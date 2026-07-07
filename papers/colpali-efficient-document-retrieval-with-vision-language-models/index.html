@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ColPali: Efficient Document Retrieval with Vision Language Models</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>ColPali: Efficient Document Retrieval with Vision Language Models</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Manuel Faysse, Hugues Sibille, Tony Wu, Bilel Omrani, Gautier Viaud, Céline Hudelot, Pierre Colombo</span>
+        <span><strong>출처</strong> · ICLR 2025 (arXiv:2407.01449)</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>이 논문은 문서(document)를 텍스트로 추출·색인하는 기존 파이프라인 대신, 문서 페이지 이미지를 Vision Language Model(VLM)로 직접 임베딩하여 검색하는 새로운 개념 &#x27;Retrieval in Vision Space&#x27;를 제안한다. 저자들은 먼저 시각적으로 풍부한 문서 검색을 평가하기 위한 벤치마크 ViDoRe(다양한 도메인·언어·모달리티의 페이지 단위 검색 태스크)를 공개한다. 그리고 PaliGemma-3B를 확장하여 텍스트·이미지 토큰 모두에 대해 ColBERT 스타일의 multi-vector 임베딩(차원 D=128)을 생성하는 ColPali 모델을 제안하고, 여기에 late interaction 매칭(각 쿼리 벡터가 문서 벡터들과의 최대 내적을 취해 합산하는 MaxSim)을 결합한다. 이 방식은 OCR·레이아웃 분석·청킹·captioning 등 복잡한 전처리를 제거하여 색인이 훨씬 단순·빠르면서도, ViDoRe에서 nDCG@5 평균 81.3으로 최고 baseline(Unstructured+Captioning BGE-M3 67.0)을 크게 능가한다. 또한 end-to-end로 학습 가능하고, 온라인 쿼리 지연은 낮게 유지되며, late interaction 히트맵으로 해석 가능성(interpretability)도 제공한다.</p>
+      <span class="source-ref">PDF p. 1, 5, 6, 7, 8</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>문서를 텍스트로 추출하지 않고 페이지 이미지를 VLM으로 직접 임베딩하는 &#x27;Retrieval in Vision Space&#x27; 개념을 제안해, OCR·레이아웃·청킹·captioning 등 복잡한 전처리를 제거했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ColPali는 ViDoRe에서 평균 nDCG@5 81.3으로 최고 텍스트 baseline(Unstructured+Captioning BGE-M3 67.0)을 크게 능가한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>성능은 태스크 특화 데이터, 비전+LLM 결합(BiPali), multi-vector late interaction의 3요소가 단계적으로 결합된 결과이며, late interaction 도입이 결정적 향상(step-change)을 만든다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>표준 PDF 파서가 페이지당 약 7.22초 걸리는 색인을 ColPali는 약 0.39초로 단축하면서, 온라인 쿼리 지연은 낮게(약 30 ms) 유지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>token pooling으로 pool factor 3에서 벡터 수를 66.7% 줄여도 성능의 97.8%를 유지해, multi-vector 색인의 저장 부담을 완화할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>문서 검색의 실제 병목은 임베딩 모델이 아니라 데이터 수집 파이프라인이다</h3>
+      <p>문서 검색(Document Retrieval)은 사용자 쿼리를 코퍼스 내 관련 문서와 매칭하는 작업으로, 검색 엔진이나 Retrieval Augmented Generation(RAG) 파이프라인의 핵심이다. 저자들은 실제 산업 환경에서 성능의 주된 병목이 텍스트 임베딩 모델의 품질이 아니라, 그 이전 단계인 데이터 수집(ingestion) 파이프라인에 있다고 지적한다. 표준 PDF 색인은 (1) PDF 파서/OCR로 단어 추출, (2) 레이아웃 탐지 모델로 문단·제목·표·그림 분할, (3) 의미 단위 청킹(chunking), (4) 시각적 요소에 대한 captioning 등 여러 단계를 거친다. 실험(Table 2)에서 이 수집 파이프라인을 최적화하는 것이 텍스트 임베딩 모델을 개선하는 것보다 훨씬 큰 성능 향상을 준다는 점이 이 병목을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>문서는 시각적으로 풍부하나 기존 시스템은 시각 단서를 활용하지 못한다</h3>
+      <p>문서는 텍스트뿐 아니라 그림, 페이지 레이아웃, 표, 심지어 폰트를 통해 정보를 전달하는 시각적으로 풍부한(visually rich) 구조이다. 그러나 현대 검색 시스템은 주로 페이지에서 추출한 텍스트 정보에만 의존하므로 이러한 핵심 시각 단서를 효율적으로 활용하지 못하고, 이는 RAG 등 실무 문서 검색 응용에서의 성능을 제한한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>산업적 제약: R1/R2/R3</h3>
+      <p>저자들은 효율적 문서 검색 시스템이 갖춰야 할 세 가지 속성을 정의한다. (R1) 강한 검색 성능(표준 검색 지표로 측정), (R2) 빠른 온라인 쿼리(평균 지연으로 측정), (R3) 높은 처리량의 코퍼스 색인(주어진 시간에 임베딩 가능한 페이지 수). 시스템은 오프라인 색인 단계와 온라인 쿼리 단계로 나뉘며, 온라인 단계에서 낮은 지연이 사용자 경험에 필수적이다. 또한 이 논문은 페이지 단위(page-level) 검색에 집중하며, &#x27;document&#x27;라는 용어를 개별 페이지를 지칭하는 데 사용한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>텍스트 중심 검색과 복잡한 수집 파이프라인</h3>
+      <p>TF-IDF/BM25 같은 통계적 방법과 bi-encoder/cross-encoder 기반 신경망 임베딩 모델은 모두 텍스트 공간에서 동작한다. Bi-encoder는 문서를 오프라인에서 단일 벡터로 매핑하고 쿼리와 cosine 거리로 매칭하며, cross-encoder는 성능은 약간 높지만 온라인에서 |D|번의 인코딩이 필요해 비효율적이다. 그러나 이들 텍스트 시스템은 문서를 텍스트로 변환하기 위한 길고(lengthy) 취약한(brittle) 전처리 파이프라인(레이아웃 탐지·OCR·청킹·captioning)에 의존하며, captioning 기반 접근은 페이지당 수십 초가 걸릴 수 있어 색인 처리량(R3)을 크게 저해한다.</p>
+      <span class="source-ref">PDF p. 2, 3, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Contrastive VLM은 검색에 최적화되어 있지 않다</h3>
+      <p>CLIP·SigLIP 계열 contrastive Vision Language Model은 시각·텍스트 인코더를 대조 손실로 정렬하지만, 시각 요소가 텍스트 이해에 최적화되지 않아 OCR 능력이 제한적이다. VLM은 Visual Question Answering·captioning·문서 이해에서는 강하나 검색(retrieval) 태스크에 최적화되어 있지 않다. 실제 실험에서 Jina-CLIP·Nomic-vision·SigLIP 같은 contrastive VLM은 텍스트 파이프라인 baseline에 크게 뒤처진다(Table 2).</p>
+      <span class="source-ref">PDF p. 3, 5, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>적절한 벤치마크의 부재</h3>
+      <p>텍스트 임베딩 모델용 벤치마크(BEIR, MTEB 등)는 텍스트 passage 단위로 평가되어 문서 검색에 맞지 않고, contrastive VLM 벤치마크는 주로 자연 이미지 검색을 평가한다. 저자들이 아는 한, 여러 문서 유형과 주제에 걸쳐 텍스트·시각 특징을 모두 end-to-end로 평가하는 실무적 문서 검색 벤치마크는 존재하지 않았다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Contribution 1 — ViDoRe 벤치마크</h3>
+      <p>시각적으로 풍부한 문서를 대상으로 페이지 단위 검색을 종합적으로 평가하는 Visual Document Retrieval Benchmark(ViDoRe)를 만들어 공개한다. 텍스트·그림·인포그래픽·표 등 다양한 모달리티, 의료·비즈니스·과학·행정 등 도메인, 영어·프랑스어 언어를 포괄하며, 학술 태스크(QA 데이터셋 재활용)와 실무 태스크(도메인별로 1,000 페이지·100 쿼리)를 포함한다.</p>
+      <span class="source-ref">PDF p. 1, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Contribution 2 — ColPali 모델과 &#x27;Retrieval in Vision Space&#x27; 개념</h3>
+      <p>VLM을 기반으로 문서를 순수하게 시각 특징으로부터 색인하고, late interaction 메커니즘으로 이후 빠른 쿼리 매칭을 수행하는 새로운 개념과 모델 구조 ColPali를 제안한다. ColPali는 ViDoRe에서 다른 모든 검색 시스템을 크게 능가하면서도 빠르고 end-to-end 학습이 가능하다. 저자들은 이 &#x27;Retrieval in Vision Space&#x27; 개념이 산업계의 문서 검색 방식을 바꿀 잠재력이 있다고 주장하며, 모델·데이터·코드·벤치마크를 오픈 라이선스로 공개한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>PaliGemma-3B 백본 위에 projection layer 추가</h3>
+      <p>ColPali는 PaliGemma-3B를 확장한 모델이다. PaliGemma는 SigLIP-So400m/14 비전 인코더의 patch 임베딩을 Gemma-2B 언어 모델의 텍스트 벡터 공간으로 투영하는 VLM으로, 작은 크기·다양한 해상도 체크포인트·강한 문서 이해 성능·prefix(지시 텍스트와 이미지 토큰)에 대한 full-block attention 특성 때문에 백본으로 선택되었다. 저자들은 언어 모델의 각 출력 토큰 임베딩(텍스트든 이미지든)을 ColBERT 논문과 동일한 축소 차원 D=128 공간으로 매핑하는 projection layer를 추가하여, 경량 bag-of-embedding 표현을 만든다.</p>
+      <span class="source-ref">PDF p. 3, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Late Interaction 연산 정의</h3>
+      <p>쿼리 q와 문서 d를 각각 multi-vector 표현 Eq ∈ R^(Nq×D), Ed ∈ R^(Nd×D)로 나타낸다. Late interaction 연산자 LI(q,d)는 각 쿼리 벡터에 대해 모든 문서 벡터와의 최대 내적(MaxSim)을 구한 뒤, 이를 모든 쿼리 벡터에 대해 합산한 값이다(식 1). 이 연산은 완전히 미분 가능(fully differentiable)하여 backpropagation이 가능하며, 개별 쿼리·문서 토큰 간의 풍부한 상호작용을 활용하면서도 문서 임베딩을 오프라인에서 미리 계산해 두는 bi-encoder의 장점을 함께 취한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>In-batch 대조 손실(pairwise CE)</h3>
+      <p>b개의 (쿼리, 페이지) 쌍으로 구성된 배치에서, 양성 점수 s+_k = LI(q_k, d_k)와 배치 내 최대 음성 점수 s−_k = max_{l≠k} LI(q_k, d_l)에 대한 softmax 교차 엔트로피로 손실을 정의한다(식 2). 수치적으로 안정된 softplus 함수를 이용해 재구성하며, 이는 가장 어려운 음성 샘플만 고려하는 pairwise CE 손실이다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>오프라인 색인(Offline Indexing)</h3>
+      <p>각 문서 페이지를 이미지로 렌더링한 뒤, 여기에 &#x27;Describe the image&#x27;라는 6개 텍스트 토큰을 붙여 PaliGemma에 단일 forward pass로 입력한다. 이미지 patch(ColPali는 1024 patch)와 텍스트 토큰이 언어 모델을 거쳐 문맥화된 출력 임베딩이 되고, projection layer가 이를 D=128 벡터로 투영한다. 결과적으로 페이지당 patch 수만큼의 multi-vector 임베딩이 저장된다. OCR·레이아웃 탐지·청킹·captioning이 전혀 없으므로 색인이 단순·고속이며, 시퀀스 길이(patch 수)가 고정되어 VRAM 사용량이 일정해 효율적 배치가 가능하다.</p>
+      <span class="source-ref">PDF p. 5, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>온라인 쿼리(Online Querying)</h3>
+      <p>쿼리는 온라인에서 언어 모델로 인코딩되어 multi-vector 임베딩이 되고(약 30 ms), ColBERT처럼 5개의 &lt;unused0&gt; 토큰을 붙여 소프트한 query expansion/re-weighting 버퍼로 사용한다. 이후 late interaction(MaxSim 합산) 연산으로 코퍼스 내 각 페이지와의 유사도 점수를 계산해 랭킹을 만든다. late interaction 오버헤드는 코퍼스 1000 페이지당 약 1 ms 수준으로 작으며, 최적화된 late interaction 엔진(PLAID 등)을 쓰면 수백만 문서로도 확장 가능하다.</p>
+      <span class="source-ref">PDF p. 6, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습(Training)</h3>
+      <p>학습 데이터는 118,695개 (쿼리, 페이지) 쌍으로, 공개 학술 데이터셋 학습셋(63%)과 웹 크롤링 PDF에 Claude-3 Sonnet이 생성한 pseudo-question을 붙인 합성 데이터(37%)로 구성된다. 학습셋은 의도적으로 전부 영어로 구성해 비영어 zero-shot 일반화를 연구할 수 있게 했으며, ViDoRe와 학습셋 간 문서 중복이 없음을 명시적으로 검증했다. 모든 모델은 1 epoch, bfloat16, LoRA(α=32, r=32)를 언어 모델 transformer 층과 projection layer에 적용, paged adamw 8bit 옵티마이저, 8-GPU 데이터 병렬, 학습률 5e-5(2.5% warmup 후 linear decay), 배치 크기 32로 학습한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim 기반 Late Interaction (식 1)</h3>
+      <p>핵심 알고리즘은 ColBERT의 late interaction을 텍스트-이미지 교차 모달로 확장한 것이다. 문서는 patch당 하나씩 임베딩되어 색인되고, 추론 시 각 쿼리 토큰 임베딩과 모든 이미지 patch 임베딩 간 내적 중 최댓값(MaxSim)을 취해 쿼리 토큰별로 가장 관련 있는 patch를 선택한 뒤, 이를 모든 쿼리 토큰에 대해 합산한다. 이 구조 덕분에 세밀한 토큰-패치 상호작용을 포착하면서도 문서 인코딩을 오프라인에 둘 수 있다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 저장 구조와 압축</h3>
+      <p>인덱스는 페이지마다 patch당 하나의 128차원 벡터(+ &#x27;Describe the image&#x27; 6개 텍스트 토큰)를 저장하며, 페이지당 메모리 사용량은 257.5 KB이다. 저자들은 naive ColBERT 색인의 메모리 사용량이 압축·클러스터링(PLAID 등)으로 크게 개선될 수 있음을 지적한다. 추가로 token pooling(계층적 mean pooling)을 적용하면 흰 배경 등 중복 patch를 병합해 벡터 수를 줄일 수 있다: pool factor 3에서 벡터 수를 66.7% 줄이면서 원래 성능의 97.8%를 유지한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ViDoRe 벤치마크와 지표</h3>
+      <p>평가는 ViDoRe의 학술 태스크(DocVQA, InfoVQA, TAT-DQA, arXiVQA, TabFQuAD)와 실무 태스크(Energy, Government, Healthcare, AI, Shift Project) 총 10개 태스크로 이루어진다. 주 지표는 nDCG@5이며 Recall@K·MRR도 함께 공개한다. R1(성능) 외에 R2(쿼리 지연)와 R3(색인 처리량)도 함께 측정한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상 baseline</h3>
+      <p>비교군은 (1) Unstructured 툴 기반 텍스트 파이프라인(text-only, +OCR, +Captioning)에 BM25 또는 BGE-M3 임베딩을 결합한 것, (2) Contrastive VLM(Jina-CLIP, Nomic-vision, SigLIP), (3) 저자들의 단계적 변형인 BiSigLIP(SigLIP 미세조정 bi-encoder), BiPali(PaliGemma 평균 풀링 bi-encoder), ColPali(late interaction)이다. Unstructured는 레이아웃 탐지·OCR·표 복원·by-title 청킹을 수행하며, +Captioning은 Claude-3 Sonnet으로 시각 요소를 텍스트 설명으로 변환한다.</p>
+      <span class="source-ref">PDF p. 4, 5, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지연·메모리 및 ablation</h3>
+      <p>지연·메모리 실험은 NVIDIA L4 GPU에서 페이지당 색인 지연, 온라인 쿼리 지연, 페이지당 저장 용량을 측정한다. Ablation에서는 이미지 patch 수(512 vs 1024), 다른 백본(Idefics2-8B, Qwen2-VL 2B), 비전 인코더 unfreeze, query augmentation 토큰, 손실 함수, 도메인 적응(프랑스어 표 1,552개 추가), out-of-domain 일반화(DocMatix 단독 학습) 등을 검토한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ColPali가 모든 baseline을 크게 능가</h3>
+      <p>Table 2에서 ColPali는 ViDoRe 평균 nDCG@5 81.3을 달성해, 최고 텍스트 baseline인 Unstructured+Captioning BGE-M3(67.0), Unstructured+OCR BGE-M3(66.1)를 크게 앞선다. 성능 향상은 (1) 태스크 특화 데이터셋, (2) 비전 모델에 LLM 결합, (3) 단일 벡터 대신 multi-vector 임베딩의 세 요인이 단계적으로 결합된 결과다. SigLIP(51.4)→BiSigLIP(58.6)→BiPali(58.8)→ColPali(81.3)로 이어지는 사다리에서 late interaction 도입이 step-change 향상을 만든다. 인포그래픽(InfoVQA)·그림(ArxivQA)·표(TabFQuAD)처럼 시각적으로 복잡한 태스크에서 격차가 특히 크며, 텍스트 중심 문서에서도 모든 도메인·언어에서 더 잘 검색한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>색인은 훨씬 빠르고 쿼리 지연은 낮게 유지</h3>
+      <p>Figure 2에서 표준 PDF 파서 파이프라인은 페이지당 약 7.22초가 걸리는 반면, ColPali는 페이지 이미지를 직접 인코딩해 약 0.39초로 색인한다(SigLIP은 0.12초). 온라인 쿼리 인코딩은 ColPali가 약 30 ms, BGE-M3가 약 22 ms(15 토큰)로 비슷하며, late interaction 오버헤드는 1000 페이지당 약 1 ms로 작다. 페이지당 저장 용량은 D=128 투영으로 257.5 KB이다.</p>
+      <span class="source-ref">PDF p. 5, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>해석 가능성과 negative result</h3>
+      <p>late interaction 히트맵을 원본 이미지에 겹치면 각 쿼리 토큰에 대해 가장 관련 있는 patch를 시각화할 수 있어, ColPali가 강한 OCR 능력을 보인다(예: 쿼리 토큰 &lt;hour&gt;가 &#x27;hourly&#x27;·&#x27;hours&#x27; 단어와 높은 유사도). 한편 부정적 결과로, SigLIP에 late interaction을 붙인 ColSigLIP은 성능이 매우 저조했는데, 이는 SigLIP이 pooled 표현만으로 대조 학습되어 개별 patch/토큰 임베딩이 최적화되지 않았기 때문으로 분석된다. SigLIP과 PaliGemma 학습 후 Gemma 임베딩 간 정렬 불일치도 관찰된다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation의 시사점</h3>
+      <p>patch 수를 512로 줄이면 −24.8 nDCG@5로 크게 하락한다. 더 좋은 언어 모델이 이미지 임베딩을 더 효율적으로 표현하여, 64 patch의 ColIdefics2가 512 patch의 ColPali를 +20.1 능가하지만 ColPali(1024)보다는 −4.7 낮고 약 2배 느리다. 비전 인코더를 unfreeze하면 −0.7로 소폭 하락한다. 더 강한 VLM인 Qwen2-VL 2B로 만든 ColQwen2-VL은 ColPali 대비 +5.3로, 생성 성능과 검색 성능의 상관을 보인다. 전혀 겹치지 않는 분포인 DocMatix만으로 학습해도 −2.2에 그쳐 최근접 baseline을 12점 이상 앞서, 강한 일반화를 보인다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론 및 향후 연구</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>결론</h3>
+      <p>저자들은 시각적으로 복잡한 문서에 대한 검색을 현실적 설정에서 평가하는 ViDoRe 벤치마크를 도입하고, 기존 검색 파이프라인과 contrastive VLM이 시각 정보를 효율적으로 활용하지 못함을 보였다. 이를 해결하기 위해 VLM으로 시각 특징만으로 고품질 multi-vector 임베딩을 만드는 ColPali를 제안했으며, 이는 기존 최고 방식을 크게 능가하면서 색인이 빠르고 쿼리 지연이 낮다. 모든 자원(벤치마크·데이터·코드·모델)을 공개해 산업 채택과 후속 연구를 장려한다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 연구</h3>
+      <p>저자들의 장기 비전은 시각 검색 시스템과 시각적으로 grounded된 질의응답을 결합해, 순수하게 이미지 특징만으로 동작하는 end-to-end RAG 시스템을 만드는 것이다. 이 방향에서는 신뢰성이 핵심이며, late interaction의 정보가 풍부한 multi-vector 점수를 활용한 신뢰도 추정·abstention 메커니즘이 중요해질 수 있다. 또한 더 많은 언어·모달리티·태스크로 벤치마크를 확장하는 것이 중요한 연구 방향이다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>ColPali 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 5, 6, 7</span>
+              </div>
+              <p>오프라인에서 페이지 이미지를 VLM으로 직접 multi-vector 임베딩하여 색인하고, 온라인에서 쿼리를 인코딩해 late interaction(MaxSim 합산)으로 랭킹하는 전체 흐름.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph Offline[오프라인 색인]
+    A[문서 페이지 이미지] --&gt; B[PaliGemma-3B\n이미지 patch + 텍스트 토큰]
+    B --&gt; C[Projection layer\nD=128]
+    C --&gt; D[페이지 multi-vector 인덱스]
+  end
+  subgraph Online[온라인 쿼리]
+    E[사용자 쿼리] --&gt; F[쿼리 인코딩\n+ unused 토큰]
+    F --&gt; G[쿼리 multi-vector]
+  end
+  G --&gt; H[Late Interaction\nMaxSim 합산]
+  D --&gt; H
+  H --&gt; I[페이지 랭킹]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 텍스트 파이프라인 vs ColPali</h3>
+                <span class="source-ref">PDF p. 1, 2, 5</span>
+              </div>
+              <p>기존 방식은 OCR·레이아웃·청킹·captioning을 거쳐 텍스트를 임베딩하는 반면, ColPali는 페이지 이미지를 단일 forward pass로 직접 임베딩한다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph Prior[기존 텍스트 파이프라인]
+    P1[PDF 페이지] --&gt; P2[OCR / 파서]
+    P2 --&gt; P3[레이아웃 탐지]
+    P3 --&gt; P4[청킹]
+    P4 --&gt; P5[captioning]
+    P5 --&gt; P6[텍스트 임베딩\n단일 벡터]
+  end
+  subgraph ColPali[ColPali]
+    C1[페이지 이미지] --&gt; C2[VLM 단일 forward]
+    C2 --&gt; C3[multi-vector 임베딩]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>ViDoRe 평균 nDCG@5 (방법별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · ViDoRe 10개 태스크 평균 nDCG@5
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>페이지당 오프라인 색인 지연</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Figure 2 · NVIDIA L4, 페이지당 평균 색인 지연
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>복잡하고 취약한 전처리 파이프라인을 제거해 색인이 단순·고속이며 end-to-end 학습이 가능하여, 특정 도메인·언어·시각 요소에 대한 미세조정이 쉽다(프랑스어 표 1,552개 추가 시 TabFQuAD +2.6 nDCG@5, 전체 저하 없음).</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>성능·지연·메모리 사이의 명확한 trade-off 분석과 다양한 백본(Idefics2, Qwen2-VL) ablation을 제공하여, 방법의 일반성과 확장성을 실증적으로 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>late interaction 히트맵을 통한 patch 단위 해석 가능성은 검색 결과의 근거를 시각적으로 제시할 수 있어, 실무에서 신뢰성·디버깅 측면의 이점을 준다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>벤치마크·데이터·코드·모델을 오픈 라이선스로 공개하고 공개 리더보드를 운영해 재현성과 후속 연구를 촉진한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>multi-vector 색인은 patch당 벡터를 저장하므로(페이지당 257.5 KB) 단일 벡터 bi-encoder보다 저장 용량이 크며, 실용화를 위해 압축·클러스터링·token pooling에 의존한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>이미지 patch 수를 512로 줄이면 −24.8 nDCG@5로 크게 하락하는 등, patch 수(및 그에 따른 메모리·지연)와 성능 사이에 강한 trade-off가 존재한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>가장 텍스트 밀도가 높은 Shift 데이터셋은 token pooling에서 명백한 outlier로, 정보 밀도가 높은 문서는 중복 patch가 적어 pooling에 의한 성능 저하에 더 취약하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>ColSigLIP·BiSigLIP_PaliGemma 변형은 성능이 매우 저조하여, late interaction이 임의의 VLM/비전 백본에서 작동하지 않고 patch 임베딩이 대조 학습으로 정렬되어 있어야 함을 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>multi-vector 인덱스의 저장·지연 부담이 수백만~수억 페이지 규모의 실제 산업 코퍼스에서 어떻게 확장되며, 압축·PLAID·token pooling 결합 시 성능 손실은 어느 정도인가?</h3>
+              </div>
+              <p>저자는 최적화된 late interaction 엔진으로 확장 가능하다고 언급하나 대규모 실측은 제시하지 않고, token pooling은 소규모 벤치마크에서만 평가되었다.</p>
+              <span class="source-ref">PDF p. 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>학습셋이 전부 영어인 상태에서 관찰된 비영어(프랑스어) zero-shot 일반화가 더 다양한 언어·문자 체계로도 유지되는가?</h3>
+              </div>
+              <p>저자는 향후 연구로 더 많은 언어 확장을 제시하며, 현재 평가 언어는 영어·프랑스어에 한정된다.</p>
+              <span class="source-ref">PDF p. 6, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>시각 검색과 시각적으로 grounded된 질의응답을 결합한 순수 이미지 기반 end-to-end RAG에서, late interaction 점수를 활용한 신뢰도 추정·abstention이 실제로 신뢰성을 높이는가?</h3>
+              </div>
+              <p>저자가 명시한 향후 비전으로, 개념적 제안 수준에서 제시되었다.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Late Interaction (지연 상호작용)</dt>
+              <dd>
+                ColBERT에서 도입된 방식으로, 문서 토큰별 임베딩을 미리 색인해 두고 런타임에 각 쿼리 토큰 임베딩과의 최대 유사도(MaxSim)를 합산해 점수를 낸다. bi-encoder의 오프라인 계산 이점과 세밀한 토큰 간 상호작용을 동시에 취한다.
+                <span class="source-ref">PDF p. 2, 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-vector embedding (다중 벡터 임베딩)</dt>
+              <dd>
+                문서·쿼리를 단일 벡터가 아니라 토큰/patch당 하나씩 여러 벡터로 표현하는 방식. 문서의 풍부한 시각·텍스트 정보를 더 잘 포착하지만 저장 비용이 크다.
+                <span class="source-ref">PDF p. 5, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ViDoRe</dt>
+              <dd>
+                Visual Document Retrieval Benchmark. 텍스트·그림·인포그래픽·표 등 다양한 모달리티와 도메인·언어를 포괄하는 페이지 단위 문서 검색 평가 벤치마크로 이 논문에서 공개했다.
+                <span class="source-ref">PDF p. 1, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PaliGemma-3B</dt>
+              <dd>
+                SigLIP-So400m/14 비전 인코더의 patch 임베딩을 Gemma-2B 텍스트 공간으로 투영하는 VLM. prefix에 full-block attention을 쓰며 ColPali의 백본이다.
+                <span class="source-ref">PDF p. 3, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                각 쿼리 벡터에 대해 모든 문서 벡터와의 내적 중 최댓값을 취하는 연산. late interaction 점수의 핵심 구성요소로, 쿼리 토큰별 가장 관련 있는 문서 patch를 선택한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Token pooling</dt>
+              <dd>
+                흰 배경 등 중복된 patch 임베딩을 계층적으로 병합해 저장 벡터 수를 줄이는 CRUD 친화적 기법. pool factor 3에서 벡터 66.7% 감소, 성능 97.8% 유지.
+                <span class="source-ref">PDF p. 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@5</dt>
+              <dd>
+                normalized Discounted Cumulative Gain의 상위 5개 결과 버전. 순위 품질을 반영하는 검색 지표로, 이 논문의 주 성능 지표다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Figure 3(left, token pooling 곡선)과 Figure 3(right, interpretability 히트맵)의 정확한 데이터 좌표는 그래프 형태로만 제시되어, pool factor 3 지점의 요약 수치(66.7% 감소·97.8% 유지) 외의 개별 태스크별 정확한 수치는 확인되지 않음.</li><li>온라인 쿼리 지연(ColPali 30 ms, BGE-M3 22 ms)과 페이지당 저장 용량(257.5 KB)은 본문 서술로 확인되나, 부록 B.4의 세부 하드웨어·배치 조건별 전체 표는 제공된 텍스트 범위에서 완전히 확인되지 않음.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe 평균 nDCG@5 (방법별)", "labels": ["Nomic-vision", "Jina-CLIP", "SigLIP (Vanilla)", "BiSigLIP", "BiPali", "Unstructured+OCR BM25", "Unstructured+Captioning BGE-M3", "ColPali"], "values": [12.9, 17.7, 51.4, 58.6, 58.8, 65.5, 67.0, 81.3], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "평균 nDCG@5"}, {"canvasId": "chart-1", "type": "bar", "title": "페이지당 오프라인 색인 지연", "labels": ["PDF Parser (Unstructured+BGE-M3)", "SigLIP", "ColPali"], "values": [7.22, 0.12, 0.39], "unit": "초(s)", "xLabel": "방법", "yLabel": "페이지당 지연"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
