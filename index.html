@@ -226,31 +226,65 @@
       }
     }
   </style>
-<!-- verification-index-style:start -->
+<!-- verification-style:start -->
 <style>
+.verification-status {
+    margin: 16px auto 22px;
+    padding: 13px 16px;
+    border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.verification-status strong {
+    margin-right: 8px;
+}
+
+.verification-status.pending {
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
+}
+
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #7f0000;
+}
+
 .verification-index-badge {
     display: inline-block;
-    margin-left: 8px;
-    padding: 2px 7px;
+    margin-left: 7px;
+    padding: 2px 8px;
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 700;
     vertical-align: middle;
 }
+
 .verification-index-badge.pending {
     background: #fff3cd;
-    color: #725900;
+    color: #6b5200;
 }
+
 .verification-index-badge.verified {
     background: #dff3e3;
     color: #176b2c;
 }
+
 .verification-index-badge.failed {
     background: #fde2e5;
-    color: #9d1824;
+    color: #941b28;
 }
 </style>
-<!-- verification-index-style:end -->
+<!-- verification-style:end -->
 </head>
 
 <body>
@@ -283,7 +317,7 @@
       <h2>
         <a href="papers/colbertsar/">
           ColBERTSaR: Sparsified ColBERT Index via Product Quantization
-        </a> <span class="verification-index-badge pending">미검증</span>
+        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
       </h2>
 
       <p class="authors">Eugene Yang, Andrew Yates, Dawn Lawrie, James Mayfield, Saron Samuel, Rohan Jha</p>
@@ -295,7 +329,7 @@
 
       <a class="open-link" href="papers/colbertsar/">
         보고서 열기 →
-      </a> <span class="verification-index-badge pending">미검증</span>
+      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
     </article>
     
 
@@ -309,7 +343,7 @@
       <h2>
         <a href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
           ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring
-        </a> <span class="verification-index-badge pending">미검증</span>
+        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
       </h2>
 
       <p class="authors">Kaili Huang, Thejas Venkatesh, Uma Dingankar, Antonio Mallia, Daniel Campos, Jian Jiao, Christopher Potts, Matei Zaharia, Kwabena Boahen, Omar Khattab, Saarthak Sarup, Keshav Santhanam</p>
@@ -321,7 +355,7 @@
 
       <a class="open-link" href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
         보고서 열기 →
-      </a> <span class="verification-index-badge pending">미검증</span>
+      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
     </article>
     
 
@@ -335,7 +369,7 @@
       <h2>
         <a href="papers/warp/">
           WARP: An Efficient Engine for Multi-Vector Retrieval
-        </a> <span class="verification-index-badge pending">미검증</span>
+        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
       </h2>
 
       <p class="authors">Jan Luca Scheerer, Matei Zaharia, Christopher Potts, Gustavo Alonso, Omar Khattab</p>
@@ -347,7 +381,7 @@
 
       <a class="open-link" href="papers/warp/">
         보고서 열기 →
-      </a> <span class="verification-index-badge pending">미검증</span>
+      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
     </article>
     
     </div>
