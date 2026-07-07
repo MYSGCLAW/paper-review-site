@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>FLASH-MaxSim: IO-Aware Fused Kernels for Late-Interaction Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>FLASH-MaxSim: IO-Aware Fused Kernels for Late-Interaction Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Roi Pony, Daniel Ezer, Adi Raz Goldfarb, Idan Friedman, Oshri Naparstek, Udi Barzelay</span>
+        <span><strong>출처</strong> · Venue 확인 필요</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>이 논문은 ColBERT/ColPali로 대표되는 late-interaction retrieval의 핵심 연산인 MaxSim(쿼리 토큰마다 문서 토큰에 대해 max를 취하고, 다시 쿼리 토큰에 대해 sum하는 연산)을 GPU에서 효율적으로 계산하는 IO-aware fused 커널 FLASH-MaxSim(FM)을 제안한다. 표준 PyTorch 구현은 [Nq, B, Lq, Ld] 크기의 query×document 유사도 텐서 S를 HBM에 전부 만든 뒤 max·sum으로 줄이고 버리는데, 이 텐서는 오직 reduce되기 위해서만 존재하면서 추론 시 후보 집합 크기와 대조학습(contrastive training) 시 배치 크기를 제한하는 메모리 병목이 된다(예: ColPali 10K 문서에서 FP16 기준 21GB). 저자들은 FlashAttention의 IO-aware tiling 원리를 MaxSim이라는 hard-selection reduction(한 축에 max/min/arg, 다른 축에 sum)에 적용하여, forward에서는 유사도 텐서를 전혀 만들지 않고 SRAM 안에서 tile 단위 running max로 점수만 계산하고, backward에서는 forward가 저장한 argmax를 sparse bipartite routing graph로 취급하는 inverse-grid CSR 구조로 gradient 텐서 없이 정확한 gradient를 복원한다. 그 결과 추론 peak memory를 최대 9× 낮추고 학습 peak memory를 두 자릿수 배(orders of magnitude) 줄이면서, 모든 shape에서 naive PyTorch보다 빠르고(최대 A100 3.8×/H100 4.7×) FP32 정밀도 프로토콜 하에서 순위(ranking)를 BEIR·REAL-MM-RAG에서 nDCG@10 소수점 4자리까지 보존한다. 여기에 저장공간을 절반으로 줄이는 approximate INT8 경로와 d&gt;512에서의 SRAM-spill을 없애는 split-d forward가 서빙 지향 확장으로 추가된다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MaxSim의 [Nq, B, Lq, Ld] 유사도 텐서는 오직 reduce되기 위해서만 존재하는 병목이며, FlashAttention식 IO-aware tiling으로 이를 아예 만들지 않고도 exact 점수를 계산할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>forward는 idempotent running max로 텐서 없이 점수만 쓰고, backward는 saved argmax를 inverse-grid CSR로 뒤집어 gradient 텐서 없이 atomic-free로 정확한 gradient를 복원한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>추론 peak memory 최대 9×, 학습 peak memory 두 자릿수 배(ColPali B=128에서 약 1,000× 분석치) 감소로 단일 GPU가 이전에 도달 못하던 후보 집합·배치 크기를 처리한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 4, 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>속도는 naive 대비 최대 A100 3.8×/H100 4.7×, compile(max-autotune) 대비 2.4–4.7×이며, FP32 정밀도 프로토콜 하에서 BEIR·REAL-MM-RAG nDCG@10을 소수점 4자리까지 보존한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4, 6, 23, 24</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>동일한 inverse-grid CSR backward가 Chamfer distance로 이식되어 77–152× 속도 향상을 보이므로, 이 커널은 MaxSim을 넘는 hard-selection reduction 템플릿으로 볼 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4, 7, 11</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim과 표준 구현의 구조</h3>
+      <p>Late-interaction retrieval(ColBERT, ColPali)은 dense single-vector 검색과 달리 쿼리와 문서를 각각 토큰 수준 embedding 집합 Q∈R^(Lq×d), D∈R^(Ld×d)로 표현하고, MaxSim 연산 score(Q,D)=Σ_i max_j ⟨Qi, Dj⟩로 점수를 낸다(쿼리 토큰 i마다 모든 문서 토큰 j에 대해 max, 이를 다시 쿼리 토큰에 대해 sum). 이 토큰 단위 세밀한 매칭이 ColBERT와 그 문서-이미지 후속인 ColPali의 품질 이점을 주지만 동시에 비용을 유발한다. 표준 PyTorch 구현은 (query, document) 쌍마다 einsum으로 [Lq, Ld] 유사도 행렬을 만들고, 배치 전체로는 [Nq, B, Lq, Ld] 텐서 S를 HBM에 materialize한 뒤 max(문서 토큰 축)·sum(쿼리 토큰 축)으로 줄이고 버린다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>reduce되기 위해서만 존재하는 텐서 S가 병목</h3>
+      <p>유사도 텐서 S는 오직 reduce되기 위해서만 존재하지만 스케일에서 파이프라인의 가장 큰 텐서가 된다. 시각 문서 검색(ColPali, d=128, page-as-query, Lq=Ld=1024)에서 10K 문서 후보 집합만으로도 S는 FP16 기준 21GB(FP32 42GB)에 달해 40GB GPU를 20K 문서 이전에 OOM 시키고, 80GB GPU에서도 reranking과 대조학습의 배치 크기를 제한한다. 짧은 텍스트 쿼리는 추론 텐서를 줄이지만, in-batch-negatives 학습에서는 S가 배치 크기 B에 대해 quadratic하게 커지므로 벽이 다시 돌아온다. 저자들은 이 유사도 행렬을 두고 &#x27;병목이며 애초에 존재할 필요가 없었다(The matrix is the bottleneck, and it never needed to exist)&#x27;고 명시한다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>naive einsum과 트래픽 문제</h3>
+      <p>표준 PyTorch의 naive 구현(einsum + max + sum)은 [Nq, B, Lq, Ld] 텐서 S를 HBM에 썼다가 다시 읽고 버리므로, S의 트래픽이 corpus-side 입력 트래픽보다 Lq/d배(ColPali 기준 약 8배) 더 크다. Naive 산술 강도(arithmetic intensity)는 H100 roofline ridge보다 4–5× 낮은 지점에 위치한다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>torch.compile(max-autotune)의 한계</h3>
+      <p>가장 강력한 PyTorch 베이스라인인 torch.compile(max-autotune)은 elementwise 연산은 fuse하지만, einsum이 만드는 4차원 [B, Lq, Ld] 중간 텐서를 Inductor가 IR 경계로 취급하기 때문에 그 materialize된 텐서 자체를 제거하지 못한다. 따라서 Tab. 23의 모든 OOM 한계가 compile-MA 하에서도 재현되며, 오히려 CUDA-graph private pool이 40GB FP32 중간 텐서를 미리 예약해 더 일찍 OOM되는 경우도 있다.</p>
+      <span class="source-ref">PDF p. 3, 10, 17</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>우회책과 인접 연구의 한계</h3>
+      <p>프로덕션에서 흔한 우회책인 corpus-chunked FP16 eager는 전체 S 트래픽이나 precision을 바꾸지 않으며, 청크 크기 튜닝 오버헤드가 있고 FLASH-MaxSim 대비 모든 frontier cell에서 2.6–2.7배 느리다. ColBERTv2/PLAID 계열은 residual compression과 centroid-pruned approximate scoring으로 압축 인덱스용 segmented scoring 커널을 제공하지만, 그 파이프라인이 살아남은 후보들에 대해 여전히 호출하는 dense exhaustive Lq×Ld×d rerank 자체는 가속하지 않는다(다른 operating point). 양자화 선행연구(LLM.int8, GPTQ, SmoothQuant)는 transformer weight를 대상으로 하며 retrieval-side Q/D embedding을 양자화하지 않는다. Flash-KMeans는 materialization-free online argmin이라는 점에서 가장 가깝지만, MaxSim 특유의 dual-asymmetry(∇Q는 충돌 없는 gather, ∇D만 contended scatter)를 다루지 않고 fused unified backward나 INT8/padding-free/retrieval 평가를 제공하지 않는다.</p>
+      <span class="source-ref">PDF p. 2, 3, 16, 17</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>(1) Fused forward kernel</h3>
+      <p>유사도 텐서 대신 document embedding 수준에 근접하는 peak memory로 exact MaxSim을 계산하는 fused forward 커널(§4.1). naive PyTorch 대비 최대 A100 3.8×/H100 4.7× 빠르고, compile(max-autotune) 대비 2.4–4.7× 빠르며(Tab. 1), FP16 eager 대비 최대 9× 낮은 peak memory(Tab. 2)로 40GB GPU에서 OOM되던 corpus 크기를 처리 가능하게 한다. cu_seqlens variant는 ragged corpora에서 최대 4.6× 추가 이득을 주고, FP32-reduction BF16 모드는 naive bf16의 정밀도 실패를 회피한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(2) Fused training backward</h3>
+      <p>atomic-free destination-owned gradient를 위한 inverse-grid CSR(compressed sparse row)과, 1.3–4.7× 더 적은 peak를 갖는 fused atomic-unified 기본 모드(§4.2). Gradient는 FP32 대비 ∇Q/∇D cosine 1.0000으로 일치하며(bit 동일성은 주장하지 않음), PyTorch를 OOM 시키던 배치 크기를 학습 가능하게 한다. 동일 커널이 Chamfer distance에도 이식되어 77–152× 속도 향상을 보인다(App. D, 전이 사례).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(3) 서빙 지향 확장</h3>
+      <p>두 가지 서빙 지향 확장을 동일 커널 위에 구축한다: ρ≥0.999에서 주로 1.97× storage 절감(자체 FP16 커널 대비 1.07–1.27×)을 주는 8-bit scoring(§4.3)과, d&gt;512에서 SRAM-spill cliff를 제거하는 split-d forward(§F.9).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(4) 평가</h3>
+      <p>eager PyTorch(plain 및 corpus-chunked)와 torch.compile(max-autotune)에 대한 head-to-head 비교를 수행하고, non-quantised path의 end-to-end retrieval parity를 BEIR(ColBERTv2)와 4개 REAL-MM-RAG subset(ColPali v1.2 + 두 번째 vision-language encoder인 Granite Vision Embedding)에서 검증한다. INT8은 별도로 high-fidelity하지만 approximate함(ρ≥0.999)을 검증하며, A100/H100 배포용 open-source PyTorch operator로 공개한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>IO-aware 원리를 hard-selection reduction으로 확장</h3>
+      <p>FLASH-MaxSim은 FlashAttention의 IO-aware tiling 원리를 MaxSim이라는 hard-selection reduction(한 축에 대한 max/min/arg, 다른 축에 대한 sum)에 적용한다. 핵심 통찰은, forward와 backward가 이 hard-selection 구조를 공유한다는 것이다. Forward는 유사도 텐서 S를 전혀 만들지 않고 tile 단위 running max로 점수를 계산하고, Backward는 forward에서 저장한 argmax map을 sparse bipartite routing graph로 취급하여 gradient 텐서 없이 정확한 gradient를 복원한다. 저자들은 이 방식이 MaxSim을 넘어 재사용 가능한 템플릿(reusable template)이라고 본다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>네 가지 축으로 원리를 관통</h3>
+      <p>IO-aware 원리를 (a) streaming forward(uniform 및 ragged corpora), (b) exact gradient를 복원하는 training backward, (c) 8-bit quantisation, (d) split-d의 네 가지 구성으로 관통시킨다. 이들은 모두 동일한 running-max 코어와 argmax 기반 backward 위에 얹혀 있으며, 런타임 dispatcher가 호출 시그니처에 따라 특화된 변형을 결정론적으로 선택한다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Forward: tile-then-reduce (Algorithm 1)</h3>
+      <p>커널은 (query, document) 쌍마다 하나의 프로그램을 실행한다. (1) 각 query tile Qblk(Bq개 행)를 SRAM에 로드하고 쿼리 토큰별 running max m을 -∞로 초기화한다. (2) 각 document tile Dblk(Bd개 행)를 SRAM에 로드하고 서브타일 St = Qblk·Dblk^T를 SRAM 내에서 FP16 연산·FP32 누적으로 계산한다. (3) invalid document position을 -∞로 마스킹한 뒤 m ← max(m, rowmax(St))로 running max를 갱신한다. 다음 document tile이 St를 덮어쓰기 전에 이 reduce가 끝난다. (4) 모든 document tile을 순회한 뒤 acc에 sum(m)을 더하고 모든 query tile에 반복한다. (5) 최종 스칼라 acc(쌍당 점수 하나)만 HBM에 기록한다. [B, Lq, Ld] 텐서는 한 번도 HBM에 쓰이지 않는다. running max는 idempotent하므로 FlashAttention과 달리 log-sum-exp나 rescaling이 필요 없다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Backward: argmax → CSR 역변환 (Algorithm 2)</h3>
+      <p>학습 시 autograd 내부에서, forward가 저장한 argmax winner t*(i,j,s)=argmax_t⟨Qi,s, Dj,t⟩를 세 가지 GPU primitive(bincount→cumsum, stable argsort)로 CSR 맵(row_ptr, col_idx)으로 뒤집는다. Closed-form gradient에서 ∇Q는 각 source의 유일한 outgoing edge를 따라가는 충돌 없는 gather이고(program 하나당 (i,s) 하나), ∇D는 여러 source가 같은 destination t를 고를 수 있는 contended scatter이다. 이 asymmetry 때문에 ∇D가 어려운 쪽이며 inverse-grid CSR이 존재한다. ∇D 커널은 destination row별 하나의 프로그램이 CSR의 source list를 순회하며 atomic 없이 정확히 한 번만 row를 기록한다. 어느 경로도 [Nq, B, Lq, Ld] gradient를 materialize하지 않는다.</p>
+      <span class="source-ref">PDF p. 4, 21, 22</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>런타임 dispatch</h3>
+      <p>런타임 dispatcher가 호출 시그니처(ragged 여부, dtype, shared_docs 여부, d 크기 등)에 따라 forward 측의 single-query/batched/packed/split-K/INT8/ragged(cu_seqlens)/architecture-specific tile 변형과, backward 측의 세 가지 변형(atomic_unified 기본값 / plain atomic / invgrid CSR opt-in)을 오토튠 시행 없이 결정론적으로 선택한다.</p>
+      <span class="source-ref">PDF p. 3, 4, 18, 19</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Exactness와 IO 복잡도 (Proposition 1, Theorem 1)</h3>
+      <p>Proposition 1은 Algorithm 1이 matched input dtype과 FP32 accumulation 하에서 dense reduction과 floating-point 재결합 순서까지만 다른 정확한 score(Q,D)를 반환하며, per-program running-max 상태와 Θ(Nq·B) HBM 출력만 쓰고 Θ(B·Lq·Ld) 유사도 텐서를 HBM에 두지 않음을 명시한다. Theorem 1(IO complexity)에 따르면 naive MaxSim은 Θ(Nq·B·Lq·Ld) HBM 접근·메모리를 쓰지만, FLASH-MaxSim은 Θ(Nq·B·(Lq+Ld)·d) operand read와 Θ(Nq·B) scalar write만 수행한다. 이 asymptotic 항의 비율은 Lq=Ld일 때 Lq/2d(ColPali에서 4×)이며, 실측 end-to-end 트래픽 비율은 naive가 S를 쓰고 다시 읽기 때문에 더 커서 33×에 달한다(Tab. 22).</p>
+      <span class="source-ref">PDF p. 3, 4, 20</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Inverse-Grid CSR과 backward 메모리</h3>
+      <p>Vanilla autograd는 S와 ∇S를 모두 [Nq, B, Lq, Ld]로 보관하지만, CSR 경로는 int32 argmax와 sub-GB transient만 저장하고 atomic-unified는 CSR build조차 생략한다. ColPali B=128 기준 분석적 총량은 67GB(vanilla) / 1.4GB(CSR) / 64MB(unified)로 약 1,000× 감소한다. CSR 변환은 O(Nq·B·Lq)에 이루어진다. 이 backward machinery는 operator-agnostic해서 각 source가 destination set으로의 정수 index를 내는 어떤 forward에도 적용되며, Chamfer distance에 이식된다.</p>
+      <span class="source-ref">PDF p. 4, 21, 22</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>INT8 quantized scoring (Algorithm 4)과 split-d</h3>
+      <p>INT8 변형은 Q, D를 per-token symmetric quantise(absmax 기반; D는 index time, Q는 on-the-fly, 별도 calibration 없음)하고, deferred-dequant 패턴으로 per-row scale을 입력 원소 단위가 아니라 dot-product 출력 셀 단위로 한 번만 적용해 INT8 tensor core를 활용하고 D 저장을 절반으로 줄인다. Split-d forward는 d&gt;512에서 operand tile이 per-SM SRAM 예산을 초과해 Triton이 local memory로 spill하는 현상을 막기 위해 내부 BLOCK_K 루프로 embedding 차원을 타일링하고 FP32로 누적한다.</p>
+      <span class="source-ref">PDF p. 4, 14, 17, 19, 22</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>하드웨어와 프로토콜</h3>
+      <p>A100-SXM4-80GB(forward sweep은 H100, corpus-scaling stress test는 A100-40GB)에서 PyTorch 2.8 + Triton 3.5/3.6, TF32 on으로 평가한다. 수치는 50 post-warmup 실행의 CUDA-event median이며 autotune/JIT와 cast는 timing 구간 밖으로 빼고, run-to-run IQR은 ≤1.2%이다. 정밀도는 pure FP16 / matched(FP32 누적, TF32) / true FP32(정확도 reference) 세 tier로 분리 보고하고, 배포된 우회책인 chunked FP16 eager를 oracle chunk-size로 항상 포함한다.</p>
+      <span class="source-ref">PDF p. 5, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>데이터셋과 워크로드</h3>
+      <p>실험 대상: (a) synthetic Q, D tensor의 5개 canonical shape — textual(Lq=32, Ld=300), long-doc(32,1024), medium(128,1024), visual(512,1024), ColPali(1024,1024), 모두 d=128; (b) BEIR with ColBERTv2 — ArguAna, SciDocs, 그리고 corpus-scale HotpotQA(500K docs), NQ(2.68M docs); (c) REAL-MM-RAG 4개 subset(FinReport, FinSlides, TechReport, TechSlides)을 ColPali v1.2와 Granite Vision Embedding(GVE) 두 encoder로 평가; (d) Chamfer distance 일반화용 synthetic 3D point cloud(N=M∈{1K,10K,50K,100K}, d∈{3,128}).</p>
+      <span class="source-ref">PDF p. 5, 11, 15, 23, 24</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>베이스라인과 지표</h3>
+      <p>베이스라인: naive eager PyTorch(einsum+max+sum, matched 및 pure-FP16), chunked FP16 eager(oracle chunk-size), torch.compile(max-autotune) 두 flavour, INT8용 dequant-then-naive, 그리고 정확도 검증용 true-FP32 reference와 §5.5 정밀도 진단용 bf16 in-dtype naive. 지표: latency(ms), peak GPU memory(GB), speedup(×), HBM traffic(GB), nDCG@5/10/20, Recall@10, Spearman ρ, top-K overlap(%), gradient cosine, QPS, docs/s, max relative error.</p>
+      <span class="source-ref">PDF p. 5, 22</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Forward 속도와 메모리</h3>
+      <p>ColPali shape(B=1K, Nq=1)에서 forward는 naive PyTorch 대비 A100 3.8×, H100 4.7× 빠르고 compile-MA(canonical graphs-on FP32) 대비 3.9× 빠르다(Tab. 1). 추론 frontier에서 peak memory는 unchunked FP16 eager 대비 최대 9× 낮다. 10K ColPali 후보 rerank는 FLASH-MaxSim 16.2ms/2.7GB vs chunked FP16 eager 42.8ms/7.0GB로 2.6× 빠르고 peak 2.6× 낮다(Tab. 2). A100-40GB에서 naive einsum(compile-MA 포함)은 B≈10–20K에서 모두 OOM되는 반면, FM dense 경로는 B≈175K까지, out-of-core streaming은 750K 문서(197GB, VRAM의 2.3배)를 flat 5.3GB/52K docs·s로 처리한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 4, 5, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습 backward</h3>
+      <p>ColPali in-batch-negatives 학습(B=128)에서 naive autograd는 80GB GPU에서 OOM되지만 FLASH-MaxSim(atomic-unified 기본값)은 0.39GB peak로 53.6ms/step에 학습하며, 이는 gradient checkpointing(recompute) 대비 8.0× 빠르다(Tab. 3). 둘 다 fit하는 B=64에서는 naive 대비 6.1× 빠르고 peak가 217× 낮다(13.4ms/0.24GB vs 81.3ms/51.8GB). Gradient는 FP32 대비 ∇Q/∇D cosine 1.0000으로 일치한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>정확도 parity와 정밀도</h3>
+      <p>연산자 수준에서 FP32 누적은 ColPali shape 기준 max relative error 4×10^-7, Spearman ρ=0.999999, top-20/50 overlap 100%를 보인다. End-to-end로는 BEIR(ArguAna nDCG@10=.3308 top-10 1405/1406, SciDocs nDCG@10=.1565 top-10 1000/1000)와 REAL-MM-RAG(ColPali nDCG@10 .602–.866, ρ=1.0000; GVE 5×10^-4 이내)에서 FP32 baseline과 소수점 4자리까지 일치한다. HotpotQA(500K)는 FP32와 동일한 nDCG@10=.5681을 내며 4.0× 빠르고, NQ(2.68M)는 dense baseline이 불가능해 FM(out-of-core)만 nDCG@10=.5223을 낸다. naive bf16 MaxSim은 max|Δ|≈0.5–0.76으로 top-20 순위를 뒤엎지만 FM(BF16, 내부 FP32 승격)은 max|Δ|≈0.009–0.014로 35–87× 더 타이트하다.</p>
+      <span class="source-ref">PDF p. 6, 22, 23, 24</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>확장(INT8, ragged, split-d)과 전이</h3>
+      <p>INT8 forward는 D 저장을 1.97× 줄이고 ρ≥0.999·top-20≥95%를 유지하며 naive/dequant 대비 3–6× 빠르다(자체 FP16 커널 대비는 1.07–1.27×). REAL-MM-RAG 8개 cell에서 INT8은 FP32 대비 최대 |Δ|=0.003 nDCG@10이다. ragged corpus에서 cu_seqlens variant는 padded naive 대비 최대 4.6× 빠르고 score가 정확히 일치한다. split-d는 d=2048에서 in-one-shot 커널 대비 A100 20.3×/H100 8.40× 빠르다. 동일 inverse-grid CSR 커널을 Chamfer distance에 이식한 결과 naive 대비 77–152× 속도 향상과 gradient cosine 1.00000을 보인다.</p>
+      <span class="source-ref">PDF p. 11, 15, 16, 17</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>결론</h3>
+      <p>FLASH-MaxSim은 MaxSim을 병목시키던 [Nq, B, Lq, Ld] 유사도 텐서를, FlashAttention의 IO-aware tiling을 operator 전체(materialization-free forward + ∇S를 만들지 않는 exact backward)로 관통시켜 제거한다. 그 결과 추론 peak memory를 최대 9×, 학습 peak memory를 두 자릿수 배 줄이는 drop-in PyTorch operator를 얻으며, 모든 shape에서 더 빠르고 nDCG@10을 소수점 4자리까지 보존한다. 저자들은 이 이점의 본질이 hard-selection 구조(한 축에 max/min/arg, 다른 축에 sum)이므로 FLASH-MaxSim을 MaxSim을 넘는 재사용 가능한 템플릿으로 읽을 것을 제안하며, open-source로 공개한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4</span>
+              </div>
+              <p>FLASH-MaxSim의 forward(running max로 텐서 없이 점수 계산)와 backward(argmax를 CSR로 뒤집어 gradient 복원)를 dispatcher가 연결하는 전체 흐름.</p>
+              <div class="mermaid">
+flowchart TB
+  A[Q, D token embeddings] --&gt; B[Runtime dispatcher]
+  B --&gt; C[Forward: one program per query-doc pair]
+  C --&gt; D[Load Q tile, D tile to SRAM]
+  D --&gt; E[St = Qblk x Dblk^T in SRAM]
+  E --&gt; F[mask invalid, running max update]
+  F --&gt; G[sum over query tokens = acc]
+  G --&gt; H[write scalar score to HBM]
+  H --&gt; I{training?}
+  I --&gt;|no| J[return scores]
+  I --&gt;|yes| K[saved argmax map]
+  K --&gt; L[bincount, cumsum, argsort to CSR]
+  L --&gt; M[grad_D: destination-owned, atomic-free scatter]
+  L --&gt; N[grad_Q: collision-free gather]
+  M --&gt; O[exact gradients, no dense grad tensor]
+  N --&gt; O
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 제안 방식 비교</h3>
+                <span class="source-ref">PDF p. 1, 3, 4</span>
+              </div>
+              <p>naive PyTorch는 전체 유사도 텐서 S를 HBM에 만들고 다시 읽어 병목이 되지만, FLASH-MaxSim은 SRAM 안에서 tile 단위로 reduce하여 스칼라 점수만 기록한다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph Naive[Naive PyTorch]
+    A1[Q, D] --&gt; A2[einsum: full S in HBM, e.g. 21GB]
+    A2 --&gt; A3[max over doc tokens]
+    A3 --&gt; A4[sum over query tokens]
+    A4 --&gt; A5[scores, S discarded]
+  end
+  subgraph FM[FLASH-MaxSim]
+    B1[Q, D] --&gt; B2[tile in SRAM, St only]
+    B2 --&gt; B3[running max, never write S]
+    B3 --&gt; B4[sum in register]
+    B4 --&gt; B5[write scalar score]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>Forward speedup (B=1K, Nq=1, A100)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4 · Table 1 · A100, matched precision(FP32 accumulation, TF32), naive eager 대비, B=1K, Nq=1
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Forward speedup (B=1K, Nq=1, H100)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4 · Table 1 · H100, matched precision(FP32 accumulation, TF32), naive eager 대비, B=1K, Nq=1
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>추론 peak memory (ColPali B=10K, A100-80GB)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Table 2 · ColPali shape (Lq=Ld=1024, d=128), B=10K, A100-80GB, full protocol
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>학습 step latency (ColPali B=64, A100-80GB)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 3 · ColPali Lq=Ld=1024, B=64, A100-80GB, fwd+bwd step
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>학습 peak memory (ColPali B=64, A100-80GB)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 3 · ColPali Lq=Ld=1024, B=64, A100-80GB, per-step transient peak
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>HBM traffic (ColPali B=1K, single-query rerank)</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 20 · Table 22 · ColPali shape (Lq=Ld=1024, d=128), single-query rerank, B=1K
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>문제 정의가 명확하다: &#x27;오직 reduce되기 위해서만 존재하는 유사도 텐서&#x27;라는 관찰을 통해 IO-aware tiling으로 제거 가능한 병목임을 정확히 짚었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>forward뿐 아니라 backward까지 hard-selection 구조를 관통해, 학습 시 gradient 텐서 materialization까지 제거한 점이 chunking으로도 우회 불가능한 학습 병목을 실제로 해결한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>벤치마크 프로토콜이 엄격하다(정밀도 tier 분리, oracle chunked baseline 포함, compile 두 flavour, L2 flush, campaign 내 ratio 계산, 독립 harness 교차검증)로 성능 주장의 신뢰도를 높인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>합성 shape의 속도·메모리뿐 아니라 실제 encoder(ColBERTv2, ColPali, GVE)로 BEIR·REAL-MM-RAG에서 end-to-end nDCG parity를 검증해, exactness 주장이 검색 품질로도 이어짐을 보였다.</span>
+              </div>
+              <span class="source-ref">PDF p. 23, 24</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Chamfer distance 이식으로 커널이 MaxSim에 국한되지 않는 재사용 가능한 hard-selection 템플릿임을 실증했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>이점은 similarity traffic(Lq·Ld)이 operand traffic((Lq+Ld)·d)을 압도할 때 발생하며, launch-bound shape(Lq, Ld ≲ 64)에서는 parity 수준이고 작은 독립-쌍 배치(N≤16)에서는 컴파일된 FP16 einsum이 최대 약 1.4× 더 빠를 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>argmax 분포가 작은 destination set에 near-uniform해 atomic contention이 거의 없는 경우(예: expert 수가 적은 MoE routing)에는 backward 이점이 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>backward는 source당 argmax 인덱스 하나만 저장하므로 k&gt;1인 top-k reduction은 구현되어 있지 않다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>matched precision 기준 single-step 학습 속도 향상은 완만하며, 학습에서의 주된 이득은 step latency가 아니라 메모리 절감과 배치 크기 unlock이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>하드웨어 커버리지는 A100/H100로 한정되며, Triton 커널은 다른 아키텍처(consumer NVIDIA, Volta/Turing, AMD MI)에서 tile 재튜닝이 필요할 수 있고 그 경우 dispatcher는 eager PyTorch로 fallback한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 18</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>exactness는 특정 PyTorch 커널과의 bit-단위 동일성이 아니라 matched dtype + FP32 accumulation 프로토콜 하의 floating-point 재결합 순서 차이까지만 허용하는 상대적 개념이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>S가 제거된 이후 large-candidate reranking의 병목은 embedding storage, host-device streaming, candidate generation, encoder latency로 이동한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>INT8 ranking 검증은 text 분포 위주이며 REAL-MM-RAG의 quantised-path nDCG는 일부 shape subset에서만 보고된다. ColBERT-PLAID 계열의 compressed-index scoring stack과는 다른 operating point라는 이유로 비교하지 않았고, ANN/PLAID-style pruning을 포함하는 완전한 ViDoRe 스타일 end-to-end 파이프라인은 실행하지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 17, 18</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>hard-selection running-max 코어가 실제 PLAID/ColBERTv2 압축 인덱스 파이프라인의 dense rerank 단계에 통합되면 end-to-end 대규모(수백만 문서) 검색 지연·비용이 얼마나 개선되는가?</h3>
+              </div>
+              <p>저자는 PLAID 계열이 살아남은 후보에 대해 여전히 dense exhaustive rerank를 호출한다고 지적하면서도, 다른 operating point라는 이유로 이 통합 파이프라인을 직접 실행하지 않았다.</p>
+              <span class="source-ref">PDF p. 3, 18</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>k&gt;1 top-k reduction으로 backward를 확장하면 argmax 단일 인덱스 저장 구조를 어떻게 유지하며 contention과 정확도를 어떻게 관리할 수 있는가?</h3>
+              </div>
+              <p>저자는 현재 backward가 source당 argmax 인덱스 하나만 저장해 top-k를 지원하지 않는다고 명시했다.</p>
+              <span class="source-ref">PDF p. 7, 17</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>A100/H100 이외의 아키텍처(consumer NVIDIA, Volta/Turing, AMD MI)에서 tile 재튜닝 후 어느 정도 성능이 유지되며, dispatcher의 eager fallback을 얼마나 줄일 수 있는가?</h3>
+              </div>
+              <p>하드웨어 커버리지가 A100/H100로 한정되고 다른 아키텍처에서는 tile 재튜닝이 필요하다고 저자가 밝혔다.</p>
+              <span class="source-ref">PDF p. 7, 18</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>INT8 approximate 경로의 순위 신뢰도를 vision/multimodal 분포 전반과 더 큰 corpus로 확장하면 ρ≥0.999·top-20≥95% 수준이 유지되는가?</h3>
+              </div>
+              <p>저자는 INT8 ranking 검증이 text 분포 위주이며 REAL-MM-RAG의 quantised-path nDCG는 일부 subset에서만 보고된다고 인정했다.</p>
+              <span class="source-ref">PDF p. 17, 18</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Late-interaction retrieval</dt>
+              <dd>
+                쿼리와 문서를 단일 벡터가 아니라 토큰 수준 embedding 집합으로 유지하고 MaxSim 같은 토큰 단위 연산으로 점수를 내는 검색 방식(ColBERT, ColPali). 세밀한 매칭으로 품질 이점을 얻지만 비용이 크다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                score(Q,D)=Σ_i max_j ⟨Qi, Dj⟩. 각 쿼리 토큰 i에 대해 모든 문서 토큰 j와의 내적 중 최대를 취하고(문서 축 max), 이를 쿼리 토큰에 대해 합산(쿼리 축 sum)하는 late-interaction 점수 연산.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>유사도 텐서 S / materialization</dt>
+              <dd>
+                einsum이 만드는 [Nq, B, Lq, Ld] query×document 유사도 텐서. 표준 구현이 HBM에 전부 만든(materialize) 뒤 max·sum으로 줄이고 버리는데, 이것이 메모리 병목이다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>IO-aware tiling</dt>
+              <dd>
+                FlashAttention이 도입한 원리로, 큰 중간 행렬을 HBM에 만들지 않고 SRAM 안에서 tile 단위로 계산·reduce하여 느린 HBM 트래픽을 줄이는 기법. FLASH-MaxSim이 MaxSim에 적용한다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>hard-selection reduction</dt>
+              <dd>
+                한 축에 대해 max/min/arg를 취하고 다른 축에 대해 sum하는 연산 구조. MaxSim이 대표 사례이며, forward와 backward가 이 구조를 공유해 재사용 가능한 커널 템플릿이 된다.
+                <span class="source-ref">PDF p. 1, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>running max (online max)</dt>
+              <dd>
+                tile을 순회하며 최대값을 누적 갱신하는 방식. idempotent해서 FlashAttention의 softmax와 달리 log-sum-exp나 rescaling이 필요 없다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Inverse-grid CSR (compressed sparse row)</dt>
+              <dd>
+                forward가 저장한 argmax(source→destination 매핑)를 bincount→cumsum→argsort로 뒤집어 destination별 source 리스트를 만드는 sparse 구조. ∇D를 atomic 없이 각 destination row에 정확히 한 번 기록하게 한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>atomic-unified backward</dt>
+              <dd>
+                ∇Q와 ∇D를 하나로 융합한 기본 backward 변형으로, CSR build조차 생략해 peak memory가 가장 낮다(1.3–4.7× less peak). in-batch-negatives의 dispatcher 기본값.
+                <span class="source-ref">PDF p. 4, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>cu_seqlens variant</dt>
+              <dd>
+                ragged(가변 길이) corpus에서 문서를 최장 길이로 padding하지 않고 실제 토큰만 packing해 처리하는 forward 변형. padded naive 대비 최대 4.6× 빠르며 score가 정확히 일치한다.
+                <span class="source-ref">PDF p. 15</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>deferred-dequant</dt>
+              <dd>
+                INT8 scoring에서 per-token dequant scale을 입력 원소 단위가 아니라 dot-product 출력 셀 단위로 한 번만 적용하는 패턴. INT8 tensor core를 활용하면서 D 저장을 절반으로 줄인다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>split-d forward</dt>
+              <dd>
+                d&gt;512에서 operand tile이 per-SM SRAM 예산을 초과해 local memory로 spill되는 현상을 막기 위해 내부 BLOCK_K 루프로 embedding 차원을 타일링하고 FP32로 누적하는 forward 변형.
+                <span class="source-ref">PDF p. 14, 17</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>matched precision / FP32-accumulation protocol</dt>
+              <dd>
+                FP16 입력으로 곱하되 FP32로 누적(TF32 tensor core)하는 정밀도 설정. FLASH-MaxSim의 exactness는 이 프로토콜 하에서 floating-point 재결합 순서 차이까지만 허용하는 상대적 개념이다.
+                <span class="source-ref">PDF p. 5, 7</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문이 게재된 공식 학회/저널 venue는 본문에서 확인되지 않으며, arXiv preprint 식별자(arXiv:2605.29517v2 [cs.IR], 2026-06-17)만 확인됨. peer review 여부도 확인되지 않음.</li><li>Figure 1(ColPali corpus scaling)은 로그-로그 그래프로 제시되어 캡션에 명시된 근사치(OOM B≈10–20K, flat peak ∼0.5GB below B≈2K, dense 한계 B≈175K) 외의 정확한 곡선 값은 그래프에서 직접 읽어낼 수 없어 chart로 기록하지 않음.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "Forward speedup (B=1K, Nq=1, A100)", "labels": ["textual (32,300)", "long-doc (32,1024)", "medium (128,1024)", "visual (512,1024)", "ColPali (1024,1024)"], "values": [1.2, 1.9, 2.8, 3.4, 3.8], "unit": "×", "xLabel": "workload shape", "yLabel": "naive 대비 speedup"}, {"canvasId": "chart-1", "type": "bar", "title": "Forward speedup (B=1K, Nq=1, H100)", "labels": ["textual (32,300)", "long-doc (32,1024)", "medium (128,1024)", "visual (512,1024)", "ColPali (1024,1024)"], "values": [1.1, 1.7, 3.1, 4.0, 4.7], "unit": "×", "xLabel": "workload shape", "yLabel": "naive 대비 speedup"}, {"canvasId": "chart-2", "type": "bar", "title": "추론 peak memory (ColPali B=10K, A100-80GB)", "labels": ["FLASH-MaxSim", "chunked FP16 eager", "unchunked FP16 eager"], "values": [2.7, 7.0, 24.0], "unit": "GB", "xLabel": "방식", "yLabel": "peak memory"}, {"canvasId": "chart-3", "type": "bar", "title": "학습 step latency (ColPali B=64, A100-80GB)", "labels": ["naive", "recompute", "FM unified", "FM CSR"], "values": [81.3, 109.2, 13.4, 11.7], "unit": "ms", "xLabel": "방식", "yLabel": "step latency"}, {"canvasId": "chart-4", "type": "bar", "title": "학습 peak memory (ColPali B=64, A100-80GB)", "labels": ["naive", "recompute", "FM unified", "FM CSR"], "values": [51.8, 8.8, 0.24, 0.39], "unit": "GB", "xLabel": "방식", "yLabel": "peak memory"}, {"canvasId": "chart-5", "type": "bar", "title": "HBM traffic (ColPali B=1K, single-query rerank)", "labels": ["naive (S traffic)", "FLASH-MaxSim (D traffic)"], "values": [8.65, 0.26], "unit": "GB", "xLabel": "방식", "yLabel": "HBM traffic"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
