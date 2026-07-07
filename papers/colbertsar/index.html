@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ColBERTSaR: Sparsified ColBERT Index via Product Quantization</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>ColBERTSaR: Sparsified ColBERT Index via Product Quantization</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Eugene Yang, Andrew Yates, Dawn Lawrie, James Mayfield, Saron Samuel, Rohan Jha</span>
+        <span><strong>출처</strong> · SIGIR &#x27;26 (49th International ACM SIGIR Conference), Melbourne, VIC, Australia; arXiv:2606.05568v1 [cs.IR]</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>ColBERTSaR는 ColBERT 계열 multi-vector dense retrieval의 핵심 확장성(scalability) 문제인 거대한 index 크기를, PLAID가 저장하던 residual 벡터를 완전히 제거하는 residual-free product quantization으로 해결한다. 저자들은 MaxSim 점수를 anchor(centroid)와 query token의 내적만으로 근사하는 Score_S(Equation 3)를 유도하고, 이 식이 anchor를 sparse vocabulary로 보는 dynamic TF-IDF 형태임을 보여 embedding quantization을 적용한 ColBERT가 scoring mechanism을 제외하면 learned sparse retrieval(LSR)과 이론적으로 동등함을 확립한다. 구현은 retrieval 모델을 재학습하지 않는 PLAID의 drop-in replacement로서, K-means로 학습한 anchor에 각 문서 토큰을 할당해 inverted index와 forward index를 만들고 nprobe 기반 2단계 검색을 수행한다. proof-of-concept 실험에서 ColBERTSaR index는 1-bit PLAID 대비 50~70% 작으면서 monolingual(BEIR), CLIR·MLIR(NeuCLIRBench, NeuCLIRTech)에서 경쟁적인 retrieval 효과성을 유지한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 4, 5</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ColBERTSaR는 residual을 저장하지 않는 product quantization으로 ColBERT index를 실제 inverted index로 바꿔 1-bit PLAID 대비 index를 50~70% 줄인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>embedding quantization을 적용한 ColBERT는 scoring mechanism을 제외하면 learned sparse retrieval과 이론적으로 동등하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MaxSim 근사 Score_S(Equation 3)는 anchor를 sparse vocabulary로, query-anchor 내적을 query-specific IDF로 보는 dynamic TF-IDF 형태이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>재학습 없이 PLAID의 drop-in replacement로 동작하며 K-means anchor + inverted/forward index + nprobe 2단계 검색으로 구현된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>BEIR에서 1-bit PLAID 효과성의 89~92%를 유지하고 NeuCLIRBench·NeuCLIRTech에서 PLAID·MILCO와 경쟁적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>training query 없이 in-batch document token을 pseudo-query로 쓰는 unsupervised anchor 최적화가 가장 견고한 기본 설정이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>index 크기 병목</h3>
+      <p>ColBERT, XTR 같은 multi-vector dense retrieval은 문서를 여러 벡터로 표현해 표현력(expressiveness)이 높지만, 생성되는 벡터 수가 문서 길이에 비례해 single-vector 모델보다 수 자릿수(orders of magnitude) 많아 효율성 문제를 낳는다. PLAID는 이를 inverted file index(IVF)와 residual 기반 product quantization으로 완화했으나, PLAID 및 유사 ColBERT 구현의 index는 원본 raw text 대비 disk 저장량이 5~10배에 달해 확장성을 제한한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>정량적 심각성</h3>
+      <p>각 512 tokens인 문서 100만 건(압축 없이 저장 시 1~3GB인 중간 규모 컬렉션)에서, 기본 ColBERT embedding 크기 128에 대해 1-bit로 공격적으로 압축한 residual만으로도 PLAID는 7.8GB 이상을 차지한다. 2/4-bit 압축 시 이 크기는 2~4배로 늘어 raw text보다 한 자릿수(order of magnitude) 커진다. 반면 sparse retrieval은 각 문서를 고유 토큰과 impact score로 표현하므로 저장 footprint가 훨씬 작다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>연구 목표</h3>
+      <p>저자들의 목표는 residual 의존성을 제거하여 ColBERT index를 실제 inverted index로 바꾸는 embedding quantization 방식을 제안함으로써 index 크기 문제를 정면으로 해결하는 것이다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>latency 중심 연구의 한계</h3>
+      <p>token routing, score imputation, fast decompression, instruction set optimization, 초기 candidate 검색을 더 효율적인 모델로 대체, backbone 자체를 더 작은 모델로 대체 등 기존 연구는 query latency 감소에 초점을 두었다. 이들은 gathering/decompression 단계의 비효율을 완화하지만 index 크기 문제 자체는 해결하지 못한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>residual 제거의 어려움</h3>
+      <p>residual 벡터는 index 저장량의 대부분을 차지하지만 PLAID에서 approximated ColBERT score 계산에 필수적이어서 단순히 제거할 수 없다. 저자들은 이 필요성의 경험적 근거로 Table 2(residual 없는 PLAID 0bit의 효과성 저하)를 제시한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ad hoc query 지원 부담</h3>
+      <p>candidate token 수를 thresholding과 score approximation으로 제한하더라도, 임의(ad hoc)의 query를 지원하려면 전체 index가 여전히 필요하다. 즉 query-time 절감만으로는 저장 문제가 사라지지 않는다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1) 이론적 유도</h3>
+      <p>ColBERTSaR sparse approximation의 이론적 도출(theoretical derivation)을 제공한다. MaxSim을 residual-free 형태로 재작성하여 anchor와 query token 내적만으로 점수를 근사하는 Score_S(Equation 3)를 유도한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2) ColBERT와 LSR의 연결</h3>
+      <p>ColBERT와 learned sparse retrieval(LSR) 모델 사이의 강한 연결(strong connections)을 확립한다. 이론적으로 embedding quantization을 적용한 ColBERT는 scoring mechanism을 제외하면 learned-sparse retrieval과 동등하며, ColBERT는 복잡한 score aggregation을 갖는 LSR 모델로 볼 수 있다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3) 실증 결과</h3>
+      <p>proof-of-concept 구현을 사용해 monolingual, cross-language(CLIR), multilingual(MLIR) retrieval에 대한 실험 결과를 제시하여 제안 방식이 index 크기를 줄이면서 효과성을 유지함을 보인다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 개요</h3>
+      <p>ColBERTSaR는 residual을 저장하지 않고 retrieval 모델 재학습(retraining) 없이 임의의 ColBERT-style 모델의 MaxSim score를 sparse하게 근사하는 방식으로, PLAID의 drop-in replacement이다. residual-free product quantization을 통해 ColBERT를 복잡한 score aggregation을 갖는 LSR 모델로 변환하며, anchor(centroid)를 sparse index vocabulary로 해석해 기존 inverted index 인프라를 재사용한다. 실험 backbone으로는 ColBERT-Small-v1, English-Trained PLAID-X(PLAID XLMR ET), MTD PLAID-X를 사용한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MaxSim의 sparse 근사 (Equation 3)</h3>
+      <p>residual 벡터 r을 생략하고 query token q_i와 anchor c_k의 inner product만으로 MaxSim score(Score_S)를 근사한다. anchor를 sparse vocabulary로, query-anchor 내적을 query-specific IDF(query token weighting)로 해석하여 dynamic TF-IDF 형태로 만든다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Anchor matrix C와 K-means</h3>
+      <p>K개 centroid로 구성된 anchor matrix C는 document token embedding 샘플에 대한 K-means clustering으로 학습된다. 각 document token은 가장 가까운 anchor에 할당되어 embedding이 sparsify된다. anchor 수 K는 문서 수에 따른 hyperparameter이다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>anchor 최적화 (Equation 5 / 6)</h3>
+      <p>query-aware anchor optimization(Equation 5)은 residual norm이 아니라 approximation error를 직접 최소화하도록 K-means 목적함수를 수정하며 training query가 필요하다. unsupervised anchor optimization(Equation 6)은 in-batch document token을 pseudo-query로 사용해 training query 의존성을 없애며, 문서 샘플만 있으면 indexing 단계에서 항상 사용 가능하다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Inverted index와 Forward index</h3>
+      <p>inverted index는 anchor ID에서 그 anchor를 포함하는 doc ID 집합으로의 postings list이며, 컬렉션을 chunk로 처리해 저장한 뒤 n-way merge로 최종본을 만든다(SciPy CSR Matrix). forward index는 inverted matrix를 역변환해 만들며 각 문서를 그 문서가 포함하는 anchor ID들로 매핑해 second stage 재점수화에 쓰인다. traversal은 표준 SciPy 연산이 아니므로 Cython으로 single-pass 알고리즘을 구현했다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>nprobe 기반 2단계 검색</h3>
+      <p>first stage는 각 query token에 대해 top-n anchor(nprobe)를 선택해 inverted index를 single pass로 훑어 Equation 3을 근사하고, second stage는 forward index로 top-k 문서를 실제 Score_S로 재점수화한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 · 학습 샘플링</h3>
+      <p>Indexing을 시작하며 document token embedding을 샘플링해 anchor matrix C 학습용 training set을 만든다. 샘플 수는 PLAID의 sampling rate를 따라 16 × √(|d̄| × D)이며, |d̄|은 가정 문서 길이(기본 120), D는 문서 수이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 · anchor 학습</h3>
+      <p>K-means clustering으로 anchor matrix C를 학습한다. 선택적으로 query-aware(Equation 5) 또는 unsupervised in-batch(Equation 6) 최적화를 적용한다. 학습 설정은 8× NVIDIA V100 GPU, learning rate 10^-4, per-device batch size 2048 vectors, 100k steps, fp16이다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 · 문서 sparsify</h3>
+      <p>각 문서의 ColBERT token embedding d_j와 학습된 anchor matrix c의 dot product를 계산하고, 가장 높은 점수의 anchor coordinate ID를 각 token d_j의 mapped anchor로 사용해 document token을 sparsify한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 · 인덱스 구축</h3>
+      <p>각 chunk를 anchor ID → doc ID 집합의 inverted mapping으로 저장하고, 모든 chunk를 n-way merge하여 최종 inverted index(SciPy CSR Matrix)를 만든 뒤 이를 역변환해 forward index를 생성한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 · query 인코딩</h3>
+      <p>검색 시 query를 ColBERT로 인코딩해 query token embedding q_i를 얻고, anchor matrix C와의 dot product로 full query token-to-anchor score matrix S ∈ R^(N×K)를 계산한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 · 1단계 scoring</h3>
+      <p>각 query token q_i에 대해 top-n anchor(nprobe)를 선택하고 해당 postings list의 모든 doc ID를 모아, inverted index를 single pass로 훑어 top-n anchor만으로 Equation 3을 근사한다. 이는 PLAID의 first-stage candidate gathering과 동일하다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>7단계 · 2단계 scoring</h3>
+      <p>forward index로 top-k first-stage 문서를 그 문서가 포함한 anchor ID들로 매핑하고, 이 ID들로 query token-anchor score matrix S를 slice하여 Equation 3으로 Score_S를 산출한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim에서 residual-free 근사로의 유도</h3>
+      <p>MaxSim(Equation 1)은 각 query token q_i에 대해 문서 토큰과의 내적 중 최대값을 취해 합산한다. PLAID는 각 문서 토큰을 최근접 anchor c_dj와 residual r_j = d_j − c_dj로 표현하므로 점수는 sum_i max_j q_i · (c_dj + r_j)로 재작성된다(Equation 2). residual norm이 작다고 가정해 r을 생략하면, 점수는 query/centroid 내적에만 의존하는 Score_S = sum_i max_{k∈v_d} q_i · c_k = sum_i max_k q_i · c_k · 1(k∈v_d)가 된다(Equation 3). 여기서 v_d는 문서 d의 모든 토큰이 최근접인 anchor 집합이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>dynamic TF-IDF 해석</h3>
+      <p>Equation 3의 핵심은 dynamic TF-IDF 함수이다. anchor c_k를 sparse index vocabulary로 해석하면 q_i와 c_k의 내적은 query token weighting, 즉 query-specific inverse document frequency로 볼 수 있다. 이 해석이 sparse inverted index 인프라 재사용을 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>K-means 목적함수와 근사 오차</h3>
+      <p>K-means(Equation 4)는 각 학습 임베딩과 최근접 centroid 사이 거리, 즉 residual 벡터 r의 L2 norm을 최소화한다. 그러나 true MaxSim과 residual-free quantization의 근사 오차는 residual의 크기뿐 아니라 방향에도 의존하며, m(i)=argmax_j q_i·d_j일 때 오차는 Σ_i q_i · r_{m(i)}로 표현된다. 즉 residual norm 최소화는 오차를 간접적으로만 줄인다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Query-aware 최적화 (Equation 5)</h3>
+      <p>근사 오차를 직접 줄이기 위해 K-means 목적함수를 query-aware하게 수정한다. N개의 training query에 대해 q_i · argmin_k ||c_k − x_j||^2 형태의 오차를 최소화한다. 다만 이 식은 indexing 시점에 보통 존재하지 않는 training query를 요구하며, query log에서 채굴하거나 외부 query로 대체할 수 있으나 실제 query 분포와 다를 수 있다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Unsupervised in-batch 최적화 (Equation 6)</h3>
+      <p>training query 의존성을 제거하기 위해 in-batch document token x_i를 pseudo-query로 사용한다(Equation 6). 문서 샘플만 있으면 되어 indexing 단계에서 항상 사용 가능하지만, query embedding과 document token embedding이 유사하다는 가정에 의존하며 이 가정은 때때로 성립하지 않는다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조와 traversal</h3>
+      <p>disk I/O를 줄이기 위해 컬렉션을 mini-batch/chunk로 처리하고 각 chunk를 anchor ID → doc ID inverted mapping으로 저장한다. n-way merge로 최종 inverted index(SciPy CSR Matrix)를 만들고 이를 역변환해 forward index를 얻는다. inverted index traversal은 표준 SciPy 연산이 아니므로 single-pass 알고리즘을 Cython으로 구현했으며, inverted index에서의 max 연산자 최적화는 future work로 남겼다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>monolingual 영어 retrieval은 BEIR(본문은 13개 subset이라 명시하나 Table 2에는 14개 열이 표시됨)로, CLIR·MLIR은 NeuCLIRBench(영어 query, 문서는 Chinese/Persian/Russian; 세 언어 혼합이 MLIR)로, 추가 CLIR은 NeuCLIRTech(영어 query, Chinese 학술 abstract)로 평가한다. anchor 최적화 ablation의 training query 출처로 MS MARCO를 사용한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>backbone과 baseline</h3>
+      <p>backbone ColBERT 모델은 ColBERT-Small-v1, English-Trained PLAID-X(PLAID XLMR ET), MTD PLAID-X이며 모든 문서는 512 tokens passage로 분할되어 MaxP로 집계된다. baseline은 BM25(CLIR/MLIR에서는 기계번역 문서 DT 사용), BEIR용 LSR로 SPLADEv3, CLIR/MLIR용 multilingual LSR SOTA로 MILCO, 주 비교 대상인 PLAID 1bit(one-bit residual compression), 그리고 colbert-small-v1에서만 비교하는 residual 없는 PLAID 0bit이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표</h3>
+      <p>효과성은 BEIR에서 nDCG@10(Table 2), NeuCLIRBench·NeuCLIRTech에서 nDCG@20(Table 1, Figure 1)으로 측정하고, 저장 효율은 Index Size in GB(Table 3)로 보고한다. 저자는 latency 분석을 명시적으로 생략하고 index 크기와 retrieval 효과성 사이의 trade-off에 집중한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>anchor 및 학습 설정</h3>
+      <p>anchor 수는 NeuCLIRTech와 작은 BEIR(1M passages 미만) 데이터셋에서 500k, 그 외에는 1M으로 고정한다. training passage 샘플 수는 PLAID의 sampling rate 16 × √(|d̄| × D)를 따른다. K-means 학습은 8× V100, learning rate 10^-4, per-device batch size 2048 vectors, 100k steps, fp16으로 수행한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>index 크기 감소</h3>
+      <p>ColBERTSaR index는 one-bit PLAID index보다 50~70% 작다(Abstract). NeuCLIRBench 각 subset에서 감소율은 zho 77%에서 MLIR 53%까지이며, GB 기준 PLAID 1bit vs ColBERTSaR는 zho 64.53 vs 14.52, fas 46.50 vs 11.43, rus 80.39 vs 37.12, MLIR 189.12 vs 89.71이다(Table 3). 다만 ColBERTSaR index는 Lucene 기반 MILCO index(zho 6.73 등)보다는 여전히 크다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>BEIR 효과성 (monolingual)</h3>
+      <p>BEIR nDCG@10 평균에서 ColBERTSaR는 PLAID 1bit 대비 효과성을 유지한다: PLAID XLMR ET에서 92%(0.481→0.445), colbert-small-v1에서 89%(0.548→0.490). 효과성 격차는 주로 Quora, Fever, HotpotQA, MSMARCO, Natural Questions 같은 QA-style subset에서 크게 나타난다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PLAID 0bit 대비 개선과 BM25 융합</h3>
+      <p>colbert-small-v1 backbone에서 ColBERTSaR(0.490)는 residual 없는 PLAID 0bit(0.424)를 크게 상회하여, K-means centroid를 anchor로 쓸 때 ColBERTSaR 최적화가 residual 없는 document token 표현을 실질적으로 개선함을 보인다. BM25와 reciprocal rank fusion(RRF)으로 융합하면 QA-style query 효과성을 일부 회복하나 다른 subset은 손해를 보아 평균이 소폭 상승한다(0.490→0.505).</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>CLIR/MLIR 효과성</h3>
+      <p>NeuCLIRBench·NeuCLIRTech nDCG@20에서 ColBERTSaR는 PLAID 1bit 및 MILCO와 경쟁적이다. CLIR 평균은 PLAID 1bit 0.495 vs ColBERTSaR 0.492 vs MILCO 0.467, MLIR은 0.396 vs 0.385 vs 0.395, NeuCLIRTech CLIR은 0.362 vs 0.348 vs 0.264이다. NeuCLIRTech에서 PLAID와의 격차가 다소 큰 것은 technical terminology가 document token 표현을 어렵게 하기 때문이라고 저자는 해석한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>nprobe 영향</h3>
+      <p>nprobe를 늘릴수록 수확 체감(diminishing return)이 관찰된다. forward index를 쓰는 second stage가 있을 때 최종 효과성은 약 2~4 probe에서 포화(saturate)하며, inverted index만 사용할 경우 작은 컬렉션(zho, fas)에서는 포화하나 큰 컬렉션에서는 계속 향상된다(Figure 1).</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>anchor 최적화 query 출처 ablation</h3>
+      <p>공식 BEIR training query나 MS MARCO training query를 쓰면 소폭 개선될 수 있다(w/ MSMARCO BEIR avg 0.495 vs in-batch 0.490). 다만 training query가 항상 존재하지는 않으므로, 문서 샘플만으로 항상 가능한 in-batch document token 사용이 가장 견고한(robust) 기본 해법으로 제시된다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 후속 과제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>ColBERTSaR는 ColBERT의 sparse approximation으로 index 크기를 크게 줄이면서 경쟁적 효과성을 제공하며, multi-vector dense retrieval과 LSR을 잇는 중요한 통찰을 제시한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>future work</h3>
+      <p>저자들은 document term weighting, index traversal trick, inverted index에서의 max 연산자 최적화 등 추가 엔지니어링이 이 proof-of-concept를 넘어서기 위해 필수적이라고 밝힌다. 이러한 최적화가 확보되면 latency 분석과 함께 실제 query-time 효율성까지 평가할 수 있을 것이다.</p>
+      <span class="source-ref">PDF p. 3, 5</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름 (인덱싱 + 검색)</h3>
+                <span class="source-ref">PDF p. 2, 3</span>
+              </div>
+              <p>인덱싱 단계에서 문서 토큰을 샘플링해 K-means로 anchor를 학습하고 anchor 최적화 후 각 토큰을 최근접 anchor에 할당해 inverted/forward index를 만든다. 검색 단계에서 query를 인코딩해 anchor score matrix S를 구한 뒤, inverted index로 1단계 후보를 모으고 forward index로 2단계 재점수화하여 Score_S(Equation 3)를 산출한다.</p>
+              <div class="mermaid">
+flowchart TD
+  subgraph IDX[&quot;인덱싱&quot;]
+    A[&quot;문서 토큰 임베딩 샘플링&quot;] --&gt; B[&quot;K-means로 anchor matrix C 학습&quot;]
+    B --&gt; C[&quot;anchor 최적화&lt;br/&gt;Eq5 query-aware 또는 Eq6 in-batch&quot;]
+    C --&gt; D[&quot;문서 토큰을 최근접 anchor에 할당하여 sparsify&quot;]
+    D --&gt; E[&quot;inverted index 생성&lt;br/&gt;anchor ID → doc ID&quot;]
+    E --&gt; F[&quot;forward index 생성&lt;br/&gt;doc → anchor ID 집합&quot;]
+  end
+  subgraph SRCH[&quot;검색&quot;]
+    Q[&quot;query를 ColBERT로 인코딩 q_i&quot;] --&gt; R[&quot;q_i · anchor C → score matrix S&quot;]
+    R --&gt; G[&quot;1단계 후보 gather&lt;br/&gt;token별 top-n anchor nprobe&lt;br/&gt;inverted index single pass&quot;]
+    G --&gt; H[&quot;2단계 재점수화&lt;br/&gt;forward index로 top-k 문서&quot;]
+    H --&gt; I[&quot;Score_S 산출 Eq3&quot;]
+  end
+  E --&gt; G
+  F --&gt; H
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식(PLAID) vs 제안 방식(ColBERTSaR)</h3>
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </div>
+              <p>PLAID는 각 문서 토큰을 centroid + residual로 압축 저장하고 검색 시 후보 문서의 모든 토큰 벡터를 decompress해 실제 MaxSim을 계산하므로 residual이 index 대부분을 차지해 크기가 크다. ColBERTSaR는 residual 없이 최근접 anchor ID만 저장해 inverted index를 만들고 forward index로 재점수화하여 index 크기를 크게 줄인다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph PLAID_G[&quot;기존 방식 · PLAID&quot;]
+    P1[&quot;문서 토큰 → centroid + residual&lt;br/&gt;여러 bit로 압축 저장&quot;] --&gt; P2[&quot;IVF에서 후보 문서 gather&quot;]
+    P2 --&gt; P3[&quot;heuristic으로 후보 filter&quot;]
+    P3 --&gt; P4[&quot;후보 문서의 모든 토큰 벡터 decompress&quot;]
+    P4 --&gt; P5[&quot;MaxSim 실제 점수 계산&quot;]
+    P1 --&gt; PB[&quot;index 크기 큼&lt;br/&gt;raw text의 5~10배&quot;]
+  end
+  subgraph SAR_G[&quot;제안 방식 · ColBERTSaR&quot;]
+    S1[&quot;문서 토큰 → 최근접 anchor ID&lt;br/&gt;residual 저장 안 함&quot;] --&gt; S2[&quot;inverted index nprobe로 후보 gather&quot;]
+    S2 --&gt; S3[&quot;forward index로 top-k 재점수화&quot;]
+    S3 --&gt; S4[&quot;Score_S 근사 Eq3&quot;]
+    S1 --&gt; SB[&quot;index 크기 작음&lt;br/&gt;1bit PLAID 대비 50~70% 감소&quot;]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>NeuCLIRBench index 크기: PLAID 1bit vs ColBERTSaR</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Table 3 · NeuCLIRBench, backbone MTD PLAID-X; 문서 수 zho 3.2M / fas 2.2M / rus 4.6M / MLIR 10.0M
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>NeuCLIRBench MLIR index 크기 (엔진별 전체 비교)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Table 3 · NeuCLIRBench MLIR(10.0M docs); ColBERTSaR는 PLAID보다 작지만 Lucene 기반 MILCO보다는 큼
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>BEIR nDCG@10 평균 (backbone colbert-small-v1)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Table 2 · BEIR 열 평균; PLAID/ColBERTSaR 행은 colbert-small-v1 backbone, BM25·SPLADEv3은 backbone 무관 baseline
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>NeuCLIRBench/NeuCLIRTech nDCG@20 (설정 · 방법)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 3 · Table 1 · backbone MTD PLAID-X; CLIR은 zho/fas/rus 평균, MLIR은 세 언어 혼합, Tech는 NeuCLIRTech
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>NeuCLIRBench 언어별 nDCG@20: PLAID 1bit vs ColBERTSaR</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 3 · Table 1 · NeuCLIRBench CLIR, backbone MTD PLAID-X
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>residual을 완전히 제거해 ColBERT index를 실제 inverted index로 전환함으로써, 재학습 없는 drop-in replacement로 기존 sparse retrieval 인프라를 그대로 재사용할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>MaxSim의 sparse 근사 유도와 ColBERT-LSR 등가성 확립이라는 이론과, 세 가지 backbone에 대한 실증을 함께 제공해 multi-vector와 LSR을 잇는 통찰을 근거와 함께 제시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>monolingual(BEIR)뿐 아니라 CLIR·MLIR(NeuCLIRBench, NeuCLIRTech)까지 실험 범위가 넓어, query와 문서가 다른 언어·분포일 때도 document 표현이 견고함을 보여 방법의 일반성을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>residual 없는 PLAID 0bit(0.424) 대비 ColBERTSaR(0.490)의 뚜렷한 개선은, 단순 K-means centroid를 넘어서는 anchor 최적화가 실질적 효과가 있음을 정량적으로 입증한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>in-batch document token을 pseudo-query로 쓰는 unsupervised anchor 최적화는 training query가 없어도 indexing 시점에 항상 적용 가능해 실무 배포에서 견고한 기본값이 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>inverted index에서 max 연산자 최적화는 추가 연구가 필요해 future work로 남겼고, 이에 따라 latency 분석을 생략하여 index 크기와 효과성의 trade-off만 다룬다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>구현은 proof-of-concept이며 blocking, sketch vector, bit packing, document term weighting, index traversal trick 등 엔지니어링 최적화가 이 단계를 넘어서기 위해 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>ColBERTSaR index는 Lucene 기반 MILCO index보다 여전히 크며, bit packing 등으로 축소 가능하다고만 언급한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>unsupervised anchor 최적화(Equation 6)는 query embedding과 document token embedding이 유사하다는 가정에 의존하는데, 이 가정은 때때로 성립하지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Quora, Fever, HotpotQA, MSMARCO, Natural Questions 등 QA-style/entity 중심 subset에서 효과성 격차가 크며, centroid 매핑이 ColBERT-style 모델의 알려진 약점을 증폭하기 때문이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>NeuCLIRTech CLIR에서 PLAID와의 격차가 NeuCLIRBench보다 다소 큰데, 문서의 technical terminology가 document token 표현을 어렵게 하기 때문이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>2단계 검색이 forward index(문서 → anchor)에 의존하므로 이 forward index 저장 비용이 별도로 발생하지만, Table 3의 보고된 index 크기에 forward index가 포함되는지 본문에 명시되지 않아 실제 저장 오버헤드 해석에 주의가 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>latency가 보고되지 않아 index 크기-효과성 trade-off는 드러나지만, sparse 전환이 실제 query-time 효율성 개선으로 이어지는지는 이 논문만으로 확인할 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>anchor 수 K가 문서 수에 따라 500k/1M으로 고정되어, anchor 수와 정확도·index 크기 사이의 trade-off 및 컬렉션 규모별 튜닝 민감도가 제한적으로만 탐구되었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>inverted index에서 max 연산자를 효율적으로 최적화하면 ColBERTSaR의 실제 query-time latency는 PLAID 및 LSR 대비 어떤 수준인가?</h3>
+              </div>
+              <p>저자가 max 연산자 최적화를 future work로 남기고 latency 분석을 명시적으로 생략함.</p>
+              <span class="source-ref">PDF p. 3</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>bit packing, document term weighting, index traversal trick 등 엔지니어링 최적화를 적용하면 index 크기를 MILCO 수준까지 낮추면서도 효과성을 유지할 수 있는가?</h3>
+              </div>
+              <p>저자가 proof-of-concept임을 밝히고 ColBERTSaR index가 MILCO보다 크다고 인정하며 bit packing 등으로 축소 가능하다고만 언급함.</p>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>centroid 매핑으로 증폭되는 entity/QA subset 약점을 anchor 수 증가, 대안적 anchor 최적화, 또는 BM25 hybrid 튜닝으로 어느 정도까지 완화할 수 있는가?</h3>
+              </div>
+              <p>QA-style subset에서 격차가 크고 BM25 RRF 융합이 평균을 0.490→0.505로 소폭만 올린 결과.</p>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>query와 document token 분포가 크게 다른 경우(예: 언어 불일치) in-batch pseudo-query 가정은 언제 깨지며, 그때 query-aware 최적화나 다른 대안이 얼마나 도움이 되는가?</h3>
+              </div>
+              <p>Equation 6이 query와 document token 임베딩의 유사성을 가정하나 때때로 거짓이라고 저자가 인정함.</p>
+              <span class="source-ref">PDF p. 3</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Figure 1의 nprobe별 정확한 nDCG@20 수치와 forward index 사용/미사용의 정량적 차이는 무엇이며, 큰 컬렉션에서 inverted-only가 계속 향상되는 상한은 어디인가?</h3>
+              </div>
+              <p>Figure 1이 그래프만 제공하여 정확 수치를 확인할 수 없고 포화 지점이 정성적으로만 기술됨.</p>
+              <span class="source-ref">PDF p. 5</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>ColBERT</dt>
+              <dd>
+                각 토큰을 개별 벡터로 표현하고 MaxSim으로 late interaction 점수를 계산하는 multi-vector dense retrieval 모델.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                각 query 토큰에 대해 문서 토큰과의 내적 중 최대값을 취해 합산하는 late interaction 집계 연산(Equation 1).
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PLAID</dt>
+              <dd>
+                ColBERT를 IVF와 residual 기반 product quantization으로 구현한 검색 엔진으로, 이 논문의 주 비교 대상.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>residual</dt>
+              <dd>
+                문서 토큰 임베딩과 최근접 centroid의 차이 벡터 r_j = d_j − c_dj로, PLAID index 저장량의 대부분을 차지한다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Product Quantization</dt>
+              <dd>
+                벡터를 centroid(및 residual)로 근사·압축하는 양자화 기법. ColBERTSaR는 residual을 저장하지 않는 residual-free 형태로 적용한다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>anchor / centroid</dt>
+              <dd>
+                K-means로 학습한 대표 벡터 c_k. ColBERTSaR는 이를 sparse index vocabulary로 해석한다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>inverted index</dt>
+              <dd>
+                anchor ID에서 그 anchor를 포함하는 doc ID 집합으로의 postings 구조. 1단계 후보 gathering에 사용된다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>forward index</dt>
+              <dd>
+                각 문서를 그 문서가 포함하는 anchor ID 집합으로 매핑하는 구조. 2단계 재점수화에서 Score_S 계산에 사용된다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nprobe</dt>
+              <dd>
+                query 토큰마다 탐색할 최근접 anchor 수를 정하는 ANN 탐색 공간 제어 hyperparameter.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Learned Sparse Retrieval (LSR)</dt>
+              <dd>
+                문서를 추론된 토큰 집합과 impact score로 표현하는 sparse 검색(SPLADE, MILCO 등). 저장 footprint가 작다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>dynamic TF-IDF</dt>
+              <dd>
+                Equation 3의 핵심 해석. anchor를 vocabulary로, query-anchor 내적을 query-specific IDF로 보는 관점.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>CLIR / MLIR</dt>
+              <dd>
+                cross-language(단일 외국어 문서)와 multilingual(여러 언어 혼합 문서) 정보 검색 설정. 이 논문은 영어 query로 평가한다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxP</dt>
+              <dd>
+                512 tokens passage 단위 점수를 문서 단위로 최대값 집계하는 방식.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@k</dt>
+              <dd>
+                상위 k개 순위의 랭킹 품질을 측정하는 평가지표. BEIR은 @10, NeuCLIR은 @20을 사용한다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>본문(p4)은 the 13 BEIR subsets라고 명시하나 Table 2(p5)에는 14개 열(argu, fiqa, nfc, quora, scidoc, scifact, touc, covid, cli., dbp., fever, hotpot, msm, nq)이 표시되어 개수가 일치하지 않으며, 어느 것이 제외 대상인지 원문에 명시가 없음.</li><li>Figure 1(p5)은 그래프만 제공하여 각 nprobe별 정확한 nDCG@20 수치를 확인할 수 없고, 포화 지점(2~4 probe)만 정성적으로 기술됨.</li><li>query-time latency 수치가 전혀 보고되지 않음(저자가 latency 분석을 명시적으로 생략).</li><li>Table 2의 w/ Official Train 행은 일부 subset(argu, quora, scidoc, covid, cli., dbp., msm, nq)과 Avg 값이 – 로 비어 있어 해당 평균값을 확인할 수 없음.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "NeuCLIRBench index 크기: PLAID 1bit vs ColBERTSaR", "labels": ["zho · PLAID 1bit", "zho · ColBERTSaR", "fas · PLAID 1bit", "fas · ColBERTSaR", "rus · PLAID 1bit", "rus · ColBERTSaR", "MLIR · PLAID 1bit", "MLIR · ColBERTSaR"], "values": [64.53, 14.52, 46.5, 11.43, 80.39, 37.12, 189.12, 89.71], "unit": "GB", "xLabel": "컬렉션 · 엔진", "yLabel": "Index Size"}, {"canvasId": "chart-1", "type": "bar", "title": "NeuCLIRBench MLIR index 크기 (엔진별 전체 비교)", "labels": ["BM25 w/ DT", "MILCO", "PLAID 1bit", "ColBERTSaR"], "values": [10.14, 19.32, 189.12, 89.71], "unit": "GB", "xLabel": "엔진", "yLabel": "Index Size"}, {"canvasId": "chart-2", "type": "bar", "title": "BEIR nDCG@10 평균 (backbone colbert-small-v1)", "labels": ["BM25", "SPLADEv3", "PLAID 1bit", "PLAID 0bit", "ColBERTSaR", "ColBERTSaR + BM25 (RRF)", "ColBERTSaR w/ MSMARCO"], "values": [0.45, 0.511, 0.548, 0.424, 0.49, 0.505, 0.495], "unit": "", "xLabel": "방법", "yLabel": "nDCG@10 (평균)"}, {"canvasId": "chart-3", "type": "bar", "title": "NeuCLIRBench/NeuCLIRTech nDCG@20 (설정 · 방법)", "labels": ["CLIR · PLAID 1bit", "CLIR · ColBERTSaR", "CLIR · MILCO", "MLIR · PLAID 1bit", "MLIR · ColBERTSaR", "MLIR · MILCO", "Tech CLIR · PLAID 1bit", "Tech CLIR · ColBERTSaR", "Tech CLIR · MILCO"], "values": [0.495, 0.492, 0.467, 0.396, 0.385, 0.395, 0.362, 0.348, 0.264], "unit": "", "xLabel": "설정 · 방법", "yLabel": "nDCG@20"}, {"canvasId": "chart-4", "type": "bar", "title": "NeuCLIRBench 언어별 nDCG@20: PLAID 1bit vs ColBERTSaR", "labels": ["zho · PLAID 1bit", "zho · ColBERTSaR", "fas · PLAID 1bit", "fas · ColBERTSaR", "rus · PLAID 1bit", "rus · ColBERTSaR"], "values": [0.495, 0.471, 0.529, 0.529, 0.463, 0.475], "unit": "", "xLabel": "언어 · 방법", "yLabel": "nDCG@20"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

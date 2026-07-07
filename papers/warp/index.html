@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>WARP: An Efficient Engine for Multi-Vector Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>WARP: An Efficient Engine for Multi-Vector Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Jan Luca Scheerer, Matei Zaharia, Christopher Potts, Gustavo Alonso, Omar Khattab</span>
+        <span><strong>출처</strong> · SIGIR &#x27;25 (Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval), Padua, Italy</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>WARP는 XTR(ConteXtualized Token Retriever) objective로 학습된 multi-vector retrieval 모델을 위한 고성능 검색 엔진(retrieval engine)이다. ColBERTv2/PLAID의 residual 압축·pruning 기법과 XTR 아키텍처에 맞춘 세 가지 혁신, 즉 (1) 누적 cluster size 기반으로 missing similarity를 동적으로 채우는 WARPSELECT, (2) retrieval 중 벡터를 명시적으로 복원하지 않는 implicit decompression, (3) 명시적 score matrix 없이 점수를 합치는 two-stage reduction을 결합한다. 여기에 고도로 최적화된 C++ kernel과 전용 inference runtime을 더해, LoTTE Pooled 기준 XTR 참조 구현 대비 end-to-end latency를 약 41배 줄이고(6초 이상에서 171ms로, 단일 스레드), ColBERTv2/PLAID 대비 약 3배 빠르면서도 retrieval quality를 유지한다. 또한 XTR(ScaNN) 대비 index size를 2~4배 줄여 메모리 제약 환경에서의 배포를 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>WARP은 candidate generation에서 이미 계산·정렬한 query-centroid score를 재사용하여 missing similarity imputation(WARPSELECT)과 decompression(implicit)을 거의 추가 비용 없이 수행한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>LoTTE Pooled에서 XTR 참조 구현 대비 약 41x, ColBERTv2/PLAID 대비 약 3x의 end-to-end latency 개선을 retrieval quality 저하 없이 달성한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>명시적 score matrix를 만들지 않는 two-stage reduction이 XTR 참조 구현의 핵심 scoring 병목을 제거한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>XTR(ScaNN) 대비 index size를 2x~4x 줄여(합계 기준 ScaNN 대비 2x) 메모리 제약 장치 배포를 가능하게 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>WARP은 데이터셋 크기의 제곱근에 비례해 확장되고 multi-threading으로 잘 병렬화되어 16 threads에서 3.1x speedup을 얻는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>여러 병목을 최적화한 결과, 이제 query encoding이 WARP end-to-end retrieval의 주된 병목으로 남는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Multi-vector retrieval의 효율성 문제</h3>
+      <p>ColBERT과 그 최신 변형 XTR 같은 multi-vector(late interaction) retrieval은 query와 document를 여러 token 벡터로 표현해 single-vector 방식보다 풍부한 표현력과 높은 정확도를 제공한다. 그러나 대규모 컬렉션에서 이런 방식은 효율성(latency) 문제를 겪는다. 이 논문은 XTR objective로 학습된 retriever의 검색 효율을 실질적으로 개선하는 것을 핵심 문제로 삼는다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>XTR 참조 구현의 overhead</h3>
+      <p>XTR은 별도의 gathering stage를 제거하고 scoring을 단순화하는 새로운 training objective를 도입해 효율적 multi-vector retrieval의 유망한 기반을 마련했다. 그러나 XTR의 참조 구현(reference implementation)은 general-purpose vector similarity search와 최적화되지 않은 Python 구성요소에 의존하여 상당한 overhead를 유발하고, end-to-end latency가 커서 production 적용이 제약된다. production 환경에서는 query response time이 조금만 늘어도 사용자 경험이 저하되고 수익에 부정적 영향을 줄 수 있다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PLAID와 XTR 통찰의 결합 가능성</h3>
+      <p>PLAID는 유망하지 않은 document를 공격적으로 pruning하고, XTR은 완전한 document 표현을 gathering하는 것 자체를 회피한다. 두 접근의 핵심 통찰은 서로 고립되어 연구되어 왔다. 저자들은 이 두 방식 사이에 풍부한 상호작용이 있는지 질문하며, 이를 탐구하기 위해 XTR 기반 ColBERT 모델용 엔진 WARP를 제안한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>XTR 참조 구현의 비효율</h3>
+      <p>XTR 참조 구현은 native Python 자료구조와 수동 반복(manual iteration)에 의존하여, 특히 token embedding 수가 많을 때 substantial overhead가 발생한다. 이로 인해 end-to-end latency가 커서 production 적용이 어렵다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>XTR: token retrieval과 scoring 병목</h3>
+      <p>XTR 프레임워크에서는 token retrieval이 근본적 병목이다. ANN backend에서 많은 수의 candidate(k&#x27;)를 검색해야 하며 이것이 성능에 큰 영향을 준다. 참조 구현에서는 명시적 score matrix 구성에 따른 scoring stage도 큰 병목이며, 특히 큰 k&#x27;에서 두드러진다. 논문이 자체 최적화한 XTR 구현으로 scoring을 상당히 줄이자(LoTTE Pooled에서 scoring 14x speedup), 그 결과 token retrieval이 남은 근본 병목임이 드러났다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PLAID: decompression 병목과 공통 query encoding 한계</h3>
+      <p>PLAID는 일반적으로 더 효율적이지만 decompression stage에서 어려움을 겪는다. k=1000에서 이 단계는 약 150-200ms로 비교적 고정적이며, 작은 데이터셋에서는 전체 latency의 큰 비중을 차지한다. query encoding은 두 엔진 모두의 공통 한계로, 특히 작은 데이터셋에서 두드러진다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>CITADEL의 한계</h3>
+      <p>CITADEL은 dynamic lexical routing으로 GPU 실행 시간을 크게 줄이지만, 비슷한 retrieval quality에서 PLAID의 CPU 성능에는 미치지 못한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>XTR missing similarity imputation의 구조적 한계</h3>
+      <p>XTR의 missing similarity imputation은 retrieved token 수(k&#x27;)에 본질적으로 묶여 있다. k&#x27;를 늘려도 missing similarity 추정치를 다듬을 뿐 score matrix의 밀도를 반드시 높이지는 못하는데, 큰 k&#x27;로 검색된 token은 대개 이미 검색된 document가 아니라 새로운 document에서 나오기 때문이다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>WARPSELECT — 동적 missing similarity imputation</h3>
+      <p>누적 cluster size에 기반해 missing similarity 추정을 candidate generation 단계에 접어 넣는(fold) 알고리즘이다. 이미 계산·정렬된 centroid score를 재사용하므로 추가 비용이 거의 없으며, k&#x27;에 묶여 있던 XTR 방식의 한계를 해소한다.</p>
+      <span class="source-ref">PDF p. 1, 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Implicit decompression — 벡터 복원 회피</h3>
+      <p>scoring 함수가 centroid 항과 residual 항으로 분해된다는 관찰을 이용해, residual을 명시적으로 복원하지 않고 candidate generation에서 구한 query-centroid relevance score를 재사용한다. 그 결과 여러 cluster를 O(1) 곱셈으로 decompress·scoring할 수 있어 PLAID의 명시적 복원보다 효율적이다.</p>
+      <span class="source-ref">PDF p. 1, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Two-stage reduction — 효율적 score aggregation</h3>
+      <p>token-level max reduction과 document-level sum reduction의 두 단계로 점수를 집계하여, 참조 구현의 병목이던 명시적 score matrix 구성을 회피한다.</p>
+      <span class="source-ref">PDF p. 1, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>최적화된 시스템과 정량 성과</h3>
+      <p>위 알고리즘을 고도로 최적화된 C++ kernel과 결합하여, LoTTE Pooled에서 XTR 참조 구현 대비 end-to-end latency를 41x 줄이고 ColBERTv2/PLAID 대비 3x speedup을 달성하면서 retrieval quality를 유지한다. 또한 XTR 대비 index size를 2x~4x 축소해 메모리 제약 장치에 배포할 수 있게 한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 개요</h3>
+      <p>WARP은 XTR 기반 ColBERT 모델을 위한 retrieval engine으로, ColBERTv2/PLAID의 압축 기법과 XTR 아키텍처에 맞춘 혁신을 결합한다. query와 document는 fine-tuned T5 transformer로 token 수준에서 독립적으로 인코딩되며(각 token 128차원), document 표현은 미리 계산되어 WARP의 index를 구성한다. query q와 document d의 유사도는 XTR가 변형한 ColBERT의 MaxSim 합산으로 모델링된다(식 1). retrieval은 query encoding, candidate generation(WARPSELECT), decompression, scoring의 네 단계로 구성된다(Figure 4).</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 1 — Index Construction</h3>
+      <p>ColBERTv2처럼 document token embedding에 k-means clustering을 적용한다. clustering용 샘플 크기는 컬렉션 크기의 제곱근에 비례한다. 각 token 벡터는 가장 가까운 centroid에 대한 quantized residual로 저장되며, 각 차원은 b-bit로 인코딩된다(보통 b=4, 즉 nibble 하나로 32-bit float 대비 8x 압축). 균일 양자화 대신 경험적 분포의 quantile로 bucket 경계와 대표값을 정해, 밀집 영역에 더 많은 quantization level을 할당하고 quantization error를 최소화한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2 — WARPSELECT</h3>
+      <p>정규화된 query embedding과 centroid로 query-centroid relevance score S_c,q = C·q^T를 계산하고, 각 query token에 대해 상위 n_probe centroid를 선택한다. 동시에 missing similarity 추정 m_i를, 누적 cluster size가 임계값 t&#x27;를 초과하는 첫 번째 정렬된 centroid score로 설정하여 candidate generation에 통합한다. 이는 자연 상한(natural upper bound)에 기대던 XTR의 lowest-retrieved-score 방식을 대체한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3 — Implicit Decompression</h3>
+      <p>PLAID처럼 residual을 명시적으로 복원하지 않고, scoring 함수가 centroid 항과 residual 항으로 분해됨을 이용한다(식 4·5). candidate generation에서 계산한 query-centroid score S_c,q를 재사용하고, bucket weight가 centroid 간 공유되므로 candidate scoring을 단순한 selective sum으로 구현한다. residual 언패킹은 저복잡도 bitwise 연산의 C++ kernel로 수행한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4 — Two-stage Reduction (Scoring)</h3>
+      <p>decompression 후 얻은 query_maxlen × n_probe개의 stride를 두 단계로 집계한다. (1) token-level reduction은 query token별로 stride를 max 연산으로 병합한다(cluster 내부의 max-reduction은 decompression 단계에서 수행). (2) document-level reduction은 sum으로 document 점수를 만들며, 채워지지 않은 per-token 값은 대응하는 missing similarity 추정치로 대체한다(식 8, prefix sum으로 구현). 마지막에 heap select로 top-k를 얻는다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 5 — 최적화된 C++ kernel과 inference runtime</h3>
+      <p>decompression과 scoring은 전용 C++ kernel로 처리하고, query encoding은 더 빠른 specialized inference runtime을 사용해 가속한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 — Query Encoding</h3>
+      <p>query text를 Transformer(T5)로 (query_maxlen, 128) 텐서 q로 인코딩한다. query_maxlen은 XTR 논문을 따라 32로 설정한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 — Candidate Generation (WARPSELECT)</h3>
+      <p>각 query token embedding에 대해 query-centroid relevance score S_c,q = C·q^T를 계산하고 가장 유사한 n_probe centroid를 식별한다. 동시에 누적 cluster size 임계값 t&#x27;를 이용해 missing similarity 추정 m_i를 계산한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 — Decompression</h3>
+      <p>선택된 centroid 클러스터에 속한 document token embedding에 대해, implicit decompression으로 query token과의 relevance score를 계산한다. 미리 계산한 query-centroid score를 재사용하고, cluster 내 max-reduction을 수행하며 selective sum으로 점수를 emit한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 — Scoring</h3>
+      <p>two-stage reduction(token-level max, missing similarity 추정을 반영한 document-level sum)으로 document 수준 점수를 만든 뒤, heap select로 정렬하여 top-k passage를 반환한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>XTR MaxSim scoring (식 1)</h3>
+      <p>document 점수 S_{d,q}는 각 query token q_i에 대해, 검색된 경우 정렬 가중 내적 Â_{i,j}·q_i^T d_j를, 검색되지 않은 경우 missing similarity 추정 m_i를 취해 j에 대해 max를 구한 뒤 i에 대해 합산한다. Â_{i,j}는 document token j가 query token q_i의 token retrieval에서 검색되었는지를 나타내는 alignment matrix다. 정규화 상수 1/Z는 문서 간 상대 순위에 영향을 주지 않아 생략한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>WARPSELECT 알고리즘</h3>
+      <p>정규화된 query와 centroid로 S_c,q = C·q^T를 행렬곱으로 효율적으로 계산하고, 각 query token에 대해 similarity가 가장 큰 n_probe개의 centroid를 decompression 대상으로 선택한다. 동시에 각 query token q_i에 대해, 정렬된 centroid score 목록에서 누적 cluster size가 t&#x27;를 넘는 첫 번째 score를 m_i로 설정한다. centroid score가 candidate generation에서 이미 계산·정렬되어 있으므로 missing similarity imputation 비용은 사실상 무시할 수 있다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Implicit decompression (식 3~5)</h3>
+      <p>일반적 decompress 함수는 centroid C[c]에 128개 차원의 residual index로 조회한 bucket weight ω를 더해 원본 벡터를 복원한다(식 3). WARP은 s = decompress(...)·q_i^T가 (C[c]·q_i^T) + Σ_d ω[...]·q_{i,d}로 분해됨을 이용한다(식 4). 첫 항은 candidate generation의 S_c,q 재사용이고, 둘째 항은 미리 계산한 υ = q ⊗ ω를 residual index로 조회하는 selective sum이다(식 5). 이렇게 하면 복원 벡터를 명시적으로 만들지 않고 임의의 cluster를 O(1) 곱셈으로 scoring한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Two-stage reduction (식 6~8)</h3>
+      <p>stride를 key-value 쌍의 목록으로 보고 reduce(r, S1, S2)를 정의한다. token-level reduction은 같은 key에 대해 max를 취하고(식 6), document-level reduction은 값을 더하되 한쪽이 비어 있으면 대응 구간의 missing similarity 합을 더한다(식 8). document-level reduction은 크기를 키워가며 식 7을 재귀 적용해 S_{1,query_maxlen}을 얻는다. 구현은 병합의 이진 트리를 구성하고 두 개의 scratch buffer를 번갈아 써 추가 할당을 피하며, 식 8은 prefix sum(running total)으로 계산한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Index 및 residual 구조</h3>
+      <p>residual은 128개 차원 각각을 b-bit index로 인코딩한 128·(b/8)개의 8-bit 값 시퀀스로 저장한다(b=4면 한 8-bit 값에 2개 index). 각 index는 크기 2^b의 bucket weight 벡터 ω 항목을 조회해 centroid를 차원별로 보정한다. bucket 경계와 대표값은 경험적 분포의 quantile로 정한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋과 지표</h3>
+      <p>BEIR 6종(NFCorpus, SciFact, SCIDOCS, Quora, FiQA-2018, Touché-2020)과 LoTTE 6종(Lifestyle, Recreation, Writing, Technology, Science, Pooled)에서 평가한다(Table 1, 총 12개 테스트셋). 지표는 LoTTE의 Success@5, BEIR의 nDCG@10, (normalized) Recall@100/Recall@k, end-to-end latency(ms), index size(GiB)이다. hyperparameter·병목 분석에는 별도의 development set을 사용한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상(baseline)</h3>
+      <p>주 비교 대상은 XTRbase/ScaNN(참조 구현 opt=False와 논문이 최적화한 opt=True, k&#x27;=1000 및 k&#x27;=40000)과 ColBERTv2/PLAID이며, 문헌 보고값과의 비교로 EMVB를 다룬다. quality 비교에는 BM25, ColBERT, GTRbase, Spladev2, ColBERTv2, GTRxxl, XTRxxl을, index size 비교에는 BruteForce, FAISS, ScaNN을 포함한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>측정 환경</h3>
+      <p>서버는 28코어 Intel Xeon Gold 6132 @ 2.6 GHz(코어당 2스레드, 총 56스레드)와 500 GB RAM을 사용한다. latency는 모든 query 평균의 3회 시행 최소 평균으로 보고하며, 별도 언급이 없으면 단일 스레드 CPU에서 측정한다. XTR의 token retrieval은 ScaNN이 AVX2 지원 x86의 단일 스레드용으로 설계되어 GPU 가속 이점을 받지 못한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>end-to-end latency: XTR·PLAID 대비 대폭 개선</h3>
+      <p>LoTTE Pooled에서 XTRbase/WARP(nprobe=32)는 단일 스레드로 171ms를 기록하여, XTR 참조 구현(opt=False, k&#x27;=40000)의 6862ms 대비 약 41x, ColBERTv2/PLAID(k=1000)의 476ms 대비 약 3x 빠르다(Figure 1).</p>
+      <span class="source-ref">PDF p. 1, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>quality 유지 (LoTTE, BEIR)</h3>
+      <p>LoTTE Success@5에서 WARP 평균 70.3으로 최적화된 ScaNN(k&#x27;=40000) 평균 69.8보다 높으면서, dataset별 speedup은 LoTTE Lifestyle 4.6x에서 LoTTE Pooled 12.8x에 이른다(Table 2). BEIR nDCG@10에서도 WARP 평균 45.0으로 ScaNN 44.8과 대등하거나 약간 높으며 2.7x~6x speedup을 보인다(Table 3). 즉 latency를 크게 줄이면서 retrieval quality를 유지한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>index size 축소</h3>
+      <p>12개 테스트셋 합계 index size는 WARP(b=4) 95.51 GiB로 BruteForce 700.66 대비 7.3x, ScaNN 190.52 대비 2x 작다. WARP(b=2)는 52.48 GiB로 FAISS(66.98)보다 작으면서 품질이 더 낫다. abstract는 이를 XTR(ScaNN) 대비 2x~4x 축소로 요약한다(Table 4).</p>
+      <span class="source-ref">PDF p. 1, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>scalability와 병렬화</h3>
+      <p>WARP의 latency는 대체로 데이터셋 크기(embedding 수)의 제곱근에 비례해 확장되는데, cluster 수가 설계상 데이터셋 크기의 제곱근에 비례하기 때문이다(Figure 8a). 또한 multi-threading으로 효과적으로 병렬화되어 nprobe=32, 16 threads에서 3.1x speedup을 달성한다(Figure 8b). 16-thread 구성에서는 LoTTE Pooled에서 GPU 기반 PLAID 구현을 능가한다(Figure 10).</p>
+      <span class="source-ref">PDF p. 7, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>병목의 이동: query encoding</h3>
+      <p>WARP 단일 스레드 총 latency는 BEIR NFCorpus 58ms, LoTTE Lifestyle 73ms, LoTTE Pooled 171ms이며, 이제 query encoding이 가장 큰 비중을 차지한다(Figure 9). specialized inference runtime을 쓰지 않으면 query encoding이 실행 시간의 약 절반을 차지한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>일반화와 EMVB 비교</h3>
+      <p>query encoding을 ColBERTv2로 교체한 ColBERTv2/WARP(nprobe=32)는 BEIR nDCG@10 평균 44.3으로 ColBERTv2/PLAID(k=1000) 44.1과 경쟁력 있어, XTR 이외 모델로의 일반화 가능성을 시사한다(Table 5). EMVB와의 비교에서는 WARP가 ColBERTv2/PLAID 대비 4.3x(95ms 대 405ms), EMVB는 2.9x(142ms 대 411ms)를 보고하나 하드웨어·encoder 설정이 달라 직접 비교는 어렵고, 저자는 두 접근을 대체로 orthogonal하다고 본다.</p>
+      <span class="source-ref">PDF p. 7, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 향후 과제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>WARP은 ColBERTv2/PLAID와 XTR 프레임워크 위에 구축된 고도 최적화 multi-vector retrieval 엔진으로, WARPSELECT(동적 missing similarity imputation), implicit decompression, C++ kernel 기반 two-stage reduction의 세 혁신으로 기존 시스템의 비효율을 해소한다. 그 결과 LoTTE Pooled에서 XTR 대비 41x(6초 이상에서 171ms로), ColBERTv2/PLAID 대비 3x의 latency 개선을 quality 저하 없이 달성하고, thread 수에 따라 잘 확장되며 memory footprint가 작아 자원 제약 환경 배포에 적합하다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 과제</h3>
+      <p>저자는 SIMD·GPU 가속, 더 경량화된 query encoding, WARP를 활용한 end-to-end training을 향후 과제로 제시한다. 또한 re-ranking·exhaustive 접근과의 광범위한 비교, XTR 이외 모델로의 일반화에 대한 상세 분석도 future work로 남긴다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>WARP 전체 검색 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>WARP retrieval의 네 단계(query encoding, WARPSELECT 기반 candidate generation, implicit decompression, two-stage reduction scoring)와 index(centroid·quantized residual) 재사용 관계를 보여준다. WARPSELECT와 decompression은 동일한 query-centroid score를 공유한다.</p>
+              <div class="mermaid">
+flowchart LR
+  Q[Query text] --&gt; E[Query Encoding&lt;br/&gt;T5 token embeddings]
+  E --&gt; W[WARPSELECT&lt;br/&gt;candidate generation and&lt;br/&gt;missing similarity]
+  W --&gt; D[Implicit Decompression&lt;br/&gt;reuse centroid scores]
+  D --&gt; S[Scoring&lt;br/&gt;two-stage reduction]
+  S --&gt; R[Top-k passages]
+  IDX[(WARP Index&lt;br/&gt;centroids and residuals)] -.-&gt; W
+  IDX -.-&gt; D
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 XTR/ScaNN 대비 WARP 파이프라인 비교</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>기존 XTR 참조 구현/ScaNN은 큰 k&#x27;로 token을 검색하고 명시적 score matrix를 만든 뒤 Python으로 scoring하여 병목이 발생한다. WARP은 WARPSELECT로 gathering을 회피하고, PLAID식 implicit decompression으로 벡터 복원을 피하며, C++ kernel의 two-stage reduction으로 점수를 집계한다. 두 파이프라인은 비슷한 retrieval quality를 유지하되 latency에서 크게 차이 난다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph PRIOR[XTR reference and ScaNN]
+    direction TB
+    A1[Token Retrieval&lt;br/&gt;ANN with large k prime] --&gt; A2[Build explicit&lt;br/&gt;score matrix]
+    A2 --&gt; A3[Scoring in Python&lt;br/&gt;major bottleneck]
+  end
+  subgraph PROPOSED[WARP engine]
+    direction TB
+    B1[WARPSELECT&lt;br/&gt;avoids gathering] --&gt; B2[Implicit Decompression&lt;br/&gt;reuse centroid scores]
+    B2 --&gt; B3[Two-stage reduction&lt;br/&gt;in C++ kernel]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>LoTTE Pooled 단일 스레드 end-to-end latency 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 1 · Figure 1 · LoTTE Pooled, 단일 스레드 CPU end-to-end latency
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>12개 테스트셋 합계 index size 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 4 · 6개 BEIR + 6개 LoTTE 테스트셋 index size 합계, 총 1.44B tokens
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>WARP 단일 스레드 총 latency (nprobe=32)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Figure 9 · XTRbase/WARP, nprobe=32, 단일 스레드, 테스트셋
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>WARP 16-thread 총 latency (nprobe=32)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Figure 10 · XTRbase/WARP, nprobe=32, n_threads=16, 테스트셋(decompression/scoring 단계 fused)
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>동일한 query-centroid relevance score를 candidate generation, missing similarity imputation, decompression에 재사용하는 설계가 우아하며, 중복 계산을 제거해 알고리즘적 효율의 핵심을 이룬다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>PLAID의 압축·pruning과 XTR의 gathering 회피라는 고립되어 있던 두 통찰을 하나의 엔진으로 통합한 점이 개념적 기여로 크다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정확도(quality)를 유지하면서 latency와 index size를 동시에 줄여, 속도-품질-메모리의 삼자 trade-off를 완화한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>SIMD/GPU 없이 단일 스레드 CPU 중심 설계로도 16-thread 구성에서 GPU 기반 PLAID를 능가하여, 실제 배포 친화적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>저자는 WARP이 t&#x27;와 nprobe 변동에 robust하고, t&#x27;를 데이터셋 크기의 제곱근에 비례시키면 일관되게 좋은 결과를 얻는다고 보고하여 운영 부담이 낮다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>query encoding을 ColBERTv2로 교체한 예비 실험에서 PLAID와 경쟁력 있는 nDCG@10을 보여, XTR 전용 설계를 넘어설 일반화 잠재력을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>XTR가 제공하던 &#x27;참 relevance score의 자연 상한(natural upper bound)&#x27;이 WARPSELECT의 임계값 기반 imputation에서는 더 이상 보장되지 않는다(각주 8).</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>WARP에서는 query encoding이 end-to-end retrieval의 주된 병목이며, specialized inference runtime을 쓰지 않으면 실행 시간의 약 절반을 차지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>평가를 주로 XTR/ScaNN baseline 비교로 한정했고, re-ranking이나 exhaustive 접근에 대한 광범위한 평가는 future work로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>WARP은 SIMD/GPU 가속을 사용하지 않으며, GPU 구현과 SIMD 기반 가속(EMVB 통합)은 future work로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>XTR 이외 모델(ColBERTv2)로의 일반화는 예비적으로만 평가했으며, 상세 분석은 future work로 미뤘다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>WARPSELECT는 데이터셋 크기별 임계값 t&#x27;와 nprobe에 의존한다. 논문은 robust하다고 하지만, 평가되지 않은 새로운 도메인·분포에서는 재조정이 필요할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>자연 상한이 사라졌으므로 이론적으로 missing similarity 추정이 참 점수를 과대평가할 여지가 있고, 그 영향은 평가된 12개 데이터셋 밖에서 달라질 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>EMVB와의 비교가 서로 다른 하드웨어·encoder 설정에서 이뤄져, 두 방법의 상대 우열을 직접 결론짓기는 어렵다(저자도 orthogonal로 규정).</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>latency가 데이터셋 크기의 제곱근에 비례하지만 index는 in-memory로 centroid·residual을 저장하므로, 초대규모(수십억+ token) 컬렉션에서의 절대 메모리·latency는 별도 검증이 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>자연 상한(natural upper bound)의 제거가 평가되지 않은 도메인·분포에서 retrieval quality에 어떤 영향을 주는가?</h3>
+              </div>
+              <p>각주 8에서 상한이 더 이상 보장되지 않는다고만 명시하고 그 quality 영향은 12개 데이터셋 밖에서 검증되지 않았다.</p>
+              <span class="source-ref">PDF p. 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>새로운 주 병목인 query encoding을 SIMD/GPU 가속이나 경량 encoder로 얼마나 더 줄일 수 있는가?</h3>
+              </div>
+              <p>저자가 query encoding을 주 병목으로 지목하고 관련 가속을 future work로 제시했다.</p>
+              <span class="source-ref">PDF p. 7, 8, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>WARP이 ColBERTv2 등 XTR 이외의 late-interaction 모델에 얼마나 잘 일반화되는가?</h3>
+              </div>
+              <p>Table 5의 예비 결과는 경쟁력을 보이나 상세 분석은 future work로 미뤄졌다.</p>
+              <span class="source-ref">PDF p. 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>WARP의 retrieval 과정에 맞춘 end-to-end training이 모델의 quality나 효율을 개선하는가?</h3>
+              </div>
+              <p>conclusion에서 WARP 기반 end-to-end training을 future work로 언급했다.</p>
+              <span class="source-ref">PDF p. 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>re-ranking·exhaustive 접근 대비 WARP의 효율-정확도 위치는 어디인가?</h3>
+              </div>
+              <p>평가를 XTR/ScaNN baseline으로 한정하고 광범위한 비교를 future work로 남겼다.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>WARP과 EMVB의 SIMD 기반 가속을 통합하면 실제로 orthogonal한 이득이 누적되는가?</h3>
+              </div>
+              <p>저자가 두 접근을 largely orthogonal로 보고 SIMD 통합을 향후 방향으로 제안했다.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Multi-vector retrieval / Late interaction</dt>
+              <dd>
+                query와 document를 각각 여러 token 벡터로 표현하고 token 간 상호작용으로 유사도를 계산하는 dense retrieval 계열. single-vector보다 표현력이 크다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ColBERT / ColBERTv2</dt>
+              <dd>
+                late interaction을 도입한 대표 모델(ColBERT)과, supervision 개선 및 residual compression을 더한 개선판(ColBERTv2).
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PLAID</dt>
+              <dd>
+                ColBERTv2를 residual 표현으로 비관련 passage를 pruning하고 C++ kernel로 가속한 late interaction 검색 엔진.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>XTR (ConteXtualized Token Retriever)</dt>
+              <dd>
+                별도의 gathering stage를 제거하고 scoring을 단순화하는 training objective를 도입한 multi-vector retrieval 모델.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim scoring (식 1)</dt>
+              <dd>
+                각 query token에 대해 document token과의 최대 유사도를 취한 뒤 query token들에 걸쳐 합산하는 late interaction scoring.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Missing similarity imputation</dt>
+              <dd>
+                token retrieval에서 검색되지 않은 (query token, document) 쌍의 점수를 추정값 m_i로 채우는 기법.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>WARPSELECT</dt>
+              <dd>
+                누적 cluster size 임계값 t&#x27;를 이용해 missing similarity 추정을 candidate generation에 통합하는 WARP의 알고리즘.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Implicit decompression</dt>
+              <dd>
+                residual을 명시적으로 복원하지 않고 query-centroid score 재사용과 selective sum으로 점수를 계산하는 기법.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Residual compression / Quantization</dt>
+              <dd>
+                token 벡터를 가장 가까운 centroid와의 차이(residual)로 두고 각 차원을 b-bit로 양자화해 저장하는 압축.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Centroid / k-means clustering</dt>
+              <dd>
+                document token embedding을 군집화해 얻는 대표 벡터(centroid)와 그 군집화 방법. cluster 수는 데이터셋 크기의 제곱근에 비례.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>n_probe</dt>
+              <dd>
+                query token마다 decompress 대상으로 선택하는 cluster(centroid)의 수 하이퍼파라미터(권장 32).
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>t&#x27; (threshold)</dt>
+              <dd>
+                WARPSELECT에서 missing similarity를 정할 때 사용하는 누적 cluster size 임계값. 데이터셋 크기의 제곱근에 비례해 설정.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>b (bits per dimension)</dt>
+              <dd>
+                residual 각 차원을 인코딩하는 비트 수. 보통 b=4로 32-bit float 대비 8x 압축.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Two-stage reduction</dt>
+              <dd>
+                token-level max reduction과 document-level sum reduction으로 stride 점수를 집계하는 WARP scoring 과정.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>k&#x27; (retrieved tokens)</dt>
+              <dd>
+                XTR/ScaNN에서 ANN backend로부터 검색하는 token 후보 수. 값이 클수록 token retrieval 비용이 커진다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ScaNN / FAISS</dt>
+              <dd>
+                근사 최근접(ANN) 벡터 검색 라이브러리. XTR baseline과 index size 비교에 사용.
+                <span class="source-ref">PDF p. 3, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>BEIR / LoTTE</dt>
+              <dd>
+                zero-shot IR 평가 벤치마크(BEIR)와 out-of-domain long-tail 검색 평가 벤치마크(LoTTE).
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@10 / Success@5 / Recall@100</dt>
+              <dd>
+                각각 BEIR·LoTTE·recall 평가에 쓰인 검색 정확도 지표.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Figure 6·7·8a 등 그래프의 정확한 축 수치(특정 t&#x27;/nprobe에서의 nRecall@100 값, Figure 8a의 절대 latency 값 등)는 그래프에서 정밀하게 판독할 수 없어 본문에 명시된 경향만 반영했다.</li><li>BEIR에서의 Recall@100 개선은 본문에서 &#x27;substantial gains&#x27;로만 언급되고 지면 제약으로 구체 수치가 생략되어 정량값을 확인할 수 없다(page 7).</li><li>Figure 1의 XTRbase/ScaNN(opt=True, k&#x27;=40000) 2155ms는 extraction.json 본문 요약에는 없으나 source.txt의 Figure 1(page 1)에서 직접 확인해 latency 비교 차트에 포함했다.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "LoTTE Pooled 단일 스레드 end-to-end latency 비교", "labels": ["XTRbase/ScaNN (opt=False, k'=40000)", "XTRbase/ScaNN (opt=True, k'=40000)", "ColBERTv2/PLAID (k=1000)", "XTRbase/WARP (nprobe=32)"], "values": [6862, 2155, 476, 171], "unit": "ms", "xLabel": "시스템 구성", "yLabel": "Latency"}, {"canvasId": "chart-1", "type": "bar", "title": "12개 테스트셋 합계 index size 비교", "labels": ["BruteForce", "FAISS", "ScaNN", "WARP (b=2)", "WARP (b=4)"], "values": [700.66, 66.98, 190.52, 52.48, 95.51], "unit": "GiB", "xLabel": "구현", "yLabel": "Index size"}, {"canvasId": "chart-2", "type": "bar", "title": "WARP 단일 스레드 총 latency (nprobe=32)", "labels": ["BEIR NFCorpus", "LoTTE Lifestyle", "LoTTE Pooled"], "values": [58, 73, 171], "unit": "ms", "xLabel": "데이터셋", "yLabel": "Latency"}, {"canvasId": "chart-3", "type": "bar", "title": "WARP 16-thread 총 latency (nprobe=32)", "labels": ["BEIR NFCorpus", "LoTTE Lifestyle", "LoTTE Pooled"], "values": [18, 23, 54], "unit": "ms", "xLabel": "데이터셋", "yLabel": "Latency"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Paper Review Library</title>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-hover: #182231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --passed: #87d7a5;
+      --warning: #f6c177;
+      --failed: #ff8f8f;
+      --unverified: #aeb8c6;
+      --max-width: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.3rem, 6vw, 4.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+    }
+
+    .hero-description {
+      max-width: 720px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .statistics {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .stat {
+      padding: 8px 13px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    main {
+      padding: 42px 0 80px;
+    }
+
+    .paper-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
+    }
+
+    .paper-card {
+      display: flex;
+      min-height: 360px;
+      flex-direction: column;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      transition:
+        transform 160ms ease,
+        border-color 160ms ease,
+        background 160ms ease;
+    }
+
+    .paper-card:hover {
+      transform: translateY(-3px);
+      border-color: #42628c;
+      background: var(--surface-hover);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 700;
+    }
+
+    .status-passed {
+      background: rgba(135, 215, 165, 0.14);
+      color: var(--passed);
+    }
+
+    .status-warning {
+      background: rgba(246, 193, 119, 0.14);
+      color: var(--warning);
+    }
+
+    .status-failed {
+      background: rgba(255, 143, 143, 0.14);
+      color: var(--failed);
+    }
+
+    .status-unverified {
+      background: rgba(174, 184, 198, 0.13);
+      color: var(--unverified);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      line-height: 1.3;
+      letter-spacing: -0.025em;
+    }
+
+    h2 a:hover {
+      color: var(--accent);
+    }
+
+    .authors {
+      margin: 14px 0 0;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    .metadata {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .summary {
+      display: -webkit-box;
+      margin: 22px 0;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 0.94rem;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 5;
+    }
+
+    .open-link {
+      margin-top: auto;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .empty-state {
+      padding: 70px 28px;
+      border: 1px dashed var(--border);
+      border-radius: 18px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .paper-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .paper-card {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Library</p>
+      <h1>Paper Review</h1>
+
+      <p class="hero-description">
+        원본 논문을 기반으로 생성한 구조화된 분석 보고서입니다.
+        각 보고서에는 핵심 주장, 동작 구조, 정량 결과와 출처가 포함됩니다.
+      </p>
+
+      <div class="statistics">
+        <span class="stat">논문 2편</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <div class="paper-grid">
+      
+    <article class="paper-card">
+      <div class="card-top">
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <h2>
+        <a href="papers/colbertsar/">
+          ColBERTSaR: Sparsified ColBERT Index via Product Quantization
+        </a>
+      </h2>
+
+      <p class="authors">Eugene Yang, Andrew Yates, Dawn Lawrie, James Mayfield, Saron Samuel, Rohan Jha</p>
+      <p class="metadata">2026 · SIGIR &#x27;26 (49th International ACM SIGIR Conference), Melbourne, VIC, Australia; arXiv:2606.05568v1 [cs.IR]</p>
+
+      <p class="summary">
+        ColBERTSaR는 ColBERT 계열 multi-vector dense retrieval의 핵심 확장성(scalability) 문제인 거대한 index 크기를, PLAID가 저장하던 residual 벡터를 완전히 제거하는 residual-free product quantization으로 해결한다. 저자들은 MaxSim 점수를 anchor(centroid)와 query token의 내적만으로 근사하는 Score_S(Equation 3)를 유도하고, 이 식이 anchor를 sparse vocabulary로 보는 dynamic TF-IDF 형태임을 보여 embedding quantization을 적용한 ColBERT가 scoring mechanism을 제외하면 learned sparse retrieval(LSR)과 이론적으로 동등함을 확립한다. 구현은 retrieval 모델을 재학습하지 않는 PLAID의 drop-in replacement로서, K-means로 학습한 anchor에 각 문서 토큰을 할당해 inverted index와 forward index를 만들고 nprobe 기반 2단계 검색을 수행한다. proof-of-concept 실험에서 ColBERTSaR index는 1-bit PLAID 대비 50~70% 작으면서 monolingual(BEIR), CLIR·MLIR(NeuCLIRBench, NeuCLIRTech)에서 경쟁적인 retrieval 효과성을 유지한다.
+      </p>
+
+      <a class="open-link" href="papers/colbertsar/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="paper-card">
+      <div class="card-top">
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <h2>
+        <a href="papers/warp/">
+          WARP: An Efficient Engine for Multi-Vector Retrieval
+        </a>
+      </h2>
+
+      <p class="authors">Jan Luca Scheerer, Matei Zaharia, Christopher Potts, Gustavo Alonso, Omar Khattab</p>
+      <p class="metadata">2025 · SIGIR &#x27;25 (Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval), Padua, Italy</p>
+
+      <p class="summary">
+        WARP는 XTR(ConteXtualized Token Retriever) objective로 학습된 multi-vector retrieval 모델을 위한 고성능 검색 엔진(retrieval engine)이다. ColBERTv2/PLAID의 residual 압축·pruning 기법과 XTR 아키텍처에 맞춘 세 가지 혁신, 즉 (1) 누적 cluster size 기반으로 missing similarity를 동적으로 채우는 WARPSELECT, (2) retrieval 중 벡터를 명시적으로 복원하지 않는 implicit decompression, (3) 명시적 score matrix 없이 점수를 합치는 two-stage reduction을 결합한다. 여기에 고도로 최적화된 C++ kernel과 전용 inference runtime을 더해, LoTTE Pooled 기준 XTR 참조 구현 대비 end-to-end latency를 약 41배 줄이고(6초 이상에서 171ms로, 단일 스레드), ColBERTv2/PLAID 대비 약 3배 빠르면서도 retrieval quality를 유지한다. 또한 XTR(ScaNN) 대비 index size를 2~4배 줄여 메모리 제약 환경에서의 배포를 가능하게 한다.
+      </p>
+
+      <a class="open-link" href="papers/warp/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      AI 생성 분석은 원문 및 독립 검증 결과와 함께 확인해야 합니다.
+    </div>
+  </footer>
+</body>
+</html>
