@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Efficient Constant-Space Multi-Vector Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Efficient Constant-Space Multi-Vector Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Sean MacAvaney (University of Glasgow, UK), Antonio Mallia (Pinecone, US), Nicola Tonellotto (University of Pisa, Italy)</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2504.01818v1, cs.IR)</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>이 논문은 ColBERT로 대표되는 multi-vector retrieval의 핵심 약점인 저장 공간(storage) 비용 문제를 해결하는 ConstBERT를 제안한다. 기존 ColBERT는 문서의 모든 토큰마다 벡터를 하나씩 저장하기 때문에 문서 길이에 비례해 인덱스가 커지는데, ConstBERT는 학습된 선형 투영 계층(projection layer) W를 도입하여 M개의 토큰 임베딩을 문서 길이와 무관한 고정된 C개(C&lt;M)의 문서 수준 임베딩 δ1,...,δC로 pooling한다. 이렇게 하면 late interaction 점수 계산 방식은 그대로 유지하면서도 문서당 저장 임베딩 수가 M/C 배만큼 줄어들어, 인덱스 크기와 질의 처리 시간이 함께 감소한다. 또한 문서당 벡터 수가 항상 일정하므로 디스크 상에서 고정 크기 표현이 되어 OS 페이징(paging) 정렬과 reranking 통합이 쉬워진다. MSMARCO 및 13개 BEIR 데이터셋 실험에서, 저자들은 원래 효과성의 대부분을 유지하면서도 동등한 효과성 기준에서 ColBERT 대비 인덱스 크기를 50% 이상 줄일 수 있음을 보였다. 특히 제안 설정인 ConstBERT32는 인덱스 크기를 22GB에서 11GB로 절반으로 줄이면서 MRR@10과 NDCG@10에서 ColBERT와 근접한 성능을 유지한다.</p>
+      <span class="source-ref">PDF p. 1, 3, 4, 5, 6, 7</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ConstBERT는 학습된 선형 투영 W로 M개 토큰 임베딩을 문서당 고정된 C개(C&lt;M) 임베딩으로 pooling하여, late interaction 구조는 유지하면서 문서당 저장 임베딩 수를 M/C 배 줄인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>제안 설정 ConstBERT32는 MSMARCO 인덱스를 22GB에서 11GB로 절반으로 줄이면서 Dev MRR@10 39.04(ColBERT 39.99)로 근접한 효과성을 유지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>BEIR 13개 데이터셋 전반에서 동등한 효과성 기준으로 ColBERT 대비 인덱스 크기를 50% 이상 일관되게 줄인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ESPLADE + ConstBERT32 2단계 reranking은 Dev MRR@10 39.52를 4.95ms에 달성하여 51.25ms의 PLAID ColBERT와 근접한 효과성을 훨씬 낮은 지연시간으로 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>문서당 벡터 수가 항상 일정하므로 고정 크기 표현이 되어 정렬된 메모리 읽기와 OS 페이징 정렬, reranking 통합이 쉬워진다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>토큰 단위 저장으로 인한 과도한 인덱스 크기</h3>
+      <p>ColBERT 계열의 multi-vector retrieval은 검색 지연시간(latency)과 효과성(effectiveness) 사이에서 우수한 trade-off를 제공하지만, 입력 컬렉션의 모든 토큰마다 (압축되었더라도) 벡터를 하나씩 저장해야 하므로 저장 공간(storage) 비용이 매우 크다. 인덱스 크기가 문서의 토큰 수에 선형적으로 비례하기 때문에, 대규모 컬렉션에서는 저장 및 메모리 부담이 실용성을 제약한다. 본 논문은 문서를 더 이상 입력 토큰 수에 종속되지 않는 고정된 개수의 벡터(fixed number of vectors)로 인코딩하여 이 문제를 해결하고자 한다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>고정 크기 표현이 주는 시스템 수준 이점</h3>
+      <p>저장 공간 절감뿐 아니라, 문서 표현이 디스크 상에서 고정된 크기(fixed size)를 가지게 되면 OS의 페이징(paging) 관리를 더 효율적으로 할 수 있다는 동기가 있다. 또한 문서당 벡터 개수가 고정되면 정렬된 메모리 읽기(aligned memory reads)가 가능해지고, ConstBERT를 reranking 방법으로 사용하기 쉬워져 초기 검색 시스템과의 통합이 단순해진다. 이러한 공간 절감은 차원 축소(dimensionality reduction) 등 다른 기법과도 상호 보완적(orthogonal)이다.</p>
+      <span class="source-ref">PDF p. 1, 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ColBERT: 높은 효과성, 높은 비용</h3>
+      <p>ColBERT는 텍스트당 단일 벡터를 쓰는 bi-encoder와 달리 토큰마다 벡터를 사용하여 더 풍부한 의미를 포착하고 단일 표현(single representation) 방식보다 더 효과적인 결과를 낸다. 그러나 그 대가로 응답 시간(response time)과 메모리 사용량이 더 높다는 한계가 있다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColBERTv2 / PLAID: 압축은 검색 효율을 희생</h3>
+      <p>ColBERTv2는 centroid 기반 압축(가장 가까운 centroid ID 기록 + residual 압축)으로 멀티벡터 임베딩의 저장 요구량을 줄이지만, 이 압축 전략은 검색(retrieval)을 상당히 덜 효율적으로 만든다. PLAID는 centroid interaction과 centroid pruning으로 검색 지연을 다시 줄이지만, 근본적으로 토큰 단위 저장 구조 자체는 유지된다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MUVERA: 속도-저장 공간 trade-off</h3>
+      <p>MUVERA는 Fixed Dimensional Encodings(FDEs)와 MIPS(Maximum Inner Product Search) 연산을 통해 PLAID를 잘 근사하여 검색 속도를 높인다. 그러나 이는 크고 고차원적인(large high-dimensional) 벡터를 사용해야만 가능하며, 그 결과 메모리 소비가 상당히 커져 검색 속도와 저장 효율성 사이에 여전히 trade-off가 존재한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Pruning / Token Pooling 계열</h3>
+      <p>Static Pruning(Acquavia et al.)은 영향이 적은 토큰의 임베딩을 가지치기하여 저장 요구량을 줄이고, Token Pooling(Clavié et al.)은 인덱싱 시점에 유사 토큰 임베딩을 클러스터링·풀링하여 벡터 수를 낮춘다. 이들은 모델 수정 없이 저장을 줄이지만, 문서마다 남는 벡터 수가 가변적이어서 문서당 고정 크기 표현이라는 시스템 이점은 제공하지 못한다(분석자 정리).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ConstBERT 제안</h3>
+      <p>각 문서를 고정된, 더 작은 수의 학습된 임베딩(learned embeddings) 집합으로 인코딩하여 multi-vector retrieval의 저장 공간(storage footprint)을 줄이는 새로운 접근법 ConstBERT를 제안한다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습된 pooling 메커니즘</h3>
+      <p>M개의 토큰 임베딩을 C개(C&lt;M)의 고정된 문서 수준(document-level) 임베딩으로 사상하는 학습된 pooling 메커니즘, 즉 선형 투영 계층 W ∈ R^(Mk×Ck)를 도입한다. 각 임베딩은 문서의 서로 다른 semantic facet을 포착하도록 end-to-end로 학습된다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>reranking 통합 용이성과 직교적 공간 절감</h3>
+      <p>문서당 고정 수의 벡터를 사용함으로써 ConstBERT를 reranking 방법으로 쓰기 쉬워지고 초기 검색 시스템과의 통합이 단순해진다. 또한 이 공간 절감은 차원 축소 등 다른 기법과 직교적이며, 문서당 공간 점유를 메모리 페이지 크기에 맞춰 OS의 메모리 관리를 더 효율적으로 활용할 수 있게 한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실증적 검증</h3>
+      <p>MSMARCO 및 13개 BEIR 데이터셋 실험을 통해, 문서를 고정 수의 벡터로 인코딩하면서도 원래 효과성의 대부분을 유지할 수 있으며, 동등한 효과성 기준에서 ColBERT 대비 인덱스 크기를 50% 이상 줄일 수 있음을 보였다.</p>
+      <span class="source-ref">PDF p. 1, 5, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>기본 아이디어: heuristic pooling을 learned pooling으로 교체</h3>
+      <p>기존 late interaction에서 각 질의 토큰에 대한 max 연산은 문서 토큰 임베딩들에 대한 heuristic pooling으로 해석될 수 있다. ConstBERT는 이 heuristic pooling 대신, 모든 문서 토큰 임베딩 d1,...,dM을 학습된 선형 투영 W로 C개의 새로운 문서 수준 임베딩 δ1,...,δC로 pooling하는 learned pooling을 제안한다. 즉 문서 표현이 토큰 정렬에서 학습된 semantic facet 집합으로 바뀐다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>점수 계산 구조는 그대로 유지</h3>
+      <p>late interaction 점수 s(q,d)는 각 질의 토큰 임베딩과 문서 임베딩 간 max 내적의 합으로 계산되는 구조를 그대로 유지한다. 다만 문서 측 임베딩 집합이 M개의 토큰 임베딩 대신 C개의 학습된 임베딩으로 대체되어, 문서당 저장 임베딩 수가 M/C 배만큼 감소한다. 이로써 디스크·메인 메모리 인덱스 크기와 질의 처리 시간이 함께 줄어든다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1. 토큰 임베딩 계산</h3>
+      <p>M개 토큰으로 구성된 문서 d에 대해, multi-representation dense IR 인코더(ColBERT와 동일 계열 base 모델)로 토큰별 임베딩 d1,...,dM을 계산한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2. 학습된 투영으로 고정 임베딩 생성</h3>
+      <p>학습된 선형 투영 계층 W를 적용하여 [δ1|···|δC] = W^T[d1|···|dM] 형태로 M개 토큰 임베딩을 C개(C&lt;M)의 고정 문서 수준 임베딩 δ1,...,δC로 변환한다. 각 δ는 문서의 서로 다른 semantic facet을 인코딩하며 이 계층은 학습 과정에서 end-to-end로 학습된다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3. 고정 임베딩만 인덱싱</h3>
+      <p>문서당 M개의 토큰 임베딩 대신 C개의 고정 임베딩만 인덱스에 저장하여, 저장 임베딩 수를 M/C 배만큼 줄이고 디스크 및 메인 메모리 상의 인덱스 크기를 감소시킨다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4. 질의 인코딩</h3>
+      <p>질의 q에 대해 N개의 질의 토큰 임베딩 q1,...,qN을 계산한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5. late interaction 점수 계산</h3>
+      <p>s(q,d) = Σ_{i=1}^N max_{j=1,...,C} q_i^T δ_j로 관련도 점수를 계산한다. 즉 각 질의 토큰 임베딩을 M개가 아닌 C개의 문서 임베딩과 매칭한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6. end-to-end 검색 또는 reranking 활용</h3>
+      <p>ConstBERT는 PLAID 엔진을 이용한 end-to-end 검색으로 사용되거나, BMP 또는 efficient SPLADE(ESPLADE) 같은 1단계 검색기가 생성한 후보 집합을 재순위화(reranking)하는 단계로 사용될 수 있다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>투영 계층 W와 scoring 함수</h3>
+      <p>핵심은 파라미터 W ∈ R^(Mk×Ck)를 갖는 단일 선형 변환이다. 여기서 k는 임베딩 차원이다. 입력은 M개 토큰 임베딩을 이어붙인 벡터이고, 출력은 C개 고정 임베딩을 이어붙인 벡터이다([δ1|···|δC] = W^T[d1|···|dM]). 이후 점수는 기존 ColBERT와 동일한 late interaction 형태 s(q,d) = Σ_i max_{j=1..C} q_i^T δ_j로 계산된다. 즉 알고리즘 자체는 간단하며, 핵심 변화는 문서 측 벡터 집합의 크기를 M(가변)에서 C(고정)로 바꾼 점이다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조와 C 파라미터</h3>
+      <p>인덱스에는 문서마다 정확히 C개의 임베딩이 저장되므로 모든 문서가 동일한 크기를 갖는다. 이 균일성(uniformity)이 정렬된 메모리 읽기와 OS 페이징 정렬을 가능하게 한다. 논문은 C=16, 32, 64, 128의 ConstBERT_C 모델군을 두어 효과성과 인덱스 크기 사이의 trade-off를 조정한다. C가 커질수록 효과성은 올라가지만 인덱스 크기도 커진다.</p>
+      <span class="source-ref">PDF p. 4, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋과 질의</h3>
+      <p>MSMARCO v1 passage corpus(약 8.8백만 passage)를 사용하며, MSMARCO Dev Queries와 TREC 2019/2020 Deep Learning Track 질의로 평가한다. 추가로 BEIR benchmark의 13개 데이터셋(arguana, cfever, dbpedia, fever, fiqa, hotpot, nf, nq, quora, scidocs, scifact, covid, touche)으로 강건성(robustness)을 검증한다.</p>
+      <span class="source-ref">PDF p. 4, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표</h3>
+      <p>효과성은 MSMARCO Dev에 MRR@10, TREC 및 BEIR에 NDCG@10을 사용하고 MSMARCO 실험에는 Recall@50/200/1000을 추가한다. 효율성은 Mean Response Time(MRT, ms)과 인덱스 크기(저장 공간)로 측정한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상과 플랫폼</h3>
+      <p>baseline은 토큰 단위 ColBERT(end-to-end는 PLAID 엔진 사용)이며, static pruning 변형 ColBERTSP, 단일 표현 모델 RetroMAE(BEIR/Table 2 비교)와 비교한다. reranking 실험에서는 ESPLADE와 BMP를 1단계 후보 생성기로 쓰고 ConstBERT32로 재순위화한다. DeeperImpact 등 다른 learned sparse 모델도 테스트해 &#x27;유사한 결과&#x27;를 얻었으나 지면 제약으로 주요 결과에는 미포함되었다. 모든 실험은 dual 2.8GHz Intel Xeon CPU, 256GiB RAM Linux 시스템에서 단일 스레드·인메모리로 수행되었다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MSMARCO: ConstBERT32가 절반 크기로 근접 성능</h3>
+      <p>ColBERT는 인덱스 22GB에 Dev MRR@10 39.99, TREC 2019 NDCG@10 74.64, TREC 2020 73.99이다. 제안 설정 ConstBERT32는 인덱스 11GB(약 절반)로 Dev MRR@10 39.04, TREC 2019 73.14, TREC 2020 73.29를 달성해 근접한 효과성을 유지한다. C를 키우면(ConstBERT64=20GB, ConstBERT128=40GB) 효과성이 ColBERT에 더 가까워지지만 인덱스가 커지고, 줄이면(ConstBERT16=5GB) MRR@10 37.84로 다소 떨어진다. static pruning ColBERTSP(14GB, MRR 39.12)는 여러 C 설정이 형성하는 저장-효과성 Pareto frontier 위에 놓인다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>BEIR: 50% 이상 저장 절감, 일부는 우위</h3>
+      <p>13개 BEIR 데이터셋에서 ConstBERT_C는 대부분의 태스크에서 ColBERT와 경쟁력 있는(때로는 더 높은) NDCG@10을 내면서 인덱스 크기를 동등한 효과성 기준으로 50% 이상 일관되게 줄인다. 예로 nq는 ColBERT 8.3GB → ConstBERT32 3.2GB로 줄면서 NDCG@10은 0.554→0.534로 근접하고, trec-covid는 ConstBERT32(0.745)가 ColBERT(0.705)보다 오히려 높다. 다만 quora는 예외적으로 ConstBERT32(0.6GB)·ConstBERT64(1.2GB)가 ColBERT(0.3GB)보다 큰데, 이는 문서가 매우 짧아 원래 토큰 수가 C보다 적기 때문으로 해석된다(분석자 추론).</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Reranking: 6ms 미만으로 ColBERT급 효과성</h3>
+      <p>ESPLADE 단독 검색은 Dev MRR@10 38.75를 3.07ms에 내지만, 여기에 ConstBERT32 reranking을 붙이면 MRR@10 39.52를 4.95ms에 달성하여, 51.25ms가 걸리는 PLAID ColBERT(39.99)에 근접한 효과성을 약 10분의 1 수준의 지연시간으로 얻는다. TREC 2019(NDCG@10 74.38 / 5.50ms)와 TREC 2020(74.33 / 5.23ms)에서도 모두 6ms 미만을 유지한다. 이는 고정 크기 표현이 reranking 시나리오에서 특히 유리함을 보여준다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>실험 결과는 고정 벡터 방식 ConstBERT가 검색 효과성과 저장 효율성의 균형을 효과적으로 맞춤을 보여준다. 문서를 고정된 소수의 학습 임베딩으로 인코딩함으로써 TREC 및 BEIR 벤치마크에서 경쟁력 있는 성능을 유지하면서도 인덱스 크기와 연산 요구를 크게 줄여, 저장 효율성과 검색 속도가 모두 중요한 실제 IR 응용에 확장 가능하고 실용적인 해법이 된다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 방향</h3>
+      <p>저자들은 late interaction 모델의 해석 가능성(interpretability) 연구를 ConstBERT처럼 토큰-벡터 정렬이 사라진 표현에 다시 적용하는 방법, 그리고 Pseudo-Relevance Feedback(PRF)와의 상호 보완 가능성을 향후 연구로 제시한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>문서 인코딩부터 고정 임베딩 인덱싱, 질의 late interaction, end-to-end 검색 또는 reranking 활용까지의 ConstBERT 파이프라인.</p>
+              <div class="mermaid">
+flowchart TB
+  A[문서 d: M개 토큰] --&gt; B[dense IR 인코더]
+  B --&gt; C[토큰 임베딩 d1..dM]
+  C --&gt; D[학습된 투영 W]
+  D --&gt; E[고정 임베딩 delta1..deltaC]
+  E --&gt; F[인덱스에 C개만 저장]
+  Q[질의 q: N개 토큰] --&gt; R[질의 임베딩 q1..qN]
+  F --&gt; S[late interaction: sum max qi·deltaj]
+  R --&gt; S
+  S --&gt; T[end-to-end 검색 PLAID]
+  S --&gt; U[reranking: ESPLADE 후보 재순위화]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>ColBERT vs ConstBERT 저장 구조 비교</h3>
+                <span class="source-ref">PDF p. 2, 3, 4</span>
+              </div>
+              <p>ColBERT는 토큰 수 M에 비례해 가변 개수의 벡터를 저장하는 반면, ConstBERT는 문서 길이와 무관하게 항상 C개의 고정 벡터를 저장한다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph ColBERT
+    A1[문서 토큰 M개] --&gt; A2[벡터 M개 저장]
+    A2 --&gt; A3[가변 크기 인덱스]
+  end
+  subgraph ConstBERT
+    B1[문서 토큰 M개] --&gt; B2[투영 W]
+    B2 --&gt; B3[벡터 C개 고정 저장]
+    B3 --&gt; B4[고정 크기 인덱스]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>MSMARCO 인덱스 크기 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 1 · MSMARCO v1 전체 컬렉션(약 8.8M passages)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MSMARCO Dev MRR@10 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 1 · MSMARCO Dev Queries
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>TREC 2019 NDCG@10 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 1 · TREC 2019 DL track
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>TREC 2020 NDCG@10 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 1 · TREC 2020 DL track
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>reranking 설정별 Dev 응답시간(MRT)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 3 · MSMARCO Dev, top-10 검색, 단일 스레드
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>reranking 설정별 Dev MRR@10</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 3 · MSMARCO Dev, top-10 검색
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>BEIR nq 인덱스 크기 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 2 · BEIR nq 데이터셋
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>BEIR trec-covid NDCG@10 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-7"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 2 · BEIR trec-covid 데이터셋
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>late interaction 점수 계산 구조를 그대로 유지한 채 문서 측 벡터 집합만 학습된 고정 크기 표현으로 교체하여, 기존 ColBERT 파이프라인·평가 방식과의 호환성을 크게 해치지 않으면서 저장을 줄인 점이 실용적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>C를 16/32/64/128로 조절하는 것만으로 저장-효과성 trade-off를 명시적으로 제어할 수 있고, 목표 저장 예산에 맞춰 표현을 직접 튜닝할 수 있는 유연성을 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>문서당 벡터 수가 고정되어 정렬된 메모리 읽기와 OS 페이징 정렬이 가능해지므로, 단순 저장 절감을 넘어 시스템 수준의 구현·성능 이점을 얻을 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>reranking 시나리오에서 6ms 미만의 지연시간으로 PLAID ColBERT급 효과성에 근접하여, 저비용 1단계 검색기와의 결합에서 특히 강한 실용적 이점을 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>ConstBERT_C는 목표 고정 저장공간 표현으로 직접 튜닝할 수 있는 유연성을 주지만, 가중치 W를 학습하기 위한 재학습(re-training)이 필요한 반면 비교 대상 ColBERTSP(static pruning)는 재학습이 필요 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>학습된 임베딩이 더 이상 특정 토큰과 직접 정렬되지 않으므로, 토큰-표현 정렬에 기반한 late interaction 해석 가능성(interpretability) 연구를 그대로 적용하기 어렵다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>quora처럼 문서가 매우 짧아 원래 토큰 수가 C보다 작은 컬렉션에서는 고정 C개 벡터를 저장하는 방식이 오히려 ColBERT보다 인덱스를 키울 수 있어, 짧은 문서 위주 컬렉션에서는 저장 이점이 사라질 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>BEIR 결과에는 NDCG@10과 인덱스 크기만 보고되고 MRT(응답 시간)나 Recall이 없어, 다양한 도메인에서의 효율성 이점이 MSMARCO 밖에서도 유지되는지는 실증적으로 확인되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>고정 임베딩 δ가 실제로 서로 다른 semantic facet을 포착하는지, 그리고 토큰 정렬이 사라진 표현에서 late interaction을 어떻게 해석할 수 있는지?</h3>
+              </div>
+              <p>저자가 해석 가능성 연구 재검토를 향후 과제로 명시했으나 실증은 없음.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>ConstBERT의 고정 벡터 표현이 Pseudo-Relevance Feedback(PRF)과 상호 보완적으로 작동할 수 있는가?</h3>
+              </div>
+              <p>저자가 PRF와의 결합 가능성을 향후 방향으로 제시함.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>C=16/32/64/128 이외의 값이나 문서 길이 분포가 다른 컬렉션에서 최적의 C를 어떻게 선택할 것인가, 그리고 매우 짧은 문서에서는 어떤 대안이 필요한가?</h3>
+              </div>
+              <p>quora에서 저장 역전이 관찰되고, 다른 C 값 실험이 보고되지 않음.</p>
+              <span class="source-ref">PDF p. 6</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>BMP·DeeperImpact 등 다른 1단계 검색기와 결합했을 때의 정량적 효과성·지연시간은 어떠한가?</h3>
+              </div>
+              <p>논문은 &#x27;유사한 결과&#x27;라고만 언급하고 지면 제약으로 수치를 보고하지 않음.</p>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Multi-vector retrieval</dt>
+              <dd>
+                텍스트를 단일 벡터가 아니라 여러 개(전형적으로 토큰당 하나)의 벡터로 표현하여 더 풍부한 의미를 포착하는 검색 방식.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late interaction</dt>
+              <dd>
+                질의와 문서를 각각 독립적으로 인코딩한 뒤, 각 질의 토큰 임베딩과 문서 임베딩들 간 max 내적을 합산하여 관련도를 계산하는 ColBERT의 점수 방식.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ColBERT / ColBERTv2</dt>
+              <dd>
+                토큰 단위 임베딩과 late interaction을 사용하는 대표적 multi-vector 랭킹 모델. v2는 centroid 기반 residual 압축을 도입.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>학습된 pooling / 투영 계층 W</dt>
+              <dd>
+                M개 토큰 임베딩을 C개(C&lt;M) 고정 임베딩으로 사상하는 선형 변환 W ∈ R^(Mk×Ck). ConstBERT의 핵심 구성요소이며 end-to-end로 학습됨.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PLAID</dt>
+              <dd>
+                ColBERTv2의 검색 지연을 줄이기 위해 centroid interaction과 centroid pruning으로 저점수 문서를 조기 제거하는 효율적 late interaction 검색 엔진.
+                <span class="source-ref">PDF p. 2, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MUVERA / FDE</dt>
+              <dd>
+                Fixed Dimensional Encodings로 멀티벡터 유사도를 근사하여 MIPS 솔버를 쓰게 하는 방식. 속도는 빠르나 큰 고차원 벡터로 메모리 소비가 큼.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ESPLADE (efficient SPLADE)</dt>
+              <dd>
+                reranking 실험에서 1단계 후보를 생성하는 데 사용된 효율적 learned sparse 검색 모델.
+                <span class="source-ref">PDF p. 5, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MRR@10 / NDCG@10 / MRT</dt>
+              <dd>
+                MRR@10은 cutoff 10에서의 평균 역순위, NDCG@10은 cutoff 10에서의 정규화 누적이득, MRT는 평균 응답 시간(ms)으로 각각 효과성·효율성 지표.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>본 논문이 정식 게재될 학회/저널명은 본문에 명시되어 있지 않으며 arXiv:2504.01818v1(2025-04-02 제출) 프리프린트로만 확인됨.</li><li>DeeperImpact 등 다른 learned sparse 1단계 검색기 사용 시 &#x27;유사한 결과&#x27;라고만 언급되고 구체적 수치는 지면 제약으로 미보고됨(page 5).</li><li>Platform 단락에서 BMP가 후보 생성에 사용되었다고 언급되나 Table 3에는 ESPLADE 조합만 제시되고 BMP 조합 수치는 미보고됨(page 5, 7).</li><li>BEIR(Table 2)에는 NDCG@10과 인덱스 크기만 보고되며 Recall이나 MRT 수치는 없음.</li><li>ConstBERT16/64/128을 단독 end-to-end 검색기로 썼을 때의 MRT는 미보고이며, Table 3에는 ConstBERT32+ESPLADE reranking의 MRT만 제시됨.</li><li>투영 계층 W 학습의 구체적 하이퍼파라미터(학습률, epoch, batch size)나 학습 데이터 규모는 본문에 상세히 기술되지 않음.</li><li>C=16, 32, 64, 128 이외 C 값에 대한 실험 결과는 제시되지 않음.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "MSMARCO 인덱스 크기 비교", "labels": ["ColBERT", "ColBERTSP", "ConstBERT16", "ConstBERT32", "ConstBERT64", "ConstBERT128"], "values": [22, 14, 5, 11, 20, 40], "unit": "GB", "xLabel": "모델", "yLabel": "인덱스 크기"}, {"canvasId": "chart-1", "type": "bar", "title": "MSMARCO Dev MRR@10 비교", "labels": ["ColBERT", "ColBERTSP", "ConstBERT16", "ConstBERT32", "ConstBERT64", "ConstBERT128"], "values": [39.99, 39.12, 37.84, 39.04, 39.15, 39.53], "unit": "", "xLabel": "모델", "yLabel": "MRR@10 (0-100 scale)"}, {"canvasId": "chart-2", "type": "bar", "title": "TREC 2019 NDCG@10 비교", "labels": ["ColBERT", "ColBERTSP", "ConstBERT16", "ConstBERT32", "ConstBERT64", "ConstBERT128"], "values": [74.64, 74.42, 71.15, 73.14, 74.29, 74.37], "unit": "", "xLabel": "모델", "yLabel": "NDCG@10 (0-100 scale)"}, {"canvasId": "chart-3", "type": "bar", "title": "TREC 2020 NDCG@10 비교", "labels": ["ColBERT", "ColBERTSP", "ConstBERT16", "ConstBERT32", "ConstBERT64", "ConstBERT128"], "values": [73.99, 72.36, 73.75, 73.29, 73.47, 73.31], "unit": "", "xLabel": "모델", "yLabel": "NDCG@10 (0-100 scale)"}, {"canvasId": "chart-4", "type": "bar", "title": "reranking 설정별 Dev 응답시간(MRT)", "labels": ["ColBERT (PLAID)", "ESPLADE", "ESPLADE + ConstBERT32"], "values": [51.25, 3.07, 4.95], "unit": "ms", "xLabel": "설정", "yLabel": "Mean Response Time"}, {"canvasId": "chart-5", "type": "bar", "title": "reranking 설정별 Dev MRR@10", "labels": ["ColBERT (PLAID)", "ESPLADE", "ESPLADE + ConstBERT32"], "values": [39.99, 38.75, 39.52], "unit": "", "xLabel": "설정", "yLabel": "MRR@10 (0-100 scale)"}, {"canvasId": "chart-6", "type": "bar", "title": "BEIR nq 인덱스 크기 비교", "labels": ["ColBERT", "ConstBERT32"], "values": [8.3, 3.2], "unit": "GB", "xLabel": "모델", "yLabel": "인덱스 크기"}, {"canvasId": "chart-7", "type": "bar", "title": "BEIR trec-covid NDCG@10 비교", "labels": ["ColBERT", "ConstBERT32"], "values": [0.705, 0.745], "unit": "", "xLabel": "모델", "yLabel": "NDCG@10 (0-1 scale)"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
