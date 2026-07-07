@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MUVERA: Multi-Vector Retrieval via Fixed Dimensional Encodings</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>MUVERA: Multi-Vector Retrieval via Fixed Dimensional Encodings</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Laxman Dhulipala, Majid Hadian, Rajesh Jayaram, Jason Lee, Vahab Mirrokni</span>
+        <span><strong>출처</strong> · arXiv preprint (Preprint, under review); arXiv:2405.19504v1 [cs.DS]</span>
+        <span><strong>연도</strong> · 2024</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>ColBERT로 대표되는 다중 벡터(multi-vector, MV) 임베딩 모델은 토큰마다 하나의 임베딩을 생성하고 Chamfer Similarity(MaxSim)로 질의-문서 유사도를 계산하여 정보 검색(IR) 성능을 크게 높였지만, 임베딩 수가 수십~수백 배로 늘어나고 Chamfer 유사도가 비선형이라 검색 비용이 매우 크다. MUVERA는 이 MV 유사도 검색을 단일 벡터(single-vector, SV) 최대 내적 검색(Maximum Inner Product Search, MIPS)으로 환원(reduction)하는 검색 기법이다. 핵심은 질의와 문서 각각의 벡터 집합을 데이터 비의존적(data-oblivious) 랜덤 변환으로 하나의 고정 차원 벡터로 인코딩하는 Fixed Dimensional Encoding(FDE)이다. 두 FDE의 내적이 원래의 Chamfer 유사도를 근사하므로(Theorem 2.1의 epsilon-additive 근사), 문서 FDE를 기존의 고도로 최적화된 MIPS 인덱스(DiskANN)에 색인하고, 질의 FDE로 상위 후보를 검색한 뒤 원래 Chamfer 유사도로 한 번만 재순위(re-rank)하면 된다. 저자들은 FDE가 기존 SV heuristic과 동일한 recall을 2-5배 적은 후보만으로 달성하고, BEIR 데이터셋 전반에서 PLAID 대비 평균 recall 10% 향상과 평균 latency 90% 감소를 얻는다고 보고한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>FDE는 벡터 집합을 데이터 비의존적 랜덤 변환으로 단일 벡터로 인코딩하며, 두 FDE의 내적이 Chamfer 유사도를 epsilon-additive로 근사한다(Theorem 2.1).</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MV 검색을 SV MIPS로 환원해 기성 MIPS 솔버(DiskANN)를 그대로 쓰고, 마지막에 한 번만 Chamfer 재순위를 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>FDE는 기존 SV heuristic과 같은 recall을 2-5배 적은 후보로 달성한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>BEIR 6개 데이터셋에서 PLAID 대비 평균 recall 10% 향상, 평균 latency 90% 감소(최대 recall +56%, 최대 latency 5.7배 감소).</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Product Quantization(PQ-256-8)으로 FDE를 32배 압축하면서 품질 손실은 거의 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3, 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Chamfer 유사도 기반 최근접 이웃 검색</h3>
+      <p>이 논문이 정의하는 문제는 Chamfer Similarity에 대한 최근접 이웃 검색(Nearest Neighbor Search, NNS)이다. 벡터 집합들의 데이터셋 D = {P1,...,Pn}과 질의 벡터 집합 Q가 주어졌을 때, CHAMFER(Q, Pi)를 최대로 하는 문서 P*를 모든 문서를 일일이 채점하는 무차별(brute-force) 방식보다 훨씬 빠르게 찾는 것이 목표다. Chamfer 유사도는 질의의 각 토큰이 문서 토큰들과 갖는 최대 유사도의 합(MaxSim)으로, 비선형이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MV 검색을 SV MIPS로 환원해야 하는 이유</h3>
+      <p>다중 벡터 유사도 검색은 단일 벡터 MIPS로 직접 풀 수 없다. Chamfer 유사도가 질의 토큰별 최대 유사도의 합이라, 특정 문서 토큰 하나가 어떤 질의 토큰과 매우 유사하더라도 문서 전체가 질의와 유사하다고 보장되지 않기 때문이다. 그래서 논문은 MV Chamfer 유사도 검색을 SV MIPS로 환원(reduction)하는 방법을 찾는 것을 문제로 삼는다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>다중 벡터 검색의 근본적 비용</h3>
+      <p>ColBERT 같은 late-interaction 모델은 토큰마다 임베딩을 생성해 IR 성능과 해석 가능성(interpretability), 일반화(generalization)에서 유리하지만, 임베딩 수가 데이터셋 규모로 수 자릿수(orders of magnitude) 증가하고, Chamfer 유사도가 비선형이어서 MV 검색에 최적화된 시스템이 부족하다. SV MIPS만으로는 진짜 MV 최근접 이웃을 복원할 수 없다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>SV heuristic의 구조적 한계</h3>
+      <p>ColBERT, ColBERTv2, PLAID가 사용하는 기존 단일 벡터(SV) heuristic은 모든 질의 토큰 임베딩마다 SV MIPS 인덱스를 조회해야 한다. 문서마다 임베딩이 여러 개이므로 인덱스 자체가 훨씬 커지고 조회 비용이 크며, 그렇게 해도 진짜 MV 최근접 이웃을 놓칠 수 있다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PLAID 파이프라인의 복잡성과 튜닝 민감도</h3>
+      <p>PLAID는 네 단계로 이루어진 다단계 검색·가지치기(pruning) 파이프라인이다. 이 파이프라인은 복잡하고 파라미터 설정에 매우 민감해 튜닝이 어렵다는 점이 재현성 연구(MacAvaney and Tonellotto)에서 지적되었다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>DESSERT의 이론적·실증적 한계</h3>
+      <p>SV heuristic의 LSH 기반 대안인 DESSERT는 epsilon-근사 최근접 이웃을 O~(n|Q|T) 시간에 복원함을 증명하지만, T가 최대 max_i|Pi|까지 커질 수 있어 최악의 경우 무차별 방식보다 빠르지 않다. 또한 개별 질의 토큰 임베딩에 대한 초기 k-means 클러스터링 필터링(ColBERTv2 방식)에 여전히 의존해 SV heuristic의 한계를 진정으로 벗어나지 못한다. 실험적으로는 PLAID보다 2-5배 빠르지만 recall이 더 나쁘다(MS MARCO에서 예: R@1000 2-2.5%).</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>SV MIPS로의 증명 가능한 경량 환원</h3>
+      <p>MUVERA는 데이터 비의존적(data-oblivious) 변환인 Fixed Dimensional Encoding(FDE)을 통해 벡터 집합을 단일 벡터로 바꾸어 MV 검색을 SV MIPS로 환원한다. 이로써 기성(off-the-shelf)의 고도로 최적화된 MIPS 솔버로 검색한 뒤 단일 재순위 단계만 거치면 되는, 경량이면서 증명 가능하게 올바른(provably correct) 기법을 제시한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이론적 보장</h3>
+      <p>FDE가 진짜 Chamfer 유사도에 대한 epsilon-additive 근사를 제공함을 증명하고(Theorem 2.1), 무차별 방식보다 엄격히 빠른(runtime strictly faster than brute force) 런타임을 갖는 Chamfer 유사도 검색 알고리즘을 처음으로 제시한다(Theorem 2.2). 논문은 이를 SV 프록시(proxy)를 통한 MV 검색의 첫 원리적 방법이라 주장한다.</p>
+      <span class="source-ref">PDF p. 2, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실증적 우수성과 PQ를 통한 메모리 절감</h3>
+      <p>FDE 내적 검색이 SV heuristic보다 Chamfer 최근접 이웃 복원에서 크게 앞선다(MS MARCO에서 FDE Recall@N이 비슷한 총 float 스캔량으로 SV heuristic의 Recall@2-5N을 상회). 또한 BEIR 데이터셋에서 PLAID 대비 평균 recall 10% 향상과 평균 latency 90% 감소를 얻고, product quantization(PQ)으로 FDE를 32배 압축(예: 10240차원 FDE를 1280바이트로)하면서도 품질 저하는 거의 없다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>비대칭 인코딩과 2단계 검색</h3>
+      <p>MUVERA는 질의용 매핑 F_q와 문서용 매핑 F_doc를 랜덤하게 생성하는데, 두 매핑은 비대칭(asymmetric)으로 정의되어 &lt;F_q(Q), F_doc(P)&gt;가 CHAMFER(Q,P)를 근사한다. 색인 단계에서 데이터셋 D의 모든 문서에 F_doc를 적용해 {F_doc(P)}를 단일 벡터 MIPS 솔버(DiskANN)에 넣는다. 질의 시점에는 F_q(Q)를 계산해 MIPS 솔버로 상위 k개 문서 FDE를 검색하고, 마지막에 원래 Chamfer 유사도로 후보를 재순위한다. F_q, F_doc가 데이터 비의존적이라 분포 변화(distribution shift)에 강건하고 스트리밍 환경에도 쓸 수 있다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PLAID 대비 단순화된 파이프라인</h3>
+      <p>PLAID의 다단계 검색·가지치기 파이프라인과 달리, MUVERA는 &#x27;MIPS 검색 → Chamfer 재순위&#x27;의 두 단계로 구성된다(논문 Figure 1). 검색의 핵심 난이도가 FDE라는 데이터 비의존적 전처리로 옮겨져, 이후 단계에서는 표준 MIPS 인프라를 그대로 활용한다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 - 공간 분할(LSH/SimHash)</h3>
+      <p>잠재 공간 R^d를 B개의 클러스터로 분할하는 지역 민감 해시(Locality-Sensitive Hash) 함수 φ를 사용한다. 구현은 k_sim개의 랜덤 초평면을 쓰는 SimHash(B=2^{k_sim})로, 가까운 벡터일수록 같은 클러스터에 충돌(collide)할 확률이 높다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 - 클러스터별 블록 구성</h3>
+      <p>각 클러스터 k에 대해, 질의 블록 q_(k)는 k로 매핑된 질의 벡터들의 합, 문서 블록 p_(k)는 k로 매핑된 문서 벡터들의 중심(centroid, 정규화된 합)으로 구성한다. 이렇게 연결(concatenate)한 블록들의 내적이 CHAMFER(Q,P)를 근사한다. 문서 블록에서 아무 점도 매핑되지 않은 클러스터는 fill_empty_clusters로 채운다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 - 내부 랜덤 투영 ψ</h3>
+      <p>선택적으로 각 클러스터 블록을 랜덤 ±1 행렬로 곱해 차원 d를 d_proj로 줄인다(inner projection ψ). 이는 FDE 차원이 원래 차원 d에 의존하는 정도를 낮춘다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 - 반복(R_reps)과 연결</h3>
+      <p>서로 다른 랜덤 분할·투영(φ_i, ψ_i)으로 1-3단계를 독립적으로 R_reps번 반복하고 결과를 모두 연결해 최종 FDE F_q(Q), F_doc(P)를 얻는다. 최종 차원은 d_FDE = B · d_proj · R_reps이며, 선택적으로 최종 투영 ψ&#x27;를 추가한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 - 오프라인 색인</h3>
+      <p>코퍼스 D의 모든 문서 P에 대해 F_doc(P)를 계산하고, 선택적으로 Product Quantization으로 압축한 뒤 문서 FDE 위에 DiskANN 그래프 기반 MIPS 인덱스를 구축한다.</p>
+      <span class="source-ref">PDF p. 3, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 - 온라인 MIPS 검색</h3>
+      <p>들어온 질의에 대해 F_q(Q)를 계산하고 DiskANN 인덱스에서 beam-width W로 beam search를 수행해 상위 후보 문서 FDE를 검색한다.</p>
+      <span class="source-ref">PDF p. 3, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>7단계 - Chamfer 재순위</h3>
+      <p>검색된 후보들을 원래 MV 표현 간의 정확한 Chamfer 유사도로 재순위한다. 이때 Ball Carving으로 재순위에 쓰는 질의 임베딩 수를 미리 줄일 수 있다.</p>
+      <span class="source-ref">PDF p. 3, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>fill_empty_clusters</h3>
+      <p>어떤 클러스터 k에 문서 점이 하나도 매핑되지 않으면, 블록을 0으로 두는 대신 분할 비트 문자열이 k와 가장 적게 어긋나는(가장 가까운) 문서 점으로 p_(k)를 채워 근사 오차를 줄인다. 이 보정은 문서 FDE에만 적용하고 질의 FDE에는 절대 적용하지 않는다(비대칭성).</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>최종 투영 ψ&#x27;</h3>
+      <p>연결된 FDE에 랜덤 ±1 투영을 한 번 더 적용해 임의의 d_final &lt; d_FDE로 차원을 더 줄인다. 고정 차원에서 작지만 무시할 수 없는 1-2%의 recall 향상을 준다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>DiskANN 기반 SV MIPS 인덱스</h3>
+      <p>확장 가능한 그래프 기반 근사 최근접 이웃 검색(ANNS) 구현인 DiskANN을 사용해 압축되지 않은 문서 FDE를 색인한다(최대 차수 200, 빌드 beam-width 600). 질의 시 조정 가능한 beam-width W의 beam search로 후보 문서 FDE를 검색한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ball Carving와 Product Quantization</h3>
+      <p>Ball Carving은 유사도 임계값 τ로 질의 임베딩 Q를 탐욕적으로 사전 클러스터링하고 각 클러스터를 임베딩 합으로 대체해, recall 저하 없이 재순위 시 질의 임베딩 수를 줄인다. Product Quantization은 비대칭 질의(asymmetric querying)를 쓰는 벡터 압축으로 PQ-C-G(그룹 G차원당 C개 중심)로 표기하며, PQ-256-8이 최적 절충으로 32배 압축과 최소 품질 손실을 제공한다.</p>
+      <span class="source-ref">PDF p. 8, 22, 23</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>BEIR의 6개 IR 데이터셋을 사용한다: MS MARCO(개발 세트), HotpotQA, NQ, Quora, SciDocs, ArguAna(뒤 5개는 테스트 세트). 모두 ColBERTv2 임베딩 기반이다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>베이스라인</h3>
+      <p>주된 종단간(end-to-end) 베이스라인은 ColBERTv2의 최적화된 4단계 검색 엔진 PLAID이다. 그 외 SV heuristic(문서 id 중복 제거 유무 각각), φ의 대안으로 k-means/k-center 분할(ablation), 관련 연구로 DESSERT(재실행 없이 보고 수치 인용), 오프라인 FDE 품질 평가의 정답 기준인 정확/무차별 Chamfer 검색을 비교한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표</h3>
+      <p>Recall@N, 1Recall@N(질의의 정확한 Chamfer 1-최근접 이웃이 FDE 내적 상위 N에 포함되는 비율), Queries Per Second(QPS), 종단간 latency(초), recall 표준편차(랜덤 FDE 인스턴스 간 분산)를 사용한다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>종단간: PLAID 대비 우위</h3>
+      <p>6개 BEIR 데이터셋과 k in {100,1000}에 대해 MUVERA는 PLAID 대비 평균 recall 10% 향상과 평균 latency 90% 감소를 얻는다(Figure 7). 최대 recall 향상은 최대 56%, 최대 latency 감소는 최대 5.7배다. MS MARCO에서는 recall 차이가 0.4% 이내로 사실상 동등하고, HotpotQA 등에서는 최대 1.56배 높은 recall을 보인다. 6개 중 5개 데이터셋에서 latency가 유의미하게 더 낮다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>오프라인 FDE 품질: 더 적은 후보로 동일 recall</h3>
+      <p>MS MARCO에서 d_FDE=5120 FDE는 후보 N=75개만으로 정확한 Chamfer 1-최근접 이웃에 대한 1Recall@N 95%를 달성한다(Figure 4). 4096차원 FDE는 중복 제거 SV heuristic과 같은 recall을 1.75-3.75배 적은 후보로(비중복 SV 대비 10.5-15배 적게), 10240차원 FDE는 2.6-5배 적은 후보로(비중복 SV 대비 20-22.5배 적게) 달성한다(Figure 5). 80% recall 시 후보 수는 d_FDE=10240에서 60개(중복제거 SV 300, 비중복 SV 1200, d_FDE=4096에서 80개)로 크게 적다(Table 1).</p>
+      <span class="source-ref">PDF p. 7, 8, 20</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>강건성·압축·재순위 최적화</h3>
+      <p>10개 랜덤 FDE 인스턴스에서 recall 분산이 작다(Recall@1000 표준편차 0.08-0.16%). 최종 투영은 고정 차원에서 recall을 높인다(d_FDE=10240에서 Recall@100 82.31%→85.15%, 20480에서 83.36%→86.00%, Table 4). PQ-256-8은 32배 압축과 함께 동일 beam-width에서 최대 20배 QPS 향상을 준다(Figure 6). Ball carving(τ=0.7)은 재순위 처리량을 순차 25%·병렬 20% 높이고 질의 임베딩을 평균 5.4배 줄인다(고정 |Q|=32 대비 평균 5.9개 클러스터).</p>
+      <span class="source-ref">PDF p. 8, 9, 20, 22, 23</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 의의</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>정리</h3>
+      <p>MUVERA는 데이터 비의존적 FDE를 통해 MV Chamfer 유사도 검색을 SV MIPS로 환원하는, 이론적 보장을 갖춘 첫 SV 프록시 기법이다. 표준 MIPS 인프라(DiskANN)와 PQ 압축, Ball Carving 같은 시스템 최적화를 결합해, 복잡하고 튜닝에 민감한 PLAID 파이프라인 대비 대부분의 BEIR 데이터셋에서 더 높은 recall과 훨씬 낮은 latency를 달성한다.</p>
+      <span class="source-ref">PDF p. 2, 3, 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>MUVERA 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 8</span>
+              </div>
+              <p>질의/문서 벡터 집합을 FDE로 인코딩하고, 문서 FDE를 DiskANN MIPS 인덱스에 색인한 뒤, 질의 FDE로 후보를 검색하고 원래 Chamfer 유사도로 재순위하는 2단계 흐름.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph Offline[오프라인 색인]
+    D[문서 벡터 집합 P] --&gt; FD[F_doc: FDE 인코딩]
+    FD --&gt; PQ[선택: PQ 압축]
+    PQ --&gt; IDX[DiskANN MIPS 인덱스]
+  end
+  subgraph Online[온라인 질의]
+    Q[질의 벡터 집합 Q] --&gt; FQ[F_q: FDE 인코딩]
+    FQ --&gt; BS[MIPS beam search]
+    IDX --&gt; BS
+    BS --&gt; CAND[상위 k 후보 문서]
+    CAND --&gt; BC[선택: Ball Carving]
+    BC --&gt; RR[정확 Chamfer 재순위]
+    RR --&gt; OUT[최종 결과 P*]
+  end
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>FDE 인코딩 내부 구조</h3>
+                <span class="source-ref">PDF p. 4, 5</span>
+              </div>
+              <p>SimHash 공간 분할, 클러스터별 블록 구성(질의=합, 문서=중심), 내부 투영, R_reps 반복 연결로 고정 차원 벡터를 만드는 과정.</p>
+              <div class="mermaid">
+flowchart LR
+  IN[벡터 집합] --&gt; PHI[SimHash 분할 phi: B개 클러스터]
+  PHI --&gt; BLK[클러스터별 블록: 질의=합 / 문서=중심]
+  BLK --&gt; FILL[fill_empty_clusters: 문서만]
+  FILL --&gt; PSI[내부 투영 psi: d to d_proj]
+  PSI --&gt; REP[R_reps회 반복 후 연결]
+  REP --&gt; FIN[선택: 최종 투영 psi&#x27;]
+  FIN --&gt; FDE[FDE 차원 = B x d_proj x R_reps]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 PLAID vs 제안 MUVERA</h3>
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </div>
+              <p>PLAID의 복잡한 4단계 파이프라인과, MUVERA의 단순한 2단계(MIPS 검색 + 재순위) 구조 비교.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph PLAID[기존 PLAID: 다단계]
+    P1[토큰별 SV MIPS 조회] --&gt; P2[후보 생성] --&gt; P3[중심 기반 가지치기] --&gt; P4[Chamfer 채점]
+  end
+  subgraph MUVERA[제안 MUVERA: 2단계]
+    M1[FDE 단일 MIPS 검색] --&gt; M2[Chamfer 재순위]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>80% recall 달성에 필요한 후보 수 (MS MARCO)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8, 20 · Table 1 · MS MARCO, recall 임계값 80%
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>95% recall 달성에 필요한 후보 수 (MS MARCO)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 20 · Table 1 · MS MARCO, recall 임계값 95% (SV 비중복은 &gt;10000으로 정확값 부재하여 제외)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>최종 투영 적용 전후 Recall@100 (MS MARCO)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5, 22 · Table 4 · MS MARCO, 최종 투영 ψ&#x27; 유무 비교
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>이론적 보장(Theorem 2.1, 2.2)과 실증적 성능을 동시에 제시해, MV 검색을 SV MIPS로 환원하는 첫 원리적 방법이라는 주장을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>F_q, F_doc가 데이터 비의존적(data-oblivious)이라 분포 변화에 강건하고 스트리밍 환경에도 적용 가능하며, 기존 MIPS 인프라를 그대로 재사용할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>PLAID의 복잡한 4단계·튜닝 민감 파이프라인을 2단계로 단순화해 운영·튜닝 부담을 크게 줄인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>PQ 압축(32배)과 Ball Carving 같은 시스템 최적화를 결합해 메모리와 재순위 비용까지 함께 다룬 종단간 설계를 제시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9, 23</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>10개 랜덤 인스턴스에 걸친 recall 표준편차가 작아 랜덤 변환 기반임에도 결과가 안정적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 20</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>5/6 데이터셋에서 PLAID를 능가했으나 MS MARCO에서는 능가하지 못했는데, 이는 PLAID가 MS MARCO에 맞춰 세심하게 튜닝되었기 때문일 수 있다고 저자가 밝힌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>문서당 평균 임베딩 수(m_avg)가 FDE 검색 품질에 미치는 영향을 연구하지 않았으며, 이를 향후 연구 방향으로 남긴다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>PLAID 구현이 다중 질의 병렬 실행을 지원하지 않아 latency로만 최적화되어 있어, PLAID에 대한 공식 QPS 비교 수치는 보고하지 못했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>고품질 FDE는 수천~수만 차원(예: 10240, 20480)에 이르러, PQ 압축을 하지 않으면 문서당 메모리 비용이 상당할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>작은 FDE 차원(d=2460)에서는 최종 투영의 이득이 미미하거나(Recall@100 +1.1%) 오히려 Recall@1000이 0.3점 낮아, 최적화 기법의 효과가 차원에 의존한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 21, 22</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>문서당 평균 임베딩 수 m_avg가 커지거나 작아질 때 FDE 근사 품질과 필요한 차원은 어떻게 변하는가?</h3>
+              </div>
+              <p>저자가 m_avg 영향 미연구를 향후 과제로 명시함</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>SimHash 대신 학습 기반 또는 데이터 의존적 분할을 쓰면 데이터 비의존성의 강건성을 잃는 대신 정확도를 얼마나 더 얻을 수 있는가?</h3>
+              </div>
+              <p>논문은 SimHash를 데이터 비의존적 선호 선택으로 두고 k-means/k-center를 ablation으로만 비교함</p>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>MS MARCO에서 PLAID를 넘지 못한 것이 튜닝 격차 때문인지, FDE 근사의 본질적 한계 때문인지 구분할 수 있는가?</h3>
+              </div>
+              <p>저자가 PLAID의 MS MARCO 특화 튜닝을 가능한 원인으로 추정</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>PLAID와 동등 조건의 병렬 QPS 벤치마크가 가능하다면 처리량 측면 우위는 어느 정도로 정량화되는가?</h3>
+              </div>
+              <p>PLAID의 병렬 미지원으로 QPS 직접 비교가 부재함</p>
+              <span class="source-ref">PDF p. 9</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Chamfer Similarity (MaxSim)</dt>
+              <dd>
+                질의 벡터 집합의 각 벡터가 문서 벡터 집합과 갖는 최대 유사도들의 합. late-interaction 모델의 질의-문서 채점 방식이며 비선형이다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-Vector (MV) / late-interaction</dt>
+              <dd>
+                ColBERT처럼 데이터 하나에 여러 임베딩(토큰마다 하나)을 생성하고 늦은 상호작용으로 유사도를 계산하는 표현 방식.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MIPS (Maximum Inner Product Search)</dt>
+              <dd>
+                단일 벡터에서 질의와 내적이 최대인 벡터를 찾는 검색. 고도로 최적화된 솔버가 존재한다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>FDE (Fixed Dimensional Encoding)</dt>
+              <dd>
+                벡터 집합을 고정 차원의 단일 벡터로 매핑하는 데이터 비의존적 랜덤 변환. 두 FDE의 내적이 Chamfer 유사도를 근사한다.
+                <span class="source-ref">PDF p. 2, 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>SimHash / LSH</dt>
+              <dd>
+                랜덤 초평면(가우시안 벡터)으로 공간을 분할하는 지역 민감 해시. 가까운 벡터일수록 같은 버킷에 충돌할 확률이 높다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>fill_empty_clusters</dt>
+              <dd>
+                문서 FDE에서 점이 없는 클러스터 블록을 비트 문자열이 가장 가까운 문서 점으로 채워 근사 오차를 줄이는 보정(질의 FDE에는 미적용).
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>DiskANN</dt>
+              <dd>
+                확장 가능한 그래프 기반 근사 최근접 이웃 검색(ANNS) 구현으로, 문서 FDE의 MIPS 인덱스로 사용된다.
+                <span class="source-ref">PDF p. 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Product Quantization (PQ)</dt>
+              <dd>
+                벡터를 그룹 단위로 코드북 중심에 양자화해 압축하는 기법. PQ-256-8이 32배 압축과 최소 품질 손실을 제공한다.
+                <span class="source-ref">PDF p. 8, 23</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Ball Carving</dt>
+              <dd>
+                재순위 전 질의 임베딩을 임계값 τ로 탐욕적으로 클러스터링하고 합으로 대체해, recall 저하 없이 재순위 비용을 줄이는 기법.
+                <span class="source-ref">PDF p. 8, 22, 23</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>SV heuristic</dt>
+              <dd>
+                ColBERT/ColBERTv2/PLAID가 쓰는 기존 방식으로, 각 질의 토큰마다 SV MIPS 인덱스를 조회해 후보를 모은다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문은 &#x27;Preprint. Under review.&#x27;(arXiv:2405.19504v1, cs.DS, 2024년 5월 29일)로 표기되어 있으며, 소스 문서에 공식 동료 심사 게재 venue는 명시되지 않았다.</li><li>Figure 7의 막대 차트에는 24개 값(12개 데이터셋-k 조합 x 2개 시스템)이 있으나, 본문에 명시된 값(MS MARCO 0.4% 이내, HotpotQA 최대 1.56배, 평균/최대치) 외 개별 막대-라벨 대응은 값 단위로 재검증하지 않았다.</li><li>95% recall 후보 수 차트에서 SV 비중복은 &#x27;&gt;10000&#x27;으로만 보고되어 정확값이 없어 차트 데이터에서 제외했다.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "80% recall 달성에 필요한 후보 수 (MS MARCO)", "labels": ["FDE d=10240", "FDE d=4096", "SV 중복제거", "SV 비중복"], "values": [60, 80, 300, 1200], "unit": "개", "xLabel": "방법", "yLabel": "검색 후보 수"}, {"canvasId": "chart-1", "type": "bar", "title": "95% recall 달성에 필요한 후보 수 (MS MARCO)", "labels": ["FDE d=20480", "FDE d=10240", "FDE d=4096", "SV 중복제거", "FDE d=2048"], "values": [700, 800, 1200, 2100, 5600], "unit": "개", "xLabel": "방법", "yLabel": "검색 후보 수"}, {"canvasId": "chart-2", "type": "bar", "title": "최종 투영 적용 전후 Recall@100 (MS MARCO)", "labels": ["d=10240 투영없음", "d=10240 투영적용", "d=20480 투영없음", "d=20480 투영적용"], "values": [82.31, 85.15, 83.36, 86.0], "unit": "%", "xLabel": "FDE 차원 / 투영 여부", "yLabel": "Recall@100"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

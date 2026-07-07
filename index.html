@@ -423,7 +423,7 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 5편</span>
+        <span class="stat">논문 6편</span>
       </div>
     </div>
   </header>
@@ -446,7 +446,7 @@
     </div>
 
     <span class="pending-queue-count">
-      5편 대기 중
+      4편 대기 중
     </span>
   </div>
 
@@ -458,12 +458,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>MUVERA_ Multi-Vector Retrieval via Fixed Dimensional Encodings.pdf</strong>
-            <span>등록 시각 · 2026-07-07 18:35</span>
+            <strong>ColPali_EFFICIENT DOCUMENT RETRIEVAL WITH VISION LANGUAGE MODELS.pdf</strong>
+            <span>등록 시각 · 2026-07-07 18:36</span>
           </div>
 
           <div class="pending-queue-size">
-            2.1 MB
+            7.9 MB
           </div>
 
           <div>
@@ -477,28 +477,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>ColPali_EFFICIENT DOCUMENT RETRIEVAL WITH VISION LANGUAGE MODELS.pdf</strong>
-            <span>등록 시각 · 2026-07-07 18:36</span>
-          </div>
-
-          <div class="pending-queue-size">
-            7.9 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -520,7 +498,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -542,7 +520,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            5
+            4
           </div>
 
           <div class="pending-queue-paper">
@@ -694,6 +672,32 @@
       <a class="open-link" href="papers/warp/">
         보고서 열기 →
       </a> <span class="verification-index-badge verified">검증 완료</span>
+    </article>
+    
+
+    <article class="paper-card">
+      <div class="card-top">
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <h2>
+        <a href="papers/muvera-multi-vector-retrieval-via-fixed-dimensional-encodings/">
+          MUVERA: Multi-Vector Retrieval via Fixed Dimensional Encodings
+        </a> <span class="verification-index-badge pending">미검증</span>
+      </h2>
+
+      <p class="authors">Laxman Dhulipala, Majid Hadian, Rajesh Jayaram, Jason Lee, Vahab Mirrokni</p>
+      <p class="metadata">2024 · arXiv preprint (Preprint, under review); arXiv:2405.19504v1 [cs.DS]</p>
+
+      <p class="summary">
+        ColBERT로 대표되는 다중 벡터(multi-vector, MV) 임베딩 모델은 토큰마다 하나의 임베딩을 생성하고 Chamfer Similarity(MaxSim)로 질의-문서 유사도를 계산하여 정보 검색(IR) 성능을 크게 높였지만, 임베딩 수가 수십~수백 배로 늘어나고 Chamfer 유사도가 비선형이라 검색 비용이 매우 크다. MUVERA는 이 MV 유사도 검색을 단일 벡터(single-vector, SV) 최대 내적 검색(Maximum Inner Product Search, MIPS)으로 환원(reduction)하는 검색 기법이다. 핵심은 질의와 문서 각각의 벡터 집합을 데이터 비의존적(data-oblivious) 랜덤 변환으로 하나의 고정 차원 벡터로 인코딩하는 Fixed Dimensional Encoding(FDE)이다. 두 FDE의 내적이 원래의 Chamfer 유사도를 근사하므로(Theorem 2.1의 epsilon-additive 근사), 문서 FDE를 기존의 고도로 최적화된 MIPS 인덱스(DiskANN)에 색인하고, 질의 FDE로 상위 후보를 검색한 뒤 원래 Chamfer 유사도로 한 번만 재순위(re-rank)하면 된다. 저자들은 FDE가 기존 SV heuristic과 동일한 recall을 2-5배 적은 후보만으로 달성하고, BEIR 데이터셋 전반에서 PLAID 대비 평균 recall 10% 향상과 평균 latency 90% 감소를 얻는다고 보고한다.
+      </p>
+
+      <a class="open-link" href="papers/muvera-multi-vector-retrieval-via-fixed-dimensional-encodings/">
+        보고서 열기 →
+      </a> <span class="verification-index-badge pending">미검증</span>
     </article>
     
     </div>
