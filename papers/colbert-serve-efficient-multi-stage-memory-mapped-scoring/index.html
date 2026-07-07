@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Kaili Huang, Thejas Venkatesh, Uma Dingankar, Antonio Mallia, Daniel Campos, Jian Jiao, Christopher Potts, Matei Zaharia, Kwabena Boahen, Omar Khattab, Saarthak Sarup, Keshav Santhanam</span>
+        <span><strong>출처</strong> · ECIR 2025 (Advances in Information Retrieval, Lecture Notes in Computer Science, vol 15575)</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>ColBERT과 같은 multi-vector late-interaction retriever는 높은 검색 품질을 보이지만, PLAID로 인코딩된 ColBERTv2 인덱스를 완전히 메모리에 올리려면 Wikipedia 규모(2000만 passage)에서 거의 100GB의 RAM이 필요해, 저사양·저비용 서버에서 다수의 동시 사용자를 서빙하기 어렵다는 문제가 있다. 이 논문은 ColBERT-serve라는 서빙 시스템을 제안하는데, (1) 압축된 ColBERTv2 임베딩 텐서에 memory-mapping을 적용해 인덱스 대부분을 디스크에 두고 필요한 페이지만 OS가 온디맨드로 메모리에 올리도록 하며, (2) SPLADEv2를 1단계 검색기로 사용하는 multi-stage retrieval로 memory-mapped 인덱스에 대한 접근(페이지 미스)을 최소화하고, (3) SPLADEv2와 ColBERTv2 점수를 z-norm 정규화 후 선형 보간(hybrid scoring)하여 재랭킹만 사용할 때보다도 품질을 개선하며, (4) Python GIL 해제와 서버-클라이언트 구조로 동시 요청을 병렬 처리한다. 그 결과, MS MARCO와 Wikipedia에서 모델 로딩에 필요한 RAM을 각각 90%, 92% 절감하고 머신 비용을 78%, 68% 절감하면서도, MS MARCO Dev/Test와 LoTTE Lifestyle에서는 완전 인메모리 ColBERTv2보다 오히려 높은 품질을 달성했고, 초당 최대 4~5개의 쿼리를 낮은 지연시간으로 서빙할 수 있음을 실증했다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ColBERT-serve는 memory-mapping으로 ColBERTv2 인덱스를 디스크에 상주시켜 모델 로딩 RAM 사용량을 MS MARCO 90%, Wikipedia 92% 절감했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>SPLADEv2 1단계 검색 + ColBERTv2 재랭킹의 multi-stage 구조로 memory-mapped 인덱스의 페이지 미스로 인한 지연시간 증가를 완화했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>z-norm 기반 hybrid scoring(α=0.3 또는 데이터셋별 최적 α)은 여러 데이터셋에서 완전 인메모리 ColBERTv2보다 높은 품질을 달성할 수 있었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>머신 비용은 MS MARCO 78%, Wikipedia 68% 절감되었고, Rerank/Hybrid 시스템은 QPS 5(Wikipedia 기준)까지 낮은 지연시간을 유지했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>OOD(Wikipedia)에서 in-domain(MS MARCO)으로 튜닝한 α를 그대로 쓰면 Rerank보다 품질이 낮아질 수 있어, held-out set에서 α를 재튜닝하는 것이 중요할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>고동시성·저메모리 환경에서의 late-interaction 검색 서빙</h3>
+      <p>ColBERT, ColPali와 같은 multi-vector late-interaction retriever는 최신 수준의 품질과 일반화 성능을 낮은 지연시간으로 달성한다. 그러나 임베딩 압축 기술(PLAID 등)의 발전에도 불구하고, Wikipedia 규모(2000만 passage)의 ColBERTv2 인덱스를 PLAID로 서빙하려면 거의 100GB의 RAM이 필요하다. 이는 RAM이 적은 저가 서버에서 다수의 동시 사용자를 낮은 지연시간으로 서빙해야 하는 상황에서 큰 제약이 되며, 기존 신경망 IR 문헌에서는 이러한 고동시성·저메모리 환경에서의 비용·지연시간·품질 간 트레이드오프가 거의 다뤄지지 않았다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>메모리 매핑 기반 접근의 선행 연구</h3>
+      <p>Memory-mapping은 근사 최근접 이웃 검색이나 일부 데이터베이스 시스템에서 사용되어 왔고, 동시대 연구([18])는 신경망 IR에도 이를 적용해 SSD 지연의 영향을 줄이는 prefetcher를 구축했다. 그러나 본 논문은 prefetching 대신, multi-stage retrieval을 통해 디스크 접근 횟수 자체를 줄이는 방향을 택한다는 점에서 차별화된다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>재랭킹 기반 접근의 품질 손실</h3>
+      <p>[7]은 BM25가 생성한 top-1000 결과를 ColBERT로 재랭킹하는 방식으로 지연시간은 개선했으나 MRR과 recall에서 상당한 성능 저하를 겪었다. [13]도 ColBERTv2로 BM25 후보를 재랭킹하고 LADR을 결합해 더 효과적인 시스템을 만들었지만, 두 시스템 모두 MS MARCO에서 품질 손실을 피하지 못했다. 즉 기존의 재랭킹 기반 접근은 지연시간·비용을 낮추는 대신 품질을 희생하는 트레이드오프에 머물러 있었다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>평가 방법론 및 벤치마크</h3>
+      <p>다양한 트래픽 워크로드와 메모리 예산 하에서 신경망 IR 모델의 동시 서빙(concurrent serving)을 평가하기 위한 방법론과 벤치마크를 제시한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColBERT-serve 시스템</h3>
+      <p>ColBERT-serve를 도입한다: (1) ColBERTv2 인덱스 대부분을 디스크에 유지할 수 있는 새로운 memory-mapping 아키텍처, (2) multi-stage retrieval을 통한 인덱스 접근 최소화, (3) PISA와 ColBERTv2를 개조해 동시 요청을 병렬로 낮은 지연시간에 처리하고 부하에 따라 원활히 확장, (4) hybrid scoring을 통한 전체 ColBERTv2 검색 품질 보존.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실증 평가</h3>
+      <p>대규모 컬렉션에 대해 품질을 유지하면서 단 몇 GB의 RAM만으로 초당 최대 4개의 쿼리를 서빙할 수 있는 최초의 ColBERT 서빙 시스템임을 입증했다(전체 ColBERTv2 대비 모델 로딩 RAM 사용량 90% 감소).</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 구성</h3>
+      <p>ColBERT-serve는 압축된 ColBERTv2 임베딩 텐서에 memory-mapping을 적용해 인덱스를 디스크에 상주시키고, SPLADEv2 기반 1단계 검색과 ColBERTv2 재랭킹을 결합한 multi-stage 아키텍처로 인덱스 접근을 최소화하며, 두 단계의 점수를 결합하는 hybrid scoring으로 품질을 보존하고, 서버-클라이언트 구조와 Python GIL 해제를 통해 동시 요청을 병렬 처리하는 네 요소로 구성된다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계: SPLADEv2 + PISA 후보 검색</h3>
+      <p>SPLADEv2(sparse lexical and expansion model)가 쿼리를 확장하고, PISA 엔진이 효율적으로 후보 문서 top-200개를 검색한다(SPLADEv2 w/ PISA).</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계: MMAP ColBERTv2 재랭킹</h3>
+      <p>memory-mapped ColBERTv2 인덱스(MMAP ColBERTv2)가 top-200 후보들만을 대상으로 late-interaction 재랭킹을 수행한다(MMAP Rerank). 후보를 200개로 좁힘으로써 디스크 페이지 미스가 발생하는 인덱스 접근 범위를 크게 줄인다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계: Hybrid scoring</h3>
+      <p>SPLADEv2 점수와 MMAP ColBERTv2 점수를 각각 z-norm으로 정규화한 뒤, 계수 α를 이용한 선형 보간으로 결합하여 최종 hybrid score를 산출한다(MMAP Hybrid). 수식은 Shybrid(D,Q) = αN(SSPLADE(D,Q)) + (1-α)N(SColBERT(D,Q)), N(x) = (x-x̄)/S 이다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Memory-Mapped Storage</h3>
+      <p>압축된 ColBERTv2 임베딩을 인코딩하는 텐서에 memory-mapping을 도입해, 인덱스를 사전에 전부 로딩하지 않고 OS가 페이지 단위(page granularity)로 필요한 데이터만 메모리에 올리며 RAM이 부족하면 페이지를 축출(evict)하도록 한다. 이를 통해 RAM 요구량을 90% 이상 절감한다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Concurrent Requests (서버-클라이언트 구조)</h3>
+      <p>ColBERTv2의 C++ 확장 호출 시 Python GIL을 해제하여 멀티스레딩 호환성을 개선하는데, 이것이 없으면 각 쿼리가 확장 호출 시 블록되어 멀티스레딩이 사실상 불가능하고, 프로세스 다중화로만 동시성을 확보해야 하며 memory-mapping 없이는 프로세스별 메모리가 선형으로 증가한다. 저자들은 스레드 수를 튜닝한 결과, 낮은 부하에서는 멀티스레딩이 유리하지만 높은 부하에서는 단일 스레드 성능이 더 우수함을 발견하여 모든 실험에서 단일 스레드를 사용했다. PISA 엔진도 이 서버-클라이언트 구조와 multi-stage retrieval에 맞게 개조되었다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Multi-Stage Retrieval</h3>
+      <p>memory-mapped 인덱스는 페이지 미스로 인해 MS MARCO에서 인메모리 인덱스 대비 검색이 약 2배 느려지는 문제를 안고 있다. 이를 SPLADEv2를 1단계 검색기로 사용해 ColBERT 인덱스에 접근해야 하는 문서 수를 top-200으로 최소화함으로써 완화한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Hybrid Scoring 정규화 방식 선택</h3>
+      <p>SPLADEv2와 ColBERTv2는 점수 분포가 크게 다르므로, 이를 결합하기 위해 (1) [0,1] 선형 매핑, (2) min-max norm, (3) z-norm 세 가지를 검토했고 z-norm이 가장 좋은 결과를 보여 최종 정규화 방식으로 채택했다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>MS MARCO Passage Ranking Dev(7K 쿼리, 8.8M passage, in-domain)를 기본 벤치마크로 사용하고, ColBERT 저자들이 사용한 held-out 5K Test 셋으로 평가 결과를 보고한다. Out-of-domain(OOD) 일반화 검증을 위해 Wikipedia Open-QA NQ-dev(8.7K 쿼리, 21M passage)와 LoTTE Search Lifestyle-dev(417 쿼리, 269K passage)를 사용한다. Wikipedia는 RAM 사용량에 부담을 주는 대규모 컬렉션인 반면 LoTTE Lifestyle은 항상 메모리에 들어가는 소규모 컬렉션으로, 서로 대비되는 조건을 제공한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>베이스라인과 지표</h3>
+      <p>비교 대상은 ColBERTv2(전체 인메모리 PLAID), SPLADEv2(BT-SPLADE-L 체크포인트 + PISA), MMAP ColBERTv2, MMAP Rerank(SPLADEv2 top-200 후 재랭킹), MMAP Hybrid(선형 보간)이다. 품질 지표는 MRR@10, Recall@5, Recall@50, Success@5를 사용하고, 효율성은 P95 latency, RSS 기준 RAM 사용량, AWS 월 비용($/month)으로 측정한다. MS MARCO·Wikipedia는 r6a.4xlarge(전체 ColBERTv2 대조군), m5ad.xlarge/r6id.xlarge(MMAP 실험) 인스턴스를, LoTTE는 c5ad.xlarge 인스턴스를 사용했다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>검색 품질</h3>
+      <p>MS MARCO Dev에서 Hybrid(α=0.3)가 모든 방법 중 가장 우수했다(MRR@10 40.22, R@5 57.38, R@50 86.98). MS MARCO 5K Test에서도 Hybrid(α=0.3)가 완전 인메모리 ColBERTv2(MRR@10 40.57)보다 높은 MRR@10 41.11을 기록했다. 반면 Wikipedia(OOD)에서는 MS MARCO로 튜닝한 α=0.3의 Hybrid(S@5 65.78, -2.6%)가 Rerank(S@5 66.29, -1.8%)보다 낮았으나, 데이터셋별 최적 α를 사용하면 Hybrid(S@5 66.34, -1.7%)가 Rerank를 다시 앞질렀다. LoTTE Lifestyle에서는 Hybrid(최적 α)가 S@5 75.3(+0.9%)으로 완전 인메모리 ColBERTv2(S@5 74.6)를 능가했다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAM 사용량 및 비용</h3>
+      <p>memory-mapping 적용 시 ColBERTv2 모델 로딩에 필요한 RAM(RSS 기준)이 MS MARCO에서 23.4GB→2.3GB(90% 감소), Wikipedia에서 98.3GB→8.2GB(92% 감소)로 크게 줄었다. 이에 따라 저용량 메모리 머신에서 인덱스를 호스팅할 수 있게 되어 AWS 월 비용이 MS MARCO 78%, Wikipedia 68% 감소했다.</p>
+      <span class="source-ref">PDF p. 4, 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>트래픽 부하에 따른 지연시간</h3>
+      <p>Wikipedia에서 PISA 기반 SPLADEv2가 가장 낮은 지연시간을 보였으나 품질(특히 OOD)에서 큰 손실이 있었다. Rerank/Hybrid는 SPLADE보다 느리지만 memory-mapped ColBERTv2 단독보다는 훨씬 빠르며, QPS 5(1/0.2)까지는 낮은 지연시간을 유지하다가 그 이상에서 큐잉으로 인해 지연시간이 급격히 증가했다. 더 고성능·고비용 머신에서 실행된(참고용) 완전 인메모리 ColBERTv2조차 QPS 3.3(1/0.3) 미만 구간에서 Rerank/Hybrid보다 지연시간이 높았다. MS MARCO에서도 Rerank/Hybrid가 모든 트래픽 부하 구간에서 memory-mapped ColBERTv2의 지연시간을 크게 줄였고(단, 완전 ColBERTv2와는 상이한 프로세서 머신에서 평가되어 직접 비교는 어려움), LoTTE에서도 유사한 패턴이 관찰되었다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>저자들은 memory-mapping, hybrid scoring, 동시 요청 지원을 결합한 서빙 시스템 ColBERT-serve와, 고동시성·메모리 제약 환경에서 신경망 IR 트레이드오프를 평가하는 방법론을 제시했다. 그 결과 단 몇 GB의 RAM만으로 초당 여러 쿼리를 서빙할 수 있는 최초의 ColBERT 서빙 시스템임을 입증했다고 결론짓는다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 2, 3, 4</span>
+              </div>
+              <p>ColBERT-serve의 쿼리 처리 파이프라인: SPLADEv2/PISA 1단계 검색으로 후보 top-200을 뽑고, memory-mapped ColBERTv2가 이를 재랭킹하며, 두 점수를 z-norm 정규화 후 선형 보간하여 hybrid score를 산출한다.</p>
+              <div class="mermaid">
+flowchart LR
+  Q[쿼리] --&gt; S[SPLADEv2 쿼리 확장]
+  S --&gt; P[PISA 엔진 검색]
+  P --&gt; C[Top-200 후보]
+  C --&gt; M[MMAP ColBERTv2 재랭킹]
+  M --&gt; N1[ColBERT 점수 z-norm]
+  P --&gt; N2[SPLADE 점수 z-norm]
+  N1 --&gt; H[Hybrid Score 선형 보간 alpha]
+  N2 --&gt; H
+  H --&gt; R[최종 랭킹 결과]
+  D[(디스크: memory-mapped ColBERTv2 인덱스)] -.페이지 단위 온디맨드 로딩.-&gt; M
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 제안 방식 비교</h3>
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </div>
+              <p>완전 인메모리 ColBERTv2 서빙(높은 RAM 요구)과 기존 BM25 재랭킹 방식(품질 손실) 대비, ColBERT-serve는 memory-mapping과 multi-stage hybrid scoring으로 낮은 RAM과 유지되는 품질을 동시에 추구한다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph 기존1[기존: 완전 인메모리 ColBERTv2]
+    A1[전체 인덱스 RAM 로딩] --&gt; A2[PLAID 검색+랭킹]
+    A2 --&gt; A3[높은 품질, 높은 RAM 약 100GB]
+  end
+  subgraph 기존2[기존: BM25 재랭킹]
+    B1[BM25 top-1000] --&gt; B2[ColBERT 재랭킹]
+    B2 --&gt; B3[낮은 RAM, 낮은 지연, 품질 손실]
+  end
+  subgraph 제안[제안: ColBERT-serve]
+    C1[SPLADEv2 top-200] --&gt; C2[MMAP ColBERTv2 재랭킹]
+    C2 --&gt; C3[Hybrid Score 선형 보간]
+    C3 --&gt; C4[낮은 RAM, 낮은 지연, 품질 유지-향상]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>ColBERTv2 모델 로딩 RAM 사용량 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5, 6 · 모델 로딩 전후 RSS 메모리 차이 측정
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>AWS 머신 월 비용 비교 (Table 1)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4, 6 · Table 1 · AWS 인스턴스별 월 비용, 각 실험 조건에 맞는 머신 사양
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MS MARCO에서 방법별 검색 품질 (Table 2)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4, 5 · Table 2 · MS MARCO Passage Ranking Dev 및 5K Test, MRR@10
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>α 값 변화에 따른 품질 변화 (Table 3)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4, 5 · Table 3 · Wikipedia NQ-dev, Success@5, α 스윕
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>α 값 변화에 따른 MS MARCO MRR@10 변화 (Table 3)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4, 5 · Table 3 · MS MARCO Dev, MRR@10, α 스윕
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>memory-mapping과 multi-stage retrieval을 결합해 RAM 절감과 지연시간 감소를 동시에 달성하면서도 여러 데이터셋에서 완전 인메모리 ColBERTv2와 동등하거나 더 나은 품질을 보였다는 점에서, 기존 재랭킹 방식들이 겪던 &#x27;효율 대 품질&#x27;의 트레이드오프를 상당 부분 해소했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>in-domain(MS MARCO)뿐 아니라 OOD 데이터셋(Wikipedia, LoTTE)까지 포함한 평가를 통해 일반화 가능성을 함께 점검했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>RAM, 지연시간, 비용, 품질을 모두 정량화하고 이를 실제 AWS 인스턴스 사양·비용에 매핑해, 실무 배포 관점에서 바로 활용 가능한 근거를 제시했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>PISA와 ColBERTv2 구현 자체를 GIL 해제, 서버-클라이언트 구조로 개조해 시스템 수준의 엔지니어링 기여를 포함하고 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Wikipedia(OOD)에서 MS MARCO Dev로 튜닝한 α=0.3의 Hybrid는 Rerank보다 낮은 성능을 보였는데, 이는 OOD 환경에서 held-out set으로 α를 별도 튜닝하는 것이 중요할 수 있음을 시사하며, 저자들은 이를 향후 연구 과제로 남겨두었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>MS MARCO 및 Wikipedia 실험에서 전체 ColBERTv2 베이스라인은 인덱스를 RAM에 담을 수 있는 더 고사양·고비용 머신(그리고 다른 물리적 프로세서)에서 평가되었기 때문에, 그 지연시간은 참고용일 뿐 memory-mapped 방법들과 직접 비교할 수 없다고 저자들이 명시했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 6, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>SPLADEv2 1단계 검색 자체가 놓치는 관련 문서(top-200 밖의 정답)에 대해 hybrid/rerank 방식이 원천적으로 복구할 수 없는 recall 상한이 존재하는지, 그리고 이 상한이 데이터셋 특성에 따라 얼마나 달라지는지는 논문에서 직접 분석되지 않았다.</h3>
+              </div>
+              <p>논문은 SPLADEv2가 top-200 후보를 생성한다고만 서술하고, 이 후보군에 정답이 없을 경우의 영향은 별도로 분석하지 않았다.</p>
+              <span class="source-ref">PDF p. 3</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>OOD 환경에서 held-out set 기반으로 α를 자동 튜닝하거나, 쿼리별로 α를 적응적으로 조정하는 방법은 어떻게 설계할 수 있는가?</h3>
+              </div>
+              <p>저자들이 향후 연구 과제로 명시한 부분이다.</p>
+              <span class="source-ref">PDF p. 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>동일 사양의 머신에서 full ColBERTv2와 MMAP 방식을 직접 비교했을 때도 Rerank/Hybrid의 지연시간 우위가 동일하게 유지되는지 확인되지 않았다.</h3>
+              </div>
+              <p>저자들이 full ColBERTv2가 다른 머신·프로세서에서 평가되어 직접 비교가 불가능하다고 명시했다.</p>
+              <span class="source-ref">PDF p. 4, 6, 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>단일 스레드가 고부하에서 멀티스레드보다 우수했다는 결과가 다른 하드웨어(디스크 종류, NVMe vs 네트워크 스토리지)에서도 일관되게 나타나는지는 확인되지 않는다.</h3>
+              </div>
+              <p>논문 구조상 실험이 특정 AWS 인스턴스 조합에 한정되어 있다.</p>
+              <span class="source-ref">PDF p. 2, 3, 4</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Late-interaction retrieval</dt>
+              <dd>
+                쿼리와 문서를 각각 토큰 단위의 다중 벡터(multi-vector)로 인코딩한 뒤, 검색 시점에 토큰 벡터 간 유사도를 계산해 결합하는 방식. ColBERT가 대표적이다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PLAID</dt>
+              <dd>
+                ColBERTv2의 압축된 임베딩 인덱스를 효율적으로 검색하기 위한 인덱싱/스코어링 기법.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Memory-mapping</dt>
+              <dd>
+                디스크에 있는 데이터를 가상 메모리 주소 공간에 매핑해, 실제로 접근된 부분만 온디맨드로 물리 메모리에 올리고 필요 시 페이지를 축출하는 OS 수준 기법.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>SPLADEv2</dt>
+              <dd>
+                sparse lexical and expansion model. 쿼리와 문서를 확장된 어휘 기반 sparse 벡터로 표현하는 1단계 검색 모델로, 본 논문에서는 PISA 엔진과 함께 사용된다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PISA</dt>
+              <dd>
+                sparse retrieval을 위한 고성능 인덱싱/검색 엔진으로, 본 논문에서 SPLADEv2 기반 1단계 검색을 수행하는 데 사용되고 서버-클라이언트 구조에 맞게 개조되었다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Hybrid scoring</dt>
+              <dd>
+                SPLADEv2 점수와 ColBERTv2 점수를 z-norm으로 정규화한 뒤 계수 α로 선형 보간하여 결합하는 방식.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>z-norm</dt>
+              <dd>
+                값에서 평균을 빼고 표준편차로 나누는 정규화 방식(N(x) = (x-x̄)/S). 본 논문에서 SPLADEv2와 ColBERTv2의 서로 다른 점수 분포를 결합하기 위해 채택되었다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>RSS (Resident Set Size)</dt>
+              <dd>
+                프로세스가 실제로 점유하고 있는 물리 메모리 크기를 나타내는 지표로, 본 논문에서 RAM 사용량 측정 기준으로 사용된다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>P95 latency</dt>
+              <dd>
+                요청 지연시간 분포에서 95번째 백분위수에 해당하는 값으로, 서버 부하 하에서의 체감 성능을 나타내는 지표.
+                <span class="source-ref">PDF p. 4, 6</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Figure 1, Figure 2a, Figure 2b의 각 QPS 구간별 정확한 P95 latency 수치는 그래프로만 제시되어 있어 본문에 언급된 QPS 임계값(5, 3.3) 외에는 정확한 수치를 확인할 수 없음.</li><li>MS MARCO에서 Hybrid의 최적 α 값과 그 때의 정확한 성능 수치는 Table 3에서 MARCO 열 최댓값(α=0.3, MRR@10 40.22)으로 확인되나, 논문은 Wikipedia와 LoTTE에 대해서만 별도로 &#x27;optimal α&#x27; 결과를 Table 2에 명시함.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ColBERTv2 모델 로딩 RAM 사용량 비교", "labels": ["MS MARCO - Full ColBERTv2", "MS MARCO - MMAP ColBERTv2", "Wikipedia - Full ColBERTv2", "Wikipedia - MMAP ColBERTv2"], "values": [23.4, 2.3, 98.3, 8.2], "unit": "GB", "xLabel": "데이터셋 / 방식", "yLabel": "RAM 사용량 (RSS)"}, {"canvasId": "chart-1", "type": "bar", "title": "AWS 머신 월 비용 비교 (Table 1)", "labels": ["Control (r6a.4xlarge, Full ColBERTv2)", "MMAP MARCO (m5ad.xlarge)", "MMAP Wiki (r6id.xlarge)", "LoTTE (c5ad.xlarge)"], "values": [438, 95, 139, 54], "unit": "$/month", "xLabel": "머신 (실험 조건)", "yLabel": "비용"}, {"canvasId": "chart-2", "type": "bar", "title": "MS MARCO에서 방법별 검색 품질 (Table 2)", "labels": ["ColBERTv2 (Dev)", "SPLADEv2 (Dev)", "Rerank (Dev)", "Hybrid α=0.3 (Dev)", "ColBERTv2 (5K Test)", "SPLADEv2 (5K Test)", "Rerank (5K Test)", "Hybrid α=0.3 (5K Test)"], "values": [39.51, 38.0, 39.5, 40.22, 40.57, 38.62, 40.55, 41.11], "unit": "score", "xLabel": "방법", "yLabel": "MRR@10"}, {"canvasId": "chart-3", "type": "line", "title": "α 값 변화에 따른 품질 변화 (Table 3)", "labels": ["Wiki S@5 (α=0.0)", "Wiki S@5 (α=0.1)", "Wiki S@5 (α=0.2)", "Wiki S@5 (α=0.3)", "Wiki S@5 (α=0.4)", "Wiki S@5 (α=0.5)", "Wiki S@5 (α=0.6)", "Wiki S@5 (α=0.7)", "Wiki S@5 (α=0.8)", "Wiki S@5 (α=0.9)", "Wiki S@5 (α=1.0)"], "values": [66.29, 66.34, 66.21, 65.78, 65.33, 64.76, 63.8, 63.01, 62.12, 61.04, 59.6], "unit": "score", "xLabel": "alpha (0=Rerank, 1=SPLADEv2)", "yLabel": "품질 지표 (Wiki/LoTTE: S@5, MARCO: MRR@10)"}, {"canvasId": "chart-4", "type": "line", "title": "α 값 변화에 따른 MS MARCO MRR@10 변화 (Table 3)", "labels": ["MARCO MRR@10 (α=0.0)", "MARCO MRR@10 (α=0.1)", "MARCO MRR@10 (α=0.2)", "MARCO MRR@10 (α=0.3)", "MARCO MRR@10 (α=0.4)", "MARCO MRR@10 (α=0.5)", "MARCO MRR@10 (α=0.6)", "MARCO MRR@10 (α=0.7)", "MARCO MRR@10 (α=0.8)", "MARCO MRR@10 (α=0.9)", "MARCO MRR@10 (α=1.0)"], "values": [39.5, 39.95, 40.06, 40.22, 40.08, 40.05, 39.81, 39.53, 38.98, 38.54, 38.0], "unit": "score", "xLabel": "alpha (0=Rerank, 1=SPLADEv2)", "yLabel": "MRR@10"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
