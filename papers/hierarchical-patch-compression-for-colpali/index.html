@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hierarchical Patch Compression for ColPali: Efficient Multi-Vector Document Retrieval with Dynamic Pruning and Quantization</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Hierarchical Patch Compression for ColPali: Efficient Multi-Vector Document Retrieval with Dynamic Pruning and Quantization</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Bach Duong</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2506.21601v2, cs.IR) — 정식 학술지/학회 게재 여부는 명시되지 않음</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>이 논문은 ColBERT·ColPali 계열의 multi-vector document retrieval이 문서당 수천 개의 고차원 float32 patch 임베딩을 저장하고 late-interaction 스코어링을 수행해야 해서 저장 공간과 검색 지연이 웹 스케일 배포의 병목이 되는 문제를 다룬다. 저자는 이를 완화하기 위해 HPC-ColPali(Hierarchical Patch Compression for ColPali)를 제안하는데, 이는 세 가지 축으로 patch 임베딩 단계에 개입한다. (1) K-Means 양자화(quantization)로 고차원 float 벡터를 1-byte centroid index로 대체해 최대 32배 압축을 달성하고 nDCG@10 하락을 2% 미만으로 유지한다. (2) VLM의 attention weight를 이용한 attention-guided dynamic pruning으로 질의 시점에 상위 p%의 salient patch만 남겨 late-interaction 연산을 최대 60% 줄인다. (3) 선택적 binary encoding으로 centroid index를 b=⌈log2 K⌉ 비트 문자열로 바꿔 CPU/엣지 환경에서 Hamming distance 기반 초고속 검색을 가능하게 한다. 나아가 이를 RAG 파이프라인에 통합해 법률 요약 과제에서 hallucination을 약 30% 낮추고 end-to-end latency를 절반으로 줄였다고 보고한다. 다만 저자는 Results and Discussion 서두에서 제시된 모든 수치가 실제 측정치가 아니라 설계의 이론적 장점에 근거한 추정(estimated)값임을 명시한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 7, 8</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>세 축(양자화·attention pruning·선택적 이진화)을 patch embedding 단계에서 결합해 저장·연산 효율과 검색 품질을 동시에 겨냥한 것이 핵심 아이디어이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>K-Means 양자화로 1-byte code index를 사용해 최대 32배 저장 압축을 달성하면서 nDCG@10 하락을 2% 미만으로 유지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>attention-guided dynamic pruning으로 salient patch만 남겨 O(M^2) late-interaction 연산을 최대 60% 절감한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>centroid index를 b-bit로 결정론적 변환하는 선택적 binary encoding은 학습 없는 Hamming 검색으로 CPU/엣지에서 최대 57배 압축과 최저 지연을 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>저자 스스로 Results and Discussion 서두에서 모든 수치가 실측이 아니라 추정(estimated)값임을 밝혀, 결과의 신뢰도를 실험적 검증이 아닌 설계 기반 예측으로 한정해야 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>multi-vector 검색의 효율성 병목</h3>
+      <p>ColBERT, ColPali 같은 multi-vector document retrieval 시스템은 질의와 문서를 다수의 patch/token 임베딩으로 분해하고 late-interaction으로 세밀한(fine-grained) 매칭을 수행해 recall과 도메인 강건성(domain robustness)을 크게 높인다. 그러나 문서당 수천 개의 고차원 float32 patch 임베딩을 저장해야 하고 late-interaction 스코어링에 큰 연산 비용이 들기 때문에, 웹 스케일로 배포될 때 저장 공간(storage)과 연산 오버헤드(compute overhead)가 심각한 병목이 된다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>연구 동기</h3>
+      <p>ColPali는 ColBERT의 multi-vector 특성을 계승하면서 막대한 저장 공간 요구와 검색 지연 증가라는 본질적 한계를 함께 물려받는다. 이 논문의 핵심 동기는 ColPali 고유의 높은 검색 품질을 유지하면서 이러한 저장·지연 효율성 문제를 완화하는 것이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>single-vector dense retrieval의 한계</h3>
+      <p>전통적인 single-vector dense retrieval 모델은 질의와 문서를 각각 하나의 고정 크기 벡터로 인코딩하기 때문에 질의어와 문서 내용 간의 세밀한(fine-grained) 상호작용을 포착하지 못하고, 복잡한 질의에 대해 suboptimal한 검색 성능을 보인다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColBERT / ColPali의 자원 비용</h3>
+      <p>ColBERT는 token-level late interaction으로 검색 성능을 크게 높이지만 문서당 수천 개의 float32 벡터를 저장·비교해야 하므로 저장 공간 요구량과 late-interaction 단계의 연산 오버헤드가 크게 증가한다. ColPali는 이 multi-vector 특성을 계승하여 다수의 고차원 patch 임베딩으로 인한 막대한 저장 공간 요구와, 특히 웹 스케일 배포 시 검색 중 연산 오버헤드 증가라는 substantial challenges에 직면한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>기존 binary hashing의 학습 부담</h3>
+      <p>효율을 높이기 위해 제안된 기존의 많은 binary hashing 기법들은 복잡하고 데이터 의존적인(data-dependent) 해시 함수를 학습해야 한다는 한계가 있다. HPC-ColPali는 이와 달리 K-Means centroid index를 결정론적으로 이진 문자열로 변환하는 방식을 택해 별도의 해시 함수 학습을 피한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Quantization으로 최대 32배 압축</h3>
+      <p>patch 임베딩에 K-Means 클러스터링(K∈{128, 256, 512})을 적용해 고차원 float 벡터를 압축된 1-byte code index로 대체함으로써 최대 32배 압축을 달성하고, nDCG@10 하락은 2% 미만으로 최소화한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Attention-Guided Dynamic Pruning으로 연산 최대 60% 절감</h3>
+      <p>질의 시점에 VLM에서 도출된 attention weight를 이용해 patch를 동적으로 순위화하고 상위 top p%의 가장 salient한 patch만 유지하여, retrieval loss는 미미하게 유지하면서 late-interaction 연산을 최대 60% 절감한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Optional Binary Encoding</h3>
+      <p>온디바이스/CPU 전용 검색처럼 극단적 효율이 요구되는 시나리오를 위해 centroid index를 b-bit 이진수(b=⌈log2 K⌉)로 인코딩하는 선택적 단계를 도입해, sub-linear speedup을 제공하는 초고속 Hamming distance 기반 유사도 검색을 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAG Integration</h3>
+      <p>HPC-ColPali를 Retrieval-Augmented Generation(RAG) 파이프라인에 통합하여 법률 요약(legal summarization) 과제에서 hallucination rate를 약 30% 감소시키고 end-to-end latency를 절반으로 줄이는 실용적 효용을 입증한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>patch embedding 단계에 개입하는 모듈형 프레임워크</h3>
+      <p>HPC-ColPali는 기존 ColPali 프레임워크를 확장하여 patch embedding 수준에서 개입하는 모듈형 프레임워크이다. 오프라인 인덱싱 단계에서는 원본 float32 patch embedding 대신 K-Means 양자화를 적용해 압축된 code index로 변환한 뒤, float 기반 검색을 위한 HNSW 그래프 또는 binary 모드를 위한 bit-packed 구조로 인덱싱한다. 질의 시점에는 VLM 인코더가 patch embedding과 attention weight를 생성하고, 이 attention weight로 덜 중요한 patch를 동적으로 pruning한 후, pruning·양자화된 질의 임베딩으로 압축된 문서 인덱스에 대해 유사도 검색을 수행한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>float 모드와 binary 모드의 이원 구조</h3>
+      <p>인덱스는 두 갈래로 나뉜다. float 모드에서는 1-byte code index를 centroid vector로 디코딩한 뒤 HNSW 또는 Flat-L2 인덱스를 구성해 L2 distance 기반 검색을 수행하고, binary 모드에서는 디코딩 없이 bit-packed 구조에서 직접 Hamming distance를 계산한다. 이로써 정확도 우선 시나리오와 극단적 효율 우선 시나리오를 하나의 프레임워크로 지원한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 · 오프라인 인덱싱</h3>
+      <p>문서의 patch embedding을 K-Means로 양자화(및 선택적으로 이진 인코딩)한 뒤, float 모드는 centroid vector로 디코딩해 HNSW/Flat-L2 인덱스로, binary 모드는 bit-packed 구조로 인덱싱한다.</p>
+      <span class="source-ref">PDF p. 3, 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 · Query Embedding and Attention Extraction</h3>
+      <p>입력 질의를 VLM 인코더로 처리하여 질의의 patch embedding과 그에 대응하는 attention weight를 생성한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 · Dynamic Pruning</h3>
+      <p>추출된 attention weight를 바탕으로 질의의 상위 p%의 가장 salient한 patch만 선택하고 나머지는 폐기하여 이후 연산량을 줄인다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 · Quantization/Encoding</h3>
+      <p>선택된 질의 patch embedding을 가장 가까운 centroid로 양자화하고, binary 모드가 활성화된 경우 b-bit 이진 코드로 추가 변환한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 · Similarity Search</h3>
+      <p>양자화(또는 이진 인코딩)된 질의 patch로 압축된 문서 인덱스에 대해 유사도 검색을 수행한다. 인덱스 유형에 따라 HNSW/Flat-L2는 L2 distance를, bit-packed 구조는 Hamming distance를 사용한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 · Late Interaction and Re-ranking</h3>
+      <p>초기 유사도 검색으로 식별된 top-k 후보 문서에 대해 전체(또는 적절히 pruning된) patch representation으로 최종 late-interaction 스코어링을 수행하여 재순위화(re-ranking)한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>K-Means Quantization</h3>
+      <p>patch 임베딩 X∈R^(N×D)에 K-Means 클러스터링을 수행해 K개의 대표 centroid {c_k}를 학습하고, 각 원본 패치 임베딩 x_i를 가장 가까운 centroid에 할당하여 1-byte code index q_i∈{0,...,K-1}로 변환한다. 예를 들어 D=128인 경우 512바이트 float 벡터가 1바이트 index로 대체되어 32배 압축이 된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Attention-Guided Dynamic Pruning</h3>
+      <p>질의 처리 시 VLM 인코더가 제공하는 patch별 attention weight α_i를 기준으로 patch를 내림차순 정렬한 뒤 상위 p%(보통 {40, 60, 80} 중 선택되는 tunable parameter)만 유지한다. 이를 통해 late interaction의 O(M^2) 연산량을 절감한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Optional Binary Encoding과 Hamming Search</h3>
+      <p>K-Means centroid index q_i를 b=⌈log2 K⌉ 비트의 이진 문자열로 결정론적으로 변환한다(예: K=512이면 9-bit). 이 이진 코드에 대해 bitwise 연산으로 Hamming distance를 계산해 CPU 전용/엣지 환경에서 sub-linear speedup을 제공한다. 다만 binarization은 본질적으로 lossy하여 약간의 정확도 손실이 있을 수 있다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Index Construction</h3>
+      <p>양자화된 표현은 두 가지 방식으로 인덱싱된다. (1) float 모드: 1-byte code index를 centroid vector로 디코딩한 뒤 HNSW 또는 Flat-L2 인덱스를 구성해 L2 distance 검색을 한다. (2) binary 모드: 디코딩 없이 bit-packed 구조에서 직접 Hamming distance를 계산한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>검색 품질과 일반화 성능을 평가하기 위해 두 개의 multimodal document retrieval 데이터셋을 사용한다. ViDoRe는 학술 논문 이미지와 대응하는 text patch로 구성되며, SEC-Filings는 표·차트·조밀한 텍스트를 포함해 구조적/비구조적 정보가 풍부한 재무보고서 데이터셋이다.</p>
+      <span class="source-ref">PDF p. 5, 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상(baselines)</h3>
+      <p>ColPali Full(Float32, Full Retrieval), PQ-Only(pruning 없는 K-Means 양자화), DistilCol(single-vector distilled retriever), ColBERTv2, 그리고 LSH·ITQ 등 binary hashing/quantization 기법과 비교한다. 다만 ColBERTv2, LSH, ITQ는 baseline으로 정의되어 있으나 실제 결과 표(Table I–V)에는 수치가 등장하지 않는다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표</h3>
+      <p>검색 품질은 nDCG@10, Recall@10, MAP로, 효율성은 Storage Footprint(GB), Average Query Latency(ms, HNSW 인덱싱 기준), Throughput(QPS)으로 측정한다. RAG 통합 성능은 ROUGE-L과 Hallucination Rate(%), end-to-end latency로 평가한다. 단, QPS는 지표로 정의되었으나 실제 수치는 어떤 표에도 보고되지 않는다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구현 백본</h3>
+      <p>patch embedding 및 attention weight 생성 백본으로 ColQwen2.5를, HNSW/PQ 인덱스 구축과 K-Means 클러스터링에 FAISS 라이브러리를, RAG 파이프라인의 생성 모델로 파인튜닝된 Llama-2 7B를 사용한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>결과의 성격에 대한 중요한 주의</h3>
+      <p>저자는 Results and Discussion 섹션 서두에서 제시된 모든 수치 결과가 실제 측정치가 아니라 HPC-ColPali 설계의 이론적 장점과 유사 연구에서 관찰된 일반적 성능 향상 경향에 기반한 추정(estimated)값이며, Q1 저널 게재 가능성을 보여주기 위한 목적임을 명시한다. 따라서 아래 결과는 실측이 아닌 추정치로 해석해야 한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>저장 공간 압축 (Table III)</h3>
+      <p>100,000개 문서(문서당 평균 50 patch) 기준, K-Means 양자화(K=256)를 적용한 HPC-ColPali는 저장 공간을 ColPali Full의 2.56GB에서 0.08GB로 줄여 32배 압축을 달성한다. K=512 float 모드는 0.09GB(28배), 선택적 이진 인코딩(Binary, K=512)은 0.045GB로 최대 57배 압축을 달성한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색 품질 유지 (Table I, II)</h3>
+      <p>ViDoRe에서 HPC-ColPali(K=256, p=60%)의 nDCG@10은 0.84로 ColPali Full(0.85) 대비 0.01만 하락하며, SEC-Filings에서도 0.87 대 0.88로 소폭 하락에 그친다. 두 데이터셋 모두에서 nDCG@10 하락은 2% 미만으로 유지되어, 압축·pruning이 검색 정확도를 크게 훼손하지 않음을 보인다. 반면 single-vector인 DistilCol은 모든 지표에서 뚜렷이 낮은 성능을 보인다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의 지연시간 절감 (Table IV)</h3>
+      <p>HNSW 인덱싱 기준으로 HPC-ColPali(K=256, p=60%)는 ViDoRe에서 지연시간을 120ms에서 60ms로, SEC-Filings에서 150ms에서 75ms로 각각 50% 감소시킨다. 이진 인코딩 모드(Binary, K=512)는 각각 40ms, 50ms로 더 낮은 지연을 달성해 고처리량·저지연 시나리오에 적합함을 보인다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAG 통합 성능 (Table V)</h3>
+      <p>법률 요약 RAG 파이프라인에서 HPC-ColPali(K=256, p=60%)는 hallucination rate를 ColPali Full의 15%에서 10%로(본문 서술상 33% 상대 감소) 낮추고 end-to-end latency를 300ms에서 150ms로 절반으로 줄인다. 이진 모드는 latency 100ms에 hallucination 11%로 극단적 저지연 trade-off를 제공한다. DistilCol은 latency 80ms로 가장 낮지만 검색 품질이 낮아 hallucination 25%로 가장 높다. 다만 hallucination 감소폭은 Abstract/Conclusion에서 &#x27;30%&#x27;, 본문에서는 &#x27;33%&#x27;로 표기가 일치하지 않는다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>종합</h3>
+      <p>HPC-ColPali는 K-Means 양자화, attention-guided dynamic pruning, 선택적 binary encoding을 결합하여 multi-vector document retrieval의 저장·연산 병목을 완화하는 유연하고 모듈적인 프레임워크이다. 저자는 nDCG@10 하락 2% 미만을 유지하면서 최대 32배 저장 압축과 최대 60% late-interaction 연산 절감을 달성하고, RAG에 통합 시 hallucination을 30% 낮추고 end-to-end latency를 절반으로 줄였다고 결론짓는다. 향후 계층적 Product Quantization, adaptive pruning, dynamic corpora용 streaming codebook, 타 모달리티 확장을 과제로 제시한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>오프라인 인덱싱과 질의 처리 6단계를 포함한 HPC-ColPali의 전체 파이프라인. 오프라인에서는 문서 patch를 K-Means 양자화 후 float(HNSW/Flat-L2) 또는 binary(bit-packed) 인덱스로 구축하고, 질의 시점에는 attention 추출→pruning→양자화/인코딩→유사도 검색→late interaction 재순위화 순으로 진행한다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph Offline[오프라인 인덱싱]
+    D[문서 patch embedding] --&gt; KM[K-Means 양자화\n1-byte code index]
+    KM --&gt; FI[Float 모드\nHNSW / Flat-L2]
+    KM --&gt; BI[Binary 모드\nbit-packed 구조]
+  end
+  subgraph Query[질의 처리]
+    Q[질의 입력] --&gt; VLM[VLM 인코더\npatch embedding + attention]
+    VLM --&gt; PR[Dynamic Pruning\n상위 p%% patch]
+    PR --&gt; QZ[양자화 / 선택적 이진 인코딩]
+    QZ --&gt; SS[유사도 검색\nL2 또는 Hamming]
+  end
+  FI --&gt; SS
+  BI --&gt; SS
+  SS --&gt; LI[Late Interaction\n재순위화]
+  LI --&gt; R[최종 top-k 결과]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 ColPali와 HPC-ColPali 비교</h3>
+                <span class="source-ref">PDF p. 2, 3, 7</span>
+              </div>
+              <p>기존 ColPali Full은 float32 patch 전체를 저장하고 모든 patch로 late interaction을 수행하는 반면, HPC-ColPali는 양자화된 1-byte index를 저장하고 pruning된 salient patch만으로 late interaction을 수행해 저장·연산을 줄인다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph Base[ColPali Full]
+    B1[모든 float32 patch 저장] --&gt; B2[모든 patch로\nlate interaction]
+    B2 --&gt; B3[높은 저장·지연]
+  end
+  subgraph HPC[HPC-ColPali]
+    H1[K-Means 양자화\n1-byte index] --&gt; H2[attention pruning\n상위 p%% patch]
+    H2 --&gt; H3[선택적 binary\nHamming 검색]
+    H3 --&gt; H4[최대 32~57배 압축\n지연 50%% 감소]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>저장 공간 비교 (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table III · 100,000 documents, 평균 50 patches/doc. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe nDCG@10 비교 (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table I · ViDoRe dataset. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>SEC-Filings nDCG@10 비교 (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table II · SEC-Filings dataset. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe 평균 질의 지연시간 (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table IV · ViDoRe, HNSW indexing. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>SEC-Filings 평균 질의 지연시간 (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table IV · SEC-Filings, HNSW indexing. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>RAG hallucination rate (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table V · Legal summarization RAG pipeline. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>RAG end-to-end latency (추정치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table V · Legal summarization RAG pipeline. 저자 명시상 추정(estimated)값
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>저장 압축(양자화), 연산 절감(pruning), 극단적 효율(binary)이라는 서로 다른 자원 축을 하나의 모듈형 프레임워크로 결합해, 배포 시나리오(정확도 우선 vs 저지연 우선)에 맞춰 유연하게 선택할 수 있는 구조가 실용적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>binary encoding을 별도 학습이 필요한 data-dependent 해시 함수 대신 K-Means centroid index의 결정론적 비트 변환으로 구현하여, 기존 binary hashing의 학습 부담을 회피한 점이 설계상 강점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>검색 지표(nDCG/Recall/MAP)뿐 아니라 RAG 다운스트림 과제의 hallucination과 end-to-end latency까지 평가 대상에 포함해, 검색 효율 개선이 실제 응용 품질로 연결되는지를 보여주려 한 점이 강점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>제시된 수치가 추정치임을 논문 스스로 명시한 점은 결과의 성격을 독자에게 투명하게 알린다는 측면에서 학술적 정직성으로 볼 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>제시된 모든 수치 결과가 실제 측정치가 아니라 설계의 이론적 장점과 유사 연구 경향에 기반한 추정(estimated)값이며, Q1 저널 게재 가능성을 보이기 위한 목적임을 저자가 명시함.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>binary encoding은 binarization의 본질적으로 lossy한 특성으로 인해 float 기반 유사도 계산 대비 검색 정확도가 소폭(marginal) 하락할 수 있음을 명시함.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>K-Means 양자화의 K값 선택에는 압축률과 정확도 간 trade-off가 존재하며, K가 작을수록 압축률은 높아지지만 정확도가 저하될 수 있음을 명시함.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>현재 연구는 단일 단계(single-stage) K-Means 양자화만 사용하며, 더 발전된 계층적(hierarchical) Product Quantization 기법은 다루지 않았음을 Future Work에서 밝힘.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>pruning 비율 p가 고정된 tunable parameter로 사용되며, query complexity나 document 특성에 따라 동적으로 조정되는 adaptive pruning policy는 아직 구현하지 않았음을 밝힘.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>지속적으로 변화하는 문서 컬렉션(dynamic corpora)에 대한 K-Means codebook의 streaming update 메커니즘이 아직 구현되지 않았음을 밝힘.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>HPC-ColPali가 현재 시각 문서(visual documents)에 한정되어 있으며, 오디오·비디오 등 다른 모달리티나 도메인으로의 확장은 이루어지지 않았음을 밝힘.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>ColBERTv2, LSH, ITQ가 baseline으로 정의되었으나 실제 결과 표에는 수치가 없고 QPS도 정의만 되고 보고되지 않아, 비교 실험의 완결성이 구조적으로 미흡하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>hallucination 감소폭이 Abstract/Conclusion(30%)과 본문 결과 서술(33%)에서 서로 다르게 표기되어 있어, 핵심 성능 주장 수치의 내적 일관성이 부족하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>추정치로 제시된 저장 압축·지연 감소·hallucination 개선 수치가 실제 ViDoRe·SEC-Filings에서의 실측 실험으로도 재현되는가?</h3>
+              </div>
+              <p>저자가 V장 서두에서 모든 수치가 추정(estimated)값임을 명시했고, 데이터셋 통계·통계적 유의성 정보도 제시되지 않았다.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>고정된 pruning 비율 p 대신 query complexity나 문서 특성에 따라 p를 조정하는 adaptive pruning이 정확도-효율 trade-off를 얼마나 개선할 수 있는가?</h3>
+              </div>
+              <p>저자가 Future Work에서 adaptive pruning policy가 아직 구현되지 않았다고 밝혔다.</p>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>single-stage K-Means 대신 계층적 Product Quantization을 도입하면 압축률-정확도 곡선이 어떻게 개선되는가?</h3>
+              </div>
+              <p>저자가 Future Work에서 hierarchical PQ를 다루지 않았다고 밝혔으며, 제목의 &#x27;Hierarchical&#x27;이 실제로는 단일 단계 양자화에 그친다.</p>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>dynamic corpora에서 K-Means codebook을 streaming 방식으로 갱신할 때 검색 품질과 인덱스 유지 비용은 어떻게 변하는가?</h3>
+              </div>
+              <p>저자가 streaming codebook update가 미구현임을 Future Work에서 밝혔다.</p>
+              <span class="source-ref">PDF p. 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>baseline으로 정의된 ColBERTv2, LSH, ITQ와의 실제 비교에서 HPC-ColPali의 압축·지연 우위가 유지되는가?</h3>
+              </div>
+              <p>이들 baseline이 IV.C절에 정의되었으나 결과 표에는 수치가 없어 실제 비교 여부를 확인할 수 없다.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Multi-vector retrieval / Late interaction</dt>
+              <dd>
+                질의와 문서를 다수의 patch/token 임베딩으로 표현하고, 검색 시점에 이들 간의 세밀한 유사도(예: MaxSim)를 집계해 스코어링하는 방식. 단일 벡터 방식보다 fine-grained 매칭이 가능하지만 저장·연산 비용이 크다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ColPali</dt>
+              <dd>
+                문서를 이미지 patch 단위 임베딩으로 표현하고 ColBERT식 late interaction을 적용하는 VLM 기반 multi-vector document retrieval 모델. 이 논문의 확장 기반(baseline)이다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>K-Means Quantization</dt>
+              <dd>
+                patch 임베딩을 K개의 대표 centroid로 클러스터링한 뒤 각 임베딩을 가장 가까운 centroid의 1-byte index로 대체해 저장 공간을 줄이는 양자화 기법(K∈{128,256,512}).
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Attention-Guided Dynamic Pruning</dt>
+              <dd>
+                VLM이 제공하는 patch별 attention weight로 patch를 순위화해 상위 p%(예: 40/60/80%)만 유지함으로써 late interaction의 O(M^2) 연산을 줄이는 질의 시점 pruning 기법.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Binary Encoding / Hamming Search</dt>
+              <dd>
+                centroid index를 b=⌈log2 K⌉ 비트 이진 문자열로 결정론적으로 변환하고, bitwise Hamming distance로 유사도를 계산해 CPU/엣지에서 초고속 검색을 가능하게 하는 선택적 기법.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>HNSW / Flat-L2</dt>
+              <dd>
+                float 모드에서 centroid vector로 디코딩된 임베딩을 인덱싱하는 근사(HNSW) 및 정확(Flat-L2) 최근접 이웃 검색 구조. L2 distance 기반 유사도를 사용한다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@10</dt>
+              <dd>
+                상위 10개 검색 결과의 순위 품질을 측정하는 지표로, 관련 문서가 상위에 위치할수록 높은 값을 가진다. 이 논문의 검색 품질 핵심 지표.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>RAG (Retrieval-Augmented Generation)</dt>
+              <dd>
+                검색된 문맥을 LLM 생성에 주입해 사실성을 높이는 파이프라인. 이 논문에서는 법률 요약 과제로 hallucination rate와 end-to-end latency를 평가한다.
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>ColBERTv2, LSH, ITQ는 Baselines(IV.C)로 정의되어 있으나 Table I–V 결과값에 등장하지 않아 실제 비교 실험 수행 여부를 확인할 수 없다.</li><li>Throughput(QPS)은 평가 지표로 정의(IV.B.2)되었으나 어떤 표에도 실제 수치가 보고되지 않는다.</li><li>V장 서두에서 &#x27;모든 수치 결과는 추정치(estimated)&#x27;라고 명시되어(p.7) 실제 실험 수행 여부와 실측값을 논문에서 확인할 수 없다.</li><li>ViDoRe·SEC-Filings의 정확한 문서 수, 질의 수, train/test 분할 등 데이터셋 통계가 명시되지 않는다.</li><li>K-Means 학습에 사용된 코퍼스 크기(N, 전체 patch 수)가 구체적 수치로 제시되지 않는다.</li><li>HNSW 인덱스의 하이퍼파라미터(M, efConstruction, efSearch 등)가 명시되지 않는다.</li><li>RAG용 파인튜닝된 Llama-2 7B의 학습 데이터 구성 및 파인튜닝 절차가 구체적으로 명시되지 않는다.</li><li>결과에 대한 통계적 유의성 검정(신뢰구간, 반복실험 횟수 등) 정보가 제시되지 않는다.</li><li>hallucination rate 감소폭이 Abstract/Conclusion에서는 &#x27;30%&#x27;, 본문 결과 서술(Table V 기반)에서는 &#x27;33%&#x27;로 서로 다르게 명시되어 논문 내에서 일관되지 않는다.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "저장 공간 비교 (추정치)", "labels": ["ColPali Full (float32)", "HPC-ColPali (K=256, float)", "HPC-ColPali (K=512, float)", "HPC-ColPali (Binary, K=512)"], "values": [2.56, 0.08, 0.09, 0.045], "unit": "GB", "xLabel": "모델 구성", "yLabel": "Storage Footprint"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe nDCG@10 비교 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)"], "values": [0.85, 0.83, 0.7, 0.84, 0.83], "unit": "nDCG@10", "xLabel": "모델 구성", "yLabel": "nDCG@10"}, {"canvasId": "chart-2", "type": "bar", "title": "SEC-Filings nDCG@10 비교 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)"], "values": [0.88, 0.86, 0.72, 0.87, 0.86], "unit": "nDCG@10", "xLabel": "모델 구성", "yLabel": "nDCG@10"}, {"canvasId": "chart-3", "type": "bar", "title": "ViDoRe 평균 질의 지연시간 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)", "HPC-ColPali (Binary, K=512)"], "values": [120, 90, 30, 60, 70, 40], "unit": "ms", "xLabel": "모델 구성", "yLabel": "Average Query Latency"}, {"canvasId": "chart-4", "type": "bar", "title": "SEC-Filings 평균 질의 지연시간 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)", "HPC-ColPali (Binary, K=512)"], "values": [150, 110, 35, 75, 85, 50], "unit": "ms", "xLabel": "모델 구성", "yLabel": "Average Query Latency"}, {"canvasId": "chart-5", "type": "bar", "title": "RAG hallucination rate (추정치)", "labels": ["ColPali Full", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (Binary, K=512)", "DistilCol"], "values": [15, 10, 11, 25], "unit": "%", "xLabel": "Retriever", "yLabel": "Hallucination Rate"}, {"canvasId": "chart-6", "type": "bar", "title": "RAG end-to-end latency (추정치)", "labels": ["ColPali Full", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (Binary, K=512)", "DistilCol"], "values": [300, 150, 100, 80], "unit": "ms", "xLabel": "Retriever", "yLabel": "End-to-end Latency"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
