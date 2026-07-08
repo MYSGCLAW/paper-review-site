@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>DocPruner: A Storage-Efficient Framework for Multi-Vector Visual Document Retrieval via Adaptive Patch-Level Embedding Pruning</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>DocPruner: A Storage-Efficient Framework for Multi-Vector Visual Document Retrieval via Adaptive Patch-Level Embedding Pruning</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Yibo Yan, Guangwei Xu, Xin Zou, Shuliang Liu, James Kwok, Xuming Hu</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2509.23883v1, cs.CL). &#x27;Preprint&#x27; 헤더로 표기되어 있으며 정식 학회/저널 게재 정보는 확인되지 않음</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>DocPruner는 다중 벡터(multi-vector) 기반 시각 문서 검색(Visual Document Retrieval, VDR)에서 발생하는 막대한 저장(storage) 오버헤드를 완화하기 위해 제안된 경량 plug-and-play 프레임워크이다. ColBERT 스타일 late interaction을 사용하는 patch-level 검색기(ColPali, ColQwen, ColNomic, Jina Embeddings v4 등)는 문서 페이지마다 수백~수천 개의 patch embedding을 저장해야 하므로 대규모 배포가 비용이 많이 들고 비현실적이라는 병목이 있다.\nDocPruner의 핵심 아이디어는 오프라인 색인(offline indexing) 단계에서, 질의(query) 없이도 VLM이 global token([EOS])을 통해 각 patch에 부여하는 attention 가중치를 patch importance score로 사용하고, 문서별 importance score의 평균 μd와 표준편차 σd로부터 만든 통계적 임계값 τd = μd + k·σd를 적용해 중요도가 낮은 patch embedding을 동적으로 제거하는 것이다. 이 방식은 query-agnostic(질의 무관)하고 document-adaptive(문서별 적응적)하며, 모델 재학습이 필요 없다.\n저자들은 ViDoRe-V2와 JinaVDR-Bench(다국어 포함)에서 세 개의 선도적 base 모델과 결합해 평균 50-60%의 patch를 pruning하면서도 near-lossless한 nDCG@5 성능을 유지함을 보였고, pruning 기반 방식이 merging 기반 방식보다 성능 보존에 더 효과적임을 실험적으로 입증하였다.</p>
+      <span class="source-ref">PDF p. 1, 2, 4, 5, 7, 9</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>DocPruner는 VDR 영역에 적응형 patch-level embedding pruning을 도입한 최초의 프레임워크로, 오프라인 색인 단계에서 모델 재학습 없이 적용되는 plug-and-play 방식이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>질의 없이도 각 patch의 중요도를 추정하기 위해 global token([EOS])의 마지막 layer attention을 importance score로 사용한다(query-agnostic).</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>문서별 평균 μd와 표준편차 σd로 만든 임계값 τd = μd + k·σd를 사용해 문서 정보 밀도에 맞춰 pruning 비율을 동적으로 조정한다(document-adaptive).</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>세 개 base 모델에서 평균 50-60%의 patch를 pruning하면서도 nDCG@5는 near-lossless하게 유지되며, 다국어 환경에서는 오히려 성능이 소폭 상승하는 경우도 있었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Pruning 기반 방식이 merging 기반 방식보다 salient patch를 보존해 성능 저하를 더 잘 방지하며, 이는 late interaction의 정밀 매칭 특성과 부합한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>저장 절감의 대가로 offline encoding latency가 60-66% 증가하지만(0.47초→0.77초), OCR 기반 방식(7.22초)보다 훨씬 빨라 오프라인 단계에서는 수용 가능하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Multi-vector VDR의 저장 오버헤드</h3>
+      <p>Visual Document Retrieval(VDR)은 시각·텍스트 단서를 결합한 질의로 시각적으로 풍부한(visually-rich) 문서 페이지를 검색하는 과제로, 전자상거래 제품 검색·교육 자료 검색 등 다양한 실제 응용에서 중요하다. 최근 state-of-the-art 방식은 Large Vision-Language Model(LVLM)을 multi-vector 패러다임으로 활용해 각 문서 페이지를 patch-level embedding으로 표현함으로써 세밀한(fine-grained) 정보를 포착한다. 그러나 이 방식은 페이지당 수백~수천 개의 벡터를 저장해야 하므로 저장 오버헤드가 막대(prohibitive)하며, 이로 인해 대규모(large-scale) 배포가 비용이 많이 들고 비현실적(impractical)이 된다는 것이 핵심 문제이다.</p>
+      <span class="source-ref">PDF p. 1, 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>고성능과 실용성의 충돌</h3>
+      <p>ColBERT 스타일 late interaction과 MaxSim 연산을 기반으로 한 patch-level(다중 벡터) 방식은 세밀한 상호작용 능력 덕분에 선도적 성능을 달성하며 VDR의 주류 패러다임으로 부상했다. 하지만 저장 오버헤드 문제를 해결하지 못하면 이러한 고성능 VDR 시스템을 실용적·대규모로 활용하기 어렵다는 것이 논문의 동기이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>OCR 기반 방식</h3>
+      <p>초기 접근은 대부분 OCR 기반으로, 문서 이미지에서 텍스트를 추출해 기존 텍스트 검색기로 색인했다. 그러나 이런 방식은 취약(brittle)하고 오류가 발생하기 쉬우며(error-prone), 시각적 표현에 내재된 레이아웃과 구조적 관계를 보존하지 못하는 경우가 많다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Page-level(single-vector) 방식</h3>
+      <p>DSE, GME, UniSE 등 문서 페이지와 질의를 하나의 단일 임베딩으로 인코딩하는 page-level 방식은 효율적이지만, 복잡한 문서 이해에 필요한 세밀한(fine-grained) 정보를 포착하지 못해 특정 질의에서 성능이 최적이 아니다(suboptimal).</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>텍스트 기반 multi-vector 모델의 저장 비용</h3>
+      <p>ColBERTv2, PLAID, XTR, MUVERA 등 텍스트 기반 multi-vector 모델의 주된 한계는 문서 토큰 수(L2)에 선형적으로 비례하는 저장 오버헤드로, 문서당 O(P × L2)의 비용이 발생한다. 이는 단일 벡터 모델의 O(P) 비용보다 크게 증가한 것이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>적응성이 부족한 기존 효율화 연구</h3>
+      <p>일부 선행 연구가 multi-vector VDR의 효율성 최적화를 탐구했지만, 사전에 정의된(pre-defined) pruning rate나 고정 임계값(fixed threshold)에 제약되어 있어 다양한 실제 시각 문서에 필요한 적응성(adaptability)이 부족하다. ColPali, ColQwen, ColNomic, Jina Embeddings v4, Llama Nemoretriever Colembed 등 최신 patch-level 검색기 역시 우수한 성능을 내지만 막대한 저장·연산 오버헤드라는 critical bottleneck을 여전히 해결하지 못하고 있다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 Contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>❶ VDR을 위한 최초의 적응형 pruning</h3>
+      <p>VDR 영역에 적응형(adaptive) pruning 메커니즘을 도입한 첫 번째 프레임워크로 DocPruner를 제안한다. 평균 50-60%의 patch pruning rate를 달성하면서도 near-lossless한 성능을 유지해 최상위 성능 multi-vector VDR 모델의 저장 오버헤드를 효과적으로 완화한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>❷ 다양한 문서에 대한 적응성</h3>
+      <p>DocPruner의 적응적 특성은 다양한 유형의 시각 문서에 대해 pruning 비율을 동적으로 조정할 수 있게 한다. 이는 문서 형식과 정보 밀도가 크게 다른 실제 시나리오에서 특히 중요한 특징이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>❸ 광범위한 실험적 검증</h3>
+      <p>다국어(multilingual)를 포함한 다양한 VDR 벤치마크에서 포괄적 실험을 수행하여, 여러 선도적 multi-vector 검색 모델과 결합했을 때의 효과성과 강건성(robustness)을 입증한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>두 가지 설계 원칙</h3>
+      <p>DocPruner는 오프라인 색인(offline indexing) 단계에서 적용되는 경량 plug-and-play 프레임워크로, 두 가지 핵심 원칙을 중심으로 설계된다: (1) query-agnostic — 질의에 무관하게 오프라인에서 처리 가능, (2) document-adaptive — 다양한 시각 문서의 특성에 적응. 모델 재학습 없이 문서 내부(intra-document)의 patch attention 분포를 활용해 중복되거나 정보량이 적은 patch embedding을 동적으로 식별·제거한다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>세 단계 파이프라인</h3>
+      <p>전체 처리는 세 가지 주요 단계로 구성된다: (1) patch importance 정량화(quantifying patch importance), (2) 적응형 임계값 적용(applying an adaptive threshold), (3) pruned embedding으로 점수 계산(scoring with the pruned embeddings). 목표는 전체 embedding 집합 D의 부분집합 D&#x27;(⊂ D)을 생성하여 크기 L&#x27;d를 Ld보다 크게 줄이고(L&#x27;d ≪ Ld), 저장 비용을 O(L&#x27;d × P)로 낮추면서 검색 성능을 보존하는 것이다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계: 인코딩 및 attention 추출 (오프라인)</h3>
+      <p>문서 페이지 d를 이미지로 렌더링한 뒤 VLM 인코더 Φ(·)에 입력해 patch-level embedding 집합 Dd와 마지막 Transformer layer의 attention 가중치 A(L)를 추출한다 (Algorithm 1, Step 0).</p>
+      <span class="source-ref">PDF p. 4, 20</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계: patch importance 계산</h3>
+      <p>모든 attention head에 대해 평균한 global([EOS]) 토큰의 patch별 attention 값 Ā(L)_global,j을 각 patch j의 importance score I(dj)로 정의한다 (Eq.2). 이는 global token의 hidden state가 문서 전체 의미를 요약하도록 학습되어 있다는 통찰에 기반한다.</p>
+      <span class="source-ref">PDF p. 4, 5, 20</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계: 문서별 적응 임계값 산출 및 필터링</h3>
+      <p>문서 d의 importance score 평균 μd(Eq.3)와 표준편차 σd(Eq.4)를 계산하고, 문서별 적응 임계값 τd = μd + k·σd를 산출한다(Eq.5). I(dj) &gt; τd인 patch만 남겨 예비 pruned set D̂&#x27;d를 구성한다. k는 adaptation factor 하이퍼파라미터이다.</p>
+      <span class="source-ref">PDF p. 5, 20</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계: edge case 처리</h3>
+      <p>D̂&#x27;d가 공집합(∅)이면 importance score가 가장 높은 patch 하나만 강제로 남기고, 그렇지 않으면 D̂&#x27;d를 최종 pruned set D&#x27;d로 사용한다(Eq.6). 이로써 빈 임베딩 집합이 되는 것을 방지한다.</p>
+      <span class="source-ref">PDF p. 5, 20</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계: pruned embedding으로 온라인 검색</h3>
+      <p>온라인 검색 시 질의 q를 토큰 임베딩 Q로 인코딩한 뒤, 전체 Dd 대신 pruned된 D&#x27;d만을 대상으로 표준 late-interaction MaxSim 연산을 수행해 관련성 점수 s&#x27;(q,d)를 계산하고, 이를 nDCG@5로 평가한다 (Section 3.2.3, Algorithm 2).</p>
+      <span class="source-ref">PDF p. 5, 6, 21</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 이론적 근거</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Global Token Attention 기반 importance</h3>
+      <p>오프라인 pruning의 핵심 난제는 질의 없이 각 patch의 중요도를 추정하는 것이다. DocPruner는 VLM이 문서 이미지를 이해하는 과정에서 이미 계산하는 신호, 즉 global token([EOS])이 각 patch에 보내는 attention을 salience 신호로 사용한다. 마지막 layer의 모든 head에 대해 평균한 attention map(Ā)에서 patch j가 받는 attention을 I(dj)로 정의한다(Eq.2).</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Adaptive Thresholding</h3>
+      <p>고정 비율이나 전역 임계값 같은 naive pruning은 정보 밀도가 크게 다른 시각 문서에 부적합하다. DocPruner는 문서별 importance score의 처음 두 통계량(평균 μd, 표준편차 σd)을 이용해 τd = μd + k·σd를 계산한다. σd가 크다는 것은 소수의 patch가 특히 중요하다는(sparse but salient) 신호이며, k는 평균 대비 몇 표준편차 이상을 유의미하다고 볼지를 결정한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Information Bottleneck 기반 정당화</h3>
+      <p>저자들은 Information Bottleneck(IB) 원리로 DocPruner를 정당화한다. 이상적 목적함수 max E_q[I(D&#x27;;s(q,d))]는 미래 질의 분포 P(q)가 알려져 있지 않아 intractable하다(Eq.8). DocPruner는 두 가지 관점으로 이를 tractable하게 근사한다: (1) Global Token as Relevance Proxy — global token의 hidden state를 문서 관련성의 sufficient statistic으로 취급하여 I(D;s(q,d)) ≈ I(D;h_global)로 근사한다. (2) Entropy-Aware Pruning — 정규화된 attention 분포의 Shannon entropy에 따라, low-entropy(peaky) 문서에서는 k·σd 항이 지배해 임계값이 높아져 공격적으로 pruning하고, high-entropy(uniform) 문서에서는 임계값이 완만해져 더 많은 patch를 보존한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>벤치마크와 평가지표</h3>
+      <p>실험은 ViDoRe-V2와 JinaVDR-Bench에서 수행되며, 주요 평가지표는 nDCG@5(Normalized Discounted Cumulative Gain at rank 5)이다. 추가로 patch pruning ratio(저장 절감률, %)와 문서당 offline encoding latency를 보고한다. 모든 실험은 NVIDIA A100(80GB) GPU 클러스터에서 진행되었다.</p>
+      <span class="source-ref">PDF p. 6, 7, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Base 모델과 하이퍼파라미터</h3>
+      <p>세 개의 state-of-the-art multi-vector 모델 ColQwen2.5, ColNomic, Jina Embeddings V4를 base 모델로 사용한다. DocPruner의 adaptation factor k는 {-0.5, -0.25, 0, 0.25, 0.5, 1} 범위에서 실험하며, k=-0.25가 성능-저장 간 최적 trade-off를 제공한다고 보고한다.</p>
+      <span class="source-ref">PDF p. 6, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 baseline</h3>
+      <p>세 부류의 baseline과 비교한다: (I) Base Models(pruning/merging 미적용 원본), (II) Merging 기반(Sem-Cluster, 1D-Pooling, 2D-Pooling), (III) Pruning 기반(Random, Attention-plus-Similarity, Pivot-Threshold). 또한 variant study(RQ3)에서 attention-ratio(고정 비율), attention-threshold(고정 전역 임계값), attention-threshold-nfp(noise-filtering-prompt 적용)와 비교한다.</p>
+      <span class="source-ref">PDF p. 6, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>네 가지 연구 질문(RQ)</h3>
+      <p>실험은 네 가지 RQ를 중심으로 구성된다: (RQ1) 다양한 문서 유형에서 저장 압축과 성능 유지의 효과, (RQ2) 다국어 시나리오로의 일반화, (RQ3) DocPruner와 그 variant의 차이, (RQ4) 저장 효율성과 latency의 정량적 개선.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Near-lossless 성능 (RQ1)</h3>
+      <p>ViDoRe-V2에서 ColQwen2.5에 적용 시 patch embedding의 51.6%를 pruning하면서 nDCG@5는 0.5508에서 0.5470으로 0.0038만 하락했다. Jina Embeddings V4는 54.1% pruning에 0.5687→0.5608, ColNomic은 43.6% pruning에 0.5946(base)→0.5960으로 거의 변화가 없었다. 즉 50-60% 저장 절감에도 near-lossless한 성능을 유지한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Pruning이 Merging보다 우수</h3>
+      <p>ColNomic 기준 약 75% 압축률 지점에서 DocPruner는 72.1% pruning ratio로 nDCG@5 0.5730을 달성한 반면, 가장 강한 merging 기준선 sem-cluster는 75% ratio에서 0.5426으로 하락했다. Merging은 벡터 평균으로 salient patch의 변별력을 희석시키는 반면, pruning은 원본 고충실도 embedding을 보존해 late interaction의 정밀 매칭에 유리하다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>다국어 일반화 (RQ2)</h3>
+      <p>JinaVDR 다국어 벤치마크에서 ColNomic은 61.0% pruning에 nDCG@5가 0.8151→0.8191로 오히려 소폭 상승, ColQwen2.5는 54.0% pruning에 0.6877→0.6958로 향상되었다. 언어별로는(ColNomic, k=-0.5) 독일어 9.0%, 일본어 36.3%, 중국어 37.6%처럼 정보 밀도에 따라 pruning 비율이 다르게 적용되어 적응성이 확인되었다. (단, 본문 Observation ❻에는 &#x27;Spanish documents&#x27; 표기가 있으나 선택된 4개 언어는 German/Russian/Chinese/Japanese로 규정되어 있어 표기 불일치가 존재한다.)</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>적응형의 우위 (RQ3)</h3>
+      <p>약 60% pruning ratio 지점에서 DocPruner는 nDCG@5 0.54를 유지했지만, 고정 전역 임계값을 쓰는 attention-threshold variant는 0.45 이하로 성능이 붕괴했다. 문서별 통계적 적응 임계값이 고정 비율/전역 임계값 방식보다 우수한 성능-압축 trade-off를 제공함을 보인다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성 분석 (RQ4)</h3>
+      <p>k=-0.25 기준 storage는 ColQwen 51.55%↓(nDCG@5 0.69%↓), ColNomic 43.62%↓(0.24%↑), JinaV4 54.09%↓(1.39%↓) 감소했다. 대신 offline latency는 각각 60.00%, 65.96%, 66.00% 증가했다. 문서당 평균 인코딩 시간은 0.47초→0.77초로 늘었으나, OCR 기반(OCR+BGE-M3)의 7.22초보다 훨씬 짧아 오프라인 색인 단계에서 수용 가능한 수준이라고 평가한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>본 논문은 state-of-the-art multi-vector VDR의 막대한 저장 오버헤드 문제를 다루며, global token이 각 patch에 부여하는 attention으로부터 query-agnostic importance score를 유도하고 문서별 통계 임계값으로 pruning 비율을 동적 조정하는 DocPruner를 제안했다. 10개 이상의 벤치마크 데이터셋 실험을 통해 저장된 patch embedding을 50-60% 줄이면서도 검색 정확도 저하는 미미함을 입증했다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 방향</h3>
+      <p>저자들은 향후 연구로 (1) pruning 메커니즘을 모델 학습 과정에 직접 통합하는 방향과 (2) 적응형 원리를 다른 모달리티(other modalities)로 확장하는 방향을 제시했다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>DocPruner 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 4, 5, 6, 20, 21</span>
+              </div>
+              <p>오프라인 색인 단계에서 VLM 인코딩→global token attention 기반 importance 산출→문서별 적응 임계값 필터링→edge case 보정→pruned embedding 저장으로 이어지고, 온라인 단계에서 pruned set에 대해서만 MaxSim을 수행하는 흐름을 나타낸다.</p>
+              <div class="mermaid">
+flowchart TD\n    A[문서 페이지 이미지] --&gt; B[VLM 인코더 Φ]\n    B --&gt; C[patch embedding Dd]\n    B --&gt; D[마지막 layer attention A_L]\n    D --&gt; E[global token 기반 importance I_dj  Eq.2]\n    C --&gt; F\n    E --&gt; G[문서별 μd, σd 계산  Eq.3,4]\n    G --&gt; H[적응 임계값 τd = μd + k·σd  Eq.5]\n    H --&gt; F[I_dj gt τd 인 patch 선별]\n    F --&gt; I{선별 결과 공집합?}\n    I --&gt;|예| J[최상위 patch 1개 보존  Eq.6]\n    I --&gt;|아니오| K[pruned set D&#x27;d]\n    J --&gt; K\n    K --&gt; L[(pruned embedding 저장)]\n    M[질의 q] --&gt; N[질의 토큰 임베딩 Q]\n    L --&gt; O[D&#x27;d 대상 MaxSim  s&#x27;q,d]\n    N --&gt; O\n    O --&gt; P[nDCG@5 평가]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 저장 방식 vs. DocPruner</h3>
+                <span class="source-ref">PDF p. 1, 4, 7</span>
+              </div>
+              <p>기존 multi-vector VDR은 페이지당 전체 patch embedding(수백~수천 개)을 저장해 O(Ld × P) 비용이 든다. DocPruner는 문서별 적응 pruning으로 부분집합 D&#x27;만 저장해 O(L&#x27;d × P)로 비용을 낮춘다.</p>
+              <div class="mermaid">
+flowchart LR\n    subgraph 기존[기존 multi-vector VDR]\n      A1[문서 페이지] --&gt; A2[전체 patch embedding Dd 저장]\n      A2 --&gt; A3[저장 비용 O_Ld×P&lt;br/&gt;대규모 배포 어려움]\n    end\n    subgraph 제안[DocPruner]\n      B1[문서 페이지] --&gt; B2[적응형 pruning]\n      B2 --&gt; B3[부분집합 D&#x27;d 저장&lt;br/&gt;50-60% 절감]\n      B3 --&gt; B4[저장 비용 O_L&#x27;d×P&lt;br/&gt;near-lossless 성능]\n    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>ViDoRe-V2에서 base 모델별 DocPruner pruning ratio</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7, 8 · Figure 2 / 본문 Observation ❶ · ViDoRe-V2 benchmark, near-lossless 성능 지점에서의 pruning ratio
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe-V2 nDCG@5: Base 대 DocPruner</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7, 8 · Figure 2 / 본문 Observation ❶ · ViDoRe-V2 benchmark, 본문에 명시된 base 및 DocPruner nDCG@5 수치
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>JinaVDR 다국어(overall): Base 대 DocPruner nDCG@5</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8, 9 · Figure 4 / 본문 Observation ❺ · JinaVDR-Bench 다국어 overall 평가, 본문에 명시된 수치
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Table 1: base 대비 상대적 변화 (k=-0.25)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 1 · ViDoRe-V2, adaptation factor k=-0.25, base 모델 대비 상대 변화(저장은 감소량, latency는 증가량의 절댓값)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>문서당 평균 인코딩 시간 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · 본문 Observation ❽ (Table 1 관련) · ViDoRe-V2, 문서당 평균 offline 인코딩 시간
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Query-agnostic 설계로 pruning을 전적으로 오프라인 색인 단계에서 수행할 수 있어, 온라인 검색 지연 없이 저장 비용만 낮춘다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>모델 재학습이 필요 없는 post-hoc plug-and-play 방식이므로 ColQwen2.5, ColNomic, Jina V4 등 서로 다른 base 모델에 그대로 결합할 수 있어 실용성과 확장성이 높다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>고정 비율/전역 임계값 대신 문서별 통계량(μd, σd)에 기반한 임계값을 써서, 정보 밀도가 다른 문서에 대해 pruning 강도를 자동 조정하는 점이 단순 baseline 대비 명확한 이점을 준다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Information Bottleneck 관점의 이론적 해석을 제시해 attention 기반 pruning이 왜 관련성 정보를 보존하는지에 대한 근거를 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>다국어(German/Russian/Chinese/Japanese) 벤치마크에서도 성능이 유지되어, 언어에 무관한 시각 attention 패턴에 의존한다는 주장을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>추가적인 attention score 추출·필터링 단계로 인해 offline encoding latency가 60-66% 증가한다. 저자는 이를 &#x27;완만하다(modest)&#x27;고 평가하지만 명시적으로 인정된 trade-off이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>현재 DocPruner는 모델 재학습 없이 post-hoc로만 적용되며, 저자들은 pruning을 모델 학습 과정에 통합하는 것을 향후 과제로 남겨두었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>검증이 시각 문서(patch-level VDR) 모달리티에 한정되어 있으며, 다른 모달리티로의 확장은 향후 연구로 제시되었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>importance score가 마지막 layer [EOS] global token의 attention에 전적으로 의존하므로, global token이 문서 요약 신호로 잘 학습되지 않은 VLM 아키텍처에서는 pruning 품질이 저하될 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>성능-저장 trade-off의 최적점(k=-0.25)이 특정 벤치마크 실험에서 도출된 것이어서, 분포가 크게 다른 실제 코퍼스에서는 k 재튜닝이 필요할 수 있으며 그 비용은 정량화되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>저장은 줄지만 pruning 후에도 late interaction의 MaxSim 검색 자체는 유지되므로, 온라인 검색의 계산 복잡도 개선 폭은 embedding 수 감소분에 비례하는 수준으로만 제한된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Pruning 메커니즘을 base 모델 학습 과정에 직접 통합하면, post-hoc 적용 대비 성능-저장 trade-off를 얼마나 더 개선할 수 있는가?</h3>
+              </div>
+              <p>저자가 Conclusion에서 향후 연구로 명시한 방향으로, 현재는 training-free post-hoc 방식에 머물러 있다.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>적응형 attention 기반 pruning 원리를 시각 문서 외 다른 모달리티(예: 비디오, 오디오)로 확장했을 때도 near-lossless 성능이 유지되는가?</h3>
+              </div>
+              <p>저자가 향후 연구로 다른 모달리티 확장을 제시했으나 본 논문에서는 검증되지 않았다.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>[EOS] 이외의 global token 선택이나 여러 layer의 attention 결합이 importance 추정의 정확도를 높일 수 있는가?</h3>
+              </div>
+              <p>논문은 마지막 layer의 [EOS] attention을 default로 사용하지만, 이 설계 선택의 대안에 대한 ablation은 본문에서 확인되지 않는다.</p>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>수백만~수십억 규모의 대규모 코퍼스에서 offline latency 60-66% 증가가 전체 색인 파이프라인 비용에 실제로 얼마나 영향을 미치는가?</h3>
+              </div>
+              <p>저자는 문서당 0.47→0.77초 증가가 수용 가능하다고 주장하지만, 대규모 전체 색인 관점의 정량 평가는 제시되지 않았다.</p>
+              <span class="source-ref">PDF p. 9</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Visual Document Retrieval (VDR)</dt>
+              <dd>
+                시각·텍스트 단서를 결합한 질의로, 레이아웃·표·그림 등 시각적으로 풍부한 문서 페이지를 검색하는 과제.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-vector / Late interaction</dt>
+              <dd>
+                질의와 문서를 각각 토큰/patch 단위 여러 임베딩 집합으로 인코딩하고, 세밀한 토큰-patch 유사도로 관련성을 계산하는 ColBERT 계열 검색 패러다임.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                각 질의 토큰 임베딩에 대해 문서의 모든 patch 임베딩과의 최대 유사도를 취한 뒤 이를 합산해 관련성 점수를 산출하는 late-interaction 연산(Eq.1).
+                <span class="source-ref">PDF p. 3, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Patch-level embedding</dt>
+              <dd>
+                문서 페이지 이미지를 patch 격자로 나눠 각 patch를 하나의 벡터로 인코딩한 표현. 세밀한 정보를 담지만 페이지당 벡터 수가 많아 저장 비용이 크다.
+                <span class="source-ref">PDF p. 2, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Global token ([EOS])</dt>
+              <dd>
+                입력 시퀀스 전체 정보를 집약·요약하도록 학습된 특수 토큰. DocPruner는 이 토큰이 각 patch에 보내는 attention을 importance 신호로 사용한다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Importance score I(dj)</dt>
+              <dd>
+                마지막 layer에서 모든 head에 대해 평균한, global token이 patch j에 부여한 attention 값. patch의 중요도를 나타낸다(Eq.2).
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Adaptive threshold τd</dt>
+              <dd>
+                문서별 importance score의 평균 μd와 표준편차 σd로 정의되는 통계 임계값 τd = μd + k·σd. 이를 초과하는 patch만 보존한다(Eq.5).
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Adaptation factor k</dt>
+              <dd>
+                평균 대비 몇 표준편차 이상을 유의미하다고 볼지 조절하는 하이퍼파라미터. 실험 범위는 {-0.5, -0.25, 0, 0.25, 0.5, 1}이며 k=-0.25가 최적 trade-off로 보고됨.
+                <span class="source-ref">PDF p. 5, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Query-agnostic / Document-adaptive</dt>
+              <dd>
+                각각 &#x27;질의 없이 오프라인 처리 가능&#x27;과 &#x27;문서별 특성에 맞춰 pruning 조정&#x27;을 뜻하는 DocPruner의 두 핵심 설계 원칙.
+                <span class="source-ref">PDF p. 2, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Information Bottleneck (IB)</dt>
+              <dd>
+                입력 X를 압축한 표현 Z가 목표 Y에 대해 최대 정보를 갖도록 하는 정보이론 원리. DocPruner의 pruning을 이론적으로 정당화하는 틀(Eq.7, 8).
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@5</dt>
+              <dd>
+                상위 5개 검색 결과의 순위 품질을 측정하는 Normalized Discounted Cumulative Gain at rank 5. 본 논문의 주요 평가지표.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Merging 기반 방식</dt>
+              <dd>
+                여러 patch 임베딩을 클러스터링·pooling으로 병합해 벡터 수를 줄이는 방식(Sem-Cluster, 1D/2D-Pooling). pruning의 대안 baseline.
+                <span class="source-ref">PDF p. 6, 8</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>본문 Observation ❻(Page 9)은 언어별 결과 중 하나를 &#x27;Spanish documents&#x27;(7.0%, nDCG@5 0.7896 vs base 0.7927)로 언급하지만, 실험 대상 4개 다국어 데이터셋은 German·Russian·Chinese·Japanese로 규정되어 있어 표기 불일치가 존재하며 논문 내에서 해소되지 않는다.</li><li>이 논문은 arXiv preprint(arXiv:2509.23883v1, &#x27;Preprint&#x27; 헤더)로 게재되어 있으며, 정식 학회/저널 게재 여부와 게재처는 본문에서 확인되지 않는다.</li><li>Figure 2, 3, 4, 5 및 Appendix Figure들은 선/막대 그래프로 제시되어 있어, 본문에 텍스트로 명시되지 않은 개별 데이터 포인트의 정확한 수치는 확인할 수 없다(그래프 눈대중 수치는 생성하지 않음).</li><li>Abstract·Conclusion이 언급한 &#x27;10개 이상의 대표 데이터셋(more than ten representative datasets)&#x27;의 전체 목록·총 개수는 본문에서 하나의 총합으로 명시되지 않는다.</li><li>Russian 문서에 대한 언어별 pruning ratio 및 nDCG@5 수치는 본문 텍스트에 명시적으로 제시되지 않아 확인되지 않는다.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe-V2에서 base 모델별 DocPruner pruning ratio", "labels": ["ColQwen2.5", "Jina Embeddings V4", "ColNomic"], "values": [51.6, 54.1, 43.6], "unit": "%", "xLabel": "Base 모델", "yLabel": "Patch pruning ratio"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe-V2 nDCG@5: Base 대 DocPruner", "labels": ["ColQwen2.5 Base", "ColQwen2.5 DocPruner", "Jina V4 Base", "Jina V4 DocPruner", "ColNomic Base", "ColNomic DocPruner"], "values": [0.5508, 0.547, 0.5687, 0.5608, 0.5946, 0.596], "unit": "nDCG@5", "xLabel": "모델 / 조건", "yLabel": "nDCG@5"}, {"canvasId": "chart-2", "type": "bar", "title": "JinaVDR 다국어(overall): Base 대 DocPruner nDCG@5", "labels": ["ColNomic Base", "ColNomic DocPruner (61.0% pruned)", "ColQwen2.5 Base", "ColQwen2.5 DocPruner (54.0% pruned)"], "values": [0.8151, 0.8191, 0.6877, 0.6958], "unit": "nDCG@5", "xLabel": "모델 / 조건", "yLabel": "nDCG@5"}, {"canvasId": "chart-3", "type": "bar", "title": "Table 1: base 대비 상대적 변화 (k=-0.25)", "labels": ["Storage ColQwen (감소)", "Storage ColNomic (감소)", "Storage JinaV4 (감소)", "Latency ColQwen (증가)", "Latency ColNomic (증가)", "Latency JinaV4 (증가)"], "values": [51.55, 43.62, 54.09, 60.0, 65.96, 66.0], "unit": "%", "xLabel": "지표 / 모델", "yLabel": "상대 변화율"}, {"canvasId": "chart-4", "type": "bar", "title": "문서당 평균 인코딩 시간 비교", "labels": ["Base (pruning 미적용)", "DocPruner (k=-0.25)", "OCR+BGE-M3"], "values": [0.47, 0.77, 7.22], "unit": "seconds", "xLabel": "방식", "yLabel": "문서당 인코딩 시간"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

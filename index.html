@@ -409,7 +409,7 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 7편</span>
+        <span class="stat">논문 8편</span>
       </div>
     </div>
   </header>
@@ -432,7 +432,7 @@
     </div>
 
     <span class="pending-queue-count">
-      3편 대기 중
+      2편 대기 중
     </span>
   </div>
 
@@ -444,12 +444,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>DocPruner_A STORAGE_EFFICIENT FRAMEWORK.pdf</strong>
-            <span>등록 시각 · 2026-07-08 01:19</span>
+            <strong>hierarchical Patch Compression for ColPali.pdf</strong>
+            <span>등록 시각 · 2026-07-08 01:21</span>
           </div>
 
           <div class="pending-queue-size">
-            18.4 MB
+            225.6 KB
           </div>
 
           <div>
@@ -463,28 +463,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>hierarchical Patch Compression for ColPali.pdf</strong>
-            <span>등록 시각 · 2026-07-08 01:21</span>
-          </div>
-
-          <div class="pending-queue-size">
-            225.6 KB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -608,6 +586,32 @@
       </p>
 
       <a class="open-link" href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="paper-card">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/docpruner-a-storage-efficient-framework/">
+            DocPruner: A Storage-Efficient Framework for Multi-Vector Visual Document Retrieval via Adaptive Patch-Level Embedding Pruning
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Yibo Yan, Guangwei Xu, Xin Zou, Shuliang Liu, James Kwok, Xuming Hu</p>
+      <p class="metadata">2025 · arXiv preprint (arXiv:2509.23883v1, cs.CL). &#x27;Preprint&#x27; 헤더로 표기되어 있으며 정식 학회/저널 게재 정보는 확인되지 않음</p>
+
+      <p class="summary">
+        DocPruner는 다중 벡터(multi-vector) 기반 시각 문서 검색(Visual Document Retrieval, VDR)에서 발생하는 막대한 저장(storage) 오버헤드를 완화하기 위해 제안된 경량 plug-and-play 프레임워크이다. ColBERT 스타일 late interaction을 사용하는 patch-level 검색기(ColPali, ColQwen, ColNomic, Jina Embeddings v4 등)는 문서 페이지마다 수백~수천 개의 patch embedding을 저장해야 하므로 대규모 배포가 비용이 많이 들고 비현실적이라는 병목이 있다.\nDocPruner의 핵심 아이디어는 오프라인 색인(offline indexing) 단계에서, 질의(query) 없이도 VLM이 global token([EOS])을 통해 각 patch에 부여하는 attention 가중치를 patch importance score로 사용하고, 문서별 importance score의 평균 μd와 표준편차 σd로부터 만든 통계적 임계값 τd = μd + k·σd를 적용해 중요도가 낮은 patch embedding을 동적으로 제거하는 것이다. 이 방식은 query-agnostic(질의 무관)하고 document-adaptive(문서별 적응적)하며, 모델 재학습이 필요 없다.\n저자들은 ViDoRe-V2와 JinaVDR-Bench(다국어 포함)에서 세 개의 선도적 base 모델과 결합해 평균 50-60%의 patch를 pruning하면서도 near-lossless한 nDCG@5 성능을 유지함을 보였고, pruning 기반 방식이 merging 기반 방식보다 성능 보존에 더 효과적임을 실험적으로 입증하였다.
+      </p>
+
+      <a class="open-link" href="papers/docpruner-a-storage-efficient-framework/">
         보고서 열기 →
       </a>
     </article>
