@@ -123,18 +123,29 @@
       background: var(--surface-hover);
     }
 
-    .card-top {
+    .paper-card-header {
       display: flex;
-      justify-content: flex-end;
-      margin-bottom: 20px;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .paper-card-header h2 {
+      flex: 1;
+      min-width: 0;
     }
 
     .status-badge {
       display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
       padding: 5px 9px;
       border-radius: 999px;
       font-size: 0.73rem;
       font-weight: 700;
+      white-space: nowrap;
     }
 
     .status-passed {
@@ -226,65 +237,6 @@
       }
     }
   </style>
-<!-- verification-style:start -->
-<style>
-.verification-status {
-    margin: 16px auto 22px;
-    padding: 13px 16px;
-    border: 1px solid;
-    border-radius: 10px;
-    line-height: 1.5;
-    box-sizing: border-box;
-}
-
-.verification-status strong {
-    margin-right: 8px;
-}
-
-.verification-status.pending {
-    background: #fff8dc;
-    border-color: #b58900;
-    color: #5f4b00;
-}
-
-.verification-status.verified {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-}
-
-.verification-status.failed {
-    background: #ffebee;
-    border-color: #c62828;
-    color: #7f0000;
-}
-
-.verification-index-badge {
-    display: inline-block;
-    margin-left: 7px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    vertical-align: middle;
-}
-
-.verification-index-badge.pending {
-    background: #fff3cd;
-    color: #6b5200;
-}
-
-.verification-index-badge.verified {
-    background: #dff3e3;
-    color: #176b2c;
-}
-
-.verification-index-badge.failed {
-    background: #fde2e5;
-    color: #941b28;
-}
-</style>
-<!-- verification-style:end -->
 
 <!-- PENDING_QUEUE_STYLE_START -->
 <style>
@@ -558,17 +510,17 @@
 <div class="paper-grid">
       
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/colbertsar/">
+            ColBERTSaR: Sparsified ColBERT Index via Product Quantization
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/colbertsar/">
-          ColBERTSaR: Sparsified ColBERT Index via Product Quantization
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Eugene Yang, Andrew Yates, Dawn Lawrie, James Mayfield, Saron Samuel, Rohan Jha</p>
       <p class="metadata">2026 · SIGIR &#x27;26 (49th International ACM SIGIR Conference), Melbourne, VIC, Australia; arXiv:2606.05568v1 [cs.IR]</p>
@@ -579,22 +531,22 @@
 
       <a class="open-link" href="papers/colbertsar/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
 
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
+            FLASH-MaxSim: IO-Aware Fused Kernels for Late-Interaction Retrieval
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
-          FLASH-MaxSim: IO-Aware Fused Kernels for Late-Interaction Retrieval
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Roi Pony, Daniel Ezer, Adi Raz Goldfarb, Idan Friedman, Oshri Naparstek, Udi Barzelay</p>
       <p class="metadata">2026</p>
@@ -605,22 +557,22 @@
 
       <a class="open-link" href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
 
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
+            ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
-          ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Kaili Huang, Thejas Venkatesh, Uma Dingankar, Antonio Mallia, Daniel Campos, Jian Jiao, Christopher Potts, Matei Zaharia, Kwabena Boahen, Omar Khattab, Saarthak Sarup, Keshav Santhanam</p>
       <p class="metadata">2025 · ECIR 2025 (Advances in Information Retrieval, Lecture Notes in Computer Science, vol 15575)</p>
@@ -631,22 +583,22 @@
 
       <a class="open-link" href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
 
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
+            ColPali: Efficient Document Retrieval with Vision Language Models
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
-          ColPali: Efficient Document Retrieval with Vision Language Models
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Manuel Faysse, Hugues Sibille, Tony Wu, Bilel Omrani, Gautier Viaud, Céline Hudelot, Pierre Colombo</p>
       <p class="metadata">2025 · ICLR 2025 (arXiv:2407.01449)</p>
@@ -657,22 +609,22 @@
 
       <a class="open-link" href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
 
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/efficient-constant-space-multi-vector-retrieval/">
+            Efficient Constant-Space Multi-Vector Retrieval
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/efficient-constant-space-multi-vector-retrieval/">
-          Efficient Constant-Space Multi-Vector Retrieval
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Sean MacAvaney (University of Glasgow, UK), Antonio Mallia (Pinecone, US), Nicola Tonellotto (University of Pisa, Italy)</p>
       <p class="metadata">2025 · arXiv preprint (arXiv:2504.01818v1, cs.IR)</p>
@@ -683,22 +635,22 @@
 
       <a class="open-link" href="papers/efficient-constant-space-multi-vector-retrieval/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
 
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/warp/">
+            WARP: An Efficient Engine for Multi-Vector Retrieval
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/warp/">
-          WARP: An Efficient Engine for Multi-Vector Retrieval
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Jan Luca Scheerer, Matei Zaharia, Christopher Potts, Gustavo Alonso, Omar Khattab</p>
       <p class="metadata">2025 · SIGIR &#x27;25 (Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval), Padua, Italy</p>
@@ -709,22 +661,22 @@
 
       <a class="open-link" href="papers/warp/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
 
     <article class="paper-card">
-      <div class="card-top">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/muvera-multi-vector-retrieval-via-fixed-dimensional-encodings/">
+            MUVERA: Multi-Vector Retrieval via Fixed Dimensional Encodings
+          </a>
+        </h2>
+
         <span class="status-badge status-unverified">
           검증 전
         </span>
       </div>
-
-      <h2>
-        <a href="papers/muvera-multi-vector-retrieval-via-fixed-dimensional-encodings/">
-          MUVERA: Multi-Vector Retrieval via Fixed Dimensional Encodings
-        </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
-      </h2>
 
       <p class="authors">Laxman Dhulipala, Majid Hadian, Rajesh Jayaram, Jason Lee, Vahab Mirrokni</p>
       <p class="metadata">2024 · arXiv preprint (Preprint, under review); arXiv:2405.19504v1 [cs.DS]</p>
@@ -735,7 +687,7 @@
 
       <a class="open-link" href="papers/muvera-multi-vector-retrieval-via-fixed-dimensional-encodings/">
         보고서 열기 →
-      </a> <!-- verification-index-badge:start --><span class="verification-index-badge verified">검증 완료</span><!-- verification-index-badge:end -->
+      </a>
     </article>
     
     </div>
