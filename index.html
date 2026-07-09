@@ -409,7 +409,7 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 10편</span>
+        <span class="stat">논문 11편</span>
       </div>
     </div>
   </header>
@@ -432,33 +432,16 @@
     </div>
 
     <span class="pending-queue-count">
-      1편 대기 중
+      0편 대기 중
     </span>
   </div>
 
   <div class="pending-queue-list">
     
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            1
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>IRPAPERS_A VISUAL DOCUMENT BENCHMARK FOR SCIENTIFIC.pdf</strong>
-            <span>등록 시각 · 2026-07-09 18:46</span>
-          </div>
-
-          <div class="pending-queue-size">
-            5.8 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-next">
-              다음 분석
-            </span>
-          </div>
-        </div>
-        
+      <div class="pending-queue-empty">
+        현재 분석을 기다리는 논문이 없습니다.
+      </div>
+    
   </div>
 </section>
 <!-- PENDING_QUEUE_SECTION_END -->
@@ -512,6 +495,32 @@
       </p>
 
       <a class="open-link" href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="paper-card">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
+            IRPAPERS: A Visual Document Benchmark for Scientific Retrieval and Question Answering
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Connor Shorten, Augustas Skaburskas, Daniel M. Jones, Charles Pierse, Roberto Esposito, John Trengrove, Etienne Dilocker, Bob van Luijt</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2602.17687v1 [cs.IR])</p>
+
+      <p class="summary">
+        IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다.
+      </p>
+
+      <a class="open-link" href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
         보고서 열기 →
       </a>
     </article>

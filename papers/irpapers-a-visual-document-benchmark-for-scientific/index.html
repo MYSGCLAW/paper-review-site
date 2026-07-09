@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>IRPAPERS: A Visual Document Benchmark for Scientific Retrieval and Question Answering</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>IRPAPERS: A Visual Document Benchmark for Scientific Retrieval and Question Answering</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Connor Shorten, Augustas Skaburskas, Daniel M. Jones, Charles Pierse, Roberto Esposito, John Trengrove, Etienne Dilocker, Bob van Luijt</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2602.17687v1 [cs.IR])</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 8, 9, 10</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>텍스트(46% Recall@1)와 이미지(43% Recall@1) 검색은 상단 순위에서 근소한 차이지만 서로 다른 질의에서 실패하며(텍스트 전용 22개 vs 이미지 전용 18개 성공), 이 상호보완성을 융합한 multimodal hybrid search가 49% Recall@1로 단일 모달리티 상한을 돌파한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>다중벡터 이미지 모델의 용량 확대(ColModernVBERT→ColPali→ColQwen2)는 Recall@1만 개선하고 Recall@20은 93~94%로 수렴해 깊은 순위에서 수확 체감을 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MUVERA의 FDE 인코딩은 다중벡터 저장을 약 50배(1.65GB→33MB) 줄이지만, ef=1024에서 Recall@1이 2점, Recall@20이 5점 하락하는 등 ef로 조절 가능한 효율-품질 tradeoff를 노출한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>질의응답에서 텍스트 RAG(0.82)가 이미지 RAG(0.71)보다 우수하며, 두 모달리티 모두 k=5 검색이 oracle 단일 문서 검색을 능가해 관련 페이지의 보조 컨텍스트가 답 종합에 유용함을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>대부분의 과학 그림은 캡션·본문·OCR로 충분히 텍스트화되어 텍스트 QA가 유리하지만, t-SNE 같은 추상 시각화(이미지 70% vs 텍스트 30%)는 이미지 표현이 필요한 반례이며, 반대로 정확한 문자열 매칭은 이미지 검색이 결여한 능력이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>이미지 기반 시스템과 텍스트 기반 시스템의 비교라는 미해결 질문</h3>
+      <p>멀티모달 파운데이션 모델(multimodal foundation model)의 발전으로 AI 시스템은 이제 OCR로 텍스트를 추출하지 않고도 문서 이미지에서 직접 검색하고 읽을 수 있게 되었다. 그러나 이러한 이미지 기반 시스템이 확립된 텍스트 기반 방식과 비교해 실제로 얼마나 우수한지는 충분히 탐구되지 않았다. 저자들은 이 근본적 질문을 과학 문헌 검색·질의응답 맥락에서 다시 제기한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>과학 문헌이라는 시각 문서의 특수성</h3>
+      <p>과학 논문은 산문 외에도 레이아웃, 그림(figure), 수식, 다이어그램을 통해 의미를 인코딩하는 본질적으로 시각적인 문서이다. 컴퓨터과학 분야만 해도 arXiv에 매일 약 300편, NeurIPS는 연 5,000편 이상이 쏟아져 개인의 탐색·독해·종합 능력을 초과한다. 이런 시각적 단서가 텍스트로 전사될 때 충실히 보존되는지는 열린 질문이며, 과학 문헌은 이미지 표현이 텍스트 전사로 소실되는 신호를 보존하는지 평가하기에 자연스러운 테스트베드가 된다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>의미적으로 조밀한 코퍼스에서의 판별 과제</h3>
+      <p>벤치마크는 LLM-for-IR 서베이 [53]의 인용 논문에서 수집되어 문서들이 어휘·기법·실험 설정을 공유하는 의미적으로 조밀한(semantically dense) 코퍼스를 형성한다. 예컨대 &#x27;HyDE에서 영어/비영어 검색에 각각 어떤 instruction-following 모델과 contrastive encoder가 쓰였는가&#x27; 같은 질의는 유사한 기법을 다루지만 세부 구조·학습 선택이 다른 여러 dense retrieval 논문을 판별할 것을 요구한다. 즉 표면적 주제 차이가 아니라 세밀한 방법론적 구분을 식별해야 한다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>기존 시각 문서 벤치마크의 초점 차이</h3>
+      <p>ViDoRe v3 [23,25]는 기업용 시각 문서 검색의 사실상 표준이지만 10개 산업 도메인의 26,000페이지를 다루는 교차 도메인 검색이며, 질의당 평균 5.1개의 관련 페이지를 가정해 NDCG@10을 보고한다. 이는 단일 연구 커뮤니티 내에서 유사 논문을 판별하는 과제와는 다르다. DocVQA[28], SlideVQA[44], InfographicVQA[27] 등은 검색이 아니라 이미 제공된 문서에 대한 이해(comprehension)를 평가하며, 정답 문서가 이미 식별되었음을 전제한다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>텍스트 전용 및 과학 검색 벤치마크의 제약</h3>
+      <p>FinanceBench[15]는 문서를 오로지 텍스트로만 취급하고 시각 문서 표현을 탐구하지 않는다. LitSearch[1]는 제목과 초록만으로 문서 단위 검색을 평가하며 더 넓은 ML/NLP 문헌을 대상으로 한다. CiteME[35]는 인용 귀속을 다루지만 페이지 단위 검색과 이미지 표현은 다루지 않는다. 즉 기존 과학 문헌 벤치마크는 페이지 단위에서 이미지 표현과 텍스트 표현을 동일 코퍼스로 직접 비교하지 않았다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>다중벡터 late-interaction의 비용 문제</h3>
+      <p>ColPali(약 2.9B 파라미터)와 ColQwen2(약 2.2B)는 강력한 검색 성능을 내지만 모델이 크고, late-interaction은 문서당 다수의 벡터를 저장하고 MaxSim 스코어링을 수행해야 하는 근본적 비용을 갖는다. 이는 대규모 배포에서 저장·연산 오버헤드를 유발한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>IRPAPERS 벤치마크 공개</h3>
+      <p>166편의 IR 논문(3,230페이지)에 각 페이지의 이미지와 OCR 전사를 함께 담고, 정밀한 방법론적 세부를 겨냥한 180개의 큐레이션 질의를 붙인 벤치마크를 공개한다. HuggingFace와 GitHub에 오픈소스로 배포한다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이미지 검색 대 하이브리드 텍스트 검색의 체계적 비교</h3>
+      <p>오픈소스 모델로 다중벡터 이미지 검색과 hybrid text search를 체계적으로 비교하고, 오픈소스 텍스트·이미지 모델을 결합한 multimodal hybrid search가 단일 모달리티 baseline을 능가함을 보인다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MUVERA 인코딩의 효율-품질 tradeoff 정량화</h3>
+      <p>다중벡터 이미지 임베딩에 대해 MUVERA 인코딩을 평가하고 ef 값에 따른 효율-검색품질 tradeoff를 정량화한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>폐쇄형 모델과의 격차 정량화</h3>
+      <p>Cohere Embed v4.0과 Voyage 3 Large를 평가해 시각 문서 검색에서 오픈소스와 폐쇄형 접근 사이의 현재 성능 격차를 정량화한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>모달리티 간 RAG 비교와 검색 깊이의 효과</h3>
+      <p>모달리티에 따른 RAG를 비교하여, 두 모달리티 모두 검색 깊이 증가에서 크게 이득을 보며 5개 문서 검색이 oracle 단일 문서 컨텍스트를 능가함을 밝힌다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>두 가지 문서 표현: 페이지 이미지와 전사 텍스트</h3>
+      <p>각 PDF는 두 가지 실용적 표현으로 처리된다. 이미지 표현은 PDF를 페이지 이미지로 분할해 base64 문자열로 저장하며 페이지당 평균 1.3MB, 전체 4.2GB이다. 텍스트 표현은 GPT-4.1 멀티모달 API로 각 페이지 이미지를 전사하며 페이지당 출력 1,125토큰(약 4.5KB)으로 이미지보다 약 290배 저장이 저렴하지만, 페이지당 25초 지연·비용($0.017/페이지, 전체 $54.08) 등 연산·운영 오버헤드를 유발한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색 파이프라인의 세 신호</h3>
+      <p>제안 시스템은 세 검색 신호를 결합한다. (1) BM25 sparse lexical 검색, (2) Arctic 2.0 dense 단일벡터 텍스트 임베딩(1,024차원), (3) ColModernVBERT 다중벡터 이미지 임베딩(페이지당 평균 1,000개의 128차원 벡터, MaxSim 스코어링). BM25와 Arctic 2.0은 hybrid text search로 결합되고, 여기에 이미지 신호를 파라미터 α로 융합해 multimodal hybrid search를 구성한다.</p>
+      <span class="source-ref">PDF p. 5, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율화·질의응답 계층</h3>
+      <p>다중벡터 저장·연산 비용을 줄이기 위해 MUVERA의 Fixed Dimensional Encoding(FDE)을 적용해 표준 단일벡터 HNSW 인덱스와 MaxSim rescoring을 재사용한다. 질의응답 계층은 DSPy로 구현한 두 RAG 시스템으로 구성된다. ImageRAG는 ColModernVBERT로 페이지 이미지를 검색해 GPT-4.1에 시각 컨텍스트로 전달하고, TextRAG는 hybrid text search로 전사 텍스트를 검색해 동일 reader에 전달한다.</p>
+      <span class="source-ref">PDF p. 5, 6, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계: 코퍼스 전처리 및 질문 생성</h3>
+      <p>서베이 [53]의 인용에서 166편을 수집하고 각 PDF를 페이지 단위로 분할한다. 이미지는 base64로 인코딩하고, 텍스트는 GPT-4.1 OCR로 전사한다. 질문은 Query Writing 중심의 19편에서 참조 전용 페이지를 제외하고 페이지당 하나씩, Claude Sonnet 4.5로 생성해 총 180개를 만든다. 각 질문에는 단일 gold 페이지가 배정된다(needle-in-the-haystack).</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계: 임베딩 및 인덱싱</h3>
+      <p>페이지 이미지는 ColModernVBERT로 다중벡터 임베딩, 텍스트 전사는 Arctic 2.0으로 dense 임베딩한다. Weaviate 데이터베이스에서 HNSW 검색, BM25, hybrid fusion, MUVERA를 수행한다. 단일벡터 계열 HNSW는 고정 ef=160을 사용한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계: 검색 및 융합</h3>
+      <p>질의에 대해 각 검색기가 후보를 순위화한다. hybrid text search는 BM25와 Arctic 2.0을 relative score fusion(RSF)으로 동일 가중 결합한다. multimodal hybrid search는 hybrid text 점수와 ColModernVBERT 이미지 점수를 α로 융합한다(α=0 텍스트만, α=1 이미지만, α=0.5는 Arctic 0.25·BM25 0.25·이미지 0.5). RSF와 RRF 두 융합 전략을 α 스윕으로 비교한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계: MUVERA 2단계 검색(선택적)</h3>
+      <p>MUVERA를 쓰면 질의 FDE로 HNSW 인덱스를 탐색해 근사 점수 기준 상위 ef개 후보를 얻고, 이 후보들의 원본 다중벡터를 가져와 정확한 MaxSim으로 rescoring해 최종 순위를 낸다. ef가 클수록 더 많은 후보를 정확 스코어링으로 재고려한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계: RAG 질의응답 및 평가</h3>
+      <p>상위 k개 문서를 검색해 GPT-4.1에 컨텍스트로 전달하고 답을 생성한다. 평가는 LLM-as-Judge로, (질문, 시스템 답, 참조 답) 튜플에 대해 이진 의미적 동치 여부를 판정하며, 판정을 3회 독립 샘플링해 다수결로 정한다. alignment score는 True로 판정된 질문의 비율이다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim 기반 late-interaction</h3>
+      <p>다중벡터 이미지 검색은 페이지를 단일 벡터로 압축하지 않고 토큰·패치 수준 임베딩을 다수 유지하며 MaxSim aggregation으로 유사도를 계산한다. 이는 질의 항과 페이지의 국소 영역 간 정밀한 매칭을 가능케 한다. ColModernVBERT는 150M 파라미터 ModernBERT 텍스트 인코더와 100M SigLIP-2 비전 인코더를 결합한 총 250M 모델로, ViDoRe에서 81.2 nDCG@5로 ColPali(81.6)에 근접한 성능을 낸다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MUVERA의 Fixed Dimensional Encoding(FDE)</h3>
+      <p>FDE는 가변 크기 임베딩 집합을 고정 길이 단일 벡터로 변환한다. SimHash LSH가 ksim개의 임의 초평면을 그어 각 벡터에 비트 문자열을 부여해 버킷(2^ksim개)에 할당한다. 각 버킷에서 문서 벡터는 평균, 질의 벡터는 합산한다(MaxSim에서 각 질의 토큰이 독립적으로 기여하기 때문). 빈 버킷은 최근접 벡터로 채운다. 각 버킷 서브벡터는 random projection으로 dproj 차원으로 압축되고 모두 연결된다. 임의 초평면이므로 이 과정을 여러 번 반복해 연결한다. 최종 차원은 2^ksim × dproj × repetitions이다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>FDE 파라미터와 저장 절감</h3>
+      <p>ksim=4, dproj=16, repetitions=10이면 각 페이지가 원래 다중벡터 차원과 무관하게 단일 2,560차원 벡터로 인코딩된다. ColModernVBERT의 naive 다중벡터 저장은 3,230 × 1,000 × 128 × 4바이트 = 1.65GB인데, MUVERA로는 3,230개 벡터에 33MB만 필요해 약 50배 저장 절감을 이룬다. FDE 덕분에 기존 벡터 DB의 HNSW·양자화·rescoring 구현을 그대로 재사용할 수 있다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>융합 전략: RSF와 RRF</h3>
+      <p>Relative Score Fusion(RSF)은 각 검색기 점수를 min-max로 [0,1] 정규화 후 가중합하여 점수 크기를 보존해 고신뢰 예측이 지배할 수 있게 한다. Reciprocal Rank Fusion(RRF)은 순위 위치 기반 score(d)=1/(k+rank(d))를 합산하며 점수 크기를 완전히 버린다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>검색 평가 지표와 대상</h3>
+      <p>단일 관련 문서 설정이므로 Recall@K(=Success@K)를 @1/@5/@20에서 보고한다. 오픈소스로 텍스트(BM25, Arctic 2.0, hybrid text search), 이미지(ColModernVBERT, ColPali, ColQwen2), 그리고 multimodal hybrid search를 비교한다. MUVERA는 ef=1024/512/256에서 정보 손실을 분석하며, 비-MUVERA 단일벡터 검색은 HNSW ef=160으로 고정한다. 폐쇄형 모델로 Cohere Embed v4(이미지)와 Voyage 3 Large(텍스트)를 추가 평가한다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의응답 baseline과 조건</h3>
+      <p>RAG 평가는 task 난이도를 검증하는 세 baseline으로 시작한다. No Retrieval(질문만 제공, 파라메트릭 지식만으로 답 가능한지), Hard Negative(gold 페이지를 제외한 최상위 문서를 컨텍스트로 제공), Oracle(정답 페이지를 직접 제공). 이후 표준 검색 k=1, k=5에서 TextRAG와 ImageRAG를 비교한다. reader는 GPT-4.1로 동일하며, 평가는 3회 다수결 LLM-as-Judge alignment score를 사용한다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단일 모달 표현의 한계 분석용 실험</h3>
+      <p>이미지 표현이 반드시 필요한지 검증하기 위해 19편의 Query Writing 논문에서 63개의 시각 요소(데이터 차트 32, 아키텍처 다이어그램 10, 개념/추상 시각 21)를 식별하고, OCR 텍스트만으로는 답할 수 없어야 하는 30개의 시각 질문을 생성한다. 또한 단일 t-SNE 플롯에 대해 10개의 질문을 만들어 oracle 조건에서 이미지 QA와 텍스트 QA를 대조한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>오픈소스 검색: 상호보완적 실패와 융합의 이득</h3>
+      <p>hybrid text search는 46% Recall@1, ColModernVBERT 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소 우위지만, 깊은 recall에서는 이미지가 93% vs 텍스트 91% Recall@20으로 앞선다. Recall@1에서 22개 질의는 텍스트로만 성공하고 18개는 이미지로만 성공하는 상호보완적 실패를 보인다. 이를 융합한 multimodal hybrid search(RSF)는 49% Recall@1, 81% Recall@5, 95% Recall@20으로 단일 모달리티의 성능 상한을 돌파한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>모델 용량 확대의 포화 효과와 MUVERA tradeoff</h3>
+      <p>ColPali는 45%, ColQwen2는 49% Recall@1로 상단 순위 판별에서 앞서지만 Recall@20은 세 모델 모두 93~94%로 수렴해 용량 증가의 수확 체감을 보인다. MUVERA는 ef=1024에서 41% Recall@1(비-MUVERA 대비 2점 하락), 88% Recall@20(5점 하락)이며 ef를 줄이면(512→256) 성능이 급감해(35% Recall@1, 66% Recall@20) 튜닝 가능한 효율-품질 tradeoff를 노출한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>폐쇄형 모델의 우위</h3>
+      <p>Cohere Embed v4 이미지 임베딩은 58% Recall@1로 오픈소스 최고 대비 9점 앞서며, Voyage 3 Large 텍스트(52% Recall@1)도 능가한다. 격차는 깊은 recall에서 좁혀지고, 폐쇄형 multimodal fusion은 Recall@5/@20을 91%/98%로 높이지만 Recall@1은 Cohere 단독을 넘지 못한다. 폐쇄형에서도 이미지 25개 vs 텍스트 15개의 배타적 성공이라는 상호보완성이 지속된다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의응답: 검색 깊이의 중요성과 모달리티 격차</h3>
+      <p>No Retrieval은 0.16으로 파라메트릭 지식만으로는 답할 수 없음을 확인한다. Hard Negative는 텍스트 0.39, 이미지 0.12로 정밀 검색 필요성을 입증한다. k=1에서 TextRAG 0.62 &gt; ImageRAG 0.40, k=5에서 0.82 &gt; 0.71이다. 흥미롭게도 두 모달리티 모두 k=5가 oracle k=1(텍스트 0.74, 이미지 0.68)을 능가해, 정확한 gold가 아니어도 관련 페이지가 답 종합에 유용함을 시사한다. ImageRAG는 k를 5→1로 줄일 때(0.71→0.40) 텍스트(0.82→0.62)보다 급락해 이미지 시스템이 검색 깊이에 더 민감함을 보인다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단일 모달 표현의 한계 결과</h3>
+      <p>30개 시각 질문의 adversarial 집합에서도 oracle 조건 하 텍스트 QA(0.67)가 이미지 QA(0.53)를 능가하는데, 대부분의 그림 내용이 캡션·본문에 서술되거나 OCR로 충분히 구조화되기 때문이다. 예외로 t-SNE 플롯 10문항에서는 이미지 QA 70% vs 텍스트 QA 30%로, 상대적 위치·군집 기하 정보는 텍스트로 전달하기 어렵다. 반대로 이미지 검색은 정확한 문자열 매칭(예: &#x27;HyDE&#x27; 존재) 같은 기호적 제약을 강제할 메커니즘이 없어 BM25가 hybrid text search에 기여하는 이유가 된다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론 및 향후 연구</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>핵심 결론</h3>
+      <p>텍스트와 이미지 기반 접근은 상호보완적 강점을 가지며, 이를 융합한 multimodal hybrid search가 두 모달리티 모두를 능가한다(49% Recall@1, 95% Recall@20). 다중벡터 모델 용량 확대는 상단 순위만 개선하고 깊은 recall에서는 수렴하며, MUVERA는 튜닝 가능한 효율-품질 tradeoff를 제공한다. 폐쇄형 모델은 여전히 오픈소스보다 앞서며, 질의응답에서는 텍스트 RAG가 우세하지만 두 모달리티 모두 검색 깊이 증가로 크게 이득을 본다.</p>
+      <span class="source-ref">PDF p. 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 방향: 적응형·에이전트형 시스템</h3>
+      <p>상호보완적 실패는 질의 특성에 따라 텍스트·이미지 신호 가중치 α를 동적으로 조정하는 적응형 멀티모달 시스템을 동기화한다. t-SNE 같은 추상 시각화는 텍스트 서술에 저항하는 반면 이미지 표현은 정확한 lexical 매칭을 결여하므로, 의미 검색과 구조적 제약(exact-match 필터, schema 라우팅)을 결합하는 에이전트형 검색이 이 간극을 메울 유망한 방향으로 제시된다. 또한 QA 시점에 시각적 grounding이 필요할 때만 이미지를 reader에 전달해 검색 스코어링과 답 생성에서 이미지의 역할을 분리하는 전략도 제안된다.</p>
+      <span class="source-ref">PDF p. 11, 14</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>IRPAPERS 전체 실험 파이프라인</h3>
+                <span class="source-ref">PDF p. 1, 4, 7</span>
+              </div>
+              <p>PDF 코퍼스에서 이미지·텍스트 두 표현을 만들고, 세 검색 신호를 융합해 검색·RAG 평가로 이어지는 전체 흐름.</p>
+              <div class="mermaid">
+flowchart TD
+    A[166편 IR 논문 PDF] --&gt; B[페이지 분할 3230p]
+    B --&gt; C[페이지 이미지 base64]
+    B --&gt; D[GPT-4.1 OCR 전사 텍스트]
+    C --&gt; E[ColModernVBERT 다중벡터 임베딩]
+    D --&gt; F[Arctic 2.0 dense 임베딩]
+    D --&gt; G[BM25 sparse]
+    F --&gt; H[Hybrid Text Search RSF]
+    G --&gt; H
+    E --&gt; I[Multimodal Hybrid Search alpha 융합]
+    H --&gt; I
+    E -.MUVERA FDE.-&gt; J[HNSW 근사 + MaxSim rescoring]
+    I --&gt; K[Recall@K 검색 평가]
+    J --&gt; K
+    E --&gt; L[ImageRAG]
+    H --&gt; M[TextRAG]
+    L --&gt; N[GPT-4.1 reader + LLM-as-Judge]
+    M --&gt; N
+    N --&gt; O[Alignment Score QA 평가]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>텍스트 표현 vs 이미지 표현 비교</h3>
+                <span class="source-ref">PDF p. 4, 5, 8</span>
+              </div>
+              <p>동일 페이지를 텍스트 전사와 페이지 이미지로 표현할 때의 처리·비용·검색 특성 차이.</p>
+              <div class="mermaid">
+flowchart LR
+    P[PDF 페이지] --&gt; T[텍스트 경로]
+    P --&gt; V[이미지 경로]
+    T --&gt; T1[GPT-4.1 OCR 25s/p, $0.017/p]
+    T1 --&gt; T2[약 4.5KB/p, 290배 저렴]
+    T2 --&gt; T3[BM25 정확 매칭 + dense 의미]
+    T3 --&gt; T4[46% Recall@1 / 상단 우위]
+    V --&gt; V1[base64 130ms/p 결정적]
+    V1 --&gt; V2[1.3MB/p, 다중벡터 저장]
+    V2 --&gt; V3[MaxSim late-interaction 레이아웃 보존]
+    V3 --&gt; V4[43% Recall@1 / 깊은 recall 우위]
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>오픈소스 검색 방식별 Recall@1</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · 본문 4.1 (Figure 2 관련) · 오픈소스 모델, needle-in-the-haystack, RSF α=0.5
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>다중벡터 이미지 임베딩 모델 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 2 · 다중벡터 이미지 검색, 오픈소스
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MUVERA ef 값에 따른 검색 성능</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · ColModernVBERT + MUVERA, ksim=4/dproj=16/rep=10, 단일벡터 HNSW ef=160
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>폐쇄형 모델 검색 성능</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 4 · 폐쇄형 임베딩(Cohere Embed v4 이미지, Voyage 3 Large 텍스트) 및 그 결합
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>질의응답 alignment score</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10, 11 · Table 5 · GPT-4.1 reader, 3회 다수결 LLM-as-Judge
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>동일 코퍼스와 동일 페이지에 대해 이미지 표현과 OCR 텍스트 표현을 함께 제공함으로써 두 모달리티의 검색·QA를 통제된 조건에서 직접 비교할 수 있게 한 점이 방법론적으로 견고하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>단일 연구 커뮤니티(IR)로 코퍼스를 좁혀 어휘·기법을 공유하는 문서 간 세밀한 판별 과제를 만들었고, 이는 표면적 주제 차이에 기대지 않는 어려운 검색 난이도를 보장한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>No Retrieval·Hard Negative baseline으로 질문이 파라메트릭 지식이나 topical 유사성으로 풀리지 않음을 정량 검증(0.16, 0.12/0.39)해 벤치마크가 정밀 검색을 요구함을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>저장 비용, 전처리 지연, API 비용 등 시스템 운영 관점의 tradeoff를 정량화해 실용적 배포 관점의 통찰을 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>데이터셋과 실험 코드를 HuggingFace·GitHub에 공개해 재현성과 후속 연구 기반을 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>시각 질문 분석은 데이터셋 규모와 큐레이션된 IR 도메인 내 추상 시각화의 희소성으로 인해 본질적으로 제한적이며, 식별된 시각 요소의 절반 미만만이 LLM이 고유하게 시각적이라 판단하는 질문을 산출했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>RAG의 모달리티별 검색 깊이 민감도 격차(이미지가 텍스트보다 k에 더 민감)가 근본적 모달리티 차이인지 특정 reader 모델(GPT-4.1)에 종속된 특성인지는 확인되지 않았으며, 다른 reader 모델로의 검증을 향후 과제로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>t-SNE 기반 텍스트 실패 사례 연구는 단일 추상 시각화에 집중한 소규모 연구로, 범위가 제한적임을 저자가 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>OCR 전사는 GPT-4.1 단일 접근만 사용했으며, Docling·Olmocr 등 로컬 추론이 가능한 대안적 전사 방식의 품질-속도 tradeoff는 향후 과제로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>표현 수준 융합(representation-level fusion, 예: Guided Query Refinement)은 평가하지 않고 출력 수준 점수 결합만 다루었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>이미지가 검색 깊이 k에 더 민감하다는 발견이 GPT-4.1 이외의 reader 모델에서도 유지되는가, 아니면 모델 특유의 행동인가?</h3>
+              </div>
+              <p>저자가 다른 reader 모델로의 검증을 명시적 향후 과제로 지목함.</p>
+              <span class="source-ref">PDF p. 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>질의 특성에 따라 α와 이미지 전달 여부를 동적으로 조정하는 에이전트형 멀티모달 시스템이 실제로 성능·비용을 동시에 개선할 수 있는가?</h3>
+              </div>
+              <p>저자가 적응형 α 조정과 QA 시점 조건부 이미지 전달을 유망한 방향으로 제시함.</p>
+              <span class="source-ref">PDF p. 11, 14</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>t-SNE 외에 manifold 시각화, 벡터장 다이어그램, 잠재공간 기하 묘사 등 텍스트로 포착 불가능한 과학 시각 요소가 얼마나 존재하며, 더 풍부한 코퍼스에서 이미지 표현의 이점이 확대되는가?</h3>
+              </div>
+              <p>저자가 기하·공간 시각화가 풍부한 코퍼스로의 확장을 후속 과제로 언급함.</p>
+              <span class="source-ref">PDF p. 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>MUVERA와 token pooling·CRISP·LEMUR 같은 저장/표현 축소 기법을 결합하면 late-interaction 검색을 어느 수준까지 효율화할 수 있는가?</h3>
+              </div>
+              <p>저자가 MUVERA-style 근사와 이들 기법의 통합을 유망한 연구 방향으로 언급함.</p>
+              <span class="source-ref">PDF p. 6</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>로컬 OCR(Docling, Olmocr) 도입이 전사 비용을 낮추면서 검색·QA 품질을 어느 정도 유지 또는 저하시키는가?</h3>
+              </div>
+              <p>저자가 로컬 추론 OCR의 품질-속도 tradeoff 탐구를 향후 과제로 명시함.</p>
+              <span class="source-ref">PDF p. 4</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Needle-in-the-haystack</dt>
+              <dd>
+                코퍼스 안에서 각 질문의 출처가 된 단일 gold 페이지를 검색 시스템이 찾아낼 수 있는지 평가하는 벤치마크 철학. IRPAPERS는 질의당 단일 관련 페이지를 배정해 Recall@K로 평가한다.
+                <span class="source-ref">PDF p. 4, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late-interaction / 다중벡터(multi-vector)</dt>
+              <dd>
+                페이지를 단일 벡터로 압축하지 않고 토큰·패치 수준 임베딩을 다수 유지해 질의와 문서 간 세밀한 정렬을 보존하는 검색 방식. 저장·연산 비용이 크다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                late-interaction에서 각 질의 토큰에 대해 문서 토큰들과의 최대 유사도를 취해 합산하는 스코어링. 질의 항과 페이지 국소 영역 간 정밀 매칭을 가능케 한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MUVERA / Fixed Dimensional Encoding(FDE)</dt>
+              <dd>
+                가변 크기 다중벡터 집합을 SimHash 버킷팅·평균/합산·random projection·반복 연결로 단일 고정 길이 벡터(2^ksim×dproj×repetitions 차원)로 변환해 표준 단일벡터 ANN 인덱스를 재사용하게 하는 기법.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ef (HNSW 검색 파라미터)</dt>
+              <dd>
+                HNSW 탐색에서 고려하는 후보 수를 정하는 파라미터. MUVERA에서는 근사 점수로 뽑아 이후 정확한 MaxSim으로 rescoring할 후보 수를 추가로 통제한다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Hybrid search / RSF·RRF</dt>
+              <dd>
+                BM25 sparse와 dense 임베딩 점수를 결합하는 검색. RSF는 점수를 [0,1]로 정규화 후 가중합해 크기를 보존하고, RRF는 순위 기반 1/(k+rank)를 합산해 크기를 버린다.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>α (융합 가중치)</dt>
+              <dd>
+                multimodal hybrid search에서 hybrid text 점수와 이미지 점수를 융합하는 가중치. α=0은 텍스트만, α=1은 이미지만, α=0.5는 Arctic 0.25·BM25 0.25·이미지 0.5.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Alignment score (LLM-as-Judge)</dt>
+              <dd>
+                (질문, 시스템 답, 참조 답) 튜플에 대해 LLM 심판이 의미적 동치 여부를 이진 판정하고 3회 다수결을 취한 뒤, True로 판정된 질문의 비율로 정의하는 RAG 품질 지표.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Hard Negative</dt>
+              <dd>
+                gold 페이지를 제외한 최상위 검색 문서를 컨텍스트로 제공하는 baseline. 유사하지만 틀린 문서로도 답할 수 있는지 검증해 질문의 판별성을 확인한다.
+                <span class="source-ref">PDF p. 10, 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ColModernVBERT</dt>
+              <dd>
+                150M ModernBERT 텍스트 인코더와 100M SigLIP-2 비전 인코더를 결합한 총 250M 다중벡터 이미지 임베딩 모델. 훨씬 큰 ColPali(약 2.9B)에 근접한 성능(ViDoRe 81.2 vs 81.6 nDCG@5)을 낸다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "오픈소스 검색 방식별 Recall@1", "labels": ["Hybrid Text (46)", "ColModernVBERT (43)", "Multimodal Hybrid (49)"], "values": [46, 43, 49], "unit": "%", "xLabel": "검색 방식", "yLabel": "Recall@1"}, {"canvasId": "chart-1", "type": "bar", "title": "다중벡터 이미지 임베딩 모델 비교", "labels": ["ColModernVBERT @1", "ColPali @1", "ColQwen2 @1", "ColModernVBERT @20", "ColPali @20", "ColQwen2 @20"], "values": [43, 45, 49, 93, 93, 94], "unit": "%", "xLabel": "모델 및 Recall 수준", "yLabel": "Recall"}, {"canvasId": "chart-2", "type": "bar", "title": "MUVERA ef 값에 따른 검색 성능", "labels": ["No MUVERA @1", "ef=1024 @1", "ef=512 @1", "ef=256 @1", "No MUVERA @20", "ef=1024 @20", "ef=512 @20", "ef=256 @20"], "values": [43, 41, 37, 35, 93, 88, 78, 66], "unit": "%", "xLabel": "구성 및 Recall 수준", "yLabel": "Recall"}, {"canvasId": "chart-3", "type": "bar", "title": "폐쇄형 모델 검색 성능", "labels": ["Cohere v4 @1", "Voyage3L @1", "Cohere v4 @5", "Voyage3L @5", "MM Hybrid @5", "Cohere v4 @20", "Voyage3L @20", "MM Hybrid @20"], "values": [58, 52, 87, 86, 91, 97, 95, 98], "unit": "%", "xLabel": "모델 및 Recall 수준", "yLabel": "Recall"}, {"canvasId": "chart-4", "type": "bar", "title": "질의응답 alignment score", "labels": ["No Retrieval", "Hard Neg Image k1", "Hard Neg Text k1", "ImageRAG k1", "TextRAG k1", "Oracle Image k1", "Oracle Text k1", "ImageRAG k5", "TextRAG k5"], "values": [0.16, 0.12, 0.39, 0.4, 0.62, 0.68, 0.74, 0.71, 0.82], "unit": "score(0-1)", "xLabel": "시스템 구성", "yLabel": "Alignment Score"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
