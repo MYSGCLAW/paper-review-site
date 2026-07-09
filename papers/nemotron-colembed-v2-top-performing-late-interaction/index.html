@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Nemotron ColEmbed V2: Top-Performing Late Interaction Embedding Models for Visual Document Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Nemotron ColEmbed V2: Top-Performing Late Interaction Embedding Models for Visual Document Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Gabriel de Souza P. Moreira, Ronay Ak, Mengyao Xu, Oliver Holworthy, Benedikt Schifferer, Zhiding Yu, Yauhen Babakhin, Radek Osmulski, Jiarui Cai, Ryan Chesler, Bo Liu, Even Oldridge</span>
+        <span><strong>출처</strong> · Proceedings of the 1st Late Interaction Workshop (LIR) @ ECIR 2026</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>이 논문은 NVIDIA가 공개한 Nemotron ColEmbed V2, 즉 시각 문서 검색(Visual Document Retrieval, VDR)을 위한 late interaction 기반 VLM 임베딩 모델 패밀리(3B/4B/8B)를 소개한다. RAG(Retrieval-Augmented Generation) 파이프라인에서 기업이 보유한 PDF·슬라이드 등 문서를 검색하려면 기존 텍스트 검색 모델은 OCR/텍스트 추출에 의존해 표·차트·인포그래픽 같은 시각 정보를 잃는다. 저자들은 페이지 이미지를 직접 임베딩하는 VLM 백본(3B: NVIDIA Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)을 초기화한 뒤, 디코더의 causal attention을 bidirectional attention으로 교체하고, ColBERT 스타일 late interaction(MaxSim) 유사도로 contrastive learning을 수행한다. 성능을 끌어올리기 위해 cluster-based 데이터 샘플링, positive-aware hard-negative mining, cross-lingual 번역 증강, (3B 전용) two-stage training, model merging(model soup)을 결합한다. 그 결과 nemotron-colembed-vl-8b-v2는 2026년 2월 3일 기준 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성하고, 4B/3B 모델도 동급 크기에서 최고 성능을 보인다. 마지막으로 저자들은 late interaction이 유발하는 저장공간·지연시간 오버헤드를 정량적으로 분석하고, 임베딩 차원 축소(512/128차원) ablation을 통해 정확도-저장공간 트레이드오프를 논의한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 7, 8, 9, 11</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>nemotron-colembed-vl-8b-v2가 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>동일 조건에서 late interaction은 single vector(average pooling) 대비 정확도를 4B +11.92%, 8B +9.36% 높인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>late interaction의 정확도 이득은 큰 저장 비용을 수반해, 동일 1B 백본 기준 single-vector 대비 약 2312배(3.8GB→8,789.1GB/100만 페이지) 저장공간이 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>임베딩을 512차원으로 줄이면 저장 87.5% 절감에 정확도 96.02%를, 128차원이면 저장 3%로 95.36%를 유지할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>bidirectional attention, hard-negative mining, cluster-based sampling, cross-lingual 번역, model merging의 조합이 리더보드 상위권을 만든 핵심 레시피이며, model merging 이득은 모델이 클수록 커진다(3B +0.8%, 8B +1.5%).</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>RAG를 위한 시각 문서 검색 수요</h3>
+      <p>RAG(Retrieval-Augmented Generation)는 언어 모델에 외부 지식을 주입하는 널리 쓰이는 패러다임이며, 그 첫 단계가 검색(retrieval) 구성요소이다. 기업들은 PDF, 프레젠테이션 슬라이드 등 대규모 문서 카탈로그를 RAG 파이프라인에 활용하려는 수요가 커지고 있다. VLM(Vision-Language Model) 기반 임베딩 모델은 OCR 텍스트 추출 없이 페이지 이미지를 직접 검색해 시각 정보를 보존하고 인덱싱/검색 파이프라인을 단순화할 수 있어 Visual Document Retrieval(VDR)에 대한 관심이 커지고 있다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>시각 정보 손실 문제</h3>
+      <p>실세계 문서는 PDF, PowerPoint, Word 등으로 저장되어 텍스트 파싱이나 OCR 같은 전처리 파이프라인이 필요하며, 이 과정에서 표(table)·차트(chart)·인포그래픽(infographic) 같은 모달리티의 핵심 시각 정보가 손실된다. 이를 해결하기 위해 페이지 이미지를 직접 검색하는 VDR이 제안되었다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>최고 성능과 배포 비용의 동시 해결</h3>
+      <p>핵심 과제는 ViDoRe와 같은 벤치마크에서 최고(state-of-the-art) 정확도를 내는 late interaction 기반 VLM 임베딩 모델을 구축하는 동시에, late interaction이 유발하는 저장공간·연산 비용 트레이드오프를 실제 서비스(production) 환경에서 어떻게 다룰지를 함께 다루는 것이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>텍스트 전용 벤치마크 가정</h3>
+      <p>NV-Embed, NV-Retriever, Qwen3-Embedding, e5-mistral 등 기존 고성능 텍스트 검색 모델은 MTEB처럼 깨끗하고 정형화된 텍스트 입력을 가정하는 벤치마크에서 평가되어 왔다. 그러나 실세계 문서는 전처리가 필요하고 그 과정에서 시각 정보가 손실된다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>초기 OCR 중심 파이프라인</h3>
+      <p>레이아웃 인식 인코더를 포함한 초기 OCR 중심 파이프라인(예: LayoutLM 계열)은 텍스트를 먼저 추출한 뒤 2D 위치와 융합해 문서 이해에는 효과적이었으나, first-stage retrieval에 쓰기에는 연산 비용이 지나치게 높아 작은 후보 집합에 대한 재순위화(reranking)에만 국한되었다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>CLIP 스타일 bi-encoder의 한계</h3>
+      <p>초기 CLIP 스타일 bi-encoder는 전역적 멀티모달 표현을 제공했으나, 관련 정보가 희소하거나 레이아웃 의존적인 복잡한(cluttered) 페이지에서 성능이 떨어졌다. 단일 전역 벡터 표현의 병목 때문에 세밀한 어휘적·시각적·레이아웃 의존적 단서를 포착하는 데 제약이 있다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Cross-encoder의 비현실적 비용</h3>
+      <p>Cross-encoder는 질의와 문서를 함께 인코딩해 모든 토큰/패치에 대한 조밀한 초기 상호작용(early interaction)으로 강력한 재순위화 성능을 보이지만, 문서 임베딩의 사전 계산/인덱싱을 지원하지 않고 연산 비용이 2차적(quadratic)으로 증가하여 대규모 컬렉션의 first-stage retriever로는 비현실적이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>late interaction 자체의 오버헤드</h3>
+      <p>late interaction은 average나 last-token pooling 같은 단순 pooling 대비 토큰 수준 매칭의 표현력을 제공하지만, 지연시간(latency)과 저장(storage) 오버헤드를 유발하며 이는 실제 응용에서 우려사항이 된다. 이 트레이드오프를 실제 배포 맥락에서 다루는 것이 본 논문이 명시적으로 짚는 문제이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>3종 SOTA 모델 공개</h3>
+      <p>세 가지 시각 문서 검색 모델(llama-nemotron-colembed-vl-3b-v2, nemotron-colembed-vl-4b-v2, nemotron-colembed-vl-8b-v2)을 open-weights로 공개한다. 8B 모델은 MTEB ViDoRe V3 리더보드에서 top-1을, 4B와 3B 모델은 top-6 안에 들면서 동급 크기 모델 대비 NDCG@10에서 최고 성능을 달성한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>리더보드 상위권을 만든 기법 정리</h3>
+      <p>ViDoRe 리더보드 상위권 달성에 기여한 기법들을 데이터 전처리(clustering 기반 샘플링, hard-negative mining, cross-lingual translation), two-stage training, late interaction, bidirectional attention, model merging에 걸쳐 설명한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>late interaction 트레이드오프 분석과 ablation</h3>
+      <p>late interaction 사용에 따른 성능 트레이드오프(단순 vector pooling 대비 높은 정확도를 얻는 대신 인덱싱 임베딩 저장공간과 서빙 시 연산량이 증가함)를 논의하고, 임베딩 크기를 512/128차원으로 줄이는 ablation을 제공한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>모델 패밀리 개요</h3>
+      <p>Nemotron ColEmbed V2는 3B/4B/8B 세 크기의 open-weights late-interaction VLM 임베딩 모델 패밀리이다. 임베딩 차원을 제외한 파라미터 수는 각각 4.40(3.99)B, 4.82(4.43)B, 8.76(8.14)B이며, 임베딩 차원(embedding dimension)은 각각 3072, 2560, 4096이다(Table 1).</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>백본 VLM 초기화</h3>
+      <p>3B 모델은 NVIDIA Eagle 2 VLM(SigLip 2 이미지 인코더 + Llama 3.2 3B LLM 백본)의 내부 사전학습 버전에서 초기화한다. 4B/8B 모델은 Qwen3-VL-4B/8B-Instruct에서 초기화하며, Qwen3-VL은 SigLIP-2 vision encoder + 2-layer MLP 기반 vision-language merger + Qwen3 LLM의 3모듈 구조에 DeepStack 메커니즘(중간 계층 visual token을 LLM 여러 층에 주입)을 적용한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인코더화 및 유사도</h3>
+      <p>디코더 LLM을 임베딩 인코더로 적응시키기 위해 causal(단방향) attention을 bidirectional attention으로 교체한다. 유사도는 ColBERT 스타일 late interaction(MaxSim)을 사용하여, 쿼리 각 토큰이 문서 모든 토큰과 상호작용해 토큰당 최대 유사도를 취한 뒤 이를 합산해 최종 관련성 점수를 산출한다.</p>
+      <span class="source-ref">PDF p. 3, 4, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이미지 토큰화 방식</h3>
+      <p>3B(Eagle 2)는 dynamic image tiling으로 가변 해상도 이미지를 여러 타일로 분할하며 타일당 256 visual token을 생성한다(학습 max_input_tiles=2, 추론 max_input_tiles=8). 4B/8B(Qwen3-VL)은 native-resolution 이미지를 가변 길이 visual token 시퀀스로 직접 매핑한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1) 백본 초기화 및 인코더화</h3>
+      <p>사전학습된 VLM(3B: Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)에서 모델을 초기화하고, 디코더의 causal attention을 bidirectional attention으로 교체하여 각 토큰이 앞뒤 전체 문맥을 참조하도록 만든다. 저자들은 Eagle 2와 Qwen3-VL 적응 시 이 변경으로 상당한 성능 향상을 관찰했다고 밝힌다.</p>
+      <span class="source-ref">PDF p. 2, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2) 데이터 구성과 클러스터 샘플링</h3>
+      <p>Vidore-ColPali-Training, Wiki-SS-NQ, DocMatix-IR, VDR(llamaindex/vdr-multilingual-train), VisRAG 등 공개 데이터셋에서 총 500,000개 샘플을 추출한다. 내부 Llama-Eagle VLM으로 문서 이미지 임베딩(3072차원)을 만들고 PCA로 50차원 축소 후 gap statistics 기반 K-Means로 14개 클러스터를 도출하여 각 클러스터에서 균일 샘플링해 도메인 불균형을 완화한다(Nemotron-CLIMB 응용).</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3) Hard-negative mining</h3>
+      <p>내부 Llama-Eagle 3B VLM teacher 모델로 코퍼스에서 쿼리와 유사한 top-k 이미지를 채굴하고, NV-Retriever의 top-k with percentage-to-positive threshold(0.95) 기법으로 positive 유사도의 95%를 넘는 후보를 false negative로 간주해 제거한 뒤 hard negative를 선별한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4) Cross-lingual 증강</h3>
+      <p>Qwen3-235B-A22 모델로 각 클러스터에서 샘플링한 쿼리를 다른 언어로 번역하여 cross-lingual retrieval 학습 데이터를 증강한다. ViDoRe V3는 영어/프랑스어 코퍼스에 6개 언어 쿼리를 사용하므로 이러한 증강이 도움이 된다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5) Contrastive 학습</h3>
+      <p>InfoNCE contrastive loss와 late interaction(MaxSim) 유사도로 대조학습을 수행한다. 3B는 텍스트 triplet(1단계)→이미지 코퍼스(2단계)의 two-stage training으로 cross-modal alignment을 하고, 4B/8B는 Qwen3-VL의 강력한 cross-modal 사전학습 덕분에 이미지 코퍼스 단일 단계로 학습한다. 공통 설정은 1 epoch, lr 2e-6, AdamW, weight decay 0.1, batch size·gradient accumulation 1, 샘플당 negative 2개이다. 8B 학습은 8×A100 80GB로 3시간 40분 소요된다.</p>
+      <span class="source-ref">PDF p. 4, 5, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6) Model merging</h3>
+      <p>서로 다른 학습 데이터 블렌드와 dataloader 랜덤 시드로 학습한 개별 모델(3B: 8개, 4B/8B: 각 4개)의 가중치를 단순 가중 평균으로 병합(model soup)해 앙상블 수준 정확도를 단일 모델로 제공한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>7) 추론 시 검색</h3>
+      <p>추론 시 쿼리 토큰 임베딩을 계산하고, 사전 계산·저장된 문서 멀티벡터 임베딩과 MaxSim 연산으로 비교해 관련성 점수를 산출한다. 이 때문에 코퍼스 모든 페이지 이미지의 토큰 임베딩을 저장해야 한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Late Interaction (MaxSim)</h3>
+      <p>ColBERT가 도입한 late interaction 메커니즘은 쿼리와 문서 토큰 간의 세밀한 상호작용을 가능하게 한다. 쿼리의 각 토큰 임베딩이 문서의 모든 토큰 임베딩과 MaxSim 연산으로 비교되어 쿼리 토큰당 최대 유사도를 선택하고, 이 점수들을 합산해 최종 관련성 점수를 만든다. 이는 문서 코퍼스의 모든 토큰 임베딩을 저장해야 함을 의미한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>InfoNCE contrastive loss</h3>
+      <p>모델은 InfoNCE contrastive loss로 학습되어, 공유 임베딩 공간에서 쿼리 q와 positive 문서 d+의 유사도는 최대화하고 negative 집합 D_N과의 유사도는 최소화한다. 유사도 함수 sim(·)로는 cosine, dot product 또는 MaxSim 기반 late interaction 유사도를 사용할 수 있으며, τ는 temperature 파라미터이다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Positive-aware hard-negative mining (NV-Retriever)</h3>
+      <p>top-k with percentage-to-positive threshold 방식은 후보 negative의 최대 유사도를 positive 유사도의 일정 비율(0.95)로 제한하여 margin을 두고 false negative를 줄인다. 즉 쿼리-positive 유사도의 95% 미만인 것 중 가장 관련성 높은 K개를 hard negative로 선택한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Cluster-based sampling (Nemotron-CLIMB 응용)</h3>
+      <p>positive 문서 이미지 임베딩(3072차원)을 PCA로 50차원 축소한 뒤, gap statistics로 대표적인 k를 고르는 K-Means로 14개 클러스터를 만들고 각 클러스터에서 균일 샘플링하여 학습 블렌드의 도메인 다양성과 균형을 확보한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>임베딩 차원 축소 (Linear projection / Matryoshka)</h3>
+      <p>LLM 백본이 출력하는 임베딩을 linear projection layer로 512·128차원으로 축소해 저장공간을 줄인다. Matryoshka Representation Learning처럼 단일 모델이 여러 작은 차원으로 슬라이스 가능한 임베딩을 내는 접근도 언급된다. 저자들은 colqwen2-v1.0 방식을 따라 projection을 적용했다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>벤치마크</h3>
+      <p>ViDoRe V3(10개 전문 도메인·다국어·다유형 쿼리, 공개 8개+비공개 2개 태스크로 리더보드 과적합 방지), ViDoRe V1&amp;V2 통합 리더보드, 그리고 다국어 벤치마크 MIRACL-Vision(18개 언어, Wikipedia 페이지 스크린샷 코퍼스)에서 평가한다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표</h3>
+      <p>정확도는 ViDoRe V3·MIRACL-Vision에서 NDCG@10, ViDoRe V1&amp;V2에서 NDCG@5로 측정한다. 배포 효율은 100만 페이지 이미지 기준 fp16 임베딩 저장 용량(GB), 이미지당 평균 토큰/임베딩 수, 이미지당 부동소수점 개수, 저장 용량 비율(%), 정확도 유지 비율(%)로 평가한다.</p>
+      <span class="source-ref">PDF p. 8, 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상</h3>
+      <p>tomoro-colqwen3-embed-8b/4b, Ops-Colqwen3-4B, jina-embeddings-v4, colnomic-embed-multimodal-7b, llama-nemoretriever-colembed-3b/1b-v1, EvoQwen2.5-VL-Retriever 계열, SauerkrautLM-ColQwen3-8b, dse-qwen2-2b-mrl-v1, gme-Qwen2-VL-2B, vdr-2b-multi-v1, colqwen2-v1.0 등과 비교하며, 배포 트레이드오프 분석에서는 single-vector 모델(llama-nemotron-embed-vl-1b-v2) 및 reranker 파이프라인과 비교한다.</p>
+      <span class="source-ref">PDF p. 8, 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation 설정</h3>
+      <p>late interaction vs single vector(average pooling) 비교는 동일 아키텍처·학습데이터·하이퍼파라미터로 수행한다(Table 5). 임베딩 차원 축소 ablation(512/128차원, Table 7)에서는 model merging 없이 서로 다른 시드로 학습한 4개 모델의 평균 NDCG@10을 보고해 변동을 줄인다.</p>
+      <span class="source-ref">PDF p. 9, 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ViDoRe V3 1위</h3>
+      <p>nemotron-colembed-vl-8b-v2가 ViDoRe V3 리더보드(2026-02-03 기준)에서 NDCG@10 63.42로 1위를 차지하며 2위 tomoro-colqwen3-embed-8b(61.59) 대비 +3% 향상되었다. 4B 모델은 61.54로 3위이자 동급(4B) 최고, 3B 모델은 59.79로 6위이자 동급(3B) 최고 성능을 보였다(Table 2).</p>
+      <span class="source-ref">PDF p. 1, 2, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ViDoRe V1&amp;V2 및 MIRACL-Vision</h3>
+      <p>ViDoRe V1&amp;V2 통합 리더보드에서 8B 모델은 Avg. NDCG@5 84.80으로 1위 Ops-Colqwen3-4B(84.87)와 근소한 차이의 2위를 기록했다(Table 3). MIRACL-Vision 18개 언어 평균에서는 8B 모델이 Avg. NDCG@10 0.686으로 비교 모델 중 최고를 기록했으며, 백본 LLM 사전학습과 cross-lingual 증강 블렌드가 그 이유로 제시된다(Table 4).</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>late interaction의 정확도 이득</h3>
+      <p>동일 조건에서 late interaction은 single vector(average pooling) 대비 ViDoRe V3 NDCG@10을 4B에서 54.07→60.52(+11.92%), 8B에서 56.91→62.24(+9.36%) 향상시켰다. 저자들은 이 효과성이 late interaction 임베딩 모델이 VDR 벤치마크를 지배해 온 이유라고 설명한다(Table 5).</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>저장공간 트레이드오프</h3>
+      <p>동일 Llama 3.2 1B 백본에서 late interaction 모델(llama-nemoretriever-colembed-1b-v1)은 100만 페이지 임베딩 저장에 8,789.1GB가 필요해 single-vector 모델(3.8GB) 대비 약 2312배의 저장공간을 요구한다. Qwen3-VL 기반(8B/4B)은 페이지당 평균 773개 visual embedding을, Eagle 2 기반(3B)은 2304개를 생성한다(Table 6).</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>reranker 대안과 차원 축소</h3>
+      <p>single-vector 모델(48.69)에 cross-encoder reranker로 top-50을 재순위화하면 NDCG@10이 54.40(Table 6에는 54.41)로 올라 late interaction 모델(55.48)에 근접하면서도 저장공간은 극히 일부만 쓴다. 또한 8B 임베딩을 512차원으로 축소하면 저장 87.5% 절감에 정확도 96.02%를, 128차원이면 저장 3%만 쓰면서 95.36%를 유지한다(Table 7). model merging의 이득은 크기가 클수록 커져 3B +0.8%, 4B +1.0%, 8B +1.5%였다.</p>
+      <span class="source-ref">PDF p. 7, 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>저자들은 Nemotron ColEmbed V2 late-interaction 모델 패밀리를 소개하며 ViDoRe 벤치마크 최고 성능과 MIRACL-Vision 다국어 능력을 입증했다. 정확도를 끌어올린 핵심 기법(bidirectional attention, positive-aware hard-negative mining, cluster-based sampling, cross-lingual translation, model merging)과 배포 시 정확도-저장공간 트레이드오프 및 차원 축소 ablation을 정리했다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 방향</h3>
+      <p>저자들은 정확도를 크게 훼손하지 않으면서 late interaction 모델의 저장 요구량을 줄이는 추가 연구(더 작은 임베딩 차원, 낮은 수치 정밀도, 샘플당 임베딩 수 감소 등)를 권고한다. AnswerAI의 late-pooling(토큰 벡터 3~5배 축소)과 MUVERA(멀티벡터를 단일 FDE로 변환) 같은 방향이 언급된다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 2, 4, 5, 6, 7</span>
+              </div>
+              <p>백본 VLM 초기화부터 인코더화, 데이터 처리, 대조학습, model merging, 추론 검색까지의 전체 파이프라인.</p>
+              <div class="mermaid">
+flowchart TB
+  A[사전학습 VLM 초기화\n3B Eagle2 / 4B,8B Qwen3-VL] --&gt; B[causal to bidirectional\nattention 교체]
+  B --&gt; C[공개 데이터 50만 샘플]
+  C --&gt; D[cluster-based sampling\nPCA+KMeans 14 clusters]
+  D --&gt; E[hard-negative mining\nthreshold 0.95]
+  E --&gt; F[cross-lingual 번역 증강\nQwen3-235B]
+  F --&gt; G[대조학습 InfoNCE + MaxSim\n3B: 2-stage / 4B,8B: 1-stage]
+  G --&gt; H[model merging\n3B 8개 / 4B,8B 4개]
+  H --&gt; I[최종 모델]
+  I --&gt; J[추론: 쿼리 토큰 임베딩]
+  J --&gt; K[저장된 문서 멀티벡터와\nMaxSim 비교]
+  K --&gt; L[관련성 점수 및 순위]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>Bi-encoder vs Late interaction</h3>
+                <span class="source-ref">PDF p. 3</span>
+              </div>
+              <p>단일 벡터 pooling 방식(bi-encoder)과 토큰 수준 MaxSim 방식(late interaction)의 구조 차이(Figure 1).</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph BiEncoder[Bi-encoder + Pooling]
+    Q1[Query LLM] --&gt; P1[단일 벡터]
+    D1[Corpus LLM] --&gt; P2[단일 벡터]
+    P1 --&gt; S1[cosine 유사도]
+    P2 --&gt; S1
+  end
+  subgraph LateInt[Late interaction]
+    Q2[Query LLM\n토큰 임베딩들] --&gt; M[MaxSim\n토큰별 최대 유사도 합산]
+    D2[Corpus LLM\n토큰 임베딩들] --&gt; M
+    M --&gt; S2[관련성 점수]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>ViDoRe V3 리더보드 상위 모델 NDCG@10</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 2 · ViDoRe V3 리더보드, 2026-02-03 기준, NDCG@10
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>late interaction vs single vector 정확도</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 5 · 동일 아키텍처·학습데이터·하이퍼파라미터, ViDoRe V3 NDCG@10
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>100만 페이지 임베딩 저장 용량(fp16)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 6 · 100만 페이지 이미지, fp16 임베딩 저장 용량(GB)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>8B 임베딩 차원 축소별 저장·정확도 유지율</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Table 7 · nemotron-colembed-vl-8b-v2, model merging 미적용·4시드 평균, 4096-dim(62.29) 대비 % NDCG@10
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>동일 아키텍처·데이터·하이퍼파라미터 통제 하에서 late interaction vs single vector를 비교(Table 5)하여 정확도 이득이 late interaction 자체에서 비롯됨을 분명히 보인 점은 방법론적으로 견고하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정확도만이 아니라 저장공간·지연시간이라는 실제 배포 비용을 정량화(Table 6)하고 reranker 대안 및 차원 축소 ablation(Table 7)을 함께 제시해, 리더보드 1위 결과를 실무 의사결정과 연결한 점이 실용적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>세 크기의 모델을 open-weights로 공개하고 데이터 처리·학습 레시피를 상세히 기술하여 재현 가능성과 후속 연구 활용도가 높다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>비공개 태스크를 MTEB 관리자가 직접 평가하는 ViDoRe V3에서 1위를 기록해 리더보드 과적합 우려를 상대적으로 낮춘 상태에서의 성능이라는 점이 강점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>late interaction은 단순 pooling 대비 지연시간과 저장 오버헤드를 유발하며 이는 실제 응용에서 우려사항이 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>리더보드 순위는 정확도만으로 결정되어 실제 응용의 폭넓은 요구사항을 반영하지 못할 수 있고, 모든 사용 사례에 맞는 단일 해법은 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>late interaction은 쿼리와 코퍼스 내 모든 페이지 이미지 멀티벡터 간 연산이 필요하고 MaxSim을 지원하는 특화 벡터 데이터베이스를 요구해 지연시간 오버헤드를 유발할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>128차원까지 축소해도 100만 페이지 기준 184.3GB가 필요해 대규모 코퍼스 프로덕션 환경에는 여전히 과도할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>이진 양자화(binary quantization)는 bi-encoder 경험상 임베딩 차원이 너무 작을 때 성능이 저하되며, late-interaction의 128차원 임베딩에 대해서는 추가 검증이 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>1B 모델 간 저장공간 비교는 late interaction 외에도 서로 다른 학습 데이터 블렌드와 이미지 인코더 크기(SigLIP2 1B vs 400M) 차이가 있어 온전히 통제된 비교가 아니다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>정확도를 크게 훼손하지 않으면서 late interaction 임베딩의 저장 요구량을 더 줄일 수 있는 방법(더 작은 차원, 낮은 정밀도, 샘플당 임베딩 수 감소)은 무엇인가?</h3>
+              </div>
+              <p>저자들이 결론에서 명시적으로 후속 연구로 권고함.</p>
+              <span class="source-ref">PDF p. 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>128차원 late-interaction 임베딩에 대해 이진 양자화나 int8 양자화가 정확도를 얼마나 보존하는가?</h3>
+              </div>
+              <p>저자들이 이진 양자화가 저차원에서 성능 저하 가능성이 있으며 추가 검증이 필요하다고 언급함.</p>
+              <span class="source-ref">PDF p. 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>AnswerAI의 late-pooling이나 MUVERA의 FDE 변환을 이 모델 패밀리에 적용하면 저장·지연시간과 정확도의 균형이 어떻게 바뀌는가?</h3>
+              </div>
+              <p>저자들이 관련 접근을 대안으로 언급했으나 본 논문에서 실험하지는 않음.</p>
+              <span class="source-ref">PDF p. 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>single-vector + cross-encoder reranker 파이프라인은 어떤 코퍼스 규모·쿼리 부하 조건에서 late interaction보다 총체적으로 더 비용 효율적인가?</h3>
+              </div>
+              <p>저자들이 reranker 파이프라인이 근접 정확도를 훨씬 적은 저장공간으로 달성함을 보였고, 선택은 사용 사례에 달렸다고 서술함.</p>
+              <span class="source-ref">PDF p. 11</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Visual Document Retrieval (VDR)</dt>
+              <dd>
+                텍스트 추출 없이 문서 페이지를 이미지 형태 그대로 검색하는 방식으로, 표·차트 등 시각 정보를 보존한다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late interaction / MaxSim</dt>
+              <dd>
+                ColBERT가 도입한 방식으로, 쿼리 각 토큰이 문서 모든 토큰과 비교되어 토큰별 최대 유사도(MaxSim)를 취한 뒤 합산해 관련성 점수를 산출한다. 문서 토큰 임베딩을 사전 계산·저장할 수 있다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Bi-encoder</dt>
+              <dd>
+                쿼리와 문서를 독립적으로 단일 전역 벡터로 인코딩하고 cosine 등 단순 유사도로 관련성을 판단하는 효율적이지만 표현력이 제한된 구조.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cross-encoder</dt>
+              <dd>
+                쿼리와 문서를 함께 인코딩해 조밀한 early interaction으로 강한 재순위화 성능을 내지만, 사전 인덱싱이 불가하고 2차 비용으로 first-stage에는 비현실적인 구조.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Bidirectional attention</dt>
+              <dd>
+                디코더 LLM의 causal(단방향) attention을 양방향으로 바꿔 각 토큰이 앞뒤 전체 문맥을 참조하도록 해 검색 정확도를 높이는 인코더화 기법.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Hard-negative mining</dt>
+              <dd>
+                쿼리와 의미적·어휘적으로 유사하지만 정답이 아닌 어려운 negative를 teacher 모델로 채굴하는 기법. 여기서는 NV-Retriever의 percentage-to-positive threshold(0.95)로 false negative를 제거한다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Model merging (model soup)</dt>
+              <dd>
+                같은 아키텍처를 서로 다른 데이터/시드로 학습한 여러 모델의 가중치를 평균해 앙상블 수준 정확도를 단일 모델로 얻는 기법.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cluster-based sampling</dt>
+              <dd>
+                문서 임베딩을 PCA 후 K-Means로 클러스터링(여기서 14개)하고 각 클러스터에서 균일 샘플링해 도메인 불균형을 완화하는 데이터 전략(Nemotron-CLIMB 응용).
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Dynamic image tiling</dt>
+              <dd>
+                가변 해상도 이미지를 여러 타일(Eagle 2 기준 타일당 256 visual token)로 나눠 처리하는 방식으로, 세밀한 시각 정보를 유지한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>NDCG@k</dt>
+              <dd>
+                상위 k개 검색 결과의 순위 품질을 관련성 기반으로 측정하는 지표. 본 논문은 ViDoRe V3·MIRACL-Vision에서 NDCG@10, ViDoRe V1&amp;V2에서 NDCG@5를 사용한다.
+                <span class="source-ref">PDF p. 8</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>3B 및 4B 모델의 정확한 학습 소요 시간은 본문에 명시되지 않음(8B만 8×A100 80GB로 3시간40분 명시).</li><li>Table 2와 Table 6의 4B 모델 ViDoRe V3 NDCG@10 값이 61.54와 61.42로 다르며 그 원인이 설명되지 않음.</li><li>Table 2와 Table 6의 3B 모델 ViDoRe V3 NDCG@10 값이 59.79와 59.70으로 다르며 그 원인이 설명되지 않음.</li><li>5.3절 본문의 재순위화 파이프라인 NDCG@10(54.40)과 Table 6 값(54.41) 사이 근소한 불일치의 원인이 설명되지 않음.</li><li>3B 초기화에 쓰인 &#x27;internal pre-trained Eagle 2 VLM&#x27;의 사전학습 데이터·규모 세부사항이 공개되지 않음.</li><li>K-Means gap statistics로 최종 14개 클러스터를 선택하는 데 사용한 후보 k 범위 등 구체적 파라미터가 명시되지 않음.</li><li>model merging에 사용된 개별 모델들(3B 8개, 4B/8B 각 4개)의 구체적 데이터 블렌드·시드 목록이 명시되지 않음.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe V3 리더보드 상위 모델 NDCG@10", "labels": ["nemotron-colembed-vl-8b-v2", "tomoro-colqwen3-embed-8b", "nemotron-colembed-vl-4b-v2", "Ops-Colqwen3-4B", "tomoro-colqwen3-embed-4b", "llama-nemotron-colembed-vl-3b-v2", "jina-embeddings-v4", "colnomic-embed-multimodal-7b", "llama-nemoretriever-colembed-3b-v1"], "values": [63.42, 61.59, 61.54, 61.17, 60.2, 59.79, 57.52, 57.33, 57.26], "unit": "NDCG@10", "xLabel": "모델", "yLabel": "Avg. NDCG@10"}, {"canvasId": "chart-1", "type": "bar", "title": "late interaction vs single vector 정확도", "labels": ["4B single vector", "4B late interaction", "8B single vector", "8B late interaction"], "values": [54.07, 60.52, 56.91, 62.24], "unit": "NDCG@10", "xLabel": "모델 / 방식", "yLabel": "ViDoRe V3 NDCG@10"}, {"canvasId": "chart-2", "type": "bar", "title": "100만 페이지 임베딩 저장 용량(fp16)", "labels": ["8b-v2 (late)", "4b-v2 (late)", "3b-v2 (late)", "colembed-1b-v1 (late)", "embed-vl-1b-v2 (single)"], "values": [5897.5, 3686.0, 13183.6, 8789.1, 3.8], "unit": "GB", "xLabel": "모델", "yLabel": "저장 용량"}, {"canvasId": "chart-3", "type": "bar", "title": "8B 임베딩 차원 축소별 저장·정확도 유지율", "labels": ["4096-dim", "512-dim", "128-dim"], "values": [100.0, 96.02, 95.36], "unit": "% NDCG@10", "xLabel": "임베딩 차원", "yLabel": "정확도 유지율"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

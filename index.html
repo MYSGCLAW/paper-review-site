@@ -409,7 +409,7 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 9편</span>
+        <span class="stat">논문 10편</span>
       </div>
     </div>
   </header>
@@ -444,12 +444,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>Nemotron ColEmbed V2_Top-Performing Late Interaction.pdf</strong>
-            <span>등록 시각 · 2026-07-08 01:23</span>
+            <strong>IRPAPERS_A VISUAL DOCUMENT BENCHMARK FOR SCIENTIFIC.pdf</strong>
+            <span>등록 시각 · 2026-07-09 18:46</span>
           </div>
 
           <div class="pending-queue-size">
-            5.1 MB
+            5.8 MB
           </div>
 
           <div>
@@ -512,6 +512,32 @@
       </p>
 
       <a class="open-link" href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="paper-card">
+      <div class="paper-card-header">
+        <h2>
+          <a href="papers/nemotron-colembed-v2-top-performing-late-interaction/">
+            Nemotron ColEmbed V2: Top-Performing Late Interaction Embedding Models for Visual Document Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Gabriel de Souza P. Moreira, Ronay Ak, Mengyao Xu, Oliver Holworthy, Benedikt Schifferer, Zhiding Yu, Yauhen Babakhin, Radek Osmulski, Jiarui Cai, Ryan Chesler, Bo Liu, Even Oldridge</p>
+      <p class="metadata">2026 · Proceedings of the 1st Late Interaction Workshop (LIR) @ ECIR 2026</p>
+
+      <p class="summary">
+        이 논문은 NVIDIA가 공개한 Nemotron ColEmbed V2, 즉 시각 문서 검색(Visual Document Retrieval, VDR)을 위한 late interaction 기반 VLM 임베딩 모델 패밀리(3B/4B/8B)를 소개한다. RAG(Retrieval-Augmented Generation) 파이프라인에서 기업이 보유한 PDF·슬라이드 등 문서를 검색하려면 기존 텍스트 검색 모델은 OCR/텍스트 추출에 의존해 표·차트·인포그래픽 같은 시각 정보를 잃는다. 저자들은 페이지 이미지를 직접 임베딩하는 VLM 백본(3B: NVIDIA Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)을 초기화한 뒤, 디코더의 causal attention을 bidirectional attention으로 교체하고, ColBERT 스타일 late interaction(MaxSim) 유사도로 contrastive learning을 수행한다. 성능을 끌어올리기 위해 cluster-based 데이터 샘플링, positive-aware hard-negative mining, cross-lingual 번역 증강, (3B 전용) two-stage training, model merging(model soup)을 결합한다. 그 결과 nemotron-colembed-vl-8b-v2는 2026년 2월 3일 기준 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성하고, 4B/3B 모델도 동급 크기에서 최고 성능을 보인다. 마지막으로 저자들은 late interaction이 유발하는 저장공간·지연시간 오버헤드를 정량적으로 분석하고, 임베딩 차원 축소(512/128차원) ablation을 통해 정확도-저장공간 트레이드오프를 논의한다.
+      </p>
+
+      <a class="open-link" href="papers/nemotron-colembed-v2-top-performing-late-interaction/">
         보고서 열기 →
       </a>
     </article>
