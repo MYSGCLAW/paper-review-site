@@ -318,70 +318,44 @@
       }
     }
   </style>
-<!-- verification-style:start -->
+</head>
+
+<body>
+<!-- verification-status:start -->
 <style>
 .verification-status {
-    margin: 16px auto 22px;
-    padding: 13px 16px;
-    border: 1px solid;
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
     border-radius: 10px;
-    line-height: 1.5;
+    border: 1px solid;
     box-sizing: border-box;
+    font-family: inherit;
 }
-
 .verification-status strong {
+    display: inline-block;
     margin-right: 8px;
 }
-
 .verification-status.pending {
-    background: #fff8dc;
-    border-color: #b58900;
-    color: #5f4b00;
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
 }
-
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
-
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #7f0000;
-}
-
-.verification-index-badge {
-    display: inline-block;
-    margin-left: 7px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    vertical-align: middle;
-}
-
-.verification-index-badge.pending {
-    background: #fff3cd;
-    color: #6b5200;
-}
-
-.verification-index-badge.verified {
-    background: #dff3e3;
-    color: #176b2c;
-}
-
-.verification-index-badge.failed {
-    background: #fde2e5;
-    color: #941b28;
+    color: #8e0000;
 }
 </style>
-<!-- verification-style:end -->
-</head>
-
-<body>
-<!-- verification-status:start -->
-<div class="verification-status verified" role="status"><strong>검증 완료</strong><span>Codex 독립 검증을 통과한 보고서입니다.</span></div>
+<div class="verification-status verified">
+    <strong>검증 완료</strong>
+    <span>원문과 분석 결과에 대한 독립 검증이 완료되었습니다.</span>
+</div>
 <!-- verification-status:end -->
   <header class="hero">
     <div class="page-shell">
@@ -773,24 +747,24 @@
               <p>PDF 코퍼스에서 이미지·텍스트 두 표현을 만들고, 세 검색 신호를 융합해 검색·RAG 평가로 이어지는 전체 흐름.</p>
               <div class="mermaid">
 flowchart TD
-    A[166편 IR 논문 PDF] --&gt; B[페이지 분할 3230p]
-    B --&gt; C[페이지 이미지 base64]
-    B --&gt; D[GPT-4.1 OCR 전사 텍스트]
-    C --&gt; E[ColModernVBERT 다중벡터 임베딩]
-    D --&gt; F[Arctic 2.0 dense 임베딩]
-    D --&gt; G[BM25 sparse]
-    F --&gt; H[Hybrid Text Search RSF]
+    A[&quot;166편 IR 논문 PDF&quot;] --&gt; B[&quot;페이지 분할 3230p&quot;]
+    B --&gt; C[&quot;페이지 이미지 base64&quot;]
+    B --&gt; D[&quot;GPT-4.1 OCR 전사 텍스트&quot;]
+    C --&gt; E[&quot;ColModernVBERT 다중벡터 임베딩&quot;]
+    D --&gt; F[&quot;Arctic 2.0 dense 임베딩&quot;]
+    D --&gt; G[&quot;BM25 sparse&quot;]
+    F --&gt; H[&quot;Hybrid Text Search RSF&quot;]
     G --&gt; H
-    E --&gt; I[Multimodal Hybrid Search alpha 융합]
+    E --&gt; I[&quot;Multimodal Hybrid Search alpha 융합&quot;]
     H --&gt; I
-    E -.MUVERA FDE.-&gt; J[HNSW 근사 + MaxSim rescoring]
-    I --&gt; K[Recall@K 검색 평가]
+    E -. &quot;MUVERA FDE&quot; .-&gt; J[&quot;HNSW 근사 및 MaxSim rescoring&quot;]
+    I --&gt; K[&quot;Recall@K 검색 평가&quot;]
     J --&gt; K
-    E --&gt; L[ImageRAG]
-    H --&gt; M[TextRAG]
-    L --&gt; N[GPT-4.1 reader + LLM-as-Judge]
+    E --&gt; L[&quot;ImageRAG&quot;]
+    H --&gt; M[&quot;TextRAG&quot;]
+    L --&gt; N[&quot;GPT-4.1 reader 및 LLM-as-Judge&quot;]
     M --&gt; N
-    N --&gt; O[Alignment Score QA 평가]
+    N --&gt; O[&quot;Alignment Score QA 평가&quot;]
               </div>
             </article>
             
@@ -802,16 +776,16 @@ flowchart TD
               <p>동일 페이지를 텍스트 전사와 페이지 이미지로 표현할 때의 처리·비용·검색 특성 차이.</p>
               <div class="mermaid">
 flowchart LR
-    P[PDF 페이지] --&gt; T[텍스트 경로]
-    P --&gt; V[이미지 경로]
-    T --&gt; T1[GPT-4.1 OCR 25s/p, $0.017/p]
-    T1 --&gt; T2[약 4.5KB/p, 290배 저렴]
-    T2 --&gt; T3[BM25 정확 매칭 + dense 의미]
-    T3 --&gt; T4[46% Recall@1 / 상단 우위]
-    V --&gt; V1[base64 130ms/p 결정적]
-    V1 --&gt; V2[1.3MB/p, 다중벡터 저장]
-    V2 --&gt; V3[MaxSim late-interaction 레이아웃 보존]
-    V3 --&gt; V4[43% Recall@1 / 깊은 recall 우위]
+    P[&quot;PDF 페이지&quot;] --&gt; T[&quot;텍스트 경로&quot;]
+    P --&gt; V[&quot;이미지 경로&quot;]
+    T --&gt; T1[&quot;GPT-4.1 OCR 25초/페이지, 0.017달러/페이지&quot;]
+    T1 --&gt; T2[&quot;약 4.5KB/페이지, 290배 저렴&quot;]
+    T2 --&gt; T3[&quot;BM25 정확 매칭 및 dense 의미 검색&quot;]
+    T3 --&gt; T4[&quot;Recall@1 46%, 상단 우위&quot;]
+    V --&gt; V1[&quot;base64 130ms/페이지, 결정적 처리&quot;]
+    V1 --&gt; V2[&quot;1.3MB/페이지, 다중벡터 저장&quot;]
+    V2 --&gt; V3[&quot;MaxSim late-interaction 레이아웃 보존&quot;]
+    V3 --&gt; V4[&quot;Recall@1 43%, 깊은 recall 우위&quot;]
               </div>
             </article>
             
