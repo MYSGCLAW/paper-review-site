@@ -405,7 +405,7 @@
   <main class="page-shell">
     <section class="summary-card">
       <h2>핵심 요약</h2>
-      <p>이 논문은 ColBERT·ColPali 계열의 multi-vector document retrieval이 문서당 수천 개의 고차원 float32 patch 임베딩을 저장하고 late-interaction 스코어링을 수행해야 해서 저장 공간과 검색 지연이 웹 스케일 배포의 병목이 되는 문제를 다룬다. 저자는 이를 완화하기 위해 HPC-ColPali(Hierarchical Patch Compression for ColPali)를 제안하는데, 이는 세 가지 축으로 patch 임베딩 단계에 개입한다. (1) K-Means 양자화(quantization)로 고차원 float 벡터를 1-byte centroid index로 대체해 최대 32배 압축을 달성하며, nDCG@10 하락을 조건에 따라 절대 0.01~0.02(가장 낮은 압축 조건 기준 약 2.3%의 상대 하락) 수준으로 낮게 유지한다. (2) VLM의 attention weight를 이용한 attention-guided dynamic pruning으로 상위 p%의 salient patch만 남겨 late-interaction 연산을 최대 60% 줄인다. (3) 선택적 binary encoding으로 centroid index를 b=⌈log2 K⌉ 비트 문자열로 바꿔 CPU/엣지 환경에서 Hamming distance 기반 초고속 검색을 가능하게 한다. 나아가 이를 RAG 파이프라인에 통합해 법률 요약 과제에서 hallucination을 약 30% 낮추고 end-to-end latency를 절반으로 줄였다고 보고한다. 다만 저자는 Results and Discussion 서두에서 제시된 모든 수치가 실제 측정치가 아니라 설계의 이론적 장점에 근거한 추정(estimated)값임을 명시한다.</p>
+      <p>이 논문은 ColBERT·ColPali 계열의 multi-vector document retrieval이 문서당 수천 개의 고차원 float32 patch 임베딩을 저장하고 late-interaction 스코어링을 수행해야 해서 저장 공간과 검색 지연이 웹 스케일 배포의 병목이 되는 문제를 다룬다. 저자는 이를 완화하기 위해 HPC-ColPali(Hierarchical Patch Compression for ColPali)를 제안하는데, 이는 세 가지 축으로 patch 임베딩 단계에 개입한다. (1) K-Means 양자화(quantization)로 고차원 float 벡터를 1-byte centroid index로 대체해 논문이 보고한 대로 최대 32배(선택적 binary 모드 포함 시 최대 57배) 압축을 달성한다고 주장하며, nDCG@10 하락을 조건에 따라 절대 0.01~0.02(가장 낮은 압축 조건 기준 약 2.3%의 상대 하락) 수준으로 낮게 유지한다고 보고한다. 다만 이 32배·57배 수치는 512-byte→1-byte 산술과 K=512 centroid를 1-byte index로 표현한다는 서술이 원문 내에서 서로 완전히 정합적이지 않아(K=512는 엄밀히는 9-bit가 필요), 검증자는 이를 원문 자체의 내부 불일치로 지적했다. (2) VLM의 attention weight를 이용한 attention-guided dynamic pruning으로 상위 p%의 salient patch만 남겨 late-interaction 연산을 최대 60% 줄인다. (3) 선택적 binary encoding으로 centroid index를 b=⌈log2 K⌉ 비트 문자열로 바꿔 CPU/엣지 환경에서 Hamming distance 기반 초고속 검색을 가능하게 하며, HPC-ColPali 변형들 사이에서는 가장 낮은 지연을 보인다(다만 전체 baseline 중 최저 지연은 아니며, single-vector인 DistilCol이 더 낮은 지연을 보인다). 나아가 이를 RAG 파이프라인에 통합해 법률 요약 과제에서 hallucination을 약 30% 낮추고 end-to-end latency를 절반으로 줄였다고 보고한다. 다만 저자는 Results and Discussion 서두에서 제시된 모든 수치가 실제 측정치가 아니라 설계의 이론적 장점에 근거한 추정(estimated)값임을 명시한다.</p>
       <span class="source-ref">PDF p. 1, 2, 7, 8</span>
     </section>
 
@@ -425,7 +425,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>K-Means 양자화로 1-byte code index를 사용해 최대 32배 저장 압축을 달성하면서 nDCG@10 하락을 조건에 따라 절대 0.01~0.02(상대 약 1.2~2.3%) 수준으로 낮게 유지한다.</span>
+                <span>K-Means 양자화로 1-byte code index를 사용해 논문은 최대 32배 저장 압축을 달성한다고 주장하면서 nDCG@10 하락을 조건에 따라 절대 0.01~0.02(상대 약 1.2~2.3%) 수준으로 낮게 유지한다. 다만 이 32배 수치의 산술 근거(512-byte→1-byte)와 K=512를 동일하게 1-byte index로 표현한다는 서술은 원문 내부에서 완전히 정합적이지 않다.</span>
               </div>
               <span class="source-ref">PDF p. 1, 7</span>
             </li>
@@ -441,7 +441,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>centroid index를 b-bit로 결정론적 변환하는 선택적 binary encoding은 학습 없는 Hamming 검색으로 CPU/엣지에서 최대 57배 압축과 최저 지연을 제공한다.</span>
+                <span>centroid index를 b-bit로 결정론적 변환하는 선택적 binary encoding은 학습 없는 Hamming 검색으로 CPU/엣지에서 최대 57배 압축과 HPC-ColPali 변형 중 최저 지연을 제공한다(다만 single-vector인 DistilCol은 이보다도 더 낮은 지연을 보여 전체 baseline 중 최저는 아니다).</span>
               </div>
               <span class="source-ref">PDF p. 4, 7</span>
             </li>
@@ -518,7 +518,7 @@
       
     <article class="content-item">
       <h3>Quantization으로 최대 32배 압축</h3>
-      <p>patch 임베딩에 K-Means 클러스터링(K∈{128, 256, 512})을 적용해 고차원 float 벡터를 압축된 1-byte code index로 대체함으로써 최대 32배 압축을 달성한다. nDCG@10 하락은 조건에 따라 다르며, K=256/p=60% 조건에서는 절대 0.01, K=512/p=40%까지 포함하면 절대 0.02(상대 약 2.3%) 수준으로 낮게 유지된다.</p>
+      <p>patch 임베딩에 K-Means 클러스터링(K∈{128, 256, 512})을 적용해 고차원 float 벡터를 압축된 1-byte code index로 대체함으로써 논문은 최대 32배 압축을 달성한다고 주장한다(선택적 binary 모드까지 포함하면 최대 57배). nDCG@10 하락은 조건에 따라 다르며, K=256/p=60% 조건에서는 절대 0.01, K=512/p=40%까지 포함하면 절대 0.02(상대 약 2.3%) 수준으로 낮게 유지된다. 다만 이 32배 수치의 근거인 &#x27;512-byte float → 1-byte index&#x27; 산술과, K=512 centroid도 동일하게 1-byte index로 표현된다는 서술은 엄밀히는 서로 맞지 않는다(K=512는 최소 9-bit가 필요하므로 정확히 1 byte로 표현되지 않는다). 이는 저자가 제시한 수치를 그대로 옮긴 것이며, 검증 결과 원문 자체의 내부 산술 불일치로 확인되었다.</p>
       <span class="source-ref">PDF p. 1</span>
     </article>
     
@@ -626,7 +626,7 @@
       
     <article class="content-item">
       <h3>K-Means Quantization</h3>
-      <p>patch 임베딩 X∈R^(N×D)에 K-Means 클러스터링을 수행해 K개의 대표 centroid {c_k}를 학습하고, 각 원본 패치 임베딩 x_i를 가장 가까운 centroid에 할당하여 1-byte code index q_i∈{0,...,K-1}로 변환한다. 예를 들어 D=128인 경우 512바이트 float 벡터가 1바이트 index로 대체되어 32배 압축이 된다.</p>
+      <p>patch 임베딩 X∈R^(N×D)에 K-Means 클러스터링을 수행해 K개의 대표 centroid {c_k}를 학습하고, 각 원본 패치 임베딩 x_i를 가장 가까운 centroid에 할당하여 1-byte code index q_i∈{0,...,K-1}로 변환한다. 논문은 D=128인 경우 512바이트 float 벡터가 1바이트 index로 대체되어 32배 압축이 된다고 설명한다. 다만 이 서술은 K∈{128,256,512} 전체에 동일하게 &#x27;1-byte index&#x27;를 적용한다고 말하는데, K=512는 표현에 최소 9-bit가 필요해 정확히 1 byte(8-bit)로 표현되지 않으므로 원문 내부에 산술상 완전히 정합적이지 않은 지점이 있다.</p>
       <span class="source-ref">PDF p. 4</span>
     </article>
     
@@ -705,7 +705,7 @@
       
     <article class="content-item">
       <h3>저장 공간 압축 (Table III)</h3>
-      <p>100,000개 문서(문서당 평균 50 patch) 기준, K-Means 양자화(K=256)를 적용한 HPC-ColPali는 저장 공간을 ColPali Full의 2.56GB에서 0.08GB로 줄여 32배 압축을 달성한다. K=512 float 모드는 0.09GB(28배), 선택적 이진 인코딩(Binary, K=512)은 0.045GB로 최대 57배 압축을 달성한다.</p>
+      <p>100,000개 문서(문서당 평균 50 patch) 기준, Table III은 K-Means 양자화(K=256)를 적용한 HPC-ColPali가 저장 공간을 ColPali Full의 2.56GB에서 0.08GB로 줄여 32배 압축을 달성한다고 보고한다. K=512 float 모드는 0.09GB(28배), 선택적 이진 인코딩(Binary, K=512)은 0.045GB로 최대 57배 압축을 달성한다고 제시된다. 다만 검증 결과, &#x27;512-byte float→1-byte index&#x27;라는 산술 근거와 K=512 centroid를 동일하게 1-byte index로 표현한다는 서술이 엄밀하게는 서로 정합적이지 않고(K=512는 최소 9-bit 필요), 100,000×50 patch에 순수 1 byte/patch를 적용하면 이론상 0.08GB보다 훨씬 작은 값(약 0.005GB 수준)이 나와야 한다는 점에서 Table III 수치 자체가 내부적으로 완전히 일관되지는 않는다. 이는 원문 자체의 산술 불일치이며, 실측 검증이 아닌 추정치라는 점과 함께 고려해야 한다.</p>
       <span class="source-ref">PDF p. 7</span>
     </article>
     
@@ -719,14 +719,14 @@
 
     <article class="content-item">
       <h3>질의 지연시간 절감 (Table IV)</h3>
-      <p>HNSW 인덱싱 기준으로 HPC-ColPali(K=256, p=60%)는 ViDoRe에서 지연시간을 120ms에서 60ms로, SEC-Filings에서 150ms에서 75ms로 각각 50% 감소시킨다. 이진 인코딩 모드(Binary, K=512)는 각각 40ms, 50ms로 더 낮은 지연을 달성해 고처리량·저지연 시나리오에 적합함을 보인다.</p>
+      <p>HNSW 인덱싱 기준으로 HPC-ColPali(K=256, p=60%)는 ViDoRe에서 지연시간을 120ms에서 60ms로, SEC-Filings에서 150ms에서 75ms로 각각 50% 감소시킨다. 이진 인코딩 모드(Binary, K=512)는 각각 40ms, 50ms로 HPC-ColPali 변형 중 가장 낮은 지연을 달성한다. 다만 전체 baseline까지 포함하면 single-vector인 DistilCol이 ViDoRe 30ms, SEC-Filings 35ms로 이보다도 더 낮은 지연을 보이므로, binary 모드의 저지연 우위는 HPC-ColPali 변형들 사이에서의 상대적 우위로 한정해서 해석해야 한다.</p>
       <span class="source-ref">PDF p. 7</span>
     </article>
     
 
     <article class="content-item">
       <h3>RAG 통합 성능 (Table V)</h3>
-      <p>법률 요약 RAG 파이프라인에서 HPC-ColPali(K=256, p=60%)는 hallucination rate를 ColPali Full의 15%에서 10%로(본문 서술상 33% 상대 감소) 낮추고 end-to-end latency를 300ms에서 150ms로 절반으로 줄인다. 이진 모드는 latency 100ms에 hallucination 11%로 극단적 저지연 trade-off를 제공한다. DistilCol은 latency 80ms로 가장 낮지만 hallucination 25%로 가장 높다. 저자는 이를 DistilCol의 낮은 retrieval quality 때문이라고 해석하지만, Table V 자체에는 검색 품질을 직접 나타내는 지표(nDCG 등)가 포함되어 있지 않으므로 이는 저자의 해석이며 표 수치로 직접 검증되지는 않는다. 다만 hallucination 감소폭은 Abstract/Conclusion에서 &#x27;30%&#x27;, 본문에서는 &#x27;33%&#x27;로 표기가 일치하지 않는다.</p>
+      <p>법률 요약 RAG 파이프라인에서 HPC-ColPali(K=256, p=60%)는 hallucination rate를 ColPali Full의 15%에서 10%로(본문 서술상 33% 상대 감소) 낮추고 end-to-end latency를 300ms에서 150ms로 절반으로 줄인다. 이진 모드는 latency 100ms에 hallucination 11%로 극단적 저지연 trade-off를 제공하지만, DistilCol은 latency 80ms로 binary 모드보다도 더 낮은 지연을 보이면서 hallucination 25%로 가장 높다. 저자는 이를 DistilCol의 낮은 retrieval quality 때문이라고 해석하지만, Table V 자체에는 검색 품질을 직접 나타내는 지표(nDCG 등)가 포함되어 있지 않으므로 이는 저자의 해석이며 표 수치로 직접 검증되지는 않는다. 다만 hallucination 감소폭은 Abstract/Conclusion에서 &#x27;30%&#x27;, 본문에서는 &#x27;33%&#x27;로 표기가 일치하지 않는다.</p>
       <span class="source-ref">PDF p. 7, 8</span>
     </article>
     
@@ -741,7 +741,7 @@
       
     <article class="content-item">
       <h3>종합</h3>
-      <p>HPC-ColPali는 K-Means 양자화, attention-guided dynamic pruning, 선택적 binary encoding을 결합하여 multi-vector document retrieval의 저장·연산 병목을 완화하는 유연하고 모듈적인 프레임워크이다. 저자는 nDCG@10 하락을 조건에 따라 절대 0.01~0.02 수준으로 낮게 유지하면서 최대 32배 저장 압축과 최대 60% late-interaction 연산 절감을 달성하고, RAG에 통합 시 hallucination을 약 30% 낮추고 end-to-end latency를 절반으로 줄였다고 결론짓는다. 향후 계층적 Product Quantization, adaptive pruning, dynamic corpora용 streaming codebook, 타 모달리티 확장을 과제로 제시한다.</p>
+      <p>HPC-ColPali는 K-Means 양자화, attention-guided dynamic pruning, 선택적 binary encoding을 결합하여 multi-vector document retrieval의 저장·연산 병목을 완화하는 유연하고 모듈적인 프레임워크이다. 저자는 nDCG@10 하락을 조건에 따라 절대 0.01~0.02 수준으로 낮게 유지하면서 최대 32배 저장 압축과 최대 60% late-interaction 연산 절감을 달성하고, RAG에 통합 시 hallucination을 약 30% 낮추고 end-to-end latency를 절반으로 줄였다고 결론짓는다. 다만 이 32배 압축 수치는 원문 내부의 산술 불일치를 동반한다는 점을 함께 고려해야 한다. 향후 계층적 Product Quantization, adaptive pruning, dynamic corpora용 streaming codebook, 타 모달리티 확장을 과제로 제시한다.</p>
       <span class="source-ref">PDF p. 8, 9</span>
     </article>
     
@@ -806,12 +806,12 @@ flowchart LR
           <h2>정량 결과</h2>
           
             <article class="visual-card">
-              <h3>저장 공간 비교 (추정치)</h3>
+              <h3>저장 공간 비교 (추정치, 산술 내적 불일치 있음)</h3>
               <div class="chart-container">
                 <canvas id="chart-0"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 7 · Table III · 100,000 documents, 평균 50 patches/doc. 저자 명시상 추정(estimated)값
+                PDF p. 7 · Table III · 100,000 documents, 평균 50 patches/doc. 저자 명시상 추정(estimated)값. 검증 결과 32×/57× 산술 근거가 원문 내부에서 완전히 정합적이지 않음(K=512를 1-byte index로 표현한다는 서술과 실제 필요 비트 수 불일치)
               </p>
             </article>
             
@@ -841,7 +841,7 @@ flowchart LR
                 <canvas id="chart-3"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 7 · Table IV · ViDoRe, HNSW indexing. 저자 명시상 추정(estimated)값
+                PDF p. 7 · Table IV · ViDoRe, HNSW indexing. 저자 명시상 추정(estimated)값. DistilCol(30ms)이 전체 항목 중 최저 지연이며, Binary 모드(40ms)는 HPC-ColPali 변형 중 최저 지연임
               </p>
             </article>
             
@@ -851,7 +851,7 @@ flowchart LR
                 <canvas id="chart-4"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 7 · Table IV · SEC-Filings, HNSW indexing. 저자 명시상 추정(estimated)값
+                PDF p. 7 · Table IV · SEC-Filings, HNSW indexing. 저자 명시상 추정(estimated)값. DistilCol(35ms)이 전체 항목 중 최저 지연이며, Binary 모드(50ms)는 HPC-ColPali 변형 중 최저 지연임
               </p>
             </article>
             
@@ -871,7 +871,7 @@ flowchart LR
                 <canvas id="chart-6"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 8 · Table V · Legal summarization RAG pipeline. 저자 명시상 추정(estimated)값
+                PDF p. 8 · Table V · Legal summarization RAG pipeline. 저자 명시상 추정(estimated)값. DistilCol(80ms)이 Binary 모드(100ms)보다도 더 낮은 지연을 보임
               </p>
             </article>
             
@@ -1020,6 +1020,14 @@ flowchart LR
               <span class="source-ref">PDF p. 4, 5</span>
             </li>
             
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>핵심 압축 주장인 32×/57×는 &#x27;512-byte float→1-byte index&#x27; 산술과 K=512 centroid를 동일하게 1-byte index로 표현한다는 서술이 원문 내부에서 완전히 정합적이지 않다(K=512는 엄밀히 9-bit 필요). 또한 100,000×50 patch에 순수 1 byte/patch를 적용하면 이론상 Table III의 0.08GB보다 훨씬 작은 값이 예상되어, 이 저장 압축 수치는 검증된 결과가 아니라 원문 자체의 산술 불일치를 내포한 추정치로 취급해야 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 7</span>
+            </li>
+            
       </ul>
     </section>
     
@@ -1082,6 +1090,15 @@ flowchart LR
               <span class="source-ref">PDF p. 7, 8</span>
             </article>
             
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>&#x27;512-byte float→1-byte index&#x27;라는 32× 압축 산술과 K=512 centroid를 동일하게 1-byte index로 표현한다는 서술 사이의 불일치는 오타인가, 아니면 실제 인덱스 구현이 K에 따라 가변 비트 폭을 쓰는가?</h3>
+              </div>
+              <p>검증 결과, K=512는 최소 9-bit가 필요해 1-byte(8-bit) 표현과 정확히 맞지 않으며, 100,000×50 patch·1 byte/patch 가정과 Table III의 0.08GB 수치도 산술적으로 정확히 일치하지 않는다.</p>
+              <span class="source-ref">PDF p. 4, 7</span>
+            </article>
+            
     </section>
     
 
@@ -1109,7 +1126,7 @@ flowchart LR
             <div class="glossary-row">
               <dt>K-Means Quantization</dt>
               <dd>
-                patch 임베딩을 K개의 대표 centroid로 클러스터링한 뒤 각 임베딩을 가장 가까운 centroid의 1-byte index로 대체해 저장 공간을 줄이는 양자화 기법(K∈{128,256,512}).
+                patch 임베딩을 K개의 대표 centroid로 클러스터링한 뒤 각 임베딩을 가장 가까운 centroid의 1-byte index로 대체해 저장 공간을 줄이는 양자화 기법(K∈{128,256,512}). 원문은 K=512도 1-byte index로 표현한다고 서술하지만 엄밀히는 9-bit가 필요해 내부적으로 완전히 정합적이지는 않다.
                 <span class="source-ref">PDF p. 4</span>
               </dd>
             </div>
@@ -1161,7 +1178,7 @@ flowchart LR
     
         <section class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>ColBERTv2, LSH, ITQ는 Baselines(IV.C)로 정의되어 있으나 Table I–V 결과값에 등장하지 않아 실제 비교 실험 수행 여부를 확인할 수 없다.</li><li>Throughput(QPS)은 평가 지표로 정의(IV.B.2)되었으나 어떤 표에도 실제 수치가 보고되지 않는다.</li><li>V장 서두에서 &#x27;모든 수치 결과는 추정치(estimated)&#x27;라고 명시되어(p.7) 실제 실험 수행 여부와 실측값을 논문에서 확인할 수 없다.</li><li>ViDoRe·SEC-Filings의 정확한 문서 수, 질의 수, train/test 분할 등 데이터셋 통계가 명시되지 않는다.</li><li>K-Means 학습에 사용된 코퍼스 크기(N, 전체 patch 수)가 구체적 수치로 제시되지 않는다.</li><li>HNSW 인덱스의 하이퍼파라미터(M, efConstruction, efSearch 등)가 명시되지 않는다.</li><li>RAG용 파인튜닝된 Llama-2 7B의 학습 데이터 구성 및 파인튜닝 절차가 구체적으로 명시되지 않는다.</li><li>결과에 대한 통계적 유의성 검정(신뢰구간, 반복실험 횟수 등) 정보가 제시되지 않는다.</li><li>hallucination rate 감소폭이 Abstract/Conclusion에서는 &#x27;30%&#x27;, 본문 결과 서술(Table V 기반)에서는 &#x27;33%&#x27;로 서로 다르게 명시되어 논문 내에서 일관되지 않는다.</li><li>&#x27;nDCG@10 하락 2% 미만&#x27;이라는 서술이 모든 HPC-ColPali 조건에 성립하는지, 아니면 K=256/p=60% 등 특정 조건에만 성립하는지 논문에서 명확히 구분되지 않는다.</li><li>DistilCol의 hallucination rate가 높은 이유를 &#x27;낮은 retrieval quality&#x27;로 설명하는 본문 서술을 Table V 수치만으로 직접 검증할 근거가 부족하다.</li><li>attention-guided dynamic pruning의 적용 대상이 질의 patch인지 문서 patch인지 원문 서술이 혼재되어 있어 확정할 수 없다.</li></ul>
+          <ul><li>ColBERTv2, LSH, ITQ는 Baselines(IV.C)로 정의되어 있으나 Table I–V 결과값에 등장하지 않아 실제 비교 실험 수행 여부를 확인할 수 없다.</li><li>Throughput(QPS)은 평가 지표로 정의(IV.B.2)되었으나 어떤 표에도 실제 수치가 보고되지 않는다.</li><li>V장 서두에서 &#x27;모든 수치 결과는 추정치(estimated)&#x27;라고 명시되어(p.7) 실제 실험 수행 여부와 실측값을 논문에서 확인할 수 없다.</li><li>ViDoRe·SEC-Filings의 정확한 문서 수, 질의 수, train/test 분할 등 데이터셋 통계가 명시되지 않는다.</li><li>K-Means 학습에 사용된 코퍼스 크기(N, 전체 patch 수)가 구체적 수치로 제시되지 않는다.</li><li>HNSW 인덱스의 하이퍼파라미터(M, efConstruction, efSearch 등)가 명시되지 않는다.</li><li>RAG용 파인튜닝된 Llama-2 7B의 학습 데이터 구성 및 파인튜닝 절차가 구체적으로 명시되지 않는다.</li><li>결과에 대한 통계적 유의성 검정(신뢰구간, 반복실험 횟수 등) 정보가 제시되지 않는다.</li><li>hallucination rate 감소폭이 Abstract/Conclusion에서는 &#x27;30%&#x27;, 본문 결과 서술(Table V 기반)에서는 &#x27;33%&#x27;로 서로 다르게 명시되어 논문 내에서 일관되지 않는다.</li><li>&#x27;nDCG@10 하락 2% 미만&#x27;이라는 서술이 모든 HPC-ColPali 조건에 성립하는지, 아니면 K=256/p=60% 등 특정 조건에만 성립하는지 논문에서 명확히 구분되지 않는다.</li><li>DistilCol의 hallucination rate가 높은 이유를 &#x27;낮은 retrieval quality&#x27;로 설명하는 본문 서술을 Table V 수치만으로 직접 검증할 근거가 부족하다.</li><li>attention-guided dynamic pruning의 적용 대상이 질의 patch인지 문서 patch인지 원문 서술이 혼재되어 있어 확정할 수 없다.</li><li>32×/57× 압축 산술(&#x27;512-byte→1-byte&#x27;, K=512도 1-byte index로 표현)과 100,000×50 patch·1 byte/patch 가정 하의 이론적 저장량이 Table III의 실제 수치(0.08GB 등)와 정확히 맞아떨어지는지는 논문에서 명확히 검증되지 않으며, 원문 내부에 산술 불일치가 존재한다.</li></ul>
         </section>
         
   </main>
@@ -1180,7 +1197,7 @@ flowchart LR
       securityLevel: "strict"
     });
 
-    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "저장 공간 비교 (추정치)", "labels": ["ColPali Full (float32)", "HPC-ColPali (K=256, float)", "HPC-ColPali (K=512, float)", "HPC-ColPali (Binary, K=512)"], "values": [2.56, 0.08, 0.09, 0.045], "unit": "GB", "xLabel": "모델 구성", "yLabel": "Storage Footprint"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe nDCG@10 비교 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)"], "values": [0.85, 0.83, 0.7, 0.84, 0.83], "unit": "nDCG@10", "xLabel": "모델 구성", "yLabel": "nDCG@10"}, {"canvasId": "chart-2", "type": "bar", "title": "SEC-Filings nDCG@10 비교 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)"], "values": [0.88, 0.86, 0.72, 0.87, 0.86], "unit": "nDCG@10", "xLabel": "모델 구성", "yLabel": "nDCG@10"}, {"canvasId": "chart-3", "type": "bar", "title": "ViDoRe 평균 질의 지연시간 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)", "HPC-ColPali (Binary, K=512)"], "values": [120, 90, 30, 60, 70, 40], "unit": "ms", "xLabel": "모델 구성", "yLabel": "Average Query Latency"}, {"canvasId": "chart-4", "type": "bar", "title": "SEC-Filings 평균 질의 지연시간 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)", "HPC-ColPali (Binary, K=512)"], "values": [150, 110, 35, 75, 85, 50], "unit": "ms", "xLabel": "모델 구성", "yLabel": "Average Query Latency"}, {"canvasId": "chart-5", "type": "bar", "title": "RAG hallucination rate (추정치)", "labels": ["ColPali Full", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (Binary, K=512)", "DistilCol"], "values": [15, 10, 11, 25], "unit": "%", "xLabel": "Retriever", "yLabel": "Hallucination Rate"}, {"canvasId": "chart-6", "type": "bar", "title": "RAG end-to-end latency (추정치)", "labels": ["ColPali Full", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (Binary, K=512)", "DistilCol"], "values": [300, 150, 100, 80], "unit": "ms", "xLabel": "Retriever", "yLabel": "End-to-end Latency"}];
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "저장 공간 비교 (추정치, 산술 내적 불일치 있음)", "labels": ["ColPali Full (float32)", "HPC-ColPali (K=256, float)", "HPC-ColPali (K=512, float)", "HPC-ColPali (Binary, K=512)"], "values": [2.56, 0.08, 0.09, 0.045], "unit": "GB", "xLabel": "모델 구성", "yLabel": "Storage Footprint"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe nDCG@10 비교 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)"], "values": [0.85, 0.83, 0.7, 0.84, 0.83], "unit": "nDCG@10", "xLabel": "모델 구성", "yLabel": "nDCG@10"}, {"canvasId": "chart-2", "type": "bar", "title": "SEC-Filings nDCG@10 비교 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)"], "values": [0.88, 0.86, 0.72, 0.87, 0.86], "unit": "nDCG@10", "xLabel": "모델 구성", "yLabel": "nDCG@10"}, {"canvasId": "chart-3", "type": "bar", "title": "ViDoRe 평균 질의 지연시간 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)", "HPC-ColPali (Binary, K=512)"], "values": [120, 90, 30, 60, 70, 40], "unit": "ms", "xLabel": "모델 구성", "yLabel": "Average Query Latency"}, {"canvasId": "chart-4", "type": "bar", "title": "SEC-Filings 평균 질의 지연시간 (추정치)", "labels": ["ColPali Full", "PQ-Only (K=256)", "DistilCol", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (K=512, p=40%)", "HPC-ColPali (Binary, K=512)"], "values": [150, 110, 35, 75, 85, 50], "unit": "ms", "xLabel": "모델 구성", "yLabel": "Average Query Latency"}, {"canvasId": "chart-5", "type": "bar", "title": "RAG hallucination rate (추정치)", "labels": ["ColPali Full", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (Binary, K=512)", "DistilCol"], "values": [15, 10, 11, 25], "unit": "%", "xLabel": "Retriever", "yLabel": "Hallucination Rate"}, {"canvasId": "chart-6", "type": "bar", "title": "RAG end-to-end latency (추정치)", "labels": ["ColPali Full", "HPC-ColPali (K=256, p=60%)", "HPC-ColPali (Binary, K=512)", "DistilCol"], "values": [300, 150, 100, 80], "unit": "ms", "xLabel": "Retriever", "yLabel": "End-to-end Latency"}];
 
     for (const spec of chartSpecs) {
       const canvas = document.getElementById(spec.canvasId);
