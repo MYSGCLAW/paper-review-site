@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ESPN: Memory-Efficient Multi-Vector Information Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 72px 0 48px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>ESPN: Memory-Efficient Multi-Vector Information Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Susav Shrestha, Narasimha Reddy, Zongwang Li</span>
+        <span><strong>출처</strong> · Under review (arXiv:2312.05417v1)</span>
+        <span><strong>연도</strong> · 2023</span>
+      </div>
+
+      <div class="status-row">
+        <span class="status-badge">Claude 분석 완료</span>
+        <span class="status-badge">독립 검증 전</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-card">
+      <h2>핵심 요약</h2>
+      <p>ColBERT류의 멀티벡터(late interaction) 검색 모델은 문서를 토큰 단위 멀티벡터로 인코딩하고 MaxSim 연산으로 유사도를 계산해 단일 벡터·lexical 모델보다 검색 품질(MRR@10)을 크게 높이지만, 재랭킹용 임베딩 인덱스 크기가 BM25 대비 한 자릿수 이상(예: ColBERTv1은 210배, ColBERTv2·ColBERTer도 26-34배) 커지면서 대규모 데이터셋에서 메모리 확장성이 심각한 병목이 된다.\n이 논문은 ESPN(Embedding from Storage Pipelined Network)을 제안한다. 핵심은 방대한 bag-of-word(BOW) 재랭킹 임베딩 테이블 전체를 SSD로 오프로드하되, Nvidia GPUDirect Storage(GDS)로 SSD에서 GPU 메모리로 직접(peer-to-peer) 데이터를 전송하고, ANN(근사 최근접 이웃) 탐색의 특성을 이용한 소프트웨어 프리페처(prefetcher)로 스토리지 지연을 ANN 연산과 오버랩시키는 것이다. 프리페처는 90%를 넘는 히트율을 달성하고, 조기 재랭킹(early re-ranking)과 부분 재랭킹(partial re-ranking)을 결합해 대역폭 요구량을 줄인다.\n결과적으로 ESPN은 전체 리트리벌 인덱스의 6-19%만 메모리에 유지하면서도 완전 메모리 기반 솔루션 대비 1.02배 수준의 end-to-end 지연시간을 유지하고, 메모리 요구량을 quantization factor에 따라 5-16배 줄이며, 메모리 용량 근처에서 mmap 대비 3.1-3.9배 빠른 지연을 달성한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 8</span>
+    </section>
+
+    
+    <section class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>재랭킹용 BOW 임베딩 테이블 전체를 SSD로 오프로드하고 GDS로 SSD→GPU 직접 전송함으로써, quantization factor에 따라 메모리 요구량을 5-16배 줄인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ANN 탐색이 δ개 클러스터를 방문한 시점에 프리페처를 시작해 남은 λ개 클러스터 탐색과 SSD I/O를 오버랩시키는 것이 핵심 아이디어이며, 프리페처 히트율은 30% prefetch step에서 90%를 넘는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ESPN은 전체 인덱스의 6-19%만 메모리에 두고도 완전 메모리 솔루션 대비 1.02배 지연을 유지하며, 메모리 용량 근처에서 mmap 대비 3.1-3.9배 빠르다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>부분 재랭킹으로 top-64~128만 재랭킹하면 MRR@10 0.3-0.7% 저하로 대역폭을 8-16배 줄여 배치 크기를 192까지 확장할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 7, 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>멀티벡터 모델의 인덱스 크기 폭증</h3>
+      <p>멀티벡터(late interaction) 모델은 질의와 문서를 토큰 단위 멀티벡터로 인코딩하고 MaxSim 연산(식1)으로 유사도를 계산해, 질의-문서 관계를 하나의 dot product로 압축하는 단일 벡터 모델의 정보 병목(information bottleneck)을 피하고 더 높은 검색 품질을 얻는다. 그러나 이 표현력의 대가로 재랭킹용 임베딩 인덱스의 메모리·저장 공간이 단일 벡터·lexical 모델 대비 한 자릿수(order of magnitude) 이상 커진다. 멀티벡터 인덱스 크기는 O(N·t·d·b) 규모(문서 수 N, 문서당 토큰 벡터 수 t, 차원 d, 차원당 바이트 b)이고, 후보 생성 인덱스까지 합치면 O(N·I + N·t·d·b)가 된다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>데이터셋이 커질수록 심화되는 확장성 한계</h3>
+      <p>인덱스를 전부 메모리에 캐싱해 저지연을 얻는 기존 설계는 시스템 메모리를 초과하는 대규모 데이터베이스에서 확장성이 무너진다. MS MARCO v2(1.38억 패시지)처럼 규모가 커지면 인덱스를 메모리에 유지하는 하드웨어 비용이 급증하고, 메모리 용량 근처에서 mmap 같은 전통적 기법으로 서빙하면 쿼리 지연시간이 크게 저하된다(Figure 1). 서버 메모리를 무한정 확장하는 것보다 테라바이트급 용량과 낮은 지연을 제공하는 SSD를 활용하는 것이 더 비용 효율적인 대안이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>mmap의 소프트웨어 오버헤드</h3>
+      <p>mmap(memory-mapping)은 파일을 프로세스 가상 메모리에 통합해 최소한의 코드 변경으로 동작하지만, 데이터가 메모리에 없을 때 블로킹 방식의 페이지 폴트 처리를 사용해 상당한 소프트웨어 오버헤드를 유발한다. 하나의 쿼리 스레드가 수천 개의 서로 다른 메모리 위치에 접근할 수 있어 SSD 대역폭을 비효율적으로 사용한다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>swap space의 확장성 부재</h3>
+      <p>swap space는 페이지 폴트당 8개 페이지를 함께 가져와 mmap보다 오버헤드가 낮지만, 메모리+스왑 공간을 초과하는 대규모 데이터셋에는 확장 불가능(OOM 발생)하며, 스왑 파일에 지속적으로 대량 데이터를 기록해야 하므로 SSD 수명에도 해롭다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>압축·축소 기법의 잔여 격차</h3>
+      <p>ColBERTv2와 ColBERTer는 dimension reduction, quantization, filtering, compression 전략으로 ColBERTv1 대비 인덱스를 각각 6.2배, 8.2배 줄였지만(Table 1), 여전히 BM25 대비 26-34배 큰 인덱스를 가지며 데이터셋이 커질수록 문제가 심화된다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ANN 오프로딩 연구의 범위 한계와 GPU 메모리 제약</h3>
+      <p>DiskANN과 SPANN은 후보 생성용 ANN 인덱스를 SSD로 오프로드하는 데에만 초점을 맞춰, 멀티벡터 late-interaction 모델의 방대한 재랭킹 임베딩 인덱스 문제는 다루지 않는다. 한편 GPU 메모리(HBM)는 매우 제한적 자원이고 확장하려면 GPU를 선형적으로 추가해야 해 비용이 빠르게 증가하므로, 대규모 멀티벡터 인덱스를 GPU 메모리에 전부 캐싱하는 것은 비용 효율적이지 않다.</p>
+      <span class="source-ref">PDF p. 4, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전통적 OS 기법의 한계 규명</h3>
+      <p>뉴럴 IR 시스템에서 swapping·mmap 같은 전통적 OS 기법의 확장성 문제와 한계를 규명했다. ESPN은 메모리 용량에 근접한 상황에서 end-to-end 쿼리 지연시간이 mmap 대비 3.9배 빠르다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>SSD 오프로드 임베딩 리트리벌 아키텍처</h3>
+      <p>재랭킹용 임베딩 테이블을 SSD로 오프로드하는 확장 가능한 멀티벡터 IR 아키텍처를 설계해, quantization factor에 따라 빠른 리트리벌을 위한 메모리 요구량을 5-16배 감소시켰다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ANN 기반 프리페처로 스토리지-연산 오버랩</h3>
+      <p>근사 최근접 이웃(ANN) 탐색 특성을 활용한 간단하고 유연한 프리페처를 설계해 스토리지 지연시간을 연산과 오버랩시키는 새로운 기회를 제시하고, SSD 접근 지연시간을 최대 6.4배 개선했다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>대역폭 효율적 부분 재랭킹</h3>
+      <p>부분 재랭킹(partial re-ranking)이 MRR@10 기준 0.3-0.7%의 미미한 품질 저하만으로 대역폭 요구량을 8-16배 줄여, SSD 기반 솔루션이 대규모 배치 쿼리로 확장될 수 있음을 보였다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ESPN 전체 구조와 메모리 계층 배치</h3>
+      <p>ESPN(Embedding from Storage Pipelined Network)은 GPUDirect Storage(GDS) 기반 임베딩 리트리벌, 소프트웨어 프리페칭, 조기 재랭킹을 결합한 시스템이다(Figure 4). 자원을 메모리 계층에 맞춰 분할 배치하는 것이 핵심 설계로, (1) 후보 생성용 IVF ANN 인덱스와 임베딩 테이블 메타데이터(오프셋)는 CPU 메모리에 유지하고, (2) 재랭킹에 쓰이는 BOW 임베딩 테이블 전체는 SSD에 저장하며, (3) GPU 메모리는 LLM 파라미터 캐싱에 활용한다. 이 배치는 수십억 파라미터 LLM을 GPU에 두어야 하는 RAG 시스템에 특히 유용하다.</p>
+      <span class="source-ref">PDF p. 2, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Retrieve-and-Rerank 인덱스 구조</h3>
+      <p>ColBERTer는 distilBERT를 fine-tuning해 단일 벡터(CLS)와 멀티벡터(BOW) 표현을 동시에 생성한다. CLS 벡터는 BOW 대비 훨씬 작으며(비압축 기준 약 7.7배) 후보 생성용 ANN 인덱스 학습에 쓰이고, ANN이 반환한 후보 문서들의 BOW 임베딩으로 재랭킹(MaxSim)을 수행한 뒤 BOW의 MaxSim 점수와 CLS의 dot product 점수를 학습된 스케일 인자로 결합해 최종 순위를 만든다. ESPN은 후보 생성 인덱스를 메모리에 두고 BOW 임베딩 리트리벌만 SSD로 오프로드한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>쿼리 인코딩과 ANN 탐색 시작</h3>
+      <p>① LLM으로 쿼리를 인코딩해 CLS(단일 벡터)와 BOW(멀티벡터) 표현을 생성한다. ② CLS 임베딩으로 IVF 기반 ANN 후보 생성 탐색을 시작한다. 이때 후보 생성은 총 η = δ + λ 개의 클러스터(cell)를 방문한다고 가정한다(δ ≪ λ).</p>
+      <span class="source-ref">PDF p. 2, 5, 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>프리페칭과 조기 재랭킹</h3>
+      <p>③ 가장 가까운 δ개 클러스터를 방문한 시점에 프리페처 스레드가 시작된다. 이 스레드는 현재까지의 근사 top-K 문서 ID에 대해 GDS로 BOW 임베딩을 미리 읽어오고 즉시 MaxSim을 계산(early re-ranking)한다. 그 동안 메인 ANN 탐색은 recall 향상을 위해 나머지 λ개 클러스터를 계속 방문하므로, 스토리지 I/O가 의미 있는 연산과 오버랩된다. PrefetchBudget(식2)는 λ개 클러스터를 추가 방문하는 시간, PrefetchStep(식3)은 δ/η 백분율로 특성화된다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>누락 문서 처리와 점수 결합</h3>
+      <p>④ ANN 탐색이 η개 클러스터 방문을 끝내면 최종 후보 리스트 중 프리페처가 놓친(missed) 문서를 식별한다. ⑤ 누락된 문서들의 BOW 임베딩만 critical path 상에서 GDS로 SSD에서 읽어와 MaxSim을 계산한다. ⑥ 프리페처의 조기 재랭킹 결과와 메인 스레드의 누락 문서 재랭킹 결과를 점수 기준으로 병합·정렬해 최종 순위 리스트를 생성한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(변형) 대역폭 효율적 부분 재랭킹</h3>
+      <p>⑦ 대역폭 효율적 변형에서는 전체 top-1000 후보 대신 상위 64~128개 등 일부만 MaxSim으로 재랭킹하고, 나머지는 candidate generator의 기존 순서를 사용해 최종 top-K 리스트를 합성한다. 이는 쿼리당 전송 데이터량(식4의 data size per query)을 줄여 SSD가 감당할 수 있는 query batch threshold를 높인다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim late-interaction 스코어링</h3>
+      <p>유사도는 식(1)의 MaxSim 연산으로 계산된다. 각 질의 토큰 벡터와 문서의 모든 토큰 벡터 간 최대 유사도(dot product)를 구해 이를 모든 질의 토큰에 대해 합산함으로써, 토큰 단위의 세밀한(fine-grained) 질의-문서 유사도를 얻는다. 다수의 행렬 곱을 포함해 연산량이 크므로 보통 GPU에서 처리된다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>IVF 기반 ANN 후보 생성 인덱스</h3>
+      <p>메모리 효율성을 위해 HNSW 대신 IVF(inverted file) 기반 탐색을 FAISS로 구축한다(HNSW는 인덱스 메모리를 부풀림). k-평균 클러스터링으로 벡터를 클러스터/셀로 분할하고, nprobe 파라미터로 탐색할 클러스터 수를 조절해 정확도(recall@1K)와 속도의 트레이드오프를 관리한다(Figure 5). 질의에 가까운 클러스터부터 탐색을 시작해 점차 먼 클러스터로 확장한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>프리페처 특성화 수식</h3>
+      <p>프리페처는 세 수식으로 특성화된다. PrefetchBudget ≈ ANNSearchTime(nprobe=η) − ANNSearchTime(nprobe=δ) (식2), PrefetchStep = (δ/η)×100% (식3), Query Batch threshold = (BW_SSD × PrefetchBudget) / (Data size per query) (식4). 예로 Figure 5에서 PrefetchStep 10%, η=2000이면 PrefetchBudget는 약 28ms이다. 배치 쿼리가 이 threshold를 넘으면 프리페처의 리트리벌 지연이 critical path로 유입된다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>GDS 리트리벌과 커스텀 CUDA 재구성 커널</h3>
+      <p>GDS batch API로 SSD→GPU 직접(peer-to-peer) 비동기 전송을 수행한다. 문서당 읽는 블록 수를 줄이기 위해 CLS와 BOW 임베딩을 하나의 바이너리 파일에 정렬 배치하여, 두 임베딩 합이 I/O 블록 크기 이하일 때 문서당 필요한 블록 수를 2개에서 1개로 줄인다. SSD에서 읽어온 바이트는 커스텀 CUDA 커널이 MaxSim 커널이 요구하는 자료구조로 파싱·재구성하며, 이는 다수의 cudaMemcpyDeviceToDevice 호출보다 성능이 우수하다.</p>
+      <span class="source-ref">PDF p. 5, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋과 인덱스 구성</h3>
+      <p>MS MARCO v1 passage ranking(8.8M 패시지, dev 6980 쿼리; FAISS ivfflat 후보 인덱스 4.3GB, BOW 임베딩 16.8GB를 SSD에 저장)과 MS MARCO v2(138.4M 패시지, dev 3903 쿼리; FAISS ivfpq m=128 nbits=8 후보 인덱스 17.5GB, BOW 임베딩 255.4GB를 SSD에 저장)를 사용했다. ncell은 각각 2^15, 2^16, nprobe는 3000, 160, prefetch step은 10%, 30%로 설정했다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구현·하드웨어·베이스라인</h3>
+      <p>ESPN은 ColBERTer 코드베이스 확장으로 구현했고, 임베딩 리트리벌은 GDS batch API를 사용해 C++ 약 600줄, Python 약 800줄로 작성했다. 하드웨어는 Intel Xeon W-2255(10코어), 256GB DDR4, 32GB swap, Nvidia A5000(24GB), Samsung PM983 SSD(PCIe 3.0)이다. 비교 대상은 Mmap, Virtual memory(+swap), 그리고 BM25(PISA)·docT5query·SPLADEv2·UniCOIL-Tok·DeepImpact·ColBERTv1·COIL·ColBERTv2·ColBERTv2(PLAID)·ColBERTer 등 IR 모델이다. 메모리 구성은 cgroups로 물리 메모리를 제한하고 별도 프로세스가 mlock으로 메모리를 점유하는 방식으로 시뮬레이션했다.</p>
+      <span class="source-ref">PDF p. 3, 4, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표와 연구 질문</h3>
+      <p>MRR@10, MRR@100, Recall@1K, end-to-end 쿼리 지연시간(ms), 인덱스 크기(GB), 프리페처 히트율(%), 임베딩 접근 지연시간(ms), 처리량(queries/s)을 측정했다. 실험은 (1) 프리페처 효과, (2) 메모리 구성별 end-to-end 지연, (3) 대규모 배치 확장성, (4) 부분 재랭킹의 배치 크기 개선 효과라는 네 연구 질문을 다룬다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>프리페처 히트율</h3>
+      <p>프리페처 히트율은 prefetch step 5%에서 v1이 74%/85%, v2가 68%/70%였으나, 30%에서는 v1이 90%를 초과하고 v2가 89%/90%에 도달했다(Figure 7). 즉 전체 클러스터의 30%만 방문한 시점에 대부분의 문서 임베딩을 정확히 프리페치할 수 있어, critical path에서는 소수 임베딩만 접근하면 된다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>메모리 구성별 end-to-end 지연</h3>
+      <p>MS MARCO v1을 물리 메모리 10GB로 제한하면 Mmap=183.2ms, Virtual memory(+swap)=76.0ms, ESPN(GDS)=54.2ms, ESPN(GDS+prefetcher@10%)=46.5ms였다(Table 4). MS MARCO v2를 32GB로 제한하면 Mmap=271.5ms, swap=OOM, ESPN(GDS)=91.2ms, ESPN(GDS+prefetcher@30%)=85.8ms였다(Table 5). ESPN은 메모리 용량 근처에서 mmap 대비 3.1-3.9배 빠르다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>메모리 절감과 near-memory 성능</h3>
+      <p>ESPN은 전체 리트리벌 인덱스의 6-19%만 메모리에 두면서 완전 메모리 기반 솔루션 대비 1.02배 수준의 competitive한 end-to-end 지연을 달성했고, quantization factor에 따라 메모리 요구량을 5-16배 줄였다. 그 결과 멀티벡터 모델의 인덱스 메모리 요구량이 BM25의 1.6배 수준으로 낮아진다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>배치 확장성과 부분 재랭킹</h3>
+      <p>PCIe 3.0 SSD에서 top-1000 재랭킹 시 ESPN은 배치 크기 12까지 DRAM 기반 리트리벌과 competitive하며, 이 구간에서 GDS 리트리벌을 3.9-6.4배 개선한다(PCIe 4.0이면 약 24까지 증가 예상). 부분 재랭킹으로 top-64만 재랭킹하면 대역폭 약 16배 감소·MRR@10 0.7% 저하로 배치 크기 192까지 확장된다(Figure 9). 상위 64-128개만 재랭킹해도 ColBERTer는 top-1000 대비 MRR@10의 99.3-99.7%, ColBERTv2(uniCOIL-tok)는 99.0-99.4%를 유지한다(Figure 6). 다만 SSD(GDS)는 DRAM 대비 critical path 임베딩 접근 지연이 7.2배 높다.</p>
+      <span class="source-ref">PDF p. 7, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약</h3>
+      <p>멀티벡터 IR의 가장 큰 확장성 장애물인 방대한 인덱스 크기를, ESPN은 재랭킹 임베딩 전체를 SSD로 오프로드해 메모리 요구량을 최대 16배 줄이는 방식으로 해소한다. 90%를 넘는 히트율의 ANN 기반 프리페칭으로 SSD 리트리벌을 최대 6.4배 개선하고 near-memory 수준의 지연·처리량을 유지하며, 대역폭 효율적 솔루션으로 대규모 배치 쿼리까지 확장한다. 즉 ESPN은 인덱스 메모리 풋프린트를 줄이면서 스토리지 접근을 가속해 멀티벡터 IR의 효율적·확장적 추론을 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>ESPN 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 5, 6, 7</span>
+              </div>
+              <p>쿼리 인코딩부터 ANN 탐색, 프리페칭·조기 재랭킹, 누락 문서 처리, 점수 결합까지 ESPN의 파이프라인을 나타낸다. 프리페처는 δ 클러스터 방문 후 시작되어 남은 λ 클러스터 탐색과 SSD I/O를 오버랩한다.</p>
+              <div class="mermaid">
+flowchart TD
+    A[쿼리 인코딩\nCLS + BOW 생성] --&gt; B[IVF ANN 탐색 시작\n목표 η=δ+λ 클러스터]
+    B --&gt; C{δ 클러스터\n방문 완료?}
+    C --&gt;|Yes| D[프리페처 스레드 시작\n근사 top-K BOW를 GDS로 프리페치]
+    D --&gt; E[조기 재랭킹\nMaxSim 즉시 계산]
+    C --&gt;|계속| F[메인 탐색\n남은 λ 클러스터 방문]
+    F --&gt; G[최종 후보 확정\n누락 문서 식별]
+    E --&gt; G
+    G --&gt; H[누락 BOW를\ncritical path에서 GDS로 read]
+    H --&gt; I[MaxSim 계산]
+    E --&gt; J[점수 결합·정렬]
+    I --&gt; J
+    J --&gt; K[최종 순위 리스트]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식(전량 메모리 캐싱) vs ESPN(SSD 오프로드)</h3>
+                <span class="source-ref">PDF p. 2, 4, 5, 8</span>
+              </div>
+              <p>기존 멀티벡터 IR은 후보 인덱스와 BOW 재랭킹 임베딩을 모두 메모리에 캐싱해 대규모 데이터셋에서 메모리 병목이 발생한다. ESPN은 BOW 임베딩을 SSD로 오프로드하고 GDS+프리페칭으로 지연을 숨긴다.</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph Conventional[기존 방식]
+      C1[ANN 인덱스\nCPU 메모리] --&gt; C2[BOW 임베딩\nCPU 메모리 전량 캐싱]
+      C2 --&gt; C3[메모리 초과 시\nmmap/swap 지연 급증]
+    end
+    subgraph ESPN[ESPN]
+      E1[ANN 인덱스+오프셋\nCPU 메모리] --&gt; E2[BOW 임베딩\nSSD 오프로드]
+      E2 --&gt; E3[GDS 직접 전송\n+ ANN 기반 프리페칭]
+      E3 --&gt; E4[near-memory 지연 유지\n메모리 5-16배 절감]
+    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+    
+        <section class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>MS MARCO v1 end-to-end 지연 (물리 메모리 10GB 제한)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 4 · MS MARCO v1, cgroups로 물리 메모리 10GB 제한
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MS MARCO v2 end-to-end 지연 (물리 메모리 32GB 제한)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 5 · MS MARCO v2, cgroups로 물리 메모리 32GB 제한 (Virtual memory+swap은 OOM으로 제외)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MS MARCO v1 인덱스 크기 (BM25 대비 배수)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 3 · Table 1 · MS MARCO v1 dev set, 각 모델 원저자 논문 인용 수치
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ColBERTer 인덱스 크기 분해 (CLS vs BOW)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Table 3 · 16-bit 비압축·비양자화 벡터 기준(CLS 128차원, BOW 32차원)
+              </p>
+            </article>
+            
+        </section>
+        
+
+    
+    <section class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>메모리 계층을 자원 특성에 맞게 분할(ANN 인덱스·오프셋→CPU, BOW 임베딩→SSD, LLM 파라미터→GPU)한 설계는 RAG처럼 GPU 메모리가 LLM에 점유되는 실제 배포 환경과 자연스럽게 정합한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>프리페칭 시점(δ), 프리페치 스텝, 배치 임계값을 식(2)-(4)로 명시적으로 특성화해, 다른 SSD 대역폭·데이터셋 규모에서도 트레이드오프를 정량적으로 예측·조정할 수 있는 유연성을 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>부분 재랭킹으로 품질 손실(0.3-0.7% MRR@10)과 대역폭 절감(8-16배)의 트레이드오프를 명확히 제시해, 배치 처리량이 중요한 서빙 환경에서 실용적 튜닝 여지를 남긴다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>기존 ColBERTer 코드베이스 확장으로 구현되고 off-the-shelf 멀티벡터 모델에 적용 가능하다고 밝혀, 특정 모델에 종속되지 않는 범용 시스템 최적화라는 점이 강점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>GPUDirect Storage(GDS)가 비교적 신기술이라 현재 버전에 한계가 있다. IO 크기 4096바이트로는 batch API로도 SSD 대역폭을 완전히 포화시키지 못했고, 높은 처리량을 위해 매 IO마다 GPU 버퍼를 재등록해야 하는 비용이 발생했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>문서별 BOW 임베딩 크기가 토큰 수에 따라 2KB~10KB로 편차가 있어, 임베딩이 I/O 한계를 조금만 초과해도 추가 블록을 읽는 비효율이 생긴다. 8KB 이상 큰 I/O로 여러 임베딩을 패킹하는 방안은 제시했으나 구현하지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>본 연구는 ANN 기반 candidate generation에 초점을 맞췄고 lexical retriever와의 결합은 향후 연구로 남겼다. 또한 candidate generation 인덱스는 CPU 메모리에 유지하며 DiskANN·SPANN처럼 이를 SSD로 오프로드하는 것도 향후 과제다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>실험은 대역폭이 제한적인 단일 SSD만 사용했다. GDS의 RAID 0으로 여러 SSD를 결합해 PCIe 대역폭을 포화시키는 것은 향후 연구로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>쿼리 배치가 query batch threshold를 넘으면 프리페처 지연이 critical path로 유입되며, 현재는 메인 스레드가 프리페처 종료를 기다리는 구조라 개선 여지가 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>GPU 기반 ANN 탐색으로 경쟁력 있는 가속을 얻으려면 ANN 인덱스 전체를 GPU HBM에 캐시해야 하는데 대규모에서는 비용이 커지며, ESPN을 GPU ANN과 결합하려면 GPU 커널 재작성이 필요할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>5-16배 메모리 감소가 구체적으로 어떤 quantization 설정(비트 수, PQ 파라미터 등) 각각에 대응하는지 세분화하면, 실제 배포에서 정확도-메모리 트레이드오프를 어떻게 최적화할 수 있는가?</h3>
+              </div>
+              <p>논문은 5-16배가 quantization factor에 따라 달라진다고만 밝히고 각 설정의 세부 대응을 명시하지 않음(unresolved).</p>
+              <span class="source-ref">PDF p. 2, 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>candidate generation(ANN) 인덱스까지 DiskANN·SPANN 방식으로 SSD로 오프로드하면, 재랭킹 임베딩 오프로드와 결합했을 때 전체 지연과 메모리 절감이 어떻게 변하는가?</h3>
+              </div>
+              <p>저자가 candidate generation 인덱스는 메모리에 유지했고 이를 SSD로 오프로드하는 것을 향후 연구로 명시함.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>RAID 0 다중 SSD와 PCIe 4.0/CXL 인터커넥트를 도입하면 query batch threshold와 처리량이 식(4) 예측대로 선형 확장되는가, 아니면 다른 병목이 드러나는가?</h3>
+              </div>
+              <p>저자가 단일 SSD의 대역폭 한계를 지적하며 RAID 0·최신 인터커넥트를 향후 과제로 제시함.</p>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>lexical/impact 기반 first-stage retriever와 ESPN을 결합할 때, ANN 기반 프리페칭이 전제한 &#x27;클러스터 근접성&#x27; 가정이 성립하지 않는데도 프리페처 히트율을 유지할 수 있는가?</h3>
+              </div>
+              <p>프리페처는 IVF ANN의 클러스터 방문 순서에 의존하는데(6페이지), 저자는 lexical retriever 결합을 향후 연구로만 언급함.</p>
+              <span class="source-ref">PDF p. 6, 10</span>
+            </article>
+            
+    </section>
+    
+
+    
+    <section class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>멀티벡터 / late interaction 모델 (multi-vector / late interaction)</dt>
+              <dd>
+                문서와 질의를 단일 벡터가 아니라 토큰 단위의 여러 벡터로 인코딩하고, MaxSim으로 토큰 수준 유사도를 계산해 검색하는 모델(예: ColBERT). 표현력이 높지만 인덱스가 커진다.
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                각 질의 토큰 벡터와 문서의 모든 토큰 벡터 간 최대 유사도를 구해 질의 토큰 전체에 대해 합산하는 late-interaction 스코어링 연산(식1).
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>CLS / BOW 임베딩</dt>
+              <dd>
+                ColBERTer가 생성하는 두 표현. CLS는 후보 생성용 단일 벡터(128차원), BOW(bag-of-word)는 재랭킹용 토큰 단위 멀티벡터(32차원)로, BOW가 훨씬 커서 SSD로 오프로드된다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>GPUDirect Storage (GDS)</dt>
+              <dd>
+                Nvidia의 I/O 인프라로, CPU 메모리를 거치지 않고 SSD에서 GPU 메모리로 데이터를 직접(peer-to-peer) 비동기 전송한다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>IVF (inverted file) ANN 인덱스</dt>
+              <dd>
+                k-평균 클러스터링으로 벡터를 클러스터(cell)로 분할하고 nprobe 개 클러스터만 탐색하는 근사 최근접 이웃 인덱스. HNSW보다 메모리 효율적이라 ESPN이 채택.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nprobe</dt>
+              <dd>
+                IVF 탐색 시 방문할 클러스터 수를 정하는 파라미터로, 값이 클수록 recall(정확도)은 오르고 속도는 느려진다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>프리페처 / PrefetchStep / PrefetchBudget</dt>
+              <dd>
+                ANN이 δ개 클러스터를 방문한 뒤 근사 top-K BOW 임베딩을 미리 읽는 스레드. PrefetchStep=δ/η(식3)는 시작 시점, PrefetchBudget(식2)는 남은 λ 클러스터 탐색 시간으로 I/O를 숨길 수 있는 예산이다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>조기 재랭킹 (early re-ranking)</dt>
+              <dd>
+                프리페치된 임베딩에 대해 즉시 MaxSim을 계산해, critical path에서의 재랭킹 부담을 줄이는 단계.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>부분 재랭킹 (partial re-ranking)</dt>
+              <dd>
+                top-1000 전체 대신 상위 64~128개만 MaxSim으로 재랭킹하고 나머지는 candidate generator 순서를 유지하는 방식. 쿼리당 전송 데이터량(대역폭)을 8-16배 줄인다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Query Batch threshold</dt>
+              <dd>
+                식(4)로 정의되며, 프리페처 지연이 critical path로 유입되지 않고 처리 가능한 최대 배치 쿼리 크기. SSD 대역폭과 쿼리당 데이터 크기에 좌우된다.
+                <span class="source-ref">PDF p. 6, 9</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+    
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문 1페이지 하단에 &#x27;Under review&#x27;라고만 명시되어 있으며 구체적 학회/저널명은 본문에서 확인되지 않음(arXiv:2312.05417v1, 2023-12-09).</li><li>Table 1의 UniCOIL-Tok 행에서 R@1K 값은 원문에 &#x27;-&#x27;로 표기되어 보고되지 않음.</li><li>5-16배 메모리 감소가 어떤 quantization 설정(비트 수 등)에 각각 대응하는지 본문에 세부적으로 명시되지 않음.</li></ul>
+        </section>
+        
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "MS MARCO v1 end-to-end 지연 (물리 메모리 10GB 제한)", "labels": ["Mmap", "Virtual memory(+swap)", "ESPN(GDS)", "ESPN(GDS+prefetcher@10%)"], "values": [183.2, 76.0, 54.2, 46.5], "unit": "ms", "xLabel": "리트리벌 방식", "yLabel": "end-to-end 쿼리 지연시간"}, {"canvasId": "chart-1", "type": "bar", "title": "MS MARCO v2 end-to-end 지연 (물리 메모리 32GB 제한)", "labels": ["Mmap", "ESPN(GDS)", "ESPN(GDS+prefetcher@30%)"], "values": [271.5, 91.2, 85.8], "unit": "ms", "xLabel": "리트리벌 방식", "yLabel": "end-to-end 쿼리 지연시간"}, {"canvasId": "chart-2", "type": "bar", "title": "MS MARCO v1 인덱스 크기 (BM25 대비 배수)", "labels": ["BM25(PISA)", "COIL(Dim 768,32)", "ColBERTv1", "ColBERTer(Dim 32)", "ColBERTv2", "ColBERTv2(PLAID)"], "values": [1, 74.9, 210.9, 25.8, 33.7, 29.6], "unit": "×(BM25 대비)", "xLabel": "모델", "yLabel": "인덱스 크기 (BM25 대비)"}, {"canvasId": "chart-3", "type": "bar", "title": "ColBERTer 인덱스 크기 분해 (CLS vs BOW)", "labels": ["v1 CLS", "v1 BOW", "v2 CLS", "v2 BOW"], "values": [2.1, 16.8, 34.6, 255.4], "unit": "GB", "xLabel": "데이터셋 / 임베딩 종류", "yLabel": "인덱스 크기"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
