@@ -75,6 +75,18 @@
       border-color: rgba(118, 169, 250, 0.36);
       color: var(--accent);
     }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
     main {
       padding: 38px 0 80px;
     }
@@ -134,6 +146,7 @@
       <p class="summary">PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.</p>
       <div class="meta-row">
         <span class="meta-pill">업데이트 2026-07-11</span>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
         <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">buffer</span><span class="tag">async</span><span class="tag">data-transfer</span><span class="tag">future</span>
       </div>
     </div>
@@ -266,7 +279,7 @@
   </main>
   <footer>
     <div class="page-shell">
-      코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
     </div>
   </footer>
   <script>

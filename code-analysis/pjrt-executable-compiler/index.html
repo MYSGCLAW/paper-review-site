@@ -75,6 +75,18 @@
       border-color: rgba(118, 169, 250, 0.36);
       color: var(--accent);
     }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
     main {
       padding: 38px 0 80px;
     }
@@ -134,6 +146,7 @@
       <p class="summary">컴파일된 아티팩트를 나타내는 PjRtExecutable 계열과 컴파일 파이프라인(PjRtCompiler), 실행 진입점(Execute 계열 메서드)의 구조를 분석한다.</p>
       <div class="meta-row">
         <span class="meta-pill">업데이트 2026-07-11</span>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
         <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">executable</span><span class="tag">compiler</span><span class="tag">execution</span><span class="tag">layout</span>
       </div>
     </div>
@@ -267,7 +280,7 @@ virtual absl::StatusOr&lt;std::unique_ptr&lt;PjRtExecutable&gt;&gt; Compile(
   </main>
   <footer>
     <div class="page-shell">
-      코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
     </div>
   </footer>
   <script>
