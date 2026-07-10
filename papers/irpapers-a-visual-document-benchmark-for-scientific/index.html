@@ -383,6 +383,7 @@
 <!-- verification-status:start -->
 <div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   <header class="hero">
     <div class="page-shell">
       <p class="eyebrow">Research Paper Report</p>
@@ -397,7 +398,6 @@
 
       <div class="status-row">
         <span class="status-badge">Claude 분석 완료</span>
-        <span class="status-badge">독립 검증 전</span>
       </div>
     </div>
   </header>
@@ -405,7 +405,7 @@
   <main class="page-shell">
     <section class="summary-card">
       <h2>핵심 요약</h2>
-      <p>IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다.</p>
+      <p>IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다. 아래 상세 서술은 source.txt 원문과 대체로 부합함을 독립 검증했으나, 검증에 사용된 extraction.json은 제목·저자·venue·연도만 담고 있어 세부 수치·주장에 대한 구조화된 근거 체인으로서는 커버리지가 부족하다는 점을 유의해야 한다.</p>
       <span class="source-ref">PDF p. 1, 2, 3, 8, 9, 10</span>
     </section>
 
@@ -755,7 +755,7 @@
 
     <article class="content-item">
       <h3>향후 방향: 적응형·에이전트형 시스템</h3>
-      <p>상호보완적 실패는 질의 특성에 따라 텍스트·이미지 신호 가중치 α를 동적으로 조정하는 적응형 멀티모달 시스템을 동기화한다. t-SNE 같은 추상 시각화는 텍스트 서술에 저항하는 반면 이미지 표현은 정확한 lexical 매칭을 결여하므로, 의미 검색과 구조적 제약(exact-match 필터, schema 라우팅)을 결합하는 에이전트형 검색이 이 간극을 메울 유망한 방향으로 제시된다. 또한 QA 시점에 시각적 grounding이 필요할 때만 이미지를 reader에 전달해 검색 스코어링과 답 생성에서 이미지의 역할을 분리하는 전략도 제안된다.</p>
+      <p>상호보완적 실패는 질의 특성에 따라 텍스트·이미지 신호 가중치 α를 동적으로 조정하는 적응형 멀티모달 시스템의 필요성을 제기한다. t-SNE 같은 추상 시각화는 텍스트 서술에 저항하는 반면 이미지 표현은 정확한 lexical 매칭을 결여하므로, 의미 검색과 구조적 제약(exact-match 필터, schema 라우팅)을 결합하는 에이전트형 검색이 이 간극을 메울 유망한 방향으로 제시된다. 또한 QA 시점에 시각적 grounding이 필요할 때만 이미지를 reader에 전달해 검색 스코어링과 답 생성에서 이미지의 역할을 분리하는 전략도 제안된다.</p>
       <span class="source-ref">PDF p. 11, 14</span>
     </article>
     
@@ -970,6 +970,14 @@ flowchart LR
               <span class="source-ref">PDF p. 7</span>
             </li>
             
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>본 보고서의 세부 수치·주장은 source.txt 원문 대조로 검증되었으나, 검증에 사용된 extraction.json은 제목·저자·venue·연도만 포함해 상세 근거 추출 결과로서 커버리지가 부족하다(Codex 독립 검증 verdict: FAIL, coverage: partial). 또한 검증자는 PDF 원본 이미지·그림 내부 수치는 대조하지 않았고, Figure 2/3/4의 세부 alpha sweep과 glossary·diagrams 항목은 본문·표로 확인 가능한 핵심 수치·결론 중심으로만 대조했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 4, 8, 9</span>
+            </li>
+            
       </ul>
     </section>
     
@@ -1116,6 +1124,11 @@ flowchart LR
     
 
     
+        <section class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>{&#x27;text&#x27;: &#x27;Codex 독립 검증은 report.json의 상세 주장·수치가 source.txt 원문과는 대체로 부합함을 확인했으나, extraction.json이 제목·저자·venue·연도만 담고 있어 세부 근거 추출 결과로서는 coverage가 partial하다고 판정했다(verdict: FAIL, confidence 0.84). 이는 보고서 서술 자체의 오류를 뜻하지는 않지만, 구조화된 근거 체인이 갖춰지지 않았다는 검증 절차상의 한계로 남는다.&#x27;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [1]}</li><li>{&#x27;text&#x27;: &#x27;Figure 2/3/4에 표현된 alpha sweep의 세부 곡선 값은 검증자가 본문·표에서 확인 가능한 범위 내에서만 대조했으며, 그림 자체의 수치를 독립적으로 재확인하지는 않았다.&#x27;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [8, 9]}</li></ul>
+        </section>
+        
   </main>
 
   <footer>

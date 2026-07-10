@@ -381,7 +381,40 @@
 
 <body>
 <!-- verification-status:start -->
-<div class="verification-status verified" role="status"><strong>검증 완료</strong><span>Codex 독립 검증을 통과한 보고서입니다.</span></div>
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status verified">
+    <strong>검증 완료</strong>
+    <span>원문과 분석 결과에 대한 독립 검증이 완료되었습니다.</span>
+</div>
 <!-- verification-status:end -->
   <header class="hero">
     <div class="page-shell">
@@ -397,7 +430,6 @@
 
       <div class="status-row">
         <span class="status-badge">Claude 분석 완료</span>
-        <span class="status-badge">독립 검증 전</span>
       </div>
     </div>
   </header>
