@@ -188,6 +188,44 @@
       gap: 22px;
     }
 
+    .project-group {
+      margin-top: 26px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.16), rgba(19, 26, 38, 0.7));
+    }
+
+    .project-group:first-child {
+      margin-top: 0;
+    }
+
+    .project-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .project-heading h3 {
+      margin: 4px 0 0;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .project-heading p {
+      max-width: 740px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .project-tags {
+      margin-top: 12px;
+    }
+
     .library-card {
       display: flex;
       min-height: 360px;
@@ -510,7 +548,7 @@
       <h1>기술 분석 아카이브</h1>
 
       <p class="hero-description">
-        논문 리뷰뿐 아니라 코드 분석, 런타임 공부, 기술 노트를 한 곳에 모읍니다.
+        논문 리뷰뿐 아니라 프로젝트 단위 코드 분석과 기술 노트를 한 곳에 모읍니다.
         깊게 읽고 검증한 내용을 탭별로 분리해 쌓아가는 개인 연구 라이브러리입니다.
       </p>
 
@@ -533,12 +571,6 @@
         <a class="tab-link" href="#code-analysis">
           <span>코드 분석</span>
           <small>6</small>
-        </a>
-        
-
-        <a class="tab-link" href="#runtime">
-          <span>런타임 공부</span>
-          <small>0</small>
         </a>
         
 
@@ -883,30 +915,42 @@
         <div>
           <p class="section-eyebrow">코드 분석</p>
           <h2>Code Analysis</h2>
-          <p>라이브러리, 프레임워크, 코드베이스를 읽고 구조와 설계 판단을 정리합니다.</p>
+          <p>라이브러리, 프레임워크, 코드베이스를 프로젝트 단위로 묶어 구조와 설계 판단을 정리합니다.</p>
         </div>
         <span class="section-count">6개</span>
       </div>
 
       <div class="library-grid">
         
+            <section class="project-group">
+              <div class="project-heading">
+                <div>
+                  <p class="section-eyebrow">PROJECT</p>
+                  <h3>PJRT</h3>
+                  <p>분석 대상 경로: /home/sam/xla/xla/pjrt</p>
+                  <div class="tag-row project-tags"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span><span class="tag">c-api</span></div>
+                </div>
+                <span class="section-count">6개 문서</span>
+              </div>
+              <div class="library-grid">
+                
     <article class="library-card">
       <div class="card-header">
         <h2>
-          <a href="code-analysis/pjrt-buffer-data-movement/">
-            PjRtBuffer와 데이터 이동/비동기 이벤트
+          <a href="code-analysis/pjrt-distributed-runtime/">
+            Distributed 런타임 (멀티 호스트 조정)
           </a>
         </h2>
       </div>
 
       <p class="metadata">코드 분석 · 2026-07-11</p>
-      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">buffer</span><span class="tag">async</span><span class="tag">data-transfer</span><span class="tag">future</span></div>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span></div>
 
       <p class="summary">
-        PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.
+        참고 문서에는 설명되지 않은 xla/pjrt/distributed 디렉터리를 분석하여 멀티 프로세스/멀티 호스트 PJRT 클라이언트가 어떻게 토폴로지와 상태를 공유하는지 파악한다.
       </p>
 
-      <a class="open-link" href="code-analysis/pjrt-buffer-data-movement/">
+      <a class="open-link" href="code-analysis/pjrt-distributed-runtime/">
         열기 →
       </a>
     </article>
@@ -937,6 +981,28 @@
     <article class="library-card">
       <div class="card-header">
         <h2>
+          <a href="code-analysis/pjrt-buffer-data-movement/">
+            PjRtBuffer와 데이터 이동/비동기 이벤트
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">buffer</span><span class="tag">async</span><span class="tag">data-transfer</span><span class="tag">future</span></div>
+
+      <p class="summary">
+        PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-buffer-data-movement/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
           <a href="code-analysis/pjrt-client-device/">
             PjRtClient / PjRtDevice / PjRtMemorySpace 계층
           </a>
@@ -951,28 +1017,6 @@
       </p>
 
       <a class="open-link" href="code-analysis/pjrt-client-device/">
-        열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card">
-      <div class="card-header">
-        <h2>
-          <a href="code-analysis/pjrt-distributed-runtime/">
-            Distributed 런타임 (멀티 호스트 조정)
-          </a>
-        </h2>
-      </div>
-
-      <p class="metadata">코드 분석 · 2026-07-11</p>
-      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span></div>
-
-      <p class="summary">
-        참고 문서에는 설명되지 않은 xla/pjrt/distributed 디렉터리를 분석하여 멀티 프로세스/멀티 호스트 PJRT 클라이언트가 어떻게 토폴로지와 상태를 공유하는지 파악한다.
-      </p>
-
-      <a class="open-link" href="code-analysis/pjrt-distributed-runtime/">
         열기 →
       </a>
     </article>
@@ -1021,26 +1065,9 @@
       </a>
     </article>
     
-      </div>
-    </section>
-    
-    <section id="runtime" class="collection-section">
-      <div class="section-heading">
-        <div>
-          <p class="section-eyebrow">런타임 공부</p>
-          <h2>Runtime Notes</h2>
-          <p>언어 런타임, VM, 스케줄러, 메모리 모델처럼 깊게 공부한 내용을 모읍니다.</p>
-        </div>
-        <span class="section-count">0개</span>
-      </div>
-
-      <div class="library-grid">
-        
-    <section class="empty-state">
-      <h2>아직 런타임 노트가 없습니다.</h2>
-      <p>site/runtime/&lt;slug&gt;/index.html을 추가하면 이 탭에 표시됩니다.</p>
-    </section>
-    
+              </div>
+            </section>
+            
       </div>
     </section>
     
