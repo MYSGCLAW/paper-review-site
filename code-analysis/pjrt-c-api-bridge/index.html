@@ -104,11 +104,49 @@
     h2:first-child, h3:first-child, h4:first-child {
       margin-top: 0;
     }
-    p, ul, pre {
+    p, ul, ol, pre, blockquote, .table-wrap {
       margin: 0 0 1.05em;
     }
-    ul {
+    ul, ol {
       padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
     }
     pre {
       overflow-x: auto;
@@ -157,16 +195,16 @@
 <p>---</p>
 <h1>PJRT C API와 C++ 구현의 연결 지점</h1>
 <h2>한 줄 요약</h2>
-<p>PJRT는 `PJRT_Api`라는 순수 함수 포인터 테이블(C ABI)을 경계로 삼아, 플러그인 저작자는 `pjrt_c_api_wrapper_impl.{h,cc}`의 `CreateWrapperClient`/`CreatePjrtApi`로 자신의 `xla::PjRtClient`를 C API에 감싸 넣고, 그 C API를 소비하는 프레임워크(XLA/JAX)는 `c_api_client/pjrt_c_api_client.{h,cc}`의 `PjRtCApiClient`로 그것을 다시 `xla::PjRtClient`로 되감아, 결과적으로 &quot;C++ → C → C++&quot;의 대칭적 이중 래핑 구조를 이룬다.</p>
+<p>PJRT는 <code>PJRT_Api</code>라는 순수 함수 포인터 테이블(C ABI)을 경계로 삼아, 플러그인 저작자는 <code>pjrt_c_api_wrapper_impl.{h,cc}</code>의 <code>CreateWrapperClient</code>/<code>CreatePjrtApi</code>로 자신의 <code>xla::PjRtClient</code>를 C API에 감싸 넣고, 그 C API를 소비하는 프레임워크(XLA/JAX)는 <code>c_api_client/pjrt_c_api_client.{h,cc}</code>의 <code>PjRtCApiClient</code>로 그것을 다시 <code>xla::PjRtClient</code>로 되감아, 결과적으로 &quot;C++ → C → C++&quot;의 대칭적 이중 래핑 구조를 이룬다.</p>
 <h2>분석 범위</h2>
-<p>`job.json`에 지정된 13개 파일만을 대상으로 한다(실제 체크아웃(`repo/xla/pjrt/`)도 이 파일들로 sparse하게 구성되어 있음을 확인함).</p>
-<ul><li>C ABI 정의: `xla/pjrt/c/pjrt_c_api.h`</li><li>플러그인 저작자용 C++→C 래퍼: `xla/pjrt/c/pjrt_c_api_wrapper_impl.{h,cc}`, `pjrt_c_api_helpers.{h,cc}`</li><li>실제 플러그인 진입점 예시: `pjrt_c_api_cpu.cc`, `pjrt_c_api_gpu.cc`, `pjrt_c_api_gpu_internal.cc`</li><li>플러그인 로딩/레지스트리/버전 검사: `xla/pjrt/pjrt_api.{h,cc}`</li><li>ABI 버전 추상화: `xla/pjrt/pjrt_abi_version.h`</li><li>프레임워크 소비자용 C→C++ 역래퍼: `xla/pjrt/c_api_client/pjrt_c_api_client.{h,cc}`</li></ul>
-<p>`pjrt_c_api_cpu_internal.cc`, 각종 `*_extension.h`(예: `pjrt_c_api_abi_version_extension.h`), `c/CHANGELOG.md` 등은 이 체크아웃에 존재하지 않아 코드로 직접 확인하지 못했다(추정만 표시).</p>
+<p><code>job.json</code>에 지정된 13개 파일만을 대상으로 한다(실제 체크아웃(<code>repo/xla/pjrt/</code>)도 이 파일들로 sparse하게 구성되어 있음을 확인함).</p>
+<ul><li>C ABI 정의: <code>xla/pjrt/c/pjrt_c_api.h</code></li><li>플러그인 저작자용 C++→C 래퍼: <code>xla/pjrt/c/pjrt_c_api_wrapper_impl.{h,cc}</code>, <code>pjrt_c_api_helpers.{h,cc}</code></li><li>실제 플러그인 진입점 예시: <code>pjrt_c_api_cpu.cc</code>, <code>pjrt_c_api_gpu.cc</code>, <code>pjrt_c_api_gpu_internal.cc</code></li><li>플러그인 로딩/레지스트리/버전 검사: <code>xla/pjrt/pjrt_api.{h,cc}</code></li><li>ABI 버전 추상화: <code>xla/pjrt/pjrt_abi_version.h</code></li><li>프레임워크 소비자용 C→C++ 역래퍼: <code>xla/pjrt/c_api_client/pjrt_c_api_client.{h,cc}</code></li></ul>
+<p><code>pjrt_c_api_cpu_internal.cc</code>, 각종 <code>*_extension.h</code>(예: <code>pjrt_c_api_abi_version_extension.h</code>), <code>c/CHANGELOG.md</code> 등은 이 체크아웃에 존재하지 않아 코드로 직접 확인하지 못했다(추정만 표시).</p>
 <h2>전체 구조</h2>
-<p>PJRT 전체 스택에서 이 분석 범위는 &quot;C ABI 경계&quot;에 해당한다. 상위에는 XLA 컴파일러/실행 스택과 JAX가 있고, 하위에는 각 디바이스(CPU/GPU/TPU/커스텀 가속기)의 `xla::PjRtClient` 구현이 있다. 이 경계 계층은 두 방향으로 쓰인다.</p>
-<p>1. **플러그인 저작 방향**: 벤더가 `xla::PjRtClient`를 직접 구현하고 `pjrt_c_api_wrapper_impl.h`의 헬퍼로 C API 뒤에 숨긴다(`pjrt_c_api_cpu.cc`, `pjrt_c_api_gpu.cc`가 이 패턴의 실제 예). 2. **플러그인 소비 방향**: XLA/JAX 프레임워크는 `.so`로 dlopen된 플러그인이든, 정적 링크된 구현이든 상관없이 `pjrt_api.cc`의 레지스트리에서 `PJRT_Api*`를 얻고, `c_api_client/pjrt_c_api_client.cc`의 `PjRtCApiClient`로 다시 감싸서 표준 `xla::PjRtClient`처럼 사용한다.</p>
+<p>PJRT 전체 스택에서 이 분석 범위는 &quot;C ABI 경계&quot;에 해당한다. 상위에는 XLA 컴파일러/실행 스택과 JAX가 있고, 하위에는 각 디바이스(CPU/GPU/TPU/커스텀 가속기)의 <code>xla::PjRtClient</code> 구현이 있다. 이 경계 계층은 두 방향으로 쓰인다.</p>
+<ol><li><strong>플러그인 저작 방향</strong>: 벤더가 <code>xla::PjRtClient</code>를 직접 구현하고 <code>pjrt_c_api_wrapper_impl.h</code>의 헬퍼로 C API 뒤에 숨긴다(<code>pjrt_c_api_cpu.cc</code>, <code>pjrt_c_api_gpu.cc</code>가 이 패턴의 실제 예).</li><li><strong>플러그인 소비 방향</strong>: XLA/JAX 프레임워크는 <code>.so</code>로 dlopen된 플러그인이든, 정적 링크된 구현이든 상관없이 <code>pjrt_api.cc</code>의 레지스트리에서 <code>PJRT_Api*</code>를 얻고, <code>c_api_client/pjrt_c_api_client.cc</code>의 <code>PjRtCApiClient</code>로 다시 감싸서 표준 <code>xla::PjRtClient</code>처럼 사용한다.</li></ol>
 <h2>먼저 볼 코드 리딩 순서</h2>
-<p>1. **`xla/pjrt/c/pjrt_c_api.h`의 `PJRT_Client_Create_Args`/`PJRT_Client_Create`/`PJRT_Api`** — 모든 논의의 출발점인 C ABI 계약(함수 시그니처, 구조체 레이아웃)을 먼저 봐야 나머지 코드가 무엇을 구현하는지 이해할 수 있다. 2. **`xla/pjrt/c/pjrt_c_api_wrapper_impl.h`의 구조체 선언부(`PJRT_Client`, `PJRT_TopologyDescription` 등)와 `CreateWrapperClient`/`CreatePjrtApi` 선언** — &quot;C 구조체 안에 C++ 객체를 어떻게 숨기는지&quot;의 설계가 여기서 드러난다. 3. **`xla/pjrt/c/pjrt_c_api_wrapper_impl.cc`의 `CreateWrapperClient`, `PJRT_Client::PJRT_Client`, `CreatePjrtApi` 정의(파일 끝부분, 3660~3900행대)** — 실제로 함수 포인터 테이블이 어떻게 채워지는지 확인하는 핵심 지점. 4. **`xla/pjrt/c/pjrt_c_api_gpu_internal.cc`의 `PJRT_Client_Create`와 `GetGpuPjrtApi`** — 문서의 의사코드가 실제 벤더 구현에서 어떻게 구체화되는지 보여주는 가장 완성도 높은 실례. 5. **`xla/pjrt/pjrt_api.h/.cc`** — 플러그인을 어떻게 등록(`SetPjrtApi`)하고 로딩(`LoadPjrtPlugin`)하며, 버전을 어떻게 검사(`InitializePjrtPlugin`)하는지, 즉 &quot;문서-코드 차이&quot; 절의 근거. 6. **`xla/pjrt/c_api_client/pjrt_c_api_client.h`의 `PjRtCApiClient` 선언과 `.cc`의 `GetCApiClient`/`WrapClientAroundCApi`(파일 끝부분)** — 이번엔 반대 방향, 즉 C API를 다시 C++로 감싸는 소비자 계층. 7. **`xla/pjrt/pjrt_abi_version.h`와 `PjRtCApiClient::RuntimeAbiVersion()`(`pjrt_c_api_client.cc` 440행 부근)** — ABI 버전이라는 이름이 붙은 두 개의 서로 다른 메커니즘(플러그인 로딩 버전 검사 vs 실행 파일 ABI)을 구분해서 읽어야 혼동이 없다. 8. **`xla/pjrt/c/pjrt_c_api_helpers.h`의 `ActualStructSizeIsGreaterOrEqual`, `ValidateCreateOptions`, `ConvertFromPjRtNamedValueList`** — 위 모든 코드에서 반복적으로 등장하는 forward-compat/옵션 검증 유틸리티.</p>
+<ol><li><strong><code>xla/pjrt/c/pjrt_c_api.h</code>의 <code>PJRT_Client_Create_Args</code>/<code>PJRT_Client_Create</code>/<code>PJRT_Api</code></strong> — 모든 논의의 출발점인 C ABI 계약(함수 시그니처, 구조체 레이아웃)을 먼저 봐야 나머지 코드가 무엇을 구현하는지 이해할 수 있다.</li><li><strong><code>xla/pjrt/c/pjrt_c_api_wrapper_impl.h</code>의 구조체 선언부(<code>PJRT_Client</code>, <code>PJRT_TopologyDescription</code> 등)와 <code>CreateWrapperClient</code>/<code>CreatePjrtApi</code> 선언</strong> — &quot;C 구조체 안에 C++ 객체를 어떻게 숨기는지&quot;의 설계가 여기서 드러난다.</li><li><strong><code>xla/pjrt/c/pjrt_c_api_wrapper_impl.cc</code>의 <code>CreateWrapperClient</code>, <code>PJRT_Client::PJRT_Client</code>, <code>CreatePjrtApi</code> 정의(파일 끝부분, 3660~3900행대)</strong> — 실제로 함수 포인터 테이블이 어떻게 채워지는지 확인하는 핵심 지점.</li><li><strong><code>xla/pjrt/c/pjrt_c_api_gpu_internal.cc</code>의 <code>PJRT_Client_Create</code>와 <code>GetGpuPjrtApi</code></strong> — 문서의 의사코드가 실제 벤더 구현에서 어떻게 구체화되는지 보여주는 가장 완성도 높은 실례.</li><li><strong><code>xla/pjrt/pjrt_api.h/.cc</code></strong> — 플러그인을 어떻게 등록(<code>SetPjrtApi</code>)하고 로딩(<code>LoadPjrtPlugin</code>)하며, 버전을 어떻게 검사(<code>InitializePjrtPlugin</code>)하는지, 즉 &quot;문서-코드 차이&quot; 절의 근거.</li><li><strong><code>xla/pjrt/c_api_client/pjrt_c_api_client.h</code>의 <code>PjRtCApiClient</code> 선언과 <code>.cc</code>의 <code>GetCApiClient</code>/<code>WrapClientAroundCApi</code>(파일 끝부분)</strong> — 이번엔 반대 방향, 즉 C API를 다시 C++로 감싸는 소비자 계층.</li><li><strong><code>xla/pjrt/pjrt_abi_version.h</code>와 <code>PjRtCApiClient::RuntimeAbiVersion()</code>(<code>pjrt_c_api_client.cc</code> 440행 부근)</strong> — ABI 버전이라는 이름이 붙은 두 개의 서로 다른 메커니즘(플러그인 로딩 버전 검사 vs 실행 파일 ABI)을 구분해서 읽어야 혼동이 없다.</li><li><strong><code>xla/pjrt/c/pjrt_c_api_helpers.h</code>의 <code>ActualStructSizeIsGreaterOrEqual</code>, <code>ValidateCreateOptions</code>, <code>ConvertFromPjRtNamedValueList</code></strong> — 위 모든 코드에서 반복적으로 등장하는 forward-compat/옵션 검증 유틸리티.</li></ol>
 <h2>로직 다이어그램</h2>
 <div class="mermaid">sequenceDiagram
     participant FW as Framework &quot;JAX or XLA&quot;
@@ -196,7 +234,7 @@
     CApiClient-&gt;&gt;CApiClient: new PjRtCApiClient wraps PJRT_Client pointer
     CApiClient--&gt;&gt;FW: unique_ptr xla PjRtClient returned</div>
 <p>각 화살표의 실제 대응:</p>
-<ul><li>`LoadPjrtPlugin` / `SetPjrtApi` / `InitializePjrtPlugin`: `xla/pjrt/pjrt_api.cc`에 정의된 함수 그대로.</li><li>`GetGpuPjrtApi`, `PJRT_Client_Create`(GPU): `xla/pjrt/c/pjrt_c_api_gpu_internal.cc:95, 568`.</li><li>`CreatePjrtApi`: `xla/pjrt/c/pjrt_c_api_wrapper_impl.cc:3765`.</li><li>`CreateWrapperClient`: `xla/pjrt/c/pjrt_c_api_wrapper_impl.cc:3661`.</li><li>`GetCApiClient` / `WrapClientAroundCApi` / `PjRtCApiClient` 생성자: `xla/pjrt/c_api_client/pjrt_c_api_client.cc:4987, 4998, 180`.</li></ul>
+<ul><li><code>LoadPjrtPlugin</code> / <code>SetPjrtApi</code> / <code>InitializePjrtPlugin</code>: <code>xla/pjrt/pjrt_api.cc</code>에 정의된 함수 그대로.</li><li><code>GetGpuPjrtApi</code>, <code>PJRT_Client_Create</code>(GPU): <code>xla/pjrt/c/pjrt_c_api_gpu_internal.cc:95, 568</code>.</li><li><code>CreatePjrtApi</code>: <code>xla/pjrt/c/pjrt_c_api_wrapper_impl.cc:3765</code>.</li><li><code>CreateWrapperClient</code>: <code>xla/pjrt/c/pjrt_c_api_wrapper_impl.cc:3661</code>.</li><li><code>GetCApiClient</code> / <code>WrapClientAroundCApi</code> / <code>PjRtCApiClient</code> 생성자: <code>xla/pjrt/c_api_client/pjrt_c_api_client.cc:4987, 4998, 180</code>.</li></ul>
 <h2>모듈/객체 관계도</h2>
 <div class="mermaid">flowchart LR
     CAPI[&quot;pjrt_c_api.h PJRT_Api and PJRT_Client_Create_Args&quot;]
@@ -217,27 +255,27 @@
     CCLIENT --&gt;|&quot;함수 포인터 호출 PJRT_Client_Create 등&quot;| CAPI
     CCLIENT --&gt;|&quot;레지스트리 조회&quot;| APIREG
     CCLIENT --&gt;|&quot;AbiVersion 확장으로 위임&quot;| ABI</div>
-<ul><li>`CAPI`는 순수 C 구조체/함수 포인터 정의만 담아 ABI 경계 역할을 한다.</li><li>`WRAP`은 저작자가 재사용하는 &quot;표준 구현체&quot;로, `PJRT_Client`라는 C 구조체 안에 `std::unique_ptr&lt;xla::PjRtClient&gt;`를 품는다(`pjrt_c_api_wrapper_impl.h:70-89`).</li><li>`GPUINT`는 `WRAP`을 불러 쓰는 실제 플러그인 예시이며, CPU 쪽(`CPU`)은 저작 패턴은 동일하지만 실제 위임 대상인 `pjrt_c_api_cpu_internal.{h,cc}`가 이번 체크아웃에 없어 점선으로 표시했다.</li><li>`APIREG`는 플러그인 소비자가 `PJRT_Api*`를 문자열 키(`device_type`)로 등록/조회하는 전역 레지스트리다.</li><li>`CCLIENT`는 `APIREG`에서 얻은 `PJRT_Api*`를 다시 C++ `xla::PjRtClient`(`PjRtCApiClient`)로 감싸며, 선택적으로 `ABI` 쪽 추상 클래스를 통해 실행 파일 ABI 버전 정보를 노출한다.</li></ul>
+<ul><li><code>CAPI</code>는 순수 C 구조체/함수 포인터 정의만 담아 ABI 경계 역할을 한다.</li><li><code>WRAP</code>은 저작자가 재사용하는 &quot;표준 구현체&quot;로, <code>PJRT_Client</code>라는 C 구조체 안에 <code>std::unique_ptr&lt;xla::PjRtClient&gt;</code>를 품는다(<code>pjrt_c_api_wrapper_impl.h:70-89</code>).</li><li><code>GPUINT</code>는 <code>WRAP</code>을 불러 쓰는 실제 플러그인 예시이며, CPU 쪽(<code>CPU</code>)은 저작 패턴은 동일하지만 실제 위임 대상인 <code>pjrt_c_api_cpu_internal.{h,cc}</code>가 이번 체크아웃에 없어 점선으로 표시했다.</li><li><code>APIREG</code>는 플러그인 소비자가 <code>PJRT_Api*</code>를 문자열 키(<code>device_type</code>)로 등록/조회하는 전역 레지스트리다.</li><li><code>CCLIENT</code>는 <code>APIREG</code>에서 얻은 <code>PJRT_Api*</code>를 다시 C++ <code>xla::PjRtClient</code>(<code>PjRtCApiClient</code>)로 감싸며, 선택적으로 <code>ABI</code> 쪽 추상 클래스를 통해 실행 파일 ABI 버전 정보를 노출한다.</li></ul>
 <h2>핵심 흐름</h2>
-<p>**입력 → 변환/검증 → 상태 변경 → 외부 호출/결과** 관점으로 GPU 클라이언트 생성 경로를 재구성하면 다음과 같다.</p>
-<p>1. **입력**: 프레임워크가 `PJRT_Client_Create_Args`를 구성한다. `create_options`(`PJRT_NamedValue*` 배열), `kv_get_callback`/`kv_put_callback`/`kv_try_get_callback` 콜백 3종이 채워진다(`pjrt_c_api.h:524-549`). 실제 채움은 `WrapClientAroundCApi`(`pjrt_c_api_client.cc:4998`)에서 일어난다. 2. **변환/검증**: `PJRT_Client_Create`(GPU, `pjrt_c_api_gpu_internal.cc:95`) 진입 즉시 `ActualStructSizeIsGreaterOrEqual`로 구조체 크기를 검사하고, `ConvertFromPjRtNamedValueList`로 C 배열을 `flat_hash_map&lt;string, PjRtValueType&gt;`으로 바꾼 뒤, `ValidateCreateOptions`로 알려진 키(`platform_name`, `allocator`, `node_id`, `num_nodes`, `visible_devices` 등 14개)만 허용하는지 검증한다. 3. **상태 변경**: 검증된 옵션을 `xla::GpuClientOptions` 필드로 하나씩 매핑하고(`options.node_id = ...`, `options.kv_store = ToCppKeyValueStore(...)` 등), `xla::GetXlaPjrtGpuClient(options)`를 호출해 실제 `xla::PjRtClient` 구현체를 만든다. 4. **외부 호출/결과**: 만들어진 C++ 클라이언트를 `pjrt::CreateWrapperClient(GetGpuPjrtApi(), std::move(client))`로 감싸 `PJRT_Client*`를 얻고, 이를 `args-&gt;client`에 대입한 뒤 `nullptr`(무오류)을 반환한다. 소비자 쪽(`WrapClientAroundCApi`)은 이 `init_args.client`를 꺼내 `PjRtCApiClient`(C++)로 다시 감싸 프레임워크에 돌려준다.</p>
+<p><strong>입력 → 변환/검증 → 상태 변경 → 외부 호출/결과</strong> 관점으로 GPU 클라이언트 생성 경로를 재구성하면 다음과 같다.</p>
+<ol><li><strong>입력</strong>: 프레임워크가 <code>PJRT_Client_Create_Args</code>를 구성한다. <code>create_options</code>(<code>PJRT_NamedValue*</code> 배열), <code>kv_get_callback</code>/<code>kv_put_callback</code>/<code>kv_try_get_callback</code> 콜백 3종이 채워진다(<code>pjrt_c_api.h:524-549</code>). 실제 채움은 <code>WrapClientAroundCApi</code>(<code>pjrt_c_api_client.cc:4998</code>)에서 일어난다.</li><li><strong>변환/검증</strong>: <code>PJRT_Client_Create</code>(GPU, <code>pjrt_c_api_gpu_internal.cc:95</code>) 진입 즉시 <code>ActualStructSizeIsGreaterOrEqual</code>로 구조체 크기를 검사하고, <code>ConvertFromPjRtNamedValueList</code>로 C 배열을 <code>flat_hash_map&lt;string, PjRtValueType&gt;</code>으로 바꾼 뒤, <code>ValidateCreateOptions</code>로 알려진 키(<code>platform_name</code>, <code>allocator</code>, <code>node_id</code>, <code>num_nodes</code>, <code>visible_devices</code> 등 14개)만 허용하는지 검증한다.</li><li><strong>상태 변경</strong>: 검증된 옵션을 <code>xla::GpuClientOptions</code> 필드로 하나씩 매핑하고(<code>options.node_id = ...</code>, <code>options.kv_store = ToCppKeyValueStore(...)</code> 등), <code>xla::GetXlaPjrtGpuClient(options)</code>를 호출해 실제 <code>xla::PjRtClient</code> 구현체를 만든다.</li><li><strong>외부 호출/결과</strong>: 만들어진 C++ 클라이언트를 <code>pjrt::CreateWrapperClient(GetGpuPjrtApi(), std::move(client))</code>로 감싸 <code>PJRT_Client*</code>를 얻고, 이를 <code>args-&gt;client</code>에 대입한 뒤 <code>nullptr</code>(무오류)을 반환한다. 소비자 쪽(<code>WrapClientAroundCApi</code>)은 이 <code>init_args.client</code>를 꺼내 <code>PjRtCApiClient</code>(C++)로 다시 감싸 프레임워크에 돌려준다.</li></ol>
 <h2>C→C++ 래퍼 흐름</h2>
-<p>**PJRT_Client_Create 실제 시그니처** (`pjrt_c_api.h:552`)</p>
+<p><strong>PJRT_Client_Create 실제 시그니처</strong> (<code>pjrt_c_api.h:552</code>)</p>
 <pre><code>typedef PJRT_Error* PJRT_Client_Create(PJRT_Client_Create_Args* args);</code></pre>
-<p>`args`는 `create_options`, KV 콜백 3종, 출력 파라미터 `client`(`PJRT_Client*`)를 담는 단일 구조체다(`pjrt_c_api.h:524-549`).</p>
+<p><code>args</code>는 <code>create_options</code>, KV 콜백 3종, 출력 파라미터 <code>client</code>(<code>PJRT_Client*</code>)를 담는 단일 구조체다(<code>pjrt_c_api.h:524-549</code>).</p>
 <p>문서(&quot;PJRT 플러그인 통합&quot;)가 제시한 의사코드는 다음과 같다.</p>
 <pre><code>PJRT_Error* PJRT_Client_Create(PJRT_Client_Create_Args* args) {
   std::unique_ptr&lt;xla::PjRtClient&gt; client = GetPluginPjRtClient();
   args-&gt;client = pjrt::CreateWrapperClient(std::move(client));
   return nullptr;
 }</code></pre>
-<p>그러나 실제 `CreateWrapperClient`의 선언(`pjrt_c_api_wrapper_impl.h:563`)은 인자가 **두 개**다.</p>
+<p>그러나 실제 <code>CreateWrapperClient</code>의 선언(<code>pjrt_c_api_wrapper_impl.h:563</code>)은 인자가 <strong>두 개</strong>다.</p>
 <pre><code>PJRT_Client* CreateWrapperClient(const PJRT_Api* api,
                                  std::unique_ptr&lt;xla::PjRtClient&gt; cpp_client);</code></pre>
-<p>GPU 실구현(`pjrt_c_api_gpu_internal.cc:230`)도 정확히 두 인자로 호출한다.</p>
+<p>GPU 실구현(<code>pjrt_c_api_gpu_internal.cc:230</code>)도 정확히 두 인자로 호출한다.</p>
 <pre><code>args-&gt;client = pjrt::CreateWrapperClient(GetGpuPjrtApi(), std::move(client));</code></pre>
-<p>즉 문서의 1-인자 예시는 단순화된 것이며, `api` 포인터가 빠져 있다. 이 `api`는 `PJRT_Client` 구조체(`pjrt_c_api_wrapper_impl.h:70-89`)의 멤버로 저장되어, 이후 토폴로지 조회(`PJRT_Client::PJRT_Client`가 `GetStatusOrTopologyDescription`을 호출할 때 등) 다른 C API 함수를 되부르는 데 쓰인다. 문서 예제를 그대로 복붙하면 컴파일되지 않는다.</p>
-<p>**CreateWrapperClient 내부 동작** (`pjrt_c_api_wrapper_impl.cc:3661-3668`)</p>
+<p>즉 문서의 1-인자 예시는 단순화된 것이며, <code>api</code> 포인터가 빠져 있다. 이 <code>api</code>는 <code>PJRT_Client</code> 구조체(<code>pjrt_c_api_wrapper_impl.h:70-89</code>)의 멤버로 저장되어, 이후 토폴로지 조회(<code>PJRT_Client::PJRT_Client</code>가 <code>GetStatusOrTopologyDescription</code>을 호출할 때 등) 다른 C API 함수를 되부르는 데 쓰인다. 문서 예제를 그대로 복붙하면 컴파일되지 않는다.</p>
+<p><strong>CreateWrapperClient 내부 동작</strong> (<code>pjrt_c_api_wrapper_impl.cc:3661-3668</code>)</p>
 <pre><code>PJRT_Client* CreateWrapperClient(...) {
   PJRT_Client* c_client = new PJRT_Client(api, std::move(cpp_client));
   PopulatePjrtClientDevices(c_client);
@@ -245,44 +283,44 @@
   AttachDevicesAndMemories(c_client);
   return c_client;
 }</code></pre>
-<p>`new`로 raw 힙 할당하며(`PJRT_Client_Destroy` C API 호출로만 해제되는 것을 전제), 생성자(`:3725`)는 `topology` 멤버를 `GetStatusOrTopologyDescription(*client)`로 즉시 계산해 캐싱한다. `PopulatePjrtClientDevices`/`Memories`/`AttachDevicesAndMemories`(`:3578-3648`)는 C++ `xla::PjRtDevice*`/`PjRtMemorySpace*` 목록을 순회하며 대응하는 C 구조체(`PJRT_Device`, `PJRT_Memory`)를 만들고 상호 참조 맵(`c_device_from_cpp_device`)을 채운다.</p>
-<p>**PJRT_Api 함수 테이블 구성 방식**(`CreatePjrtApi`, `pjrt_c_api_wrapper_impl.cc:3765`)</p>
+<p><code>new</code>로 raw 힙 할당하며(<code>PJRT_Client_Destroy</code> C API 호출로만 해제되는 것을 전제), 생성자(<code>:3725</code>)는 <code>topology</code> 멤버를 <code>GetStatusOrTopologyDescription(*client)</code>로 즉시 계산해 캐싱한다. <code>PopulatePjrtClientDevices</code>/<code>Memories</code>/<code>AttachDevicesAndMemories</code>(<code>:3578-3648</code>)는 C++ <code>xla::PjRtDevice*</code>/<code>PjRtMemorySpace*</code> 목록을 순회하며 대응하는 C 구조체(<code>PJRT_Device</code>, <code>PJRT_Memory</code>)를 만들고 상호 참조 맵(<code>c_device_from_cpp_device</code>)을 채운다.</p>
+<p><strong>PJRT_Api 함수 테이블 구성 방식</strong>(<code>CreatePjrtApi</code>, <code>pjrt_c_api_wrapper_impl.cc:3765</code>)</p>
 <p>문서 예시:</p>
 <pre><code>const PJRT_Api* GetPjrtApi() {
   static const PJRT_Api pjrt_api =
       pjrt::CreatePjrtApi(my_plugin::PJRT_Client_Create);
   return &amp;pjrt_api;
 }</code></pre>
-<p>실제 시그니처(`pjrt_c_api_wrapper_impl.h:594`)는 인자 4개(기본값 없음) + 2개(기본값 있음)이다.</p>
+<p>실제 시그니처(<code>pjrt_c_api_wrapper_impl.h:594</code>)는 인자 4개(기본값 없음) + 2개(기본값 있음)이다.</p>
 <pre><code>PJRT_Api CreatePjrtApi(PJRT_Client_Create* create_fn,
                        PJRT_ExecuteContext_Create* execute_context_create_fn,
                        PJRT_TopologyDescription_Create* topology_create_fn,
                        PJRT_Plugin_Initialize* plugin_initialize_fn,
                        PJRT_Extension_Base* extension_start = nullptr,
                        PJRT_Plugin_Attributes* plugin_attributes_fn = ...);</code></pre>
-<p>GPU 쪽 실호출(`pjrt_c_api_gpu_internal.cc:602`)은 6개 인자를 모두 채운다.</p>
+<p>GPU 쪽 실호출(<code>pjrt_c_api_gpu_internal.cc:602</code>)은 6개 인자를 모두 채운다.</p>
 <pre><code>static const PJRT_Api pjrt_api = pjrt::CreatePjrtApi(
     pjrt::gpu_plugin::PJRT_Client_Create,
     pjrt::gpu_plugin::PJRT_ExecuteContext_Create,
     pjrt::gpu_plugin::PJRT_GpuDeviceTopology_Create,
     pjrt::PJRT_Plugin_Initialize_NoOp, &amp;abi_version_extension.base,
     pjrt::gpu_plugin::PJRT_Plugin_Attributes_Gpu);</code></pre>
-<p>`CreatePjrtApi` 정의부(`:3765` 이후)는 `PJRT_Api` 리터럴을 반환하는데, `pjrt_api_version`은 헤더의 `PJRT_API_MAJOR`/`PJRT_API_MINOR` 매크로 값을 그대로 박아 넣고, `create_fn`만 호출자가 넘긴 함수로 채워지며 나머지 ~150개 필드는 `pjrt::PJRT_Error_Destroy`, `pjrt::PJRT_Client_Destroy` 등 `pjrt_c_api_wrapper_impl.cc` 자체에 구현된 고정 함수들로 채워진다. 즉 벤더가 직접 구현해야 하는 함수는 `PJRT_Client_Create`, `PJRT_ExecuteContext_Create`, `PJRT_TopologyDescription_Create`, (선택) `PJRT_Plugin_Initialize`/`Attributes` 정도뿐이며 나머지는 래퍼가 대신 채워준다 — 이는 문서의 &quot;래퍼를 사용하면 나머지 C API를 구현할 필요가 없습니다&quot;라는 서술과 정확히 일치한다.</p>
+<p><code>CreatePjrtApi</code> 정의부(<code>:3765</code> 이후)는 <code>PJRT_Api</code> 리터럴을 반환하는데, <code>pjrt_api_version</code>은 헤더의 <code>PJRT_API_MAJOR</code>/<code>PJRT_API_MINOR</code> 매크로 값을 그대로 박아 넣고, <code>create_fn</code>만 호출자가 넘긴 함수로 채워지며 나머지 ~150개 필드는 <code>pjrt::PJRT_Error_Destroy</code>, <code>pjrt::PJRT_Client_Destroy</code> 등 <code>pjrt_c_api_wrapper_impl.cc</code> 자체에 구현된 고정 함수들로 채워진다. 즉 벤더가 직접 구현해야 하는 함수는 <code>PJRT_Client_Create</code>, <code>PJRT_ExecuteContext_Create</code>, <code>PJRT_TopologyDescription_Create</code>, (선택) <code>PJRT_Plugin_Initialize</code>/<code>Attributes</code> 정도뿐이며 나머지는 래퍼가 대신 채워준다 — 이는 문서의 &quot;래퍼를 사용하면 나머지 C API를 구현할 필요가 없습니다&quot;라는 서술과 정확히 일치한다.</p>
 <h2>버전 관리 및 문서-코드 차이</h2>
-<p>**현재 버전 관리 메커니즘 요약**</p>
+<p><strong>현재 버전 관리 메커니즘 요약</strong></p>
 <p>세 층위의 서로 다른(그러나 이름이 겹쳐 혼동하기 쉬운) 메커니즘이 공존한다.</p>
-<p>1. **구조체 필드 단위 forward/backward 호환** — `pjrt_c_api.h`의 `PJRT_STRUCT_SIZE`/`PJRT_DEFINE_STRUCT_TRAITS` 매크로가 모든 `*_Args` 구조체에 `struct_size` 필드와 `_STRUCT_SIZE` 상수를 자동 생성한다(`pjrt_c_api.h:27-47`). 호출자가 새 필드를 추가해도(마이너 버전업) 오래된 구현은 `struct_size`로 자신이 아는 필드까지만 읽고, 새 구현은 `ActualStructSizeIsGreaterOrEqual`(`pjrt_c_api_helpers.h:162`, 실제 사용 예: `pjrt_c_api_gpu_internal.cc:96`)로 호출자가 최소한 자신이 요구하는 필드까지는 채웠는지 검사한다. 2. **PJRT_Api 전역 major/minor 버전과 로딩 시점 검사** — `PJRT_API_MAJOR=0`, `PJRT_API_MINOR=113`(`pjrt_c_api.h:106, 121`)을 `pjrt_api.cc::InitializePjrtPlugin`(`:153`)이 검사한다. `kMinPjRtMinor = 29`로 &quot;최소 12주 전방호환 창&quot;을 강제하고, `ENABLE_PJRT_COMPATIBILITY` 환경 변수(기본 `true`)로 완화된 검사(메이저 일치 + 마이너 ≥ 최소값)와 엄격한 검사(메이저·마이너 완전 일치)를 전환한다. 3. **`PJRT_Extension_Type_AbiVersion` 확장과 `pjrt_abi_version.h`** — `pjrt_abi_version.h`가 정의하는 `xla::PjRtRuntimeAbiVersion`/`xla::PjRtExecutableAbiVersion`는 추상 인터페이스일 뿐이며, 실제 데이터는 `PJRT_AbiVersion_Extension`(정의 파일은 이번 체크아웃 밖)이라는 **선택적** 확장을 통해 오간다. `PjRtCApiClient::RuntimeAbiVersion()`(`pjrt_c_api_client.cc:441`)은 이 확장을 `FindExtension`으로 찾고, 없으면 `UnimplementedError`를 반환한다 — 즉 필수가 아니라 옵트인이다.</p>
-<p>**문서 대비 달라진 점 또는 구체화된 점**</p>
-<p>문서의 &quot;지금은 jaxlib 버전을 PJRT C API 버전과 일치시켜야 합니다... 곧 ABI 호환성을 지원할 예정입니다&quot;라는 문장은 문맥상 위 2번(플러그인-프레임워크 간 프로토콜 호환)을 가리킨다. 코드를 보면 이 약속은 **이미 `pjrt_api.cc`에 구현되어 있다**(`kMinPjRtMinor` + `ENABLE_PJRT_COMPATIBILITY`) — &quot;곧 지원 예정&quot;이 아니라 이미 동작 중인 기능이다. 다만 이는 pjrt_abi_version.h가 이 약속을 &quot;대체&quot;한 것이 아니라, 애초에 별도 파일(`pjrt_api.cc`)에서 구현된 것으로 **추정**된다(정확한 시점/커밋은 확인 필요).</p>
-<p>반면 `pjrt_abi_version.h`(파일 저작권 연도 2025)와 `PJRT_AbiVersion_Extension`은 문서가 말하는 &quot;플러그인-프레임워크 프로토콜 호환&quot;과는 **다른 문제**, 즉 &quot;컴파일된 실행 파일(executable)이 특정 런타임/플러그인 빌드와 호환되는가&quot;를 다루는 것으로 보인다(`PjRtCApiExecutableAbiVersion`, `PjRtExecutable::GetAbiVersion()` 존재로 미루어 볼 때). 이는 문서가 언급한 기능이 구체화된 것이라기보다, **이름은 비슷하지만 범위가 다른 별도 메커니즘이 나중에 추가된 것**으로 보인다 — 이 부분은 `pjrt_c_api_abi_version_extension.h`(체크아웃 밖)를 봐야 확정할 수 있어 추정으로 남긴다.</p>
+<ol><li><strong>구조체 필드 단위 forward/backward 호환</strong> — <code>pjrt_c_api.h</code>의 <code>PJRT_STRUCT_SIZE</code>/<code>PJRT_DEFINE_STRUCT_TRAITS</code> 매크로가 모든 <code>*_Args</code> 구조체에 <code>struct_size</code> 필드와 <code>_STRUCT_SIZE</code> 상수를 자동 생성한다(<code>pjrt_c_api.h:27-47</code>). 호출자가 새 필드를 추가해도(마이너 버전업) 오래된 구현은 <code>struct_size</code>로 자신이 아는 필드까지만 읽고, 새 구현은 <code>ActualStructSizeIsGreaterOrEqual</code>(<code>pjrt_c_api_helpers.h:162</code>, 실제 사용 예: <code>pjrt_c_api_gpu_internal.cc:96</code>)로 호출자가 최소한 자신이 요구하는 필드까지는 채웠는지 검사한다.</li><li><strong>PJRT_Api 전역 major/minor 버전과 로딩 시점 검사</strong> — <code>PJRT_API_MAJOR=0</code>, <code>PJRT_API_MINOR=113</code>(<code>pjrt_c_api.h:106, 121</code>)을 <code>pjrt_api.cc::InitializePjrtPlugin</code>(<code>:153</code>)이 검사한다. <code>kMinPjRtMinor = 29</code>로 &quot;최소 12주 전방호환 창&quot;을 강제하고, <code>ENABLE_PJRT_COMPATIBILITY</code> 환경 변수(기본 <code>true</code>)로 완화된 검사(메이저 일치 + 마이너 ≥ 최소값)와 엄격한 검사(메이저·마이너 완전 일치)를 전환한다.</li><li><strong><code>PJRT_Extension_Type_AbiVersion</code> 확장과 <code>pjrt_abi_version.h</code></strong> — <code>pjrt_abi_version.h</code>가 정의하는 <code>xla::PjRtRuntimeAbiVersion</code>/<code>xla::PjRtExecutableAbiVersion</code>는 추상 인터페이스일 뿐이며, 실제 데이터는 <code>PJRT_AbiVersion_Extension</code>(정의 파일은 이번 체크아웃 밖)이라는 <strong>선택적</strong> 확장을 통해 오간다. <code>PjRtCApiClient::RuntimeAbiVersion()</code>(<code>pjrt_c_api_client.cc:441</code>)은 이 확장을 <code>FindExtension</code>으로 찾고, 없으면 <code>UnimplementedError</code>를 반환한다 — 즉 필수가 아니라 옵트인이다.</li></ol>
+<p><strong>문서 대비 달라진 점 또는 구체화된 점</strong></p>
+<p>문서의 &quot;지금은 jaxlib 버전을 PJRT C API 버전과 일치시켜야 합니다... 곧 ABI 호환성을 지원할 예정입니다&quot;라는 문장은 문맥상 위 2번(플러그인-프레임워크 간 프로토콜 호환)을 가리킨다. 코드를 보면 이 약속은 <strong>이미 <code>pjrt_api.cc</code>에 구현되어 있다</strong>(<code>kMinPjRtMinor</code> + <code>ENABLE_PJRT_COMPATIBILITY</code>) — &quot;곧 지원 예정&quot;이 아니라 이미 동작 중인 기능이다. 다만 이는 pjrt_abi_version.h가 이 약속을 &quot;대체&quot;한 것이 아니라, 애초에 별도 파일(<code>pjrt_api.cc</code>)에서 구현된 것으로 <strong>추정</strong>된다(정확한 시점/커밋은 확인 필요).</p>
+<p>반면 <code>pjrt_abi_version.h</code>(파일 저작권 연도 2025)와 <code>PJRT_AbiVersion_Extension</code>은 문서가 말하는 &quot;플러그인-프레임워크 프로토콜 호환&quot;과는 <strong>다른 문제</strong>, 즉 &quot;컴파일된 실행 파일(executable)이 특정 런타임/플러그인 빌드와 호환되는가&quot;를 다루는 것으로 보인다(<code>PjRtCApiExecutableAbiVersion</code>, <code>PjRtExecutable::GetAbiVersion()</code> 존재로 미루어 볼 때). 이는 문서가 언급한 기능이 구체화된 것이라기보다, <strong>이름은 비슷하지만 범위가 다른 별도 메커니즘이 나중에 추가된 것</strong>으로 보인다 — 이 부분은 <code>pjrt_c_api_abi_version_extension.h</code>(체크아웃 밖)를 봐야 확정할 수 있어 추정으로 남긴다.</p>
 <h2>주요 파일과 역할</h2>
-<p>| 파일 | 역할 | |---|---| | `xla/pjrt/c/pjrt_c_api.h` | C ABI 전체 정의: `PJRT_Api`, `PJRT_Client_Create_Args`, 확장(`PJRT_Extension_Base`) 체계, 버전 매크로 | | `xla/pjrt/c/pjrt_c_api_wrapper_impl.h/.cc` | `PJRT_Client` 등 C 구조체 안에 C++ `xla::PjRt*` 객체를 담는 표준 구현. `CreateWrapperClient`, `CreatePjrtApi` 제공 | | `xla/pjrt/c/pjrt_c_api_helpers.h/.cc` | `struct_size` 검사, 옵션 변환/검증, 에러 변환 등 공용 유틸리티 | | `xla/pjrt/c/pjrt_c_api_cpu.cc` | CPU 플러그인의 `GetPjrtApi()` 진입점(내부는 `pjrt_c_api_cpu_internal.*`에 위임, 체크아웃 밖) | | `xla/pjrt/c/pjrt_c_api_gpu.cc` | GPU 플러그인의 `GetPjrtApi()` 진입점, ABSL 로깅 초기화 후 `GetGpuPjrtApi()` 위임 | | `xla/pjrt/c/pjrt_c_api_gpu_internal.cc` | GPU `PJRT_Client_Create`(옵션 파싱 → `xla::GpuClientOptions` → `GetXlaPjrtGpuClient`), `GetGpuPjrtApi`(확장 체인 + `CreatePjrtApi` 호출) | | `xla/pjrt/pjrt_api.h/.cc` | 플러그인 레지스트리(`device_type → PJRT_Api*`), `dlopen` 기반 로딩, 버전/초기화 검사 | | `xla/pjrt/pjrt_abi_version.h` | 실행 파일 수준 ABI 버전을 표현하는 추상 클래스(`PjRtRuntimeAbiVersion`, `PjRtExecutableAbiVersion`) | | `xla/pjrt/c_api_client/pjrt_c_api_client.h/.cc` | `PJRT_Api*`/`PJRT_Client*`를 다시 `xla::PjRtClient` 등 C++ 인터페이스로 감싸는 프레임워크 측 소비 계층 |</p>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>역할</th></tr></thead><tbody><tr><td><code>xla/pjrt/c/pjrt_c_api.h</code></td><td>C ABI 전체 정의: <code>PJRT_Api</code>, <code>PJRT_Client_Create_Args</code>, 확장(<code>PJRT_Extension_Base</code>) 체계, 버전 매크로</td></tr><tr><td><code>xla/pjrt/c/pjrt_c_api_wrapper_impl.h/.cc</code></td><td><code>PJRT_Client</code> 등 C 구조체 안에 C++ <code>xla::PjRt*</code> 객체를 담는 표준 구현. <code>CreateWrapperClient</code>, <code>CreatePjrtApi</code> 제공</td></tr><tr><td><code>xla/pjrt/c/pjrt_c_api_helpers.h/.cc</code></td><td><code>struct_size</code> 검사, 옵션 변환/검증, 에러 변환 등 공용 유틸리티</td></tr><tr><td><code>xla/pjrt/c/pjrt_c_api_cpu.cc</code></td><td>CPU 플러그인의 <code>GetPjrtApi()</code> 진입점(내부는 <code>pjrt_c_api_cpu_internal.*</code>에 위임, 체크아웃 밖)</td></tr><tr><td><code>xla/pjrt/c/pjrt_c_api_gpu.cc</code></td><td>GPU 플러그인의 <code>GetPjrtApi()</code> 진입점, ABSL 로깅 초기화 후 <code>GetGpuPjrtApi()</code> 위임</td></tr><tr><td><code>xla/pjrt/c/pjrt_c_api_gpu_internal.cc</code></td><td>GPU <code>PJRT_Client_Create</code>(옵션 파싱 → <code>xla::GpuClientOptions</code> → <code>GetXlaPjrtGpuClient</code>), <code>GetGpuPjrtApi</code>(확장 체인 + <code>CreatePjrtApi</code> 호출)</td></tr><tr><td><code>xla/pjrt/pjrt_api.h/.cc</code></td><td>플러그인 레지스트리(<code>device_type → PJRT_Api*</code>), <code>dlopen</code> 기반 로딩, 버전/초기화 검사</td></tr><tr><td><code>xla/pjrt/pjrt_abi_version.h</code></td><td>실행 파일 수준 ABI 버전을 표현하는 추상 클래스(<code>PjRtRuntimeAbiVersion</code>, <code>PjRtExecutableAbiVersion</code>)</td></tr><tr><td><code>xla/pjrt/c_api_client/pjrt_c_api_client.h/.cc</code></td><td><code>PJRT_Api*</code>/<code>PJRT_Client*</code>를 다시 <code>xla::PjRtClient</code> 등 C++ 인터페이스로 감싸는 프레임워크 측 소비 계층</td></tr></tbody></table></div>
 <h2>중요한 설계 판단</h2>
-<ul><li>**불투명 구조체 + 함수 포인터 테이블**: `PJRT_Client` 등은 헤더에서 전방 선언만 노출되고 실제 필드는 `pjrt_c_api_wrapper_impl.h`에서만 정의된다. 플러그인 소비자는 절대 필드에 직접 접근하지 않고 `PJRT_Api`의 함수 포인터로만 상호작용한다 — 이것이 컴파일러/언어 버전이 다른 프로세스 간에도 ABI가 안정적인 이유다.</li><li>**struct_size 기반 점진적 호환**(메이저 버전 고정, 마이너만 증가): 필드를 새로 추가해도 메이저를 올리지 않는다. 대신 `struct_size`로 &quot;얼마나 아는지&quot;를 런타임에 판단한다. 이는 문서에 나온 것과 코드가 정확히 일치하는 부분이다(`pjrt_c_api.h:99-121` 주석 참고).</li><li>**확장(Extension) 연결 리스트**: `PJRT_Extension_Base::next`로 옵션 기능(Profiler, Stream, AbiVersion 등)을 체이닝한다. GPU 구현(`GetGpuPjrtApi`)에서 8개 이상의 확장을 정적 변수로 체이닝하는 패턴이 반복된다. 이는 메이저 버전을 올리지 않고도 완전히 새로운 기능 집합을 추가할 수 있게 하는 확장 지점이다.</li><li>**대칭적 이중 래핑**: 저작자 쪽(`wrapper_impl`)과 소비자 쪽(`c_api_client`)이 정확히 대칭 구조라, 플러그인을 xla 소스 트리 안에서 빌드하든 밖에서 빌드하든 프레임워크는 항상 동일한 `xla::PjRtClient` 인터페이스만 보게 된다. 이 덕분에 &quot;직접 손으로 C API 구현&quot; 옵션과 &quot;C++ 클라이언트 + 래퍼&quot; 옵션이 프레임워크 입장에서 완전히 구분되지 않는다.</li></ul>
+<ul><li><strong>불투명 구조체 + 함수 포인터 테이블</strong>: <code>PJRT_Client</code> 등은 헤더에서 전방 선언만 노출되고 실제 필드는 <code>pjrt_c_api_wrapper_impl.h</code>에서만 정의된다. 플러그인 소비자는 절대 필드에 직접 접근하지 않고 <code>PJRT_Api</code>의 함수 포인터로만 상호작용한다 — 이것이 컴파일러/언어 버전이 다른 프로세스 간에도 ABI가 안정적인 이유다.</li><li><strong>struct_size 기반 점진적 호환</strong>(메이저 버전 고정, 마이너만 증가): 필드를 새로 추가해도 메이저를 올리지 않는다. 대신 <code>struct_size</code>로 &quot;얼마나 아는지&quot;를 런타임에 판단한다. 이는 문서에 나온 것과 코드가 정확히 일치하는 부분이다(<code>pjrt_c_api.h:99-121</code> 주석 참고).</li><li><strong>확장(Extension) 연결 리스트</strong>: <code>PJRT_Extension_Base::next</code>로 옵션 기능(Profiler, Stream, AbiVersion 등)을 체이닝한다. GPU 구현(<code>GetGpuPjrtApi</code>)에서 8개 이상의 확장을 정적 변수로 체이닝하는 패턴이 반복된다. 이는 메이저 버전을 올리지 않고도 완전히 새로운 기능 집합을 추가할 수 있게 하는 확장 지점이다.</li><li><strong>대칭적 이중 래핑</strong>: 저작자 쪽(<code>wrapper_impl</code>)과 소비자 쪽(<code>c_api_client</code>)이 정확히 대칭 구조라, 플러그인을 xla 소스 트리 안에서 빌드하든 밖에서 빌드하든 프레임워크는 항상 동일한 <code>xla::PjRtClient</code> 인터페이스만 보게 된다. 이 덕분에 &quot;직접 손으로 C API 구현&quot; 옵션과 &quot;C++ 클라이언트 + 래퍼&quot; 옵션이 프레임워크 입장에서 완전히 구분되지 않는다.</li></ul>
 <h2>읽으면서 주의할 점</h2>
-<ul><li>이번 체크아웃은 `job.json`이 지정한 13개 파일만 포함하는 sparse 체크아웃이다. `GetCpuPjrtApi`, `PJRT_AbiVersion_Extension`, `PJRT_Client_RuntimeAbiVersion_Args` 등 실제 정의는 다른 파일(`pjrt_c_api_cpu_internal.*`, `pjrt_c_api_abi_version_extension.h` 등)에 있으며 이번 분석 범위 밖이다.</li><li>`CreateWrapperClient`는 `new`로 힙에 할당하고 명시적 `PJRT_Client_Destroy` 호출로만 해제되는 C 스타일 수명 관리를 쓴다. 소비자 쪽(`pjrt_c_api_client.h`)은 `PJRT_ClientDeleter` 커스텀 삭제자로 `unique_ptr`에 담아 RAII화하지만, 저작자 쪽 코드에서는 여전히 raw pointer + 수동 delete 패턴이다.</li><li>문서의 `CreateWrapperClient`/`CreatePjrtApi` 예제 코드를 그대로 복사하면 인자 개수 불일치로 컴파일되지 않는다(위 &quot;C→C++ 래퍼 흐름&quot; 절 참고).</li><li>&quot;ABI 버전&quot;이라는 표현이 최소 두 가지 다른 의미(플러그인-프레임워크 프로토콜 버전 vs 실행 파일 호환성 버전)로 쓰이므로, 코드에서 `PJRT_API_MAJOR/MINOR`와 `PjRtRuntimeAbiVersion`/`PJRT_AbiVersion_Extension`을 혼동하지 않아야 한다.</li><li>GPU `PJRT_Client_Create`의 옵션 검증(`ValidateCreateOptions`)은 화이트리스트 방식이라, 스키마에 없는 키를 넘기면 곧바로 에러가 난다(`kExpectedOptionNameAndTypes`에 없는 키는 실패).</li></ul>
+<ul><li>이번 체크아웃은 <code>job.json</code>이 지정한 13개 파일만 포함하는 sparse 체크아웃이다. <code>GetCpuPjrtApi</code>, <code>PJRT_AbiVersion_Extension</code>, <code>PJRT_Client_RuntimeAbiVersion_Args</code> 등 실제 정의는 다른 파일(<code>pjrt_c_api_cpu_internal.*</code>, <code>pjrt_c_api_abi_version_extension.h</code> 등)에 있으며 이번 분석 범위 밖이다.</li><li><code>CreateWrapperClient</code>는 <code>new</code>로 힙에 할당하고 명시적 <code>PJRT_Client_Destroy</code> 호출로만 해제되는 C 스타일 수명 관리를 쓴다. 소비자 쪽(<code>pjrt_c_api_client.h</code>)은 <code>PJRT_ClientDeleter</code> 커스텀 삭제자로 <code>unique_ptr</code>에 담아 RAII화하지만, 저작자 쪽 코드에서는 여전히 raw pointer + 수동 delete 패턴이다.</li><li>문서의 <code>CreateWrapperClient</code>/<code>CreatePjrtApi</code> 예제 코드를 그대로 복사하면 인자 개수 불일치로 컴파일되지 않는다(위 &quot;C→C++ 래퍼 흐름&quot; 절 참고).</li><li>&quot;ABI 버전&quot;이라는 표현이 최소 두 가지 다른 의미(플러그인-프레임워크 프로토콜 버전 vs 실행 파일 호환성 버전)로 쓰이므로, 코드에서 <code>PJRT_API_MAJOR/MINOR</code>와 <code>PjRtRuntimeAbiVersion</code>/<code>PJRT_AbiVersion_Extension</code>을 혼동하지 않아야 한다.</li><li>GPU <code>PJRT_Client_Create</code>의 옵션 검증(<code>ValidateCreateOptions</code>)은 화이트리스트 방식이라, 스키마에 없는 키를 넘기면 곧바로 에러가 난다(<code>kExpectedOptionNameAndTypes</code>에 없는 키는 실패).</li></ul>
 <h2>더 파볼 질문</h2>
-<ul><li>`pjrt_c_api_abi_version_extension.h`(체크아웃 밖)를 확인하면 `PJRT_AbiVersion_Extension`이 정확히 어떤 필드(예: 실행 파일 지문, 플랫폼별 버전 번호)를 주고받는지, `pjrt_abi_version.h`의 추상 클래스와 1:1로 매핑되는지 검증할 수 있다.</li><li>`pjrt_c_api_cpu_internal.cc`(체크아웃 밖)를 확인하면 CPU 플러그인이 실제로 `CreatePjrtApi`를 몇 개 인자로 호출하는지, GPU와 동일한 패턴인지 재검증할 수 있다.</li><li>`xla/pjrt/c/CHANGELOG.md`(체크아웃에 없음)를 원본 저장소에서 확인하면 `kMinPjRtMinor = 29`가 어느 커밋/날짜에 대응하는지, 마이너 버전 변경 이력을 통해 &quot;12주 전방호환 창&quot; 정책이 실제로 지켜지고 있는지 검증할 수 있다.</li><li>`ENABLE_PJRT_COMPATIBILITY` 기본값이 `true`(관대한 검사)로 설정된 이유와, 이 값이 프로덕션(JAX 배포)에서 실제로 어떻게 설정되는지는 이번 범위의 파일만으로는 확인할 수 없다.</li></ul>
+<ul><li><code>pjrt_c_api_abi_version_extension.h</code>(체크아웃 밖)를 확인하면 <code>PJRT_AbiVersion_Extension</code>이 정확히 어떤 필드(예: 실행 파일 지문, 플랫폼별 버전 번호)를 주고받는지, <code>pjrt_abi_version.h</code>의 추상 클래스와 1:1로 매핑되는지 검증할 수 있다.</li><li><code>pjrt_c_api_cpu_internal.cc</code>(체크아웃 밖)를 확인하면 CPU 플러그인이 실제로 <code>CreatePjrtApi</code>를 몇 개 인자로 호출하는지, GPU와 동일한 패턴인지 재검증할 수 있다.</li><li><code>xla/pjrt/c/CHANGELOG.md</code>(체크아웃에 없음)를 원본 저장소에서 확인하면 <code>kMinPjRtMinor = 29</code>가 어느 커밋/날짜에 대응하는지, 마이너 버전 변경 이력을 통해 &quot;12주 전방호환 창&quot; 정책이 실제로 지켜지고 있는지 검증할 수 있다.</li><li><code>ENABLE_PJRT_COMPATIBILITY</code> 기본값이 <code>true</code>(관대한 검사)로 설정된 이유와, 이 값이 프로덕션(JAX 배포)에서 실제로 어떻게 설정되는지는 이번 범위의 파일만으로는 확인할 수 없다.</li></ul>
     </article>
   </main>
   <footer>
