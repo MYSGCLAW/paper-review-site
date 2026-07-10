@@ -318,72 +318,45 @@
       }
     }
   </style>
-<!-- verification-style:start -->
+</head>
+
+<body>
+<!-- verification-status:start -->
 <style>
 .verification-status {
-    margin: 16px auto 22px;
-    padding: 13px 16px;
-    border: 1px solid;
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
     border-radius: 10px;
-    line-height: 1.5;
+    border: 1px solid;
     box-sizing: border-box;
+    font-family: inherit;
 }
-
 .verification-status strong {
+    display: inline-block;
     margin-right: 8px;
 }
-
 .verification-status.pending {
-    background: #fff8dc;
-    border-color: #b58900;
-    color: #5f4b00;
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
 }
-
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
-
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #7f0000;
-}
-
-.verification-index-badge {
-    display: inline-block;
-    margin-left: 7px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    vertical-align: middle;
-}
-
-.verification-index-badge.pending {
-    background: #fff3cd;
-    color: #6b5200;
-}
-
-.verification-index-badge.verified {
-    background: #dff3e3;
-    color: #176b2c;
-}
-
-.verification-index-badge.failed {
-    background: #fde2e5;
-    color: #941b28;
+    color: #8e0000;
 }
 </style>
-<!-- verification-style:end -->
-</head>
-
-<body>
-<!-- verification-status:start -->
-<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
+<div class="verification-status failed">
+    <strong>검증 실패</strong>
+    <span>검증 과정에서 수정이 필요한 문제가 발견되었습니다.</span>
+</div>
 <!-- verification-status:end -->
-
   <header class="hero">
     <div class="page-shell">
       <p class="eyebrow">Research Paper Report</p>
@@ -405,7 +378,7 @@
   <main class="page-shell">
     <section class="summary-card">
       <h2>핵심 요약</h2>
-      <p>IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다. 아래 상세 서술은 source.txt 원문 및 problem·method·evaluation·results·limitations를 포함하는 상세 근거를 담은 extraction.json과 대조해 독립 검증되었으며, 논문 식별 정보, 벤치마크 규모, 방법론, 검색·QA 주요 수치는 대체로 원문과 일치함을 확인했다.</p>
+      <p>IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다.</p>
       <span class="source-ref">PDF p. 1, 2, 3, 8, 9, 10</span>
     </section>
 
@@ -970,22 +943,6 @@ flowchart LR
               <span class="source-ref">PDF p. 7</span>
             </li>
             
-            <li>
-              <div class="list-main">
-                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>Codex 독립 검증 결과(verdict: FAIL, confidence 0.88)는 report.json의 핵심 수치·주장이 source.txt 원문과 대체로 일치함을 확인했다. FAIL 판정의 근거는 본 보고서 이전 버전이 &#x27;extraction.json은 제목·저자·venue·연도만 포함한다&#x27;고 서술했던 부분이 실제 extraction.json(문제 정의·방법·평가·주요 결과·저자 한계까지 포함)과 모순되었다는 점이며, 이는 본문 수치 서술의 오류가 아니라 근거 체인 메타 서술의 오류였다. 본 버전에서는 해당 서술을 수정했다.</span>
-              </div>
-              <span class="source-ref">PDF p. 1, 4, 8, 9</span>
-            </li>
-            
-            <li>
-              <div class="list-main">
-                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>검증자는 PDF 원본 이미지와 그림 내부 수치는 직접 대조하지 않았으며, Mermaid 도식은 문법상 정적 검사만 수행했고, Figure 2/3/4의 α 스윕 세부 곡선 지점은 본문·표에 명시된 핵심 수치(예: 49%/81%/95%, α=0.5 부근) 중심으로만 검증했다.</span>
-              </div>
-              <span class="source-ref">PDF p. 8, 9</span>
-            </li>
-            
       </ul>
     </section>
     
@@ -1134,7 +1091,7 @@ flowchart LR
     
         <section class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>{&#x27;text&#x27;: &#x27;이전 버전의 report.json은 extraction.json이 제목·저자·venue·연도만 포함한다고 서술했으나, Codex 독립 검증(verdict: FAIL, confidence 0.88)이 지적한 대로 실제 extraction.json은 problem·contributions·method·evaluation·results·author_stated_limitations·unresolved까지 담은 상세 근거 문서이다. 이번 개정판에서 해당 서술을 수정했으며, 본문의 수치·주장 자체는 원문과 대체로 일치함이 확인되었다.&#x27;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [1]}</li><li>{&#x27;text&#x27;: &#x27;Figure 2/3/4에 표현된 alpha sweep의 세부 곡선 값은 검증자가 본문·표에서 확인 가능한 범위 내에서만 대조했으며, 그림 자체의 수치를 독립적으로 재확인하지는 않았다.&#x27;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [8, 9]}</li><li>{&#x27;text&#x27;: &quot;본문 11페이지에서는 t-SNE 관련 질문 예시를 &#x27;Table 8&#x27;로 지칭하나 Appendix E에서는 동일 표가 &#x27;Table 7&#x27;로 표기되어 있어, 논문 자체 내 표 번호 불일치가 존재한다(논문 원문의 오기로 추정되며 보고서 서술의 오류는 아님).&quot;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [11]}</li></ul>
+          <ul><li>{&#x27;text&#x27;: &#x27;Figure 2/3/4에 표현된 alpha sweep의 세부 곡선 값은 검증자가 본문·표에서 확인 가능한 범위 내에서만 대조했으며, 그림 자체의 수치를 독립적으로 재확인하지는 않았다.&#x27;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [8, 9]}</li><li>{&#x27;text&#x27;: &quot;본문 11페이지에서는 t-SNE 관련 질문 예시를 &#x27;Table 8&#x27;로 지칭하나 Appendix E에서는 동일 표가 &#x27;Table 7&#x27;로 표기되어 있어, 논문 자체 내 표 번호 불일치가 존재한다(논문 원문의 오기로 추정되며 보고서 서술의 오류는 아님).&quot;, &#x27;claim_type&#x27;: &#x27;analyst_inference&#x27;, &#x27;pages&#x27;: [11]}</li></ul>
         </section>
         
   </main>
