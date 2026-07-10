@@ -8,6 +8,7 @@
 - 메인 페이지: `index.html`
 - 논문 리뷰: `papers/`
 - 코드 분석: `code-analysis/`
+- 정보 수집: `research/`
 
 ## 현재 구성
 
@@ -18,6 +19,8 @@
   - 프로젝트 단위로 묶인 코드베이스 분석
   - 예: `PJRT`
   - 각 문서는 코드 리딩 순서, 로직 다이어그램, Mermaid 도식을 포함
+- 정보 수집 탭
+  - 특정 주제에 대한 문서, 링크, 메모를 모아 핵심 요약과 쟁점으로 정리
 - 기술 노트 탭
   - 실험, 아이디어, 기타 기술 정리용
 
@@ -30,7 +33,9 @@
 ```text
 queue/papers/pending/
 queue/code-analysis/pending/
+queue/research/pending/
 references/code-analysis/
+references/research/
 ```
 
 주요 출력 경로:

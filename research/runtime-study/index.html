@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가속기 Runtime 역할 및 Interface 정보 수집</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+    header {
+      padding: 64px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, pre {
+      margin: 0 0 1.05em;
+    }
+    ul {
+      padding-left: 1.3em;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-shell">
+      <p class="eyebrow">정보 수집</p>
+      <h1>가속기 Runtime 역할 및 Interface 정보 수집</h1>
+      <p class="summary">CUDA, Level Zero, PJRT, UPMEM Runtime을 비교해 LPDDR6-PIM Runtime 구조와 API 설계에 반영하기 위한 조사 계획과 정보 지도를 정리한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-11</span>
+        <span class="tag">runtime</span><span class="tag">accelerator</span><span class="tag">CUDA</span><span class="tag">Level Zero</span><span class="tag">PJRT</span><span class="tag">UPMEM</span><span class="tag">LPDDR6-PIM</span><span class="tag">CHAMP-PIM</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell">
+    <article>
+      <h1>가속기 Runtime 역할 및 Interface 분석 — 정보 수집 보고서 (LP6-PIM Runtime 설계 준비)</h1>
+<h2>한 줄 요약</h2>
+<p>유일한 참고 문서인 runtime study 계획서(`runtime-study-plan.md`)가 이미 담고 있는 &quot;역할 13분류 · 자원 7분류 · 12단계 처리 흐름 · 5개 내부 인터페이스 구조체&quot;를 CUDA / Level Zero / PJRT / UPMEM 공통 분석 프레임으로 재구성하고, 각 시스템별 자료 수집 우선순위와 LP6-PIM Runtime 6개 구성요소(ExecutionDomain, Resource Manager, Task Scheduler, Stream Executor, Command Backend, Completion Tracker) 초안, 그리고 아직 원문이 없어 단정할 수 없는 확인 필요 항목을 정리했다.</p>
+<p>---</p>
+<h2>수집 범위</h2>
+<p>**포함한 것**</p>
+<ul><li>참고 문서: `references/raw/runtime-study/runtime-study-plan.md` (추출본 `references/text/runtime-study__runtime-study-plan.txt`, 원본 위치 `/home/sam/paper-review/references/research/runtime-study/runtime-study-plan.md`) 1건. 이 계획서의 역할 분류(§3), 자원 분류(§4), 시스템별 분석 방법(§5), 내부 인터페이스(§6), 12단계 흐름(§7), LP6-PIM 연결 항목(§8), 작업 순서(§9)와 우선순위(§10)를 기준으로 삼았다.</li><li>CUDA Runtime/Driver API, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK에 대한 일반 지식 — 단, 공식 문서 원문이 reference에 없으므로 전부 표시를 달아 구분했다.</li><li>LP6-PIM(LPDDR6-PIM) Runtime 설계 초안으로의 연결.</li></ul>
+<p>**제외한 것**</p>
+<ul><li>계획서 §10에서 &quot;이후 분석&quot;으로 미룬 항목(Multi-stream Scheduling, Cost Model, Profiling, QoS, Power-aware Scheduling)의 상세 조사.</li><li>ROCm/HIP, oneDNN, Vulkan 등 계획서가 분석 대상으로 지정하지 않은 runtime.</li></ul>
+<p>**표기 규약** (본문 전체에서 사용)</p>
+<p>| 표기 | 의미 | |---|---| | [계획서 §n] | `runtime-study-plan.md`의 해당 절에 근거한 내용 | | [배경지식] | 참고 문서에 없는 일반 지식. 공식 문서 확보 후 재검증 필요 | | [추정] | 계획서 또는 배경지식에서 유추한 해석 | | [확인 필요] | 다음 자료 수집에서 검증해야 할 항목 |</p>
+<p>참고: `job.json`과 `references/manifest.json`에 docs URL 메타데이터는 없다(`source.docs`가 빈 배열). 본문에 나오는 URL은 전부 [배경지식]이다.</p>
+<p>---</p>
+<h2>핵심 요약</h2>
+<p>1. **분석 프레임은 이미 완성도가 높다.** 계획서는 Runtime 역할 13분류(§3), 자원 할당 7분류(§4), 외부 관찰 9단계 실행 흐름(§5.3), 내부 12단계 처리 흐름(§7), 계층 경계 5단(§5.5), 내부 인터페이스 구조체 5종(§6)을 갖추고 있다. 새 프레임을 만들 필요 없이 이 프레임을 4개 시스템에 그대로 적용하는 것이 다음 단계다. 2. **공통 객체 6종이 비교의 축이다.** Device, Context, Buffer, Executable, Queue/Stream, Event/Fence(/Future)는 계획서 §5.2의 객체 표 그대로 4개 시스템 모두에 대응 가능하며[계획서 §2 중점 객체 목록], 가장 먼저 정리할 용어는 계획서 Phase 0의 10개 용어다. 3. **각 시스템은 LP6-PIM의 서로 다른 설계 질문에 대응한다.** CUDA → API 2계층화(무엇을 숨기고 무엇을 노출할 것인가), Level Zero → 명령 기록과 제출의 분리(Stream Executor/Command Backend 구조), PJRT → Compiler-Runtime 계약, UPMEM → 실존 PIM의 자원 할당·실행 흐름 [계획서 §2 각 분석 목적]. 4. **LP6-PIM의 근본 차이는 &quot;메모리 자원과 연산 자원의 결합&quot;이다.** 별도 device memory를 가진 GPU/NPU와 달리 연산 대상 DRAM 공간 자체가 실행 자원이며, bank/row/register/timing 상태를 Runtime이 추적하고 bank/PU 충돌을 Runtime이 직접 판단한다는 것이 계획서의 핵심 가정이다[계획서 §8.5]. 단, 계획서 스스로 &quot;가능성&quot;이라는 표현을 쓰고 있어 이 가정은 검증 대상이다. 5. **내부 모듈 파이프라인 초안이 존재하지만 경계가 한 곳 어긋난다.** 계획서 §11은 Task Scheduler → Stream Executor → Command Backend → Driver 순서인데, §6.5는 Stream Executor가 이미 완성된 `command_buffer`를 Driver/HAL에 넘기는 것으로 기술한다. Command Lowering이 어느 모듈 소관인지가 설계 쟁점이다. 6. **참고 원문이 계획서 1건뿐이다.** CUDA/L0/PJRT/UPMEM에 대한 모든 API 수준 서술은 현재 [배경지식] 상태이며, 계획서 §13이 지정한 외부 공식 자료 6종과 내부 자료 4종(홍pim.pdf, Micron LPDDR6-PIM draft, Overview md, kickoff pdf)은 아직 reference로 확보되지 않았다. 7. **수집 우선순위는 계획서 §10이 이미 확정했다.** ① CUDA Runtime vs Driver API 차이 ② Stream/Event/Context/Memory 객체 관계 ③ Level Zero Command List/Queue ④ Runtime 내부 Task/Resource/Submission 구조 ⑤ Compiler-Runtime-Driver 경계 순이며, PJRT와 UPMEM은 그다음이다. 8. **Completion 모델이 LP6-PIM에서 독특해질 수 있다.** 계획서 §8.1이 &quot;Operation Completion Timing&quot;을 Runtime 관리 상태로 지정한 것은, interrupt/polling 대신 DRAM timing 기반의 결정론적 완료 판정 가능성을 시사한다[추정 — LP6-PIM spec 확인 필요].</p>
+<p>---</p>
+<h2>정보 지도</h2>
+<h3>계층 구조와 내부 모듈 파이프라인 [계획서 §5.5, §11 재구성]</h3>
+<div class="mermaid">flowchart TD
+ APP[&quot;Application / Framework / (PyTorch, JAX, CHAMP Compiler 등)&quot;] --&gt; API[&quot;Runtime API / (CUDA RT · Level Zero · PJRT · UPMEM Host API · LP6-PIM API)&quot;]
+ subgraph RT[&quot;Runtime 내부 모듈 — 계획서 §11 초안&quot;]
+ V[&quot;Request Validator&quot;] --&gt; TN[&quot;Task Normalizer&quot;]
+ TN --&gt; DEP[&quot;Dependency Manager&quot;]
+ DEP --&gt; RM[&quot;Resource Manager&quot;]
+ RM --&gt; TS[&quot;Task Scheduler&quot;]
+ TS --&gt; SE[&quot;Stream Executor&quot;]
+ SE --&gt; CB[&quot;Command Backend / (위치는 쟁점 1 참조)&quot;]
+ CT[&quot;Completion Tracker&quot;]
+ end
+ API --&gt; V
+ CB --&gt; DRV[&quot;Driver / HAL&quot;]
+ DRV --&gt; FW[&quot;Firmware / Controller / (LP6-PIM에서 존재 여부 확인 필요)&quot;]
+ FW --&gt; HW[&quot;Hardware&quot;]
+ DRV -. &quot;interrupt / polling / fence&quot; .-&gt; CT
+ CT -. &quot;Event Signal · 객체 상태 갱신&quot; .-&gt; API</div>
+<h3>공통 객체 대응표 (계획서 §2의 시스템별 중점 객체를 §5.2 공통 객체 축으로 재배열)</h3>
+<p>| 공통 객체 | CUDA [계획서 §2.1] | Level Zero [계획서 §2.2] | PJRT [계획서 §2.3] | UPMEM [계획서 §2.4] | LP6-PIM 후보 [계획서 §8] | |---|---|---|---|---|---| | Device | Device | Driver → Device | Client가 노출하는 Device / Addressable Device | DPU Set(rank/DPU 단위) | Device + Sub-channel | | Context | Context(Primary/명시적) | Context | Client가 겸함 [추정] | DPU Set이 세션 역할 [추정] | ExecutionDomain + Register Context | | Buffer | Device Memory | Memory Allocation | Buffer | MRAM/WRAM Buffer | Bank/Row mapping이 붙은 PIM Buffer | | Executable | Module + Kernel/Function | Module + Kernel | LoadedExecutable | DPU Binary | Primitive → Internal Task 프로그램(§8.3) | | Queue/Stream | Stream | Command Queue + Command List | 내부 stream, 사용자 비노출 [배경지식] | Launch 단위(rank별) [추정] | Stream Executor가 관리하는 Stream | | Event/Fence/Future | Event | Event + Fence | Future / Ready Event | Synchronization | Completion Tracker의 Event/Fence |</p>
+<p>행 배치 자체는 이번 정리에서의 재구성이며, [추정]/[배경지식] 표시 칸은 Phase 5 비교 분석(계획서 §9)에서 검증해야 한다.</p>
+<h3>시스템 → LP6-PIM 설계 질문 대응</h3>
+<p>| 시스템 | 가르쳐 주는 것 [계획서 §2 분석 목적] | LP6-PIM에서 답할 질문 | |---|---|---| | CUDA RT/Driver | 고수준 API가 숨기는 것과 저수준 API가 노출하는 것의 구분 | LP6-PIM API를 2계층으로 나눌 것인가, 경계는 어디인가 | | Level Zero | 명령 기록(Command List)과 제출(Command Queue)의 분리, Event vs Fence | Stream Executor / Command Backend / Completion Tracker의 구체 구조 | | PJRT | Compiler↔Runtime 계약(Executable, Buffer, Future) | CHAMP Compiler가 Runtime에 넘길 Primitive Descriptor와 metadata | | UPMEM | 실제 PIM의 자원 집합 할당, 전송, launch 흐름 | LP6-PIM 자원 할당 단위와 host↔PIM 데이터 이동 모델 |</p>
+<p>---</p>
+<h2>세부 정리</h2>
+<h3>1. 공통 Runtime 분석 프레임</h3>
+<h4>1.1 공통 객체 — 가장 먼저 정리할 용어 (질문 1에 대한 답)</h4>
+<p>계획서 Phase 0(§9)이 지정한 10개 용어가 출발점이다: **Device, Context, Buffer/Memory Object, Module/Executable, Kernel/Primitive/Task, Stream/Queue, Event/Fence/Future, Command List/Command Buffer, Resource Reservation, Submission/Completion**. 산출물은 `runtime_common_terms.md`.</p>
+<p>이 중 시스템 간 의미 차이가 커서 정의를 먼저 고정해야 하는 것 세 가지를 뽑으면:</p>
+<ul><li>**Context** — CUDA는 프로세스별 주소 공간+실행 상태, Level Zero는 자원 소유 컨테이너, PJRT는 명시 객체가 없음(Client가 겸함) [배경지식]. LP6-PIM에서는 &quot;Register + Bank + PIM Mode Context&quot;로 재정의된다[계획서 §8.5]. 즉 Context는 시스템마다 격리 범위가 다르므로 &quot;무엇으로부터의 격리인가&quot;를 축으로 정의해야 한다.</li><li>**Command List vs Queue/Stream** — 명령의 *기록 컨테이너*와 *제출 대상*을 분리하는지(L0)와 합쳐 놓는지(CUDA stream)가 갈린다. LP6-PIM Command Backend 산출물의 형태를 결정하는 용어다.</li><li>**Event vs Fence vs Future** — 명령 단위 세밀 동기화(Event), 제출 단위 완료(Fence), 상위 계층으로의 비동기 결과 전달(Future)로 층위가 다르다[계획서 §2.2, §2.3의 분석 목적에서 이 구분을 요구]. Completion Tracker가 셋 중 무엇을 제공할지 정해야 한다.</li></ul>
+<p>공통 객체 표 템플릿은 §5.2에 있다(객체 | 역할 | 생성 API | 제거 API | 내부 상태). 시스템별 분석 시 이 표를 그대로 채운다.</p>
+<h4>1.2 공통 처리 단계</h4>
+<p>계획서는 두 개의 흐름을 제공하며, 둘을 겹쳐 읽어야 한다.</p>
+<p>**외부에서 관찰되는 9단계** [계획서 §5.3]: Device 선택 → Context 준비 → Memory 할당 → Binary/Module Load → Data Copy → Kernel/Task Submit → Queue 실행 → Completion 확인 → Resource 해제. 각 단계마다 호출 API, 입력 인자, 생성/변경 객체, 동기/비동기 여부, Driver 호출 여부, 실패 조건, 완료 확인 방법을 기록한다.</p>
+<p>**내부 12단계** [계획서 §7]와 §11 모듈 파이프라인의 대응 (이번 정리에서의 재구성):</p>
+<p>| 12단계 | 내용 | 담당 모듈 [계획서 §11 기준 매핑, 재구성] | |---|---|---| | 1–2 | API 호출, 입력·Capability 검증 | Runtime API + Request Validator | | 3 | Primitive/Kernel 요청 → 내부 Task 변환 | Task Normalizer | | 4 | 데이터·제어 의존성 등록 | Dependency Manager | | 5–6 | 자원 상태 조회, 실행 자원 예약 | Resource Manager | | 7 | 실행 순서·병렬성 결정 | Task Scheduler | | 8 | Device-specific Command로 Lowering | Command Backend | | 9 | Driver/Firmware에 제출 | Stream Executor (→ 쟁점 1: Backend와의 순서) | | 10 | 완료 상태 추적 | Completion Tracker | | 11–12 | 객체·자원 상태 갱신, 해제 및 Event Signal | Completion Tracker + Resource Manager |</p>
+<p>이 매핑에서 8단계(Lowering)와 9단계(제출)의 담당 모듈 순서가 계획서 내부에서 일관되지 않다는 점이 드러난다(쟁점 1).</p>
+<h4>1.3 자원 할당 종류</h4>
+<p>&quot;Runtime이 자원을 할당한다&quot;를 7종으로 세분화한다[계획서 §4]. LP6-PIM 예시는 계획서가 직접 제시한 것이다.</p>
+<p>| 자원 종류 | 의미 | GPU 예시 | LP6-PIM 예시 [계획서 §4] | |---|---|---|---| | 메모리 자원 | Device 주소 공간/Buffer 확보 | `cudaMalloc` | PIM memory region | | 실행 Context | Process/Session별 실행 상태 | CUDA Context | Register+Bank+Mode Context [§8.5] | | 제출 자원 | Queue/Stream/Command List 생성 | CUDA Stream, L0 Queue | Stream Executor의 Stream | | 연산 자원 | 실행 유닛에 작업 배치 | GPU SM | PIM Bank Set (+PU) | | 임시 자원 | Register, Scratchpad | Shared Memory | IR/SR/OR Register | | 시간 자원 | 실행 가능 시점·예약 기간 | Event dependency | Command Timing, reservation | | 전송 자원 | DMA/Copy engine | H2D/D2H engine | [확인 필요 — LP6에 전용 전송 엔진이 있는지] |</p>
+<p>핵심 관찰: 기존 GPU runtime에서는 메모리 자원(1)과 연산 자원(4)이 독립적으로 할당되지만, LP6-PIM에서는 데이터가 놓인 bank가 곧 연산 위치이므로 두 할당이 결합된다[계획서 §8.5 &quot;Memory: 연산 대상 DRAM 공간과 결합&quot;, &quot;Data Placement: Bank/Row/Layout Mapping 중요&quot;]. 이것이 Resource Manager 설계의 출발점이다.</p>
+<h4>1.4 상위 계층 / Runtime / Driver / HAL 경계</h4>
+<p>계층 스택은 Application·Framework → Runtime API → Runtime 내부 모듈 → Driver/HAL API → Firmware/Controller → Hardware [계획서 §5.5]. 경계마다 오가는 정보를 계획서 §6이 구조체 5종으로 규정했고, 각 구조체에 붙은 &quot;확인할 내용&quot;이 곧 시스템별 분석 질문이다.</p>
+<p>| 경계 | 구조체 [계획서 §6] | 핵심 필드 | 붙어 있는 핵심 질문 | |---|---|---|---| | 상위 계층 → Runtime | `SubmitRequest` | executable/operator, in/out buffers, shape·dtype·layout, stream, dependency_events, hints | Buffer Handle인가 물리 주소인가, Priority/Deadline/Exclusive 표현 가능한가 | | Task Normalizer → Resource Manager | `TaskResourceRequest` | 필요 compute/memory 자원, register 사용량, 임시 저장, exclusive 요구 | 자원 요구량이 정적인가 실행 중 계산인가, Copy/Layout 변환 Task를 추가 생성하는가 | | Resource Manager → Scheduler | `ResourceDecision` | runnable, selected_resource, reservation_token, conflicting_tasks, earliest_start_time | 예약과 실제 사용을 구분하는가, 대기 사유를 표현하는가, 예약 취소·복구 가능한가 | | Scheduler → Stream Executor | `ScheduledTask` | task, selected_execution_domain, wait/signal events | Scheduler가 Queue까지 선택하는가, Queue 간 의존성 표현, batching | | Stream Executor → Driver/HAL | `DriverSubmission` | command_buffer, referenced_buffers, wait/signal events, completion_cookie | 고수준 Task를 넘기는가 완성된 Command Buffer를 넘기는가, Driver가 추가 스케줄링 하는가, 완료 통지는 interrupt/polling/fence 중 무엇인가 |</p>
+<p>**Scheduling 책임 분해 표** [계획서 §5.4]: Tiling, Memory Placement, Queue 선택, Compute Unit 배치, Register 사용, Command Timing, Completion 판단의 7개 결정 항목 × Compiler/Runtime/Driver/Firmware/Hardware 5주체. 계획서에서 이 표는 의도적으로 빈 템플릿이다 — 시스템별 분석에서 채워야 할 답이다. 다만 LP6-PIM 열에 대해서는 계획서 §8.5가 이미 가설을 제시했다: Compute Unit 배치와 충돌 판단은 Runtime, Command Timing은 Command Backend, Register 상태 추적은 Runtime &quot;가능성&quot;. 이 가설의 검증이 전체 분석의 목적 함수다.</p>
+<p>---</p>
+<h3>2. 시스템별 정보 수집 로드맵</h3>
+<p>공통 원칙: 각 시스템에 대해 §5의 동일 템플릿(기본 정보 → 객체 표 → 실행 흐름 → Scheduling 주체 표 → Interface 경계)을 채우는 것이 목표이며, 아래 우선순위는 계획서 §10(CUDA·L0 최우선, PJRT·UPMEM 다음)을 따른다. 아래에 나오는 구체 문서명·URL·API명은 계획서 §13의 문서 목록을 제외하면 전부 [배경지식]이므로 확보 후 검증해야 한다.</p>
+<h4>2.1 CUDA (우선순위 1)</h4>
+<p>**왜 먼저인가**: 고수준 Runtime API와 저수준 Driver API의 역할 차이가 &quot;Runtime이 무엇을 숨기고 무엇을 Driver에 위임하는가&quot;를 가장 잘 보여준다[계획서 §2.1]. LP6-PIM API 계층화 결정의 직접 근거가 된다.</p>
+<p>**수집 순서**</p>
+<p>1. NVIDIA CUDA Runtime API Documentation [계획서 §13] — Device/Memory/Stream/Event/Execution Control 모듈 중심. [배경지식: docs.nvidia.com/cuda/cuda-runtime-api] 2. CUDA C++ Programming Guide [계획서 §13] — Streams, Events, Context(Primary Context), 비동기 실행 장. 3. NVIDIA CUDA Driver API Documentation [계획서 §13] — `cuCtx*`, `cuModule*`, `cuLaunchKernel` 계열과 &quot;Runtime과 Driver API의 상호작용&quot; 절(primary context 공유 규칙) [배경지식]. 4. 예제: cuda-samples의 `vectorAdd`(Runtime API판)와 `vectorAddDrv`(Driver API판)를 같은 흐름으로 비교 [배경지식].</p>
+<p>**추적할 코드 흐름** [계획서 §11 작업 1]: `cudaSetDevice → cudaMalloc → cudaMemcpyAsync → cudaLaunchKernel → cudaEventRecord → cudaEventSynchronize → cudaFree`. 호출마다 입력/생성 객체/수정 상태/실행 주체/비동기 여부/완료 확인/오류(즉시 vs 지연)를 표로 기록.</p>
+<p>**채울 산출물**: `cuda_runtime_analysis.md`, `cuda_runtime_sequence.md`, `cuda_runtime_vs_driver_api.md` [계획서 Phase 1]. 특히 Runtime↔Driver 대응표(작업 2)는 [배경지식] 수준에서 `cudaSetDevice↔cuDevicePrimaryCtxRetain+cuCtxSetCurrent`, `cudaMalloc↔cuMemAlloc`, `cudaLaunchKernel↔cuLaunchKernel` 대응이 예상되나 문서로 확정해야 한다[확인 필요].</p>
+<p>**LP6-PIM에 주는 힌트 (질문 2에 대한 답)**</p>
+<ul><li>Runtime API는 Context를 암묵 관리(primary context)하고 Driver API는 명시 관리한다[배경지식]. 같은 방식으로 LP6-PIM도 **ExecutionDomain을 암묵 관리하는 고수준 API**(framework용)와 **도메인·register context를 명시 제어하는 저수준 API**(HAL 검증·튜닝용)의 2계층으로 나눌 수 있다.</li><li>`cudaMalloc`(메모리 자원)과 kernel launch(연산 자원 사용)가 분리된 구조를 기준선으로 삼아, LP6-PIM에서 두 할당이 결합될 때 API에 무엇이 추가로 필요한지(bank/row 지정, PU mask)를 역으로 도출한다.</li><li>오류의 즉시 반환/지연 반환 구분[계획서 Phase 1 체크리스트]은 LP6-PIM Completion Tracker의 error 모델(제출 시 오류 vs 실행 중 오류)의 참조 모델이다.</li></ul>
+<h4>2.2 Level Zero (우선순위 2)</h4>
+<p>**왜인가**: Command List(기록)와 Command Queue(제출)의 분리 구조가 CHAMP-PIM의 Stream Executor와 Command Backend 구조를 구체화하는 직접 모델이다[계획서 §2.2].</p>
+<p>**수집 순서**</p>
+<p>1. Intel Level Zero Specification [계획서 §13] — Core API의 Driver/Device 열거, Context, Memory, Module/Kernel, Command List, Command Queue, Event/Event Pool, Fence 장 순서로. [배경지식: github.com/oneapi-src/level-zero, spec.oneapi.io] 2. 최소 예제(`zello_world` 류)로 초기화→모듈 로드→list 기록→queue 제출→동기화 전체 시퀀스 추적 [배경지식]. 3. 심화: Immediate Command List vs 일반 Command List, Command List 재사용 조건, Queue Group과 engine 종류(compute/copy ordinal) [계획서 Phase 2 체크리스트].</p>
+<p>**채울 산출물**: `level_zero_runtime_analysis.md`, `level_zero_command_flow.md`, `level_zero_event_fence.md`.</p>
+<p>**CHAMP-PIM에 주는 힌트 (질문 3에 대한 답)**</p>
+<ul><li>Command List = &quot;lowering된 명령의 재사용 가능한 컨테이너&quot;. LP6-PIM Command Backend의 산출물을 일회성 제출이 아니라 **PIM command list 객체**로 만들면, 같은 GEMV tile 시퀀스를 반복 실행할 때 lowering 비용을 절약할 수 있다. 단, active row·register 상태가 동적으로 변하면 재사용성이 깨질 수 있다(쟁점 3).</li><li>Command Queue 제출이 별도 단계라는 점이 Stream Executor(제출 담당)와 Command Backend(생성 담당)를 다른 모듈로 두는 근거가 된다.</li><li>Event(명령 단위, list 간 의존성 표현)와 Fence(queue 제출 단위 완료)의 이원 구조[계획서 §2.2 분석 목적]는 Completion Tracker가 **Task 단위 완료와 제출 단위 완료를 구분**해야 함을 시사한다.</li><li>Immediate Command List는 기록-제출 분리를 생략하는 저지연 경로다[배경지식]. 작은 PIM 연산(단발 GEMV)용 fast path 설계의 참조가 된다.</li></ul>
+<h4>2.3 PJRT / OpenXLA (우선순위 3)</h4>
+<p>**왜인가**: Compiler/Framework와 Device Runtime 사이 &quot;계약&quot;의 표준 사례로, CHAMP Compiler와 Runtime 사이 Interface 설계에 참고한다[계획서 §2.3].</p>
+<p>**수집 순서**</p>
+<p>1. OpenXLA PJRT C++ API Overview [계획서 §13] — Client/Device/Buffer/LoadedExecutable 개념 문서. [배경지식: openxla.org/xla/pjrt] 2. PJRT C API 헤더와 C++ 인터페이스 [배경지식: openxla/xla repo의 `xla/pjrt/c/pjrt_c_api.h`, `xla/pjrt/pjrt_client.h`] — Backend Plugin이 구현해야 하는 함수 집합 확인[계획서 Phase 3 체크리스트]. 3. Plugin 구현 사례(CPU/GPU plugin) 코드 흐름 [배경지식]. 4. 예제: JAX 간단 프로그램에서 compile→execute→result 회수까지 PJRT 호출 추적.</p>
+<p>**채울 산출물**: `pjrt_interface_analysis.md`, `compiler_runtime_contract.md`.</p>
+<p>**LP6-PIM에 주는 힌트 (질문 4에 대한 답)**</p>
+<ul><li>**Executable(컴파일 산출물)과 LoadedExecutable(device에 로드된 상태)의 분리**[계획서 Phase 3 체크리스트]는 CHAMP Compiler 산출물(Primitive Descriptor 등)과 &quot;특정 ExecutionDomain에 로드·바인딩된 실행체&quot;를 다른 객체로 관리하라는 힌트다.</li><li>Buffer가 device 위치·layout을 캡슐화하고 **비동기 ready 상태**를 갖는 구조는, LP6-PIM Buffer에 bank/row/layout mapping을 속성으로 넣고 준비 완료를 event로 표현하는 모델의 참조다.</li><li>Future 기반 완료/오류 전달[계획서 §2.3 중점 객체]은 Runtime 내부의 Event/Fence와 별개로 **상위 계층에 노출할 비동기 결과 표현**이 따로 필요함을 보여준다 — Completion Tracker의 외부 인터페이스.</li><li>`ExecuteOptions`는 계획서 §6.1 `SubmitRequest.execution_hints` 필드의 실존 사례다. Compiler가 Runtime에 넘기는 metadata 목록(shape, layout, donation 등)을 여기서 수집한다[확인 필요].</li></ul>
+<h4>2.4 UPMEM SDK (우선순위 4)</h4>
+<p>**왜인가**: 상용 PIM runtime의 실물로, 자원 할당 단위와 host-PIM 데이터 이동, binary load, launch 구조를 LP6-PIM과 직접 비교할 수 있다[계획서 §2.4].</p>
+<p>**수집 순서**</p>
+<p>1. UPMEM SDK Documentation [계획서 §13] — Host Library(`dpu.h`) 사용자 매뉴얼과 DPU Runtime 문서. [배경지식: sdk.upmem.com] 2. 공식 예제 [계획서 §13] — `dpu_alloc → dpu_load → dpu_copy_to/dpu_push_xfer → dpu_launch → dpu_copy_from → dpu_free` 전체 흐름이 있는 예제 1개를 기준 시퀀스로 [배경지식: SDK 동봉 예제, 추가로 PrIM 벤치마크 스위트]. 3. 심화: rank 단위 병렬 전송(`dpu_prepare_xfer`/`dpu_push_xfer`), 비동기 launch 지원 여부, DPU별/Rank별 자원 관리 단위, Runtime-Driver 경계 [계획서 Phase 4 체크리스트].</p>
+<p>**채울 산출물**: `upmem_runtime_analysis.md`, `upmem_vs_lp6_pim.md`.</p>
+<p>**LP6-PIM과의 같고 다름 (질문 5에 대한 답, 현 시점 정리)**</p>
+<p>같은 점 [추정, Phase 4에서 검증]:</p>
+<ul><li>자원을 개별 유닛이 아니라 **집합 단위로 할당** (DPU Set ↔ LP6의 Bank Set/PU 집합).</li><li>명시적 binary/program load 단계가 존재 (DPU Binary ↔ CONFIG_DEVICE/CONFIG_REGISTER 류의 준비 task [계획서 §8.3]).</li><li>host↔PIM 데이터 이동이 명시적 Transfer 단계로 분리되고, Launch 후 Synchronization으로 완료를 확인.</li></ul>
+<p>다른 점 [계획서 §8.5의 차이 표에 근거]:</p>
+<ul><li>UPMEM DPU는 독립 코어+전용 MRAM/WRAM으로 &quot;코어 중심&quot; 실행 단위인 반면, LP6-PIM은 Sub-channel+Bank Set 중심이며 연산 대상이 host가 쓰는 DRAM 공간과 결합된다.</li><li>UPMEM runtime은 DRAM row/timing/register 상태를 사용자에게 노출하지 않는 것으로 보이나[추정], LP6-PIM은 Active Row, IR/SR/OR, Command Timing을 Runtime이 추적할 가능성이 있다.</li><li>데이터 이동이 UPMEM은 &quot;복사&quot; 모델인 반면 LP6-PIM은 Bank/Row/Layout mapping(placement) 문제가 중심이 된다.</li></ul>
+<p>---</p>
+<h3>3. LP6-PIM Runtime 설계 연결</h3>
+<p>기존 runtime 분석 결과를 계획서 §8의 LP6-PIM 항목과 §11 모듈 초안에 연결한다. 각 구성요소마다 &quot;정의 초안(계획서 근거) — 참조 모델 — 열린 설계 질문&quot; 순으로 정리한다.</p>
+<h4>3.1 ExecutionDomain</h4>
+<p>**정의 초안** [계획서 §8.2]: `{ device_id, subchannel_id, bank_set(EVEN|ODD), active_row, pu_mask, register_context, pim_mode, pit_group }`. 실행이 일어나는 격리·충돌 판단 단위.</p>
+<p>**참조 모델**: CUDA Context(격리 범위) + Level Zero Command Queue(제출 대상 바인딩) + GPU SM(연산 자원 슬롯)의 결합체에 해당한다[재구성]. 기존 runtime에서 세 개념이 분리돼 있던 것이 LP6-PIM에서는 메모리-연산 결합 때문에 하나로 묶인다는 것이 계획서의 관점이다[계획서 §8.5 Context 행: &quot;Register + Bank + PIM Mode Context&quot;].</p>
+<p>**열린 질문**: ① `active_row`는 도메인의 정체성인가, 도메인이 가진 동적 상태인가(도메인 수명 결정에 직결). ② 도메인과 Stream이 1:1인가 N:1인가. ③ 도메인 전환 비용(register 저장/복원, PREmb/ACTmb)은 누가 계산하는가. [모두 LP6-PIM spec 확인 필요]</p>
+<h4>3.2 Resource Manager</h4>
+<p>**정의 초안**: `TaskResourceRequest`를 받아 `ResourceDecision`(runnable 여부, reservation_token, conflicting_tasks, earliest_start_time)을 반환한다[계획서 §6.2–6.3]. 추적해야 할 상태는 계획서 §8.1의 11종: PIM Enable State, Sub-channel, Even/Odd Bank Set, Active Row, PU Ownership, IR/SR/OR Register State, RICR/RISR State, PIT Group, PIMX Mode, Command Timing, Operation Completion Timing.</p>
+<p>**참조 모델**: UPMEM의 DPU Set 할당(집합 단위 할당·해제)이 가장 가까운 실물이고, CUDA `cudaMalloc`류의 메모리 할당과 GPU의 암묵적 SM 배치가 분리 기준선이다. LP6-PIM에서는 이 둘이 결합되므로 Allocation Table에 bank/row/layout이, Resource Table에 PU ownership과 register 상태가 함께 들어가야 한다[계획서 Phase 6 체크리스트: Resource Table/Allocation Table 필드 정의].</p>
+<p>**질문 6에 대한 현 시점 답 (Runtime 직접 추적 vs 위임)**: 계획서 §8.1 목록이 &quot;Runtime이 관리해야 할 상태&quot; 후보 전체다. 이 중 논리 소유권(PU Ownership, Bank Set 예약, PIT Group 구성, Buffer↔Row mapping)은 충돌 판단에 필요하므로 Runtime 추적이 불가피해 보이고[계획서 §8.5 Scheduling 행], **cycle 수준 Command Timing 집행과 인터럽트 처리, 실제 register write의 물리 시퀀스는 Driver/HAL(또는 존재한다면 Firmware/Controller)로 내릴 수 있는 후보**다[추정]. 단 계획서 §8.5는 Timing을 &quot;Backend가 고려&quot;라고 적어 Runtime 쪽에 두는 가정이므로, 이 경계는 쟁점 2로 남는다.</p>
+<h4>3.3 Task Scheduler</h4>
+<p>**정의 초안**: `ResourceDecision`을 받아 실행 순서와 병렬성을 결정하고, `ScheduledTask{task, selected_execution_domain, wait_events[], signal_event}`를 산출한다[계획서 §6.4]. 내부 Task 어휘는 계획서 §8.3의 13종(CONFIG_DEVICE, CONFIG_REGISTER, LOAD_VECTOR, LOAD_SCALE, CLEAR_OUTPUT, ACTIVATE_BANK_SET, GEMV_TILE, STORE_OUTPUT, PRECHARGE_BANK_SET, READ_REGISTER, WRITE_REGISTER, RESET_CONTEXT)이다.</p>
+<p>**참조 모델**: CUDA Stream ordering(같은 stream 내 in-order 보장)과 Event 기반 cross-stream 의존성이 순서 의미론의 기준선. GPU에서는 SM 배치를 HW가 하지만 LP6-PIM에서는 Even/Odd Bank Set 병렬성과 Bank/PU 충돌 회피를 Scheduler가 직접 판단한다는 것이 계획서의 가정이다[계획서 §8.5 Scheduling 행].</p>
+<p>**열린 질문**: Scheduler가 Queue(도메인)까지 선택하는가, Task batching(여러 GEMV_TILE 묶음 제출)을 지원하는가[계획서 §6.4 확인 내용]. Even/Odd 동시 활성화의 하드웨어 제약은 spec 확인 필요.</p>
+<h4>3.4 Stream Executor</h4>
+<p>**정의 초안**: 도메인/stream별 제출 창구. `ScheduledTask`를 받아 in-order 제출을 보장하고 stream 간 의존성을 event로 연결하며, `DriverSubmission{command_buffer, referenced_buffers, wait/signal events, completion_cookie}`를 Driver/HAL에 넘긴다[계획서 §6.5].</p>
+<p>**참조 모델**: Level Zero Command Queue가 직접 모델이다[계획서 §2.2 분석 목적: &quot;CHAMP-PIM의 Stream Executor... 구조 구체화&quot;]. CUDA stream의 암묵 제출과 L0의 명시 제출 중 어느 쪽을 외부 API로 노출할지는 CUDA 2계층 분석(§2.1) 결과에 달려 있다.</p>
+<p>**열린 질문(쟁점 1과 직결)**: §6.5에서는 Executor가 이미 완성된 command_buffer를 넘기는데, §11 파이프라인에서는 Executor 다음에 Command Backend가 온다. Executor가 Backend를 호출해 lowering을 받아 제출하는 구조인지, Backend가 Driver 직전의 최하층인지 확정해야 한다.</p>
+<h4>3.5 Command Backend</h4>
+<p>**정의 초안**: 논리 Task를 PIM command 시퀀스로 lowering한다. 계획서 §8.4의 GEMV_TILE 예시: Device/GCR/RICR 설정 → ACTmb → LdIREG(또는 WR-R) → LdSREG(또는 WR-R) → PIMX-CLR → LdMAC × N → StOREG(또는 RD-R) → PREmb. DRAM/PIM Command Timing을 이 계층이 고려한다[계획서 §8.5 Timing 행].</p>
+<p>**참조 모델**: Level Zero의 Command List encode(명령을 미리 기록해 두는 것)와 CUDA의 Launch Descriptor 생성[계획서 Phase 1: &quot;`cudaLaunchKernel` 입력과 내부 Launch Descriptor&quot;]이 참조. 기존 GPU에서는 timing을 HW가 처리하지만 LP6-PIM에서는 Backend가 command 간 간격까지 고려해야 할 수 있다는 점이 최대 차이다[계획서 §8.5].</p>
+<p>**열린 질문**: ① 산출물 형태 — HAL이 받는 것이 command buffer인가, register write 목록인가, 고수준 요청인가(§6.5 확인 내용과 동일 질문). ② LdIREG vs WR-R처럼 같은 효과의 명령 변형 중 선택 기준(성능? 모드?)은 spec 확인 필요. ③ N(LdMAC 반복 수)은 Compiler가 주는가 Runtime이 계산하는가 — Compiler/Runtime 경계 질문.</p>
+<h4>3.6 Completion Tracker</h4>
+<p>**정의 초안**: `DriverSubmission.completion_cookie`로 제출과 완료를 매칭하고, polling/interrupt/callback 중 하나로 완료를 감지해[계획서 §3 Completion 처리 행] 객체 상태 갱신과 Event Signal(12단계 중 10–12)을 수행한다. 오류는 제출 시점의 즉시 오류와 실행 중 지연 오류를 구분한다[계획서 §3 Error 처리, §11 작업 1].</p>
+<p>**참조 모델**: L0의 Event(세밀)/Fence(제출 단위) 이원 구조, CUDA Event의 record/query/synchronize, PJRT Future(상위 노출용)의 3층을 조합하는 것이 자연스럽다[재구성].</p>
+<p>**LP6-PIM 특수 가설**: 계획서 §8.1이 &quot;Operation Completion Timing&quot;을 관리 상태로 지정했다. DRAM command timing이 결정론적이라면 interrupt 없이 **시간 기반 완료 판정**이 가능할 수 있다[추정]. 이 경우 Completion Tracker는 &quot;완료 통지를 기다리는&quot; 모듈이 아니라 &quot;완료 시각을 계산하고 검증하는&quot; 모듈이 되어 기존 runtime과 성격이 달라진다. LP6-PIM spec에서 완료 통지 메커니즘(RISR가 상태 register 역할인지 등) 확인이 필요하다[확인 필요].</p>
+<p>---</p>
+<h3>4. 확인 필요 항목</h3>
+<p>현재 reference(계획서 1건)만으로는 단정할 수 없는 항목의 체크리스트. 완료 기준은 계획서 §12의 10개 항목을 설명할 수 있는 상태다.</p>
+<h4>4.1 공식 문서 필요 (현재 원문 미확보 — 계획서 §13 지정 목록)</h4>
+<ul><li>[ ] NVIDIA CUDA Runtime API Documentation — Stream/Event/Memory/Execution Control 절</li><li>[ ] NVIDIA CUDA Driver API Documentation — Context/Module/Launch 절 + Runtime API와의 상호작용 절</li><li>[ ] CUDA C++ Programming Guide — 비동기 실행, Stream ordering 규칙</li><li>[ ] Intel Level Zero Specification — Command List/Queue, Event/Fence, Queue Group 장</li><li>[ ] OpenXLA PJRT C++ API Overview + PJRT C API 헤더</li><li>[ ] UPMEM SDK Documentation — Host Library, DPU Runtime</li><li>[ ] 내부 자료 4건의 reference 등록: `홍pim.pdf`(CHAMP-PIM 연구 범위, Runtime Interface), `Micron_LPDDR6_PIM_Standard_DRAFT (1).pdf`, `LP6_PIM_Runtime_개발방향성_Overview.md`, `LP6_pim_kickoff meeting.pdf` — 계획서가 인용하지만 이번 job의 `references/`에는 없다</li></ul>
+<h4>4.2 예제 코드 필요</h4>
+<ul><li>[ ] CUDA: 동일 연산의 Runtime API판/Driver API판 비교 예제 (vectorAdd/vectorAddDrv 류 [배경지식])</li><li>[ ] Level Zero: 초기화→module→list 기록→queue 제출→fence/event 동기화 최소 예제</li><li>[ ] Level Zero: Immediate Command List 사용 예제와 일반 list 재사용 예제</li><li>[ ] PJRT: plugin 구현 사례(CPU plugin 등)와 JAX→PJRT 호출 추적 로그</li><li>[ ] UPMEM: alloc→load→push_xfer→launch(sync/async)→copy_from 전체 흐름 예제, rank 분산 전송 예제</li></ul>
+<h4>4.3 LP6-PIM spec 확인 필요 (Micron draft 확보 후)</h4>
+<ul><li>[ ] PIM command 각각의 정확한 의미와 인코딩: ACTmb, PREmb, LdIREG, LdSREG, LdMAC, StOREG, PIMX-CLR, WR-R/RD-R (계획서 §8.4에는 이름만 존재)</li><li>[ ] IR/SR/OR register의 개수·폭·bank/PU와의 대응 관계</li><li>[ ] RICR/RISR의 역할 (RISR가 완료/상태 통지 register인지 — Completion 모델 직결)</li><li>[ ] PIT Group의 정의와 구성 단위</li><li>[ ] PIMX Mode 진입/해제 조건과 일반 DRAM 동작과의 배타성</li><li>[ ] Even/Odd Bank Set 동시 활성화 규칙과 timing 제약 (Scheduler 병렬성 판단 근거)</li><li>[ ] Command Timing 제약을 위반했을 때의 동작 (오류 모델 근거)</li><li>[ ] Operation Completion을 하드웨어가 통지하는가, 시간 계산으로만 판정하는가</li></ul>
+<h4>4.4 Compiler/Runtime/HAL 경계 확인 필요 (홍pim.pdf, kickoff pdf 확보 후)</h4>
+<ul><li>[ ] Tiling(GEMV_TILE 분할)과 LdMAC 반복 수 N의 결정 주체 — Compiler인가 Runtime인가</li><li>[ ] Bank/Row/Layout mapping(placement)의 결정 주체 — Compiler, Runtime, 별도 allocator 중 어디인가</li><li>[ ] 상위 계층이 Runtime에 넘기는 것이 Buffer Handle인지 물리 주소인지[계획서 §6.1 확인 내용]</li><li>[ ] HAL API의 형태 — command buffer 수신인가, register read/write primitives인가</li><li>[ ] Firmware/Controller 계층의 존재 여부 (계획서 §5.5 스택에는 있으나 LP6-PIM에 실재하는지 미확인)</li><li>[ ] CHAMP-PIM과 LP6-PIM의 명칭 관계 (과제명 vs 하드웨어 표준 기반 명칭으로 보이나[추정] 정의 문서 필요)</li><li>[ ] PJRT plugin 계약을 CHAMP Compiler-Runtime 경계에 그대로 채택할지 여부</li></ul>
+<p>---</p>
+<h2>쟁점과 불확실성</h2>
+<p>**쟁점 1 — Stream Executor와 Command Backend의 순서/경계 (계획서 내부 불일치).** §6.5는 Stream Executor가 완성된 `command_buffer`를 Driver/HAL에 넘긴다고 기술하는 반면, §11 모듈 파이프라인은 Executor *다음에* Command Backend를 둔다. Lowering(12단계 중 8)이 제출(9)보다 앞서야 한다는 §7과 조합하면, &quot;Executor가 Backend를 호출해 lowering 결과를 받아 제출&quot;하는 구조와 &quot;Backend가 Driver-facing 최하층&quot;인 구조 두 해석이 가능하다. Level Zero 분석(기록과 제출의 분리)이 이 결정의 근거 자료가 된다.</p>
+<p>**쟁점 2 — Scheduling 책임을 Runtime으로 끌어올리는 가정의 강도.** 계획서 §8.5는 GPU/NPU 대비 LP6-PIM에서 Runtime이 Bank/PU 충돌을 직접 판단하고 Backend가 timing을 고려한다고 보지만, Register 행에는 &quot;추적할 가능성&quot;이라는 유보 표현을 썼다. Runtime이 timing까지 관리하면 유연하지만 software 오버헤드가 커지고, HAL/Controller가 흡수하면 Runtime은 단순해지나 하드웨어 요구가 커진다. 어느 쪽이 실현 가능한지는 Micron draft와 kickoff 자료의 HAL 구조를 봐야 판단할 수 있다[확인 필요].</p>
+<p>**쟁점 3 — 기록-제출 분리(L0 모델)와 동적 PIM 상태의 양립성.** Command list 재사용은 lowering 비용을 줄이지만, LP6-PIM command 시퀀스는 active row, register 상태, PIM mode 같은 동적 상태에 의존한다(ACTmb/PREmb가 시퀀스에 포함됨 [계획서 §8.4]). 미리 기록한 list가 제출 시점 상태와 어긋날 수 있으므로, &quot;완전 사전 기록 / parameterized template / 제출 시점 lowering&quot; 중 선택이 필요하다[추정]. L0의 command list 재사용 조건(Phase 2 체크리스트)이 참고 답을 줄 것이다.</p>
+<p>**쟁점 4 — Buffer 객체의 정의 충돌.** 기존 runtime의 Buffer는 위치가 추상화된 handle이지만, LP6-PIM에서는 bank/row placement가 연산 가능성 자체를 결정한다[계획서 §8.5 Data Placement 행]. 상위 계층(Compiler)이 placement를 지정해 내려보내는지, Runtime이 placement를 결정하고 Compiler는 제약만 주는지에 따라 `SubmitRequest`의 layout 필드 의미가 달라진다. 이는 Compiler/Runtime 경계 확인 필요 항목과 직결된다.</p>
+<p>**쟁점 5 — Completion 통지 메커니즘.** 계획서 §3은 polling/interrupt/callback을 나열할 뿐 LP6-PIM의 방식을 정하지 않았고, §8.1의 &quot;Operation Completion Timing&quot; 상태는 시간 기반 결정론적 완료 판정 가능성을 시사한다[추정]. RISR가 상태 통지 register라면 polling 모델, timing 계산만으로 충분하다면 tracker의 성격이 완전히 달라진다. spec 확인 전까지 Completion Tracker 설계는 두 갈래를 모두 열어 두어야 한다.</p>
+<p>**쟁점 6 — 근거 자료의 공백.** 이번 수집에서 시스템별(API 수준) 서술은 전부 [배경지식]이다. 계획서가 지정한 외부 공식 자료 6종과 내부 자료 4종이 모두 미확보 상태이므로, 본 보고서의 시스템별 내용은 &quot;수집 로드맵&quot;으로만 유효하고 &quot;분석 결과&quot;로 인용해서는 안 된다.</p>
+<p>---</p>
+<h2>읽는 순서 / 조사 로드맵</h2>
+<p>질문 7(우선 확보할 문서·예제)에 대한 답을 겸한다. 순서는 계획서 §9 Phase 구조와 §10 우선순위를 따르되, 내부 자료 확보를 병행 트랙으로 앞당겼다.</p>
+<p>1. **[즉시, 병행] 내부 자료 4건을 reference로 등록** — `Micron_LPDDR6_PIM_Standard_DRAFT (1).pdf`(spec 확인 필요 항목 §4.3 해소), `홍pim.pdf`와 `LP6_pim_kickoff meeting.pdf`(경계 확인 §4.4 해소), `LP6_PIM_Runtime_개발방향성_Overview.md`. 외부 runtime 분석과 독립적으로 진행 가능하며, 쟁점 2·4·5의 판정 근거다. 2. **[Phase 0] 공통 용어 10개 정의** → `runtime_common_terms.md`. 본 보고서의 §1.1이 초안 역할을 하므로 반나절 작업으로 완결 가능. 3. **[Phase 1] CUDA** — Runtime API 문서 + Programming Guide + Driver API 문서 순으로 읽고, §11 작업 1의 7-call 추적표와 작업 2의 대응표를 채운다 → `cuda_runtime_analysis.md`, `cuda_runtime_sequence.md`, `cuda_runtime_vs_driver_api.md`. 4. **[Phase 2] Level Zero** — Spec의 Command List/Queue/Event/Fence 장 + 최소 예제. 쟁점 1(Executor/Backend 경계)과 쟁점 3(list 재사용)의 답을 여기서 찾는다 → `level_zero_runtime_analysis.md`, `level_zero_command_flow.md`, `level_zero_event_fence.md`. 5. **[Phase 3] PJRT** — API Overview → C API 헤더 → plugin 사례. Compiler-Runtime 계약(쟁점 4의 절반)을 정리 → `pjrt_interface_analysis.md`, `compiler_runtime_contract.md`. 6. **[Phase 4] UPMEM** — SDK 문서 + 공식 예제로 alloc/load/xfer/launch 흐름 추적 → `upmem_runtime_analysis.md`, `upmem_vs_lp6_pim.md`. 7. **[Phase 5] 비교 매트릭스** — §5.4 Scheduling 주체 표와 객체 대응표(본 보고서 정보 지도 표의 검증판)를 4개 시스템 값으로 채움 → `runtime_comparison_matrix.md`. 8. **[Phase 6] LP6-PIM 초안** — 본 보고서 §3의 6개 구성요소 초안을 spec/경계 확인 결과로 갱신하고, Resource/Allocation/Task Table 필드와 GEMV 실행 sequence를 작성 → `lp6_pim_runtime_role.md` 외 3건 [계획서 §14의 산출물 구조].</p>
+<p>각 Phase의 세부 체크리스트는 계획서 §9에 이미 있으므로 여기서는 반복하지 않는다. 완료 판정은 계획서 §12의 10개 기준을 사용한다.</p>
+<p>---</p>
+<h2>후속 질문</h2>
+<p>다음 정보 수집/분석 회차에서 다룰 질문:</p>
+<p>1. Level Zero에서 command list 재사용이 허용되는 정확한 조건은 무엇이며, LP6-PIM의 동적 상태(active row, register)와 양립하는 &quot;parameterized command template&quot; 설계가 가능한가? (쟁점 3) 2. CUDA Runtime↔Driver API 대응표에서 runtime이 자동화하는 것(primary context, module 관리)의 목록을 확정하면, LP6-PIM 고수준 API가 자동화할 항목은 무엇인가? 3. PJRT plugin이 반드시 구현해야 하는 최소 함수 집합은 무엇이며, CHAMP Compiler-Runtime 경계를 PJRT 호환으로 만들 실익이 있는가? 4. UPMEM의 비동기 launch와 rank 단위 병렬 전송은 실제로 어느 계층(라이브러리/드라이버)에서 병렬화되는가? LP6-PIM의 sub-channel 병렬성과 대응되는가? 5. LP6-PIM에서 완료 판정이 시간 기반으로 가능하다면, Event/Fence 의미론을 어떻게 단순화할 수 있는가? RISR polling과 혼합 모델이 필요한가? (쟁점 5) 6. Bank/Row/Layout placement를 Compiler와 Runtime 중 누가 결정하는가에 따라 `SubmitRequest`와 `TaskResourceRequest`의 필드가 어떻게 달라지는가? (쟁점 4) 7. Multi-tenant/다중 프로세스 상황에서 ExecutionDomain 격리는 어떻게 보장하는가 — CUDA context 격리 모델을 어디까지 차용할 수 있는가? (계획서 §10 &quot;이후 분석&quot;과 연결) 8. 오류·Context 복구(계획서 §10 항목 10): PIM mode 중 오류 발생 시 RESET_CONTEXT[계획서 §8.3]만으로 복구 가능한가, DRAM 상태(row) 복구가 추가로 필요한가?</p>
+<p>---</p>
+<h2>참고 자료</h2>
+<p>**이번 수집에서 사용한 reference (확보됨)**</p>
+<ul><li>`runtime-study-plan.md` — 가속기 Runtime 역할 및 Interface 분석 계획서. 경로: `references/raw/runtime-study/runtime-study-plan.md`, 추출 텍스트: `references/text/runtime-study__runtime-study-plan.txt`, 원본: `/home/sam/paper-review/references/research/runtime-study/runtime-study-plan.md` (manifest: `references/manifest.json`). 본 보고서의 모든 [계획서 §n] 인용의 출처.</li></ul>
+<p>**계획서가 인용하나 이번 job에 미확보인 내부 자료 [확인 필요 — 확보 우선순위 1]**</p>
+<ul><li>`홍pim.pdf` — CHAMP-PIM 연차별 연구개발 범위, PIM Runtime Interface, Resource Manager/Task Scheduler/Stream Executor 구조</li><li>`Micron_LPDDR6_PIM_Standard_DRAFT (1).pdf` — Bank/PU 구조, PIM Command/Register/Timing/Execution Constraint</li><li>`LP6_PIM_Runtime_개발방향성_Overview.md` — Runtime 역할 및 내부 아키텍처</li><li>`LP6_pim_kickoff meeting.pdf` — CHAMP Runtime과 HAL 초기 구조</li></ul>
+<p>**계획서 §13이 지정한 외부 공식 자료 (미확보, URL은 [배경지식]이며 검증 필요)**</p>
+<ul><li>NVIDIA CUDA Runtime API Documentation / CUDA Driver API Documentation / CUDA C++ Programming Guide — docs.nvidia.com/cuda</li><li>Intel Level Zero Specification — github.com/oneapi-src/level-zero, spec.oneapi.io</li><li>OpenXLA PJRT C++ API Overview — openxla.org/xla/pjrt (구현: github.com/openxla/xla의 `xla/pjrt/`)</li><li>UPMEM SDK Documentation and Official Examples — sdk.upmem.com</li></ul>
+<p>`job.json`과 `references/manifest.json`에는 docs URL 메타데이터가 없다(`source.docs: []`). 다음 회차에서 위 문서들을 확보하면 manifest에 URL과 버전(문서 버전/SDK 버전)을 함께 기록할 것을 권한다 — 특히 CUDA와 Level Zero는 버전 간 API 차이가 분석 결과에 영향을 줄 수 있다[배경지식].</p>
+    </article>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+  </script>
+</body>
+</html>

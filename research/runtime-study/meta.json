@@ -1,0 +1,86 @@
+{
+  "title": "가속기 Runtime 역할 및 Interface 정보 수집",
+  "summary": "CUDA, Level Zero, PJRT, UPMEM Runtime을 비교해 LPDDR6-PIM Runtime 구조와 API 설계에 반영하기 위한 조사 계획과 정보 지도를 정리한다.",
+  "type": "정보 수집",
+  "topic": "가속기 Runtime 역할 및 Interface 분석",
+  "scope": "현재 reference의 runtime study 계획서를 기준으로 CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LP6-PIM Runtime 설계 관점을 정리한다. 아직 공식 문서 원문이 없는 항목은 확인 필요로 분리한다.",
+  "parent_slug": null,
+  "generated_from_plan": null,
+  "project": {},
+  "tags": [
+    "runtime",
+    "accelerator",
+    "CUDA",
+    "Level Zero",
+    "PJRT",
+    "UPMEM",
+    "LPDDR6-PIM",
+    "CHAMP-PIM"
+  ],
+  "updated": "2026-07-11",
+  "source": {
+    "repo_url": null,
+    "local_path": null,
+    "branch": null,
+    "paths": [],
+    "reference_dir": "references/research/runtime-study",
+    "docs": []
+  },
+  "analysis": {
+    "model": "fable",
+    "effort": "max",
+    "max_turns": 160,
+    "analysis_style": "단순 요약이 아니라 연구 로드맵과 비교 프레임을 만드는 방식으로 정리한다. 확인된 내용, 계획서의 가정, 추가 자료가 필요한 항목을 분리한다.",
+    "sections": [
+      {
+        "title": "공통 Runtime 분석 프레임",
+        "prompt": "reference의 역할 분류와 12단계 처리 흐름을 바탕으로 모든 runtime에 공통으로 적용할 분석 프레임을 재구성한다.",
+        "required": [
+          "공통 객체",
+          "공통 처리 단계",
+          "자원 할당 종류",
+          "상위 계층/Runtime/Driver/HAL 경계"
+        ]
+      },
+      {
+        "title": "시스템별 정보 수집 로드맵",
+        "prompt": "CUDA, Level Zero, PJRT, UPMEM 각각에 대해 어떤 공식 문서/예제/코드 흐름을 먼저 수집해야 하는지 우선순위를 정한다.",
+        "required": [
+          "CUDA",
+          "Level Zero",
+          "PJRT",
+          "UPMEM"
+        ]
+      },
+      {
+        "title": "LP6-PIM Runtime 설계 연결",
+        "prompt": "기존 runtime 분석 결과를 LP6-PIM Runtime의 객체, 상태, execution domain, command lowering, completion/error 모델로 연결한다.",
+        "required": [
+          "ExecutionDomain",
+          "Resource Manager",
+          "Task Scheduler",
+          "Stream Executor",
+          "Command Backend",
+          "Completion Tracker"
+        ]
+      },
+      {
+        "title": "확인 필요 항목",
+        "prompt": "현재 reference만으로는 단정할 수 없는 항목과 다음 자료 수집에서 확인해야 할 질문을 체크리스트로 정리한다.",
+        "required": [
+          "공식 문서 필요",
+          "예제 코드 필요",
+          "LP6-PIM spec 확인 필요",
+          "Compiler/Runtime/HAL 경계 확인 필요"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/research/runtime-study/runtime-study-plan.md",
+      "raw": "references/raw/runtime-study/runtime-study-plan.md",
+      "text": "references/text/runtime-study__runtime-study-plan.txt"
+    }
+  ]
+}
