@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PjRtBuffer와 데이터 이동/비동기 이벤트</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <style>
     :root {
       color-scheme: light dark;
@@ -104,6 +105,15 @@
       border-radius: 12px;
       background: #080b11;
     }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
     code {
       font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
       font-size: 0.9em;
@@ -123,57 +133,135 @@
       <h1>PjRtBuffer와 데이터 이동/비동기 이벤트</h1>
       <p class="summary">PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.</p>
       <div class="meta-row">
-        <span class="meta-pill">업데이트 2026-07-10</span>
+        <span class="meta-pill">업데이트 2026-07-11</span>
         <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">buffer</span><span class="tag">async</span><span class="tag">data-transfer</span><span class="tag">future</span>
       </div>
     </div>
   </header>
   <main class="page-shell">
     <article>
-      <h1>PjRtBuffer 데이터 이동과 비동기 이벤트 분석</h1>
+      <p>이제 충분한 자료를 확보했습니다. 최종 분석 보고서를 작성하겠습니다.</p>
+<h1>PjRtBuffer 데이터 이동과 비동기 이벤트 메커니즘</h1>
 <h2>한 줄 요약</h2>
-<p>`PjRtBuffer`는 실제 데이터 소유·전송·동기화 책임을 `AbstractTrackedDeviceBuffer`(정의/사용 이벤트 추적) → `PjRtRawBuffer`(원시 디바이스 메모리 + 전송 프리미티브) → `PjRtDeviceEvent`(C-API 호환 비동기 값) 3단으로 위임하는 구조이며, `GetReadyFuture()`는 이 이벤트 체인을 `device_event_utils.h`의 `RunWhenReady`(참조 카운트 기반 join)로 모아 `Future&lt;&gt;`로 변환한다.</p>
+<p>`PjRtBuffer`의 실제 구현은 `PjRtRawBuffer`(물리 메모리 + C API 브리지) → `AbstractTrackedDeviceBuffer`(정의/사용 이벤트 추적) → `CommonPjRtBuffer`(hold 기반 생명주기 관리)의 3단 계층으로 이루어지며, 이 위에서 `PjRtDeviceEventRef`/`PjRtDeviceEventPromiseRef`와 `xla::Future&lt;&gt;`가 결합해 &quot;즉시 반환하지만 필요한 시점에만 블록하는&quot; 비동기 실행 모델을 구현한다.</p>
 <h2>분석 범위</h2>
-<ul><li>대상: `xla/pjrt/pjrt_client.h`, `raw_buffer.{h,cc}`, `staging_buffer.{h,cc}`, `host_to_device_transfer_manager.{h,cc}`, `device_event.{h,cc}`, `device_event_utils.{h,cc}`, `abstract_tracked_device_buffer.{h,cc}`, `host_memory_allocator.h`, `host_memory_spaces.h`, `semaphore.{h,cc}`, `pjrt_future.h` (17개 파일, `repo/xla/pjrt/` 하위)</li><li>**주의**: 이 체크아웃은 위 파일들만 포함된 부분 스냅샷이다. `common_pjrt_client.h`, `xla/future.h`, CPU/GPU 백엔드 구현(`pjrt_stream_executor_client.*` 등)은 포함되어 있지 않아 직접 인용할 수 없고, 호출 관계로만 추론했다. 이 부분은 &quot;확인 필요&quot;로 표기한다.</li><li>참고 문서: OpenXLA &quot;PJRT C++ Device API 개요&quot; 한국어 페이지(`references/text/...cpp_api_overview...`)를 코드와 대조했다.</li></ul>
-<h2>전체 구조: 상위 PJRT와의 연결 (간략)</h2>
-<p>참고 문서는 `PjRtClient` → `PjRtDevice`/`PjRtMemorySpace` → `PjRtBuffer` 순의 소유 관계와, 버퍼가 &quot;메모리 공간은 알지만 기기를 반드시 알 필요는 없다&quot;는 점을 명시한다. 이번 분석 대상 모듈들은 이 계층 중 **`PjRtBuffer`의 구현 세부사항**(데이터가 실제로 어디에 있고 언제 준비되는지)에 해당하며, `PjRtClient`/`PjRtDevice`/`PjRtExecutable` 자체의 구현(컴파일, 실행 스케줄링)은 범위 밖이다. `CommonPjRtBuffer`(`abstract_tracked_device_buffer.h`)가 `PjRtBuffer`의 공용 구현 기반이며, 이를 구체화하는 `CommonPjRtClient`는 이번 체크아웃에 포함되지 않은 상위 오케스트레이터로만 참조된다 (`memory_space-&gt;client()`를 `absl::down_cast&lt;CommonPjRtClient*&gt;`하는 코드가 `abstract_tracked_device_buffer.cc:54,128`, `host_to_device_transfer_manager.cc:76` 등 여러 곳에서 등장).</p>
-<h2>1. 버퍼 생명주기</h2>
-<h3>1.1 생성 경로</h3>
-<p>`pjrt_client.h`의 `PjRtClient`는 세 가지 생성 경로를 제공한다.</p>
-<ul><li>**동기 생성**: `BufferFromHostBuffer`(`pjrt_client.h:980`), `BufferFromHostLiteral`(`:1001`) — 즉시 `PjRtBuffer`를 반환하되, 내부 전송은 비동기일 수 있다. `HostBufferSemantics` enum(`:933-969`)이 호스트 데이터의 공유/복사/변경 가능 여부를 규정한다(아래 1.2 참고).</li><li>**비동기(지연) 생성**: `CreateBuffersForAsyncHostToDevice`(`:902`, `:915`)가 `AsyncHostToDeviceTransferManager`(`:827` 추상 클래스)를 반환한다. 이 매니저의 구체 구현이 `host_to_device_transfer_manager.cc`의 `CommonAsyncHostToDeviceTransferManager::Create`(`:64`)이다.</li><li>**초기화 없는/에러/별칭 생성**: `CreateUninitializedBuffer`, `CreateAliasBuffer`, `CreateErrorBuffer`(`:736-755`) — 아직 데이터가 없거나 에러 상태로 시작하는 버퍼.</li></ul>
-<p>`CommonAsyncHostToDeviceTransferManager::Create`의 핵심 단계(`host_to_device_transfer_manager.cc:64-174`): 1. 각 `ShapeSpec`마다 `client-&gt;CreateAllocationEventForTransfers(...)`로 **지연 할당 이벤트**를 만든다. 주석(`:87-91`)에 따르면 이는 원격 서버에서 데이터가 올 때까지 빈 HBM을 붙잡지 않기 위한 최적화다. 2. `client-&gt;AllocateRawBuffer(...)`로 `PjRtRawBufferRef`(원시 디바이스 메모리)를 확보한다. 3. `client-&gt;CreateLinkedEventPromise(...)`로 `definition_event_promise`/`definition_event` 쌍을 만든다. 4. `client-&gt;DefineBuffer(shared_device_shape, memory_space, raw_buffer, {definition_event})`로 실제 `PjRtBuffer`를 만들고, 이를 `RetrieveBuffer(int)`(`:213`)를 통해 즉시 호출자에게 반환할 수 있다. **이 시점에 정의 이벤트는 아직 미완료 상태이므로 버퍼는 &quot;존재하지만 준비되지 않은&quot; 상태다.**</p>
-<h3>1.2 전송 경로 (BufferFromHostBuffer / ToLiteral 왕복)</h3>
-<p>**Host → Device (쓰기, H2D):**</p>
-<ul><li>일괄(one-shot) 버퍼는 `BufferFromHostBuffer` 경로를 통하며, `HostBufferSemantics`(`pjrt_client.h:933`)로 소유권 규칙을 정한다:</li><li>`kImmutableOnlyDuringCall`: 런타임은 호출이 끝나기 전에 데이터를 복사해야 하며, `on_done_with_host_buffer`가 반환 전에 호출됨.</li><li>`kImmutableUntilTransferCompletes`: 전송 완료(정의 이벤트 준비)까지 호스트 데이터를 참조할 수 있음.</li><li>`kImmutableZeroCopy` / `kMutableZeroCopy`: 버퍼가 호스트 메모리를 직접 별칭(alias)하며, 버퍼가 살아있는 동안 호출자가 데이터를 보존(및 mutable 버전은 런타임이 이를 변형 가능).</li><li>참고 문서(`227`행)의 &quot;버퍼 시맨틱: 공유/복사/변경 가능 여부&quot;가 정확히 이 enum에 대응한다.</li><li>분할 전송(streaming) 경로는 `AsyncHostToDeviceTransferManager::TransferLiteralToBuffer`/`TransferRawDataToSubBuffer`(`pjrt_client.h:851,878`)이며, 구현은 `host_to_device_transfer_manager.cc:218,323`이다. `TransferLiteralToBuffer`는 `client_-&gt;LinearizeInto(literal, device_shape, kImmutableUntilTransferCompletes, raw_buffer)`(`:263-268`)로 리터럴을 디바이스 레이아웃으로 변환하며 raw buffer에 기록하고, 완료 시 `definition_event.Set(transfer_event)`(`:306`)로 정의 이벤트를 채워 다운스트림 소비자를 unblock한다.</li></ul>
-<p>**Device → Host (읽기, D2H, `ToLiteral`):**</p>
-<ul><li>`PjRtBuffer::ToLiteral(MutableLiteralBase*)`(`pjrt_client.h:1224`)와 지연 할당 버전 `LazyToLiteral`(`:1230`)이 순수 가상 함수로 선언되어 있으며, 실제 구현은 이번 체크아웃 범위 밖(백엔드별 `CommonPjRtBuffer` 파생 클래스)이다.</li><li>다만 D2H 전송의 저수준 빌딩 블록은 `raw_buffer.cc`의 `ToStagingBuffer()`(`:137-196`)에서 확인 가능하다. 이 함수는 두 갈래로 갈라진다:</li><li>`raw_buffer-&gt;GetHostPointer()`가 널이 아니면(호스트에서 직접 보이는 메모리, 예: CPU) — 복사 없이 `HostRawBufferPjRtStagingBuffer`로 그 포인터를 그대로 감싼다(제로카피).</li><li>널이면 — 호출자가 제공한 `allocate_staging_buffer(size, memory_space)`로 별도 스테이징 메모리를 할당하고, `raw_buffer-&gt;CopyRawDeviceToHostAndReturnEvent(dst, 0, size)`로 실제 DMA 복사를 발행한 뒤, 그 이벤트가 완료되면 `WrappedPjRtStagingBuffer`를 채운다.</li><li>즉 `ToLiteral`의 실질적 디바이스-메모리 판독은 `PjRtRawBuffer::CopyRawDeviceToHost[AndReturnEvent]`(`raw_buffer.h:150,176`)가 담당하고, `staging_buffer.h`는 그 결과를 담는 &quot;임시 바이트 배열&quot; 인터페이스(`data()`/`const_data()`만 존재, `staging_buffer.h:32-34`)일 뿐이다.</li></ul>
-<h3>1.3 삭제 및 외부 참조 처리</h3>
-<ul><li>`PjRtBuffer::Delete()`(`pjrt_client.h:1287`)는 순수 가상. 구현은 `CommonPjRtBuffer`가 내부적으로 `AbstractTrackedDeviceBuffer::Delete(memory_space)`(`abstract_tracked_device_buffer.cc:143-159`)를 사용하는 패턴을 따른다고 추정된다(직접 오버라이드는 이 파일셋에 없음 — **확인 필요**).</li><li>`AbstractTrackedDeviceBuffer::Delete`는 정의 이벤트 + 사용 이벤트를 모두 모은 뒤 `LockUsageEvents()`로 더 이상 사용 이벤트 추가를 막고, `raw_buffer.release()-&gt;DecrefAfter(std::move(events))`(`:157`)를 호출한다. `DecrefAfter`(`raw_buffer.cc:112-114`)는 `xla::RunWhenReady(events, [this](){ DropRef(); })`이므로 **메모리 참조 해제(refcount 감소)는 진행 중인 모든 연산이 끝난 뒤 지연 실행**된다 — 문서의 &quot;Delete는 비동기 연산 완료 후 메모리를 지연 해제한다&quot;는 설명과 일치.</li><li>**외부 참조**: `PjRtBuffer::AcquireExternalReference()`(`pjrt_client.h:1216`, `ExternalReference` 내부 클래스 `:1200`)와 `ReleaseDeviceMemoryOwnership`(`:1305`)이 소유권을 프레임워크(NumPy/DLPack 등)로 이전하는 API다. `CommonPjRtBuffer::ScopedHold`(`abstract_tracked_device_buffer.h:202`)가 이를 뒷받침하는 락 메커니즘:</li><li>Hold 종류는 `kUsage`, `kExternalReference`, `kDonation` 세 가지(`:204`).</li><li>**불변식**: 도네이션 홀드는 &quot;쓰기 잠금&quot;처럼 동작하여, 외부 참조가 살아있으면 도네이션을 거부하고(`abstract_tracked_device_buffer.cc:215-218`), 도네이션 홀드가 진행 중이면 다른 어떤 홀드도 블록된다(`WaitForOutstandingDonationHold`, `:189-194`).</li><li>`CommonPjRtBuffer::~CommonPjRtBuffer()`(`:176-180`)는 소멸 시 모든 홀드 카운트가 0이어야 함을 `CHECK_EQ`로 강제한다 — 즉 외부 참조가 살아있는 한 버퍼 객체 자체의 파괴도 막힌다는 설계.</li></ul>
-<h2>2. 비동기 동기화 메커니즘</h2>
-<h3>2.1 Future 개념과 GetReadyFuture 대응 코드</h3>
-<p>1. `tsl::MakePromise&lt;void&gt;()`로 `[definition_promise, definition_future]`를 만든다. 2. `raw_buffer()-&gt;GetRawBufferAsyncValue()`(할당 이벤트, `client-&gt;include_raw_buffer_in_ready_event()`가 true일 때만) + `definition_events()` 각각을 `dependencies`(`PjRtDeviceEventRefVector`)에 모은다. 이미 concrete인 이벤트는 제외한다(`:66,73`의 `IsConcrete()` 체크). 3. `xla::RunWhenReady(deps_span, ...)`(device_event_utils.h)로 이 모든 이벤트가 준비될 때 콜백을 실행하도록 등록한다. 콜백은 각 이벤트의 에러 여부를 취합해 `definition_promise.Set(status)`로 future를 완료시킨다.</p>
-<ul><li>`pjrt_future.h`는 `xla/future.h`로의 단순 재전달(`#include &quot;xla/future.h&quot;`, 실제 정의는 이번 체크아웃 범위 밖 — **확인 필요**)이며, `Future&lt;T&gt;`는 `tsl::MakePromise&lt;T&gt;()`로 생성되는 promise/future 쌍으로 코드 전반에서 관찰된다(예: `raw_buffer.cc:82`, `abstract_tracked_device_buffer.cc:56`).</li><li>`PjRtBuffer::GetReadyFuture()`(`pjrt_client.h:1394`)의 실제 구현 예시는 `AbstractTrackedDeviceBuffer::GetReadyFuture(PjRtMemorySpace*)`(`abstract_tracked_device_buffer.cc:52-106`)다:</li><li>**문서 대응**: 참고 문서(`226`행)의 `xla::Future&lt;&gt; ToLiteral(...)` 시그니처, `258`행의 &quot;x 값이 필요하면 GetReadyFuture에서 반환된 future를 통해 준비되었다고 선언할 때까지 실행이 차단된다&quot;는 서술이 이 구현과 정확히 일치한다.</li></ul>
-<h3>2.2 device_event의 역할</h3>
-<p>`device_event.h`는 PJRT C API(`PJRT_DeviceEvent`)와 C++ 네이티브 `tsl::AsyncValue`를 모두 감쌀 수 있는 **경량 vtable 기반 래퍼**를 제공한다.</p>
-<ul><li>`PjRtDeviceEventPtr`(`:103`) — non-owning 핸들. `AndThen`, `GetErrorIfPresent`, `state()`, `down_cast&lt;T&gt;()`를 제공하며, 내부적으로 `IsCompatibleWithLocalAsyncValue()`(`device_event.cc:154`)로 &quot;이 이벤트가 로컬 `tsl::AsyncValue`인가, 아니면 C API 너머의 외부 플러그인 이벤트인가&quot;를 판별해 빠른 경로(직접 `AsyncValue::AndThen`)와 느린 경로(vtable 호출)를 나눈다.</li><li>`PjRtDeviceEventRef`(`:217`) — 소유(owning) 참조, RAII로 ref count 관리.</li><li>`PjRtDeviceEventPromise`/`PjRtDeviceEventPromiseRef`(`:298,320`) — 값을 나중에 채우는 프로미스(예: `TransferLiteralToBuffer`의 `definition_event_promise`).</li><li>`PjRtDeviceEventRefVector`/`PjRtDeviceEventSpan`(`:374,420`) — C API 호환 벡터/스팬(내부적으로 `PJRT_DeviceEventVector` C 구조체를 직접 감쌈).</li></ul>
-<p>**&quot;실행 큐잉&quot;과의 연결**은 `device_event_utils.h`의 `ScopedLauncher`(`:28`)가 담당한다:</p>
-<ul><li>`AddDependency(event)`가 호출될 때마다, 이벤트가 아직 미완료면 `state_`(참조 카운트된 `Callee` 객체)를 지연 생성하고 그 이벤트의 `AndThen`에 `state_`를 캡처한 람다를 건다(`device_event_utils.cc:64-77`).</li><li>`Callee`의 소멸자(`:39-45`)가 실제 task를 실행한다(옵션으로 `tsl::Executor`에 위임, 없으면 즉시 호출).</li><li>**설계 포인트**: 명시적 카운터 대신 **참조 카운팅 자체를 join/countdown-latch로 재사용**한다 — 각 의존성 이벤트가 완료되면 그 이벤트가 쥐고 있던 `state_` 참조 하나가 사라지고, 모든 의존성 + `ScopedLauncher` 자신이 소멸해야 `Callee` refcount가 0이 되어 task가 실행된다. `RunWhenReady`/`ExecuteWhenReady`(`:55-77`)가 이를 감싼 편의 함수다.</li><li>`AbstractTrackedDeviceBuffer::Delete`의 `DecrefAfter`, `GetReadyFuture`의 `RunWhenReady` 호출이 모두 이 메커니즘을 사용하므로, **device_event는 &quot;이 데이터가 언제 준비/해제 가능한가&quot;를 나타내는 토큰이고, ScopedLauncher/RunWhenReady가 그 토큰들을 모아 후속 작업을 큐잉하는 실행 계층**이다.</li></ul>
-<h3>2.3 semaphore가 사용되는 지점</h3>
-<ul><li>`Semaphore`(`semaphore.h:27`)는 표준적인 카운팅 세마포어로, `Acquire`/`TryAcquire`/`Release`와 RAII `ScopedReservation`(`:50`)을 제공한다. 구현(`semaphore.cc`)은 `absl::Mutex::LockWhen`으로 블로킹 획득을 구현하는 평범한 코드다.</li><li>**확인 사실**: 이번에 제공된 17개 파일 및 `repo/xla/pjrt` 전체를 grep한 결과, `semaphore.h`를 include하거나 `Semaphore`를 사용하는 곳은 `semaphore.cc/h` 자기 자신뿐이었다. `raw_buffer`, `abstract_tracked_device_buffer`, `host_to_device_transfer_manager`, `device_event*` 어디에서도 참조하지 않는다.</li><li>**해석(추정)**: 이 리포지토리 스냅샷이 `xla/pjrt/` 전체가 아니라 job.json에 명시된 파일만 포함한 부분 체크아웃이므로, `Semaphore`는 아마 CPU/GPU 등 백엔드별 클라이언트 구현(예: 과거 `pjrt_stream_executor_client.cc`류에서 동시 H2D 전송 개수를 제한하던 &quot;transfer semaphore&quot; 패턴)에서 소비될 가능성이 높다. 하지만 이 파일셋 안에서는 **직접적인 연결 고리를 확인할 수 없다** — 질문 4(&quot;device_event/semaphore가 실행 큐잉과 어떻게 연결되는가&quot;)에 대해, 실행 큐잉의 실질적 구현은 `device_event`+`ScopedLauncher`(2.2절)이며, `semaphore.h`는 이 스냅샷 기준으로는 동시성 처리량 제한용 범용 프리미티브로 존재하되 현재 분석 대상 모듈들과는 배선되어 있지 않다고 판단하는 것이 정확하다. **단정하지 않음 — 확인 필요.**</li></ul>
-<h2>3. 계층 구조: raw_buffer vs abstract_tracked_device_buffer (질문 2 답변)</h2>
-<p>세 계층이 뚜렷하게 구분된다.</p>
-<p>| 계층 | 파일 | 책임 | |---|---|---| | **원시 메모리/전송** | `raw_buffer.h/.cc` | `PjRtRawBuffer`(C++ 구현체) / `PjRtRawBufferInterface`(C API-호환 핸들, vtable 디스패치). &quot;이 바이트가 어디 있고 어떻게 복사·슬라이스하는가&quot;만 안다. `Slice`, `CopyRawHostToDevice[AndReturnEvent]`, `CopyTo`/`ScheduleCopyTo`, `MakeAllocationReadyEvent`. 논리적 shape, dtype, 홀드 개념이 전혀 없다. | | **정의/사용 이벤트 추적** | `abstract_tracked_device_buffer.h/.cc` — `AbstractTrackedDeviceBuffer` | `PjRtRawBufferRef` 하나를 감싸며 `definition_events_`(언제 데이터가 준비되는가)와 `usage_events_`(언제 안전하게 mutate/free 가능한가)를 추적. `GetReadyFuture`, `Delete`, `BlockForOperationsToComplete`를 제공. | | **PjRtBuffer 공개 API + 동시성 상태기계** | `abstract_tracked_device_buffer.h` — `CommonPjRtBuffer : public PjRtBuffer` | `AbstractTrackedDeviceBuffer`를 `device_buffer_`로 소유하고, `ScopedHold`(Usage/External/Donation)로 도네이션·삭제·외부공유 사이의 상호배제를 구현. `on_device_shape()`, `memory_space()`, `device()` 등 나머지 `PjRtBuffer` 순수 가상 함수는 **더 하위의 백엔드별 파생 클래스**(이 체크아웃에 없음)가 채운다. |</p>
-<p>`PjRtRawBuffer`는 재사용 가능한 &quot;메모리 소유권+전송&quot; 단위이고(예: `CreateRawAliasOfBuffer`로 기존 `PjRtBuffer`에서 원시 뷰를 뽑아낼 수 있음, `raw_buffer.cc:116`), `AbstractTrackedDeviceBuffer`/`CommonPjRtBuffer`는 그 위에서 &quot;언제 쓸 수 있는가&quot;, &quot;누가 지금 쓰고 있는가&quot;, &quot;donation 중인가&quot;를 조율하는 동시성 레이어다.</p>
-<h2>질문 답변 요약</h2>
-<p>1. **&quot;PjRtBuffer는 MemorySpace만 알고 Device는 모른다&quot;는 문서 설명**: `pjrt_client.h:1188`에서 `memory_space()`는 순수 가상으로 필수 구현이지만, `device()`(`:1190`)는 `ABSL_DEPRECATED`는 아니지만 주석 `// TODO(b/277820585): remove device() after the migration is done.`이 붙어 있어 **레거시 하위호환용으로 남아있을 뿐 설계상 우선순위가 아님**이 코드에 그대로 드러난다. `AbstractTrackedDeviceBuffer`/`CommonPjRtBuffer` 어디에도 `device()`의 기본 구현이 없고, 오직 `memory_space_`(`abstract_tracked_device_buffer.h:379`)만 멤버로 보유한다 — memory_space를 통해서만 디바이스를 추이적으로 알 수 있다는 문서 설명과 일치. 2. **raw_buffer vs abstract_tracked_device_buffer 계층 차이**: 위 3절 참고. 3. **staging_buffer vs host_to_device_transfer_manager**: `PjRtStagingBuffer`(`staging_buffer.h`)는 **단일 linearize/delinearize 복사 1회**에서 쓰이는 임시 바이트 뷰 인터페이스(zero-copy 또는 raw buffer로부터의 D2H 복사 결과)일 뿐이며, `raw_buffer.cc:ToStagingBuffer()`가 이를 만든다. 반면 `CommonAsyncHostToDeviceTransferManager`(`host_to_device_transfer_manager.cc`)는 **버퍼 객체 자체의 탄생부터 여러 청크에 걸친 전송, 정의 이벤트 완료까지 전체 세션**을 관장하는 상위 오케스트레이터다 — &quot;언제 어떤 바이트가 어디로 가는가&quot;(staging_buffer)와 &quot;전체 비동기 전송 세션의 상태 기계&quot;(transfer manager)로 나뉜다. 4. **`x = foo(1)` 시나리오의 device_event/semaphore 구현**: 2.2절 `ScopedLauncher`/`RunWhenReady`가 실질적 구현. `x`가 반환된 시점엔 `definition_events_`가 아직 미완료 상태(`GetReadyFuture`가 pending future 반환)이며, 이후 `print(x+1)`처럼 실제 값이 필요해지는 지점에서 `.Await()`(future.h, 범위 밖)를 호출하면 그때 블록된다. `semaphore.h`는 이 흐름에 현재 직접 배선되어 있지 않음(2.3절 &quot;확인 필요&quot; 참고).</p>
+<p>`job.json`에 지정된 18개 파일만 체크아웃된 저장소로, `xla/pjrt/` 아래 다른 파일(`common_pjrt_client.*`, `pjrt_client.cc`, `xla/future.h`, `cpu/`·`gpu/` 백엔드 등)은 이 스냅숏에 존재하지 않는다. 즉 이번 분석은 **PJRT 전체가 아니라, 최근 리팩터링으로 분리된 &quot;저수준 데이터 이동/이벤트 레이어&quot;만을 대상**으로 한다. 이 레이어를 실제로 사용하는 `CommonPjRtClient`(할당·직렬화·플랫폼별 로직)는 소스가 없어 시그니처와 호출 패턴으로만 역할을 추정했으며, 이런 부분은 본문에 &quot;추정&quot; 또는 &quot;확인 필요&quot;로 표시했다.</p>
+<h2>전체 구조 (상위 PJRT와의 연결, 짧게)</h2>
+<p>상위 PJRT 계층에서 사용자는 `PjRtClient`(`pjrt_client.h`)를 통해 `PjRtBuffer`를 만들고 `PjRtLoadedExecutable::Execute`에 넘긴다. `PjRtDevice`/`PjRtMemorySpace`/`PjRtClient`는 이번 분석 범위에서는 인터페이스 선언만 존재하고 구체 구현(`StreamExecutor` 기반 클라이언트, TPU/GPU 클라이언트 등)은 범위 밖이다. 이번 분석은 그 구현체들이 공통으로 딛고 서는 &quot;buffer backing store&quot; 계층 — `raw_buffer.h/.cc`, `abstract_tracked_device_buffer.h/.cc`, `device_event.h/.cc`, `device_event_utils.h/.cc`, `staging_buffer.h/.cc`, `host_to_device_transfer_manager.h/.cc`, `semaphore.h/.cc`, `host_memory_allocator.h`, `host_memory_spaces.h` — 를 집중적으로 다룬다.</p>
+<h2>먼저 볼 코드 리딩 순서</h2>
+<p>1. **`pjrt_client.h`의 `PjRtMemorySpace`/`PjRtDevice`/`PjRtBuffer` 선언(L89-303, L1122-1398)** — 전체 계층의 공개 계약과 `HostBufferSemantics`(L933-969), `AsyncHostToDeviceTransferManager`(L827-893)를 먼저 봐야 이후 구현 코드가 어떤 인터페이스를 채우는지 이해된다. 2. **`device_event.h`의 `PjRtDeviceEventRef`/`PjRtDeviceEventPromiseRef`** — 이 저장소 전체에서 가장 자주 등장하는 타입으로, C API(`PJRT_DeviceEvent`)와 `tsl::AsyncValue`를 감싼 참조 카운트 핸들이다. 이걸 모르면 다른 `.cc` 코드가 읽히지 않는다. 3. **`device_event_utils.h`의 `ScopedLauncher`/`RunWhenReady`/`BlockUntilReady`** — &quot;N개 이벤트가 준비되면 콜백 실행&quot;이라는 fan-in 조합자와, 실제로 스레드를 재우는 유일한 지점(`BlockUntilReady`)을 구분해서 봐야 &quot;지연된 블로킹&quot; 모델이 이해된다. 4. **`raw_buffer.h`의 `PjRtRawBufferInterface`/`PjRtRawBuffer`** — 물리 메모리 한 덩어리를 나타내는 가장 저수준 타입. `CopyRawHostToDeviceAndReturnEvent`, `Slice`, `CopyTo`/`ScheduleCopyTo` 시그니처를 눈에 익혀 둔다. 5. **`abstract_tracked_device_buffer.h`의 `AbstractTrackedDeviceBuffer`와 `CommonPjRtBuffer::ScopedHold`** — raw_buffer 위에 정의/사용 이벤트와 usage/external/donation hold 규칙을 얹는 곳. `ScopedHold`의 3가지 타입 설명 주석(L156-201)을 먼저 읽는다. 6. **`abstract_tracked_device_buffer.cc`의 `GetReadyFuture`와 `Delete`** — 실제 Future 생성·이벤트 fan-in·지연 해제 로직이 담긴 핵심 함수. 이번 분석에서 가장 중요한 두 함수다. 7. **`host_to_device_transfer_manager.cc`의 `CommonAsyncHostToDeviceTransferManager`** — 위의 모든 타입(raw_buffer, device_event, definition_event)이 실제로 조립되어 쓰이는 유일한 &quot;완결된 사용 예&quot;이므로, 여기서 개념들이 어떻게 맞물리는지 확인한다. 8. **`raw_buffer.cc`의 `ToStagingBuffer`** — `staging_buffer.h`의 추상 인터페이스가 실제로 어떻게 채워지는지 보여주는 유일한 코드. host-visible 여부에 따라 분기하는 로직을 본다. 9. **`semaphore.h/.cc`** — 마지막에 가볍게. 이 스코프 안에서는 호출부가 없는 독립 유틸리티이므로, 개념(카운팅 세마포어 + RAII 예약)만 확인하고 넘어가면 된다.</p>
+<h2>로직 다이어그램</h2>
+<h3>1) BufferFromHostBuffer 로 시작한 값이 &quot;필요한 시점에만&quot; 블록되는 흐름</h3>
+<div class="mermaid">sequenceDiagram
+    participant Caller as 호출자
+    participant TM as CommonAsyncHostToDeviceTransferManager
+    participant Ext as CommonPjRtClient 외부 범위
+    participant Raw as PjRtRawBuffer
+    participant Prom as PjRtDeviceEventPromiseRef
+    participant ATD as AbstractTrackedDeviceBuffer
+    participant Exec as 후속 Execute
+
+    Caller-&gt;&gt;TM: CreateBuffersForAsyncHostToDevice 호출
+    TM-&gt;&gt;Ext: AllocateRawBuffer 및 CreateLinkedEventPromise
+    TM-&gt;&gt;ATD: DefineBuffer raw_buffer + definition_event
+    TM--&gt;&gt;Caller: RetrieveBuffer 로 PjRtBuffer 즉시 반환 아직 not ready
+    Caller-&gt;&gt;Exec: 아직 값이 없는 버퍼를 다음 연산 인자로 즉시 enqueue
+    Caller-&gt;&gt;TM: TransferLiteralToBuffer 로 실제 데이터 전달
+    TM-&gt;&gt;Raw: CopyRawHostToDeviceAndReturnEvent 또는 LinearizeInto
+    Raw--&gt;&gt;TM: h2d_transfer_event 반환
+    TM-&gt;&gt;Prom: h2d_transfer_event.AndThen 에서 definition_event.Set 호출
+    Exec-&gt;&gt;ATD: GetReadyFuture 호출로 값이 필요해짐
+    ATD-&gt;&gt;ATD: RunWhenReady 로 definition_events 대기 등록
+    Prom--&gt;&gt;ATD: 이벤트 ready 전이시 콜백 실행
+    ATD--&gt;&gt;Exec: Future ready, 이제야 BlockUntilReady 가 실제로 깨어남</div>
+<ul><li>`Caller→TM CreateBuffersForAsyncHostToDevice`는 `pjrt_client.h:902-911`의 가상 함수를 `host_to_device_transfer_manager.cc:64-174`의 `CommonAsyncHostToDeviceTransferManager::Create`가 구현한다.</li><li>`TM→ATD DefineBuffer`는 `host_to_device_transfer_manager.cc:157-160`에서 확인되는 실제 호출(`client-&gt;DefineBuffer(...)`)이며, `DefineBuffer` 자체의 구현은 스코프 밖(추정: `AbstractTrackedDeviceBuffer`를 생성해 `CommonPjRtBuffer`로 감싸는 함수).</li><li>`TM→Raw CopyRawHostToDeviceAndReturnEvent`는 `TransferRawDataToSubBuffer`(`host_to_device_transfer_manager.cc:376-378`)에서, `LinearizeInto`는 `TransferLiteralToBuffer`(같은 파일 263-268)에서 각각 확인된다.</li><li>`Prom→ATD` 구간은 `abstract_tracked_device_buffer.cc:52-106`의 `AbstractTrackedDeviceBuffer::GetReadyFuture`가 담당하며, 내부에서 `xla::RunWhenReady`(`device_event_utils.h:70-73`)를 호출한다.</li><li>마지막 &quot;BlockUntilReady&quot;는 `device_event_utils.cc:132-144`에서, `absl::Notification`으로 실제 스레드를 재운다 — 이 지점이 문서에서 말하는 &quot;x 값이 필요하면 실행이 차단된다&quot;의 구현이다.</li></ul>
+<h3>2) GetReadyFuture 내부의 이벤트 fan-in</h3>
+<div class="mermaid">flowchart TD
+    A[&quot;PjRtBuffer GetReadyFuture 호출&quot;] --&gt; B[&quot;AbstractTrackedDeviceBuffer GetReadyFuture&quot;]
+    B --&gt; C[&quot;tsl MakePromise void 로 새 Future 쌍 생성&quot;]
+    C --&gt; D[&quot;raw_buffer 할당 이벤트 및 미완료 definition_events 를 dependencies 로 수집&quot;]
+    D --&gt; E[&quot;device_event_utils RunWhenReady 호출&quot;]
+    E --&gt; F[&quot;ScopedLauncher 가 각 dependency 에 AndThen 콜백을 건다&quot;]
+    F --&gt; G[&quot;모든 dependency 가 ready 또는 error 로 전이&quot;]
+    G --&gt; H[&quot;콜백에서 에러를 병합하고 definition_event Set 호출&quot;]
+    H --&gt; I[&quot;앞서 반환했던 Future 가 ready 상태로 전이&quot;]
+    I --&gt; J[&quot;호출자가 Await 나 BlockUntilReady 를 부를 때만 스레드가 블록&quot;]</div>
+<ul><li>`A→C`는 `abstract_tracked_device_buffer.cc:52-58`, `D`는 60-76행(정의 이벤트와 raw buffer 할당 이벤트를 합치는 부분), `E→G`는 `device_event_utils.h`의 `RunWhenReady`/`ScopedLauncher::AddDependency`(`device_event_utils.cc:64-90`)가 각 의존성의 `AndThen`/`DeleteWhenReady`에 참조 카운트된 `Callee`를 매달아, 마지막 참조가 사라질 때만(`~Callee`) 콜백을 실행하는 방식이다. `H`는 `abstract_tracked_device_buffer.cc:84-103`, `J`는 `BlockUntilReady`(`device_event_utils.cc:132-144`)다.</li></ul>
+<h2>모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+    subgraph API[&quot;공개 API pjrt_client.h&quot;]
+        PjRtBuffer
+        PjRtMemorySpace
+        PjRtDevice
+        PjRtClient
+    end
+    subgraph Common[&quot;생명주기 계층 abstract_tracked_device_buffer.h&quot;]
+        CommonPjRtBuffer
+        ScopedHold
+        AbstractTrackedDeviceBuffer
+    end
+    subgraph RawLayer[&quot;물리 메모리 계층 raw_buffer.h raw_buffer.cc&quot;]
+        PjRtRawBufferInterface
+        PjRtRawBuffer
+    end
+    subgraph Transfer[&quot;전송 보조 staging_buffer.h host_to_device_transfer_manager.cc&quot;]
+        PjRtStagingBuffer
+        CommonAsyncHostToDeviceTransferManager
+    end
+    subgraph Event[&quot;비동기 이벤트 device_event.h device_event_utils.h&quot;]
+        PjRtDeviceEventRef
+        PjRtDeviceEventPromiseRef
+        ScopedLauncher
+    end
+    subgraph HostMem[&quot;호스트 메모리 host_memory_allocator.h host_memory_spaces.h&quot;]
+        HostMemoryAllocator
+        PinnedHostMemorySpace
+        UnpinnedHostMemorySpace
+        CpuDeviceMemorySpace
+    end
+
+    PjRtBuffer --&gt; CommonPjRtBuffer
+    CommonPjRtBuffer --&gt; ScopedHold
+    CommonPjRtBuffer --&gt; AbstractTrackedDeviceBuffer
+    AbstractTrackedDeviceBuffer --&gt; PjRtRawBufferInterface
+    AbstractTrackedDeviceBuffer --&gt; PjRtDeviceEventRef
+    PjRtRawBuffer --&gt; PjRtStagingBuffer
+    CommonAsyncHostToDeviceTransferManager --&gt; PjRtRawBufferInterface
+    CommonAsyncHostToDeviceTransferManager --&gt; PjRtDeviceEventPromiseRef
+    CommonAsyncHostToDeviceTransferManager --&gt; PjRtBuffer
+    PjRtMemorySpace --&gt; PjRtDevice
+    CommonPjRtBuffer --&gt; PjRtMemorySpace
+    ScopedLauncher --&gt; PjRtDeviceEventRef
+    PinnedHostMemorySpace --&gt; PjRtDevice
+    UnpinnedHostMemorySpace --&gt; PjRtDevice
+    CpuDeviceMemorySpace --&gt; PjRtDevice</div>
+<ul><li>`CommonPjRtBuffer`는 `protected PjRtMemorySpace* const memory_space_`(`abstract_tracked_device_buffer.h:379`)만 저장하고 `PjRtDevice`에 대한 필드는 없다 — 이것이 &quot;버퍼는 메모리 공간만 안다&quot;는 문서 설명의 실제 구현이다(아래 &quot;중요한 설계 판단&quot; 참고).</li><li>`PjRtRawBuffer`는 `PJRT_RawBuffer`(C 구조체)를 상속하고 vtable(`kRawBufferVtable`, `raw_buffer.cc:198-334`)을 가진다 — 이는 C++ 내부 구현과 C ABI 플러그인 양쪽에서 동일하게 쓰이도록 설계된 것이며, `AbstractTrackedDeviceBuffer`에는 이런 C API 미러링이 없다(순수 C++ 북키핑).</li><li>`host_memory_spaces.h`의 세 클래스는 각각 `PjRtDevice* device_` 필드를 실제로 갖고 `client()`/`devices()`를 이를 통해 위임한다 — `PjRtMemorySpace`가 디바이스를 알고, 버퍼는 메모리 공간을 통해 &quot;간접적으로만&quot; 디바이스에 닿는다는 문서 구조의 구체적 예시다.</li></ul>
+<h2>버퍼 생명주기</h2>
+<h3>생성 경로</h3>
+<p>`pjrt_client.h`에는 최소 5개의 버퍼 생성 진입점이 있다: `BufferFromHostBuffer`/`BufferFromHostLiteral`(동기, L980-1014), `CreateUninitializedBuffer`(L736-740), `CreateAliasBuffer`(L744-748), `CreateBuffersForAsyncHostToDevice`(비동기, L902-929), `CreateViewOfDeviceBuffer`(외부 소유 메모리 뷰, L1028-1034), `MakeCrossHostReceiveBuffers`(L1059-1065). 이 경로들의 실제 구현부는 스코프 밖이지만, `host_to_device_transfer_manager.cc`에서 유일하게 전체 흐름을 확인할 수 있다:</p>
+<p>1. `CommonAsyncHostToDeviceTransferManager::Create`(L64-174)가 각 `ShapeSpec`에 대해 `client-&gt;AllocateRawBuffer(...)`로 `PjRtRawBufferRef`를 얻고, `client-&gt;CreateLinkedEventPromise(...)`로 `definition_event`(promise+ref 쌍)를 만든 뒤, `client-&gt;DefineBuffer(shared_device_shape, memory_space, raw_buffer, {definition_event})`(L157-160)로 실제 `PjRtBuffer`를 만든다. `DefineBuffer` 자체는 스코프 밖이지만 시그니처로 보아 **`AbstractTrackedDeviceBuffer`를 만들어 `CommonPjRtBuffer`(=`PjRtBuffer`)로 감싸는 함수로 추정**된다. 2. 이때 실제 device 메모리는 아직 확보되지 않을 수 있다. `allocation_event`(`CreateAllocationEventForTransfers`가 반환)가 `ScopedEvent`로 보류되어 있다가, 첫 데이터가 도착할 때(`TransferLiteralToBuffer`/`TransferRawDataToSubBuffer`에서 `allocation_events_[buffer_index].reset()`) 비로소 소멸자를 통해 `SetStateConcrete()`가 호출되어 할당이 트리거된다(L232-234, L353-354, 주석: &quot;lazy allocation design avoids holding on to empty, unusable HBM&quot;). 3. 생성된 `PjRtBuffer`는 `RetrieveBuffer(buffer_index)`(L213-216)로 즉시 호출자에게 반환되며, 아직 `definition_event`가 미완료 상태이므로 &quot;아직 준비 안 됨&quot; 상태의 유효한 핸들이다.</p>
+<h3>전송 경로</h3>
+<ul><li>**동기(`BufferFromHostBuffer`/`BufferFromHostLiteral`)**: `HostBufferSemantics` enum(4종, L933-969)이 호스트 메모리의 공유/복사/변경 가능성 계약을 규정한다 — `kImmutableOnlyDuringCall`(호출 중에만 유효, 복사 강제), `kImmutableUntilTransferCompletes`(전송 완료까지 유효), `kImmutableZeroCopy`(버퍼 생존 동안 유효, 런타임은 변경 안 함), `kMutableZeroCopy`(런타임도 변경 가능, 예: 출력 버퍼로 aliasing). 이 값에 따라 구현이 zero-copy 뷰를 만들지, 즉시 복사할지 결정한다(구체 구현은 스코프 밖).</li><li>**비동기(`AsyncHostToDeviceTransferManager`)**: `TransferLiteralToBuffer`는 `client_-&gt;LinearizeInto(literal, device_shape, ..., raw_buffer)`(L263-268, host layout→device layout 변환 + 전송, 구현은 스코프 밖이지만 개념적으로 `staging_buffer`를 사용할 것으로 추정)를, `TransferRawDataToSubBuffer`는 `raw_buffer-&gt;CopyRawHostToDeviceAndReturnEvent(...)`(L376-378, 이미 device layout으로 정렬된 원시 바이트)를 각각 호출한다. 두 경우 모두 반환된 `h2d_transfer_event`에 `AndThen`을 걸어, 전송이 끝나면 `definition_event.Set(transfer_event)`(L306, L439)로 버퍼를 ready 상태로 전이시킨다.</li><li>**역방향(`ToLiteral`, device→host)**: `PjRtBuffer::ToLiteral`/`LazyToLiteral`(`pjrt_client.h:1224-1231`)은 순수 가상 함수로 구현은 스코프 밖이지만, `raw_buffer.cc`의 `ToStagingBuffer` 헬퍼(L137-196)가 그 하부 메커니즘을 보여준다: raw buffer가 host-visible 포인터를 가지면(`GetHostPointer() != nullptr`, 예: CPU/pinned host) **zero-copy로 바로 그 메모리를 감싸는** `HostRawBufferPjRtStagingBuffer`를 반환하고, 그렇지 않으면 `allocate_staging_buffer` 콜백으로 새 스테이징 버퍼를 만들고 `raw_buffer-&gt;CopyRawDeviceToHostAndReturnEvent(...)`로 device→host 복사를 건 뒤 완료 시 스테이징 버퍼를 concrete로 만든다.</li></ul>
+<h3>삭제/외부 참조 처리</h3>
+<ul><li>`IsDeleted()`는 `CommonPjRtBuffer::device_buffer_ == nullptr` 여부다(`abstract_tracked_device_buffer.cc:409-412`).</li><li>실제 `Delete()`는 스코프 밖이지만, 최종적으로 도달하는 `AbstractTrackedDeviceBuffer::Delete(memory_space)`(L143-159)가 핵심이다: `definition_events_`와 `usage_events_`를 모두 모은 뒤 `LockUsageEvents()`로 더 이상 새 usage event를 못 붙이게 막고, `raw_buffer`를 꺼내 `this`(unique_ptr 소유)를 파괴한 다음, **`raw_buffer.release()-&gt;DecrefAfter(std::move(events))`** 를 호출한다. `DecrefAfter`(`raw_buffer.cc:112-114`)는 `xla::RunWhenReady(events, [this]{ DropRef(); })`로 구현되어 있어 — 즉 실제 메모리 반납(`DropRef`)은 **모든 정의/사용 이벤트가 끝난 뒤로 지연**된다. 이는 `pjrt_client.h`의 `Delete()` 주석(&quot;메모리는 지연 해제되며, Delete는 잠깐 블록할 수는 있지만 스트림 연산 완료까지 블록하지는 않는다&quot;)과 정확히 대응한다.</li><li>**외부 참조**는 `CommonPjRtBuffer::ScopedHold`의 `kExternalReference` 타입(`abstract_tracked_device_buffer.h:204`)으로 구현된다. 홀드 규칙(L156-201 주석 + `GetBufferForDonationHoldLocked` L208-229)에 따르면: 도네이션 홀드는 미해제 외부 참조가 있으면 에러를 반환하고, 외부 참조가 있는 동안은 `Delete`/도네이션이 완전히 끝나지 않는다 — `AcquireExternalReference()`(`pjrt_client.h:1216-1217`, 순수 가상)가 이 `kExternalReference` 홀드로 구현될 것으로 추정된다(구체 코드는 스코프 밖).</li></ul>
+<h2>비동기 동기화 메커니즘</h2>
+<h3>Future 개념과 GetReadyFuture 대응 코드</h3>
+<p>`pjrt_future.h`는 실질적으로 `#include &quot;xla/future.h&quot;` 한 줄뿐인 **포워딩 헤더**다. 즉 현재 이 저장소에서 `PjRtFuture&lt;T&gt;`라는 이름은 사라지고 범용 `xla::Future&lt;T&gt;`(정의는 `xla/future.h`에 있으나 이번 체크아웃에는 포함되지 않음 — 확인 필요)로 통합되었다. `PjRtBuffer::GetReadyFuture()`(`pjrt_client.h:1394`)는 순수 가상이며, 실제 구현은 `AbstractTrackedDeviceBuffer::GetReadyFuture(PjRtMemorySpace*)`(`abstract_tracked_device_buffer.cc:52-106`)다. 여기서 `tsl::MakePromise&lt;void&gt;()`로 **호출할 때마다 새 Future/Promise 쌍**을 만들고, `raw_buffer`의 할당 이벤트 + 아직 concrete가 아닌 `definition_events_`를 의존성으로 모아 `RunWhenReady`에 넘긴다. 이는 `pjrt_client.h`의 주석(&quot;버퍼가 삭제/도네이션돼도 이미 반환된 Future는 유효하게 남는다&quot;)을 그대로 구현한 것 — 반환되는 Future는 내부 이벤트 객체와 독립적인 새 객체이기 때문이다.</p>
+<h3>device_event의 역할</h3>
+<p>`device_event.h`의 `PjRtDeviceEventRef`(소유)/`PjRtDeviceEventPtr`(비소유)/`PjRtDeviceEventPromiseRef`(쓰기 측)는 `PJRT_DeviceEvent` C 구조체를 감싼 참조 카운트 핸들이다. 로컬(in-process) 이벤트는 `tsl::AsyncValue`에 바로 매핑되고(`internal::GetBuiltinAsyncValueCApiFunctionTable`, `device_event.h:31-96`), 외부 C API 플러그인 이벤트는 vtable 디스패치로 동일한 인터페이스를 제공한다. `device_event_utils.h`의 `ScopedLauncher`/`RunWhenReady`/`ExecuteWhenReady`는 &quot;여러 이벤트가 모두 준비되면 작업 실행&quot;이라는 **논블로킹 fan-in 조합자**이며, `ScopedLauncher::AddDependency`가 각 의존성에 참조 카운트된 `Callee`를 매달아(`DeleteWhenReady`/`AndThen`) 마지막 참조가 사라질 때(`~Callee`)만 태스크를 실행한다(`device_event_utils.cc:34-105`). 반면 `BlockUntilReady`(`device_event_utils.cc:132-144`)만이 `absl::Notification`으로 **실제로 스레드를 재우는** 유일한 지점이다 — `AbstractTrackedDeviceBuffer::BlockForOperationsToComplete`(L108-124)가 이를 사용한다.</p>
+<p>**문서 시나리오(&quot;x=foo(1) 실행 후 값이 필요할 때까지 블로킹을 미룬다&quot;)와의 대응**: `x` 생성 시점에는 `definition_events_`에 아직 완료되지 않은 `PjRtDeviceEventRef`(플러그인이 나중에 `Set`할 promise)만 들어있다. `CommonPjRtBuffer::GetBufferWithHold(kUsage)`/`AcquireScopedRawBuffer`(`abstract_tracked_device_buffer.cc:414-444`)는 이 미완료 이벤트를 **블록 없이** 그대로 다음 연산의 의존성으로 넘길 수 있으므로, `x`를 쓰지 않는 다른 연산은 계속 큐잉될 수 있다. `x`의 값이 실제로 필요해지는 지점(예: `ToLiteralSync`가 내부적으로 호출하는 `Future::Await`, 또는 `BlockForOperationsToComplete`)에 이르러서야 `BlockUntilReady`가 호출되어 스레드가 멈춘다.</p>
+<h3>semaphore가 사용되는 지점</h3>
+<p>`semaphore.h`/`semaphore.cc`는 `absl::Mutex::LockWhen` 기반의 표준 카운팅 세마포어(`Acquire`/`TryAcquire`/`Release`)와 RAII `ScopedReservation`/`ScopedAcquire`를 제공하는 **독립적인 유틸리티**다. 그러나 이번 체크아웃 범위(`xla/pjrt/` 지정 파일들과 저장소 전체를 재검색) 안에서 `Semaphore`를 실제로 사용하는 코드는 **한 곳도 발견되지 않았다** — `raw_buffer`, `abstract_tracked_device_buffer`, `host_to_device_transfer_manager`, `device_event*` 어디에도 참조가 없다. 이 계획 단계 스냅숏 안에서 semaphore는 device_event/실행 큐잉과 아직 배선되지 않은 leaf 유틸리티로 보이며, 일반적인 PJRT 패턴상 CPU/GPU 등 플랫폼별 클라이언트가 동시 전송/실행 개수를 제한하는 데 쓸 것으로 **추정**되지만, 해당 소비 코드(플랫폼별 `*_client.cc`)는 이번 분석 범위 밖이라 **확인이 필요함**.</p>
+<h2>핵심 흐름</h2>
+<ul><li>**입력**: `BufferFromHostBuffer`류 API 호출 또는 `CreateBuffersForAsyncHostToDevice` + `TransferLiteralToBuffer/TransferRawDataToSubBuffer` 조합.</li><li>**변환/검증**: `HostBufferSemantics`로 소유권 계약 확인 → 필요 시 `LinearizeInto`(host layout→device layout, 내부적으로 스테이징 버퍼 경유 추정) → `PjRtRawBuffer`에 실제 바이트 기록(`CopyRawHostToDeviceAndReturnEvent`).</li><li>**상태 변경**: 전송 완료 이벤트를 `PjRtDeviceEventPromiseRef.Set(...)`으로 `definition_events_`에 반영 → `AbstractTrackedDeviceBuffer`가 이를 근거로 `GetReadyFuture()` 호출 시마다 새 Future를 발급.</li><li>**외부 호출/결과**: 소비자는 `ToLiteral`(내부적으로 `ToStagingBuffer` 경유해 device→host 복사) 또는 `Execute`의 인자로 버퍼를 그대로 사용하며, 값이 실제로 필요한 지점(`Await`/`BlockUntilReady`)에서만 동기 대기가 발생한다. `Delete`는 이벤트 완료 이후로 미뤄진 지연 해제(`DecrefAfter`)로 마무리된다.</li></ul>
 <h2>주요 파일과 역할</h2>
-<p>| 파일 | 핵심 타입/함수 | 역할 | |---|---|---| | `pjrt_client.h` | `PjRtClient`, `PjRtBuffer`, `AsyncHostToDeviceTransferManager`, `HostBufferSemantics` | 공개 API 표면 정의(순수 가상 다수) | | `raw_buffer.{h,cc}` | `PjRtRawBuffer`, `PjRtRawBufferInterface`, `ToStagingBuffer` | 원시 디바이스 메모리 + 전송 프리미티브 | | `staging_buffer.{h,cc}` | `PjRtStagingBuffer` | linearize/delinearize용 임시 바이트 뷰 | | `host_to_device_transfer_manager.{h,cc}` | `CommonAsyncHostToDeviceTransferManager` | 지연 H2D 버퍼 생성·청크 전송 오케스트레이션 | | `abstract_tracked_device_buffer.{h,cc}` | `AbstractTrackedDeviceBuffer`, `CommonPjRtBuffer`, `ScopedHold` | 정의/사용 이벤트 추적 + 홀드 기반 동시성 제어 | | `device_event.{h,cc}` | `PjRtDeviceEventPtr/Ref/Promise` | C API 호환 비동기 이벤트 래퍼 | | `device_event_utils.{h,cc}` | `ScopedLauncher`, `RunWhenReady`, `BlockUntilReady` | 이벤트 join 후 후속 작업 큐잉/블로킹 | | `semaphore.{h,cc}` | `Semaphore`, `ScopedReservation` | 범용 카운팅 세마포어(이 파일셋 내 미사용) | | `pjrt_future.h` | (재전달) | `xla/future.h`로의 alias, 정의는 범위 밖 | | `host_memory_allocator.h` | `HostMemoryAllocator`, `BasicHostMemoryAllocator` | 호스트측 정렬 메모리 할당(DMA 친화적) | | `host_memory_spaces.h` | `UnpinnedHostMemorySpace`, `PinnedHostMemorySpace`, `CpuDeviceMemorySpace` | 호스트 인접 메모리 종류별 `PjRtMemorySpace` 구현 |</p>
+<p>| 파일 | 역할 | |---|---| | `pjrt_client.h` | `PjRtClient`/`PjRtDevice`/`PjRtMemorySpace`/`PjRtBuffer`/`PjRtLoadedExecutable` 공개 인터페이스, `HostBufferSemantics`, `AsyncHostToDeviceTransferManager` 선언 | | `raw_buffer.h/.cc` | 물리 device 메모리 1개를 나타내는 최저수준 참조 카운트 객체, C API(`PJRT_RawBuffer`) 브리지, `ToStagingBuffer` 헬퍼 | | `abstract_tracked_device_buffer.h/.cc` | `raw_buffer` + 정의/사용 이벤트를 묶는 `AbstractTrackedDeviceBuffer`, hold 기반 생명주기 관리 `CommonPjRtBuffer`/`ScopedHold` | | `device_event.h/.cc` | `PJRT_DeviceEvent`를 감싼 C++ 핸들(`PjRtDeviceEventRef`/`Ptr`/`PromiseRef`), 로컬 AsyncValue ↔ C API 플러그인 이벤트 양방향 호환 | | `device_event_utils.h/.cc` | 이벤트 fan-in 조합자(`ScopedLauncher`, `RunWhenReady`)와 실제 블로킹 지점(`BlockUntilReady`) | | `staging_buffer.h/.cc` | linearize/delinearize용 호스트 스크래치 버퍼 추상 인터페이스(`data()`/`const_data()`만 존재) | | `host_to_device_transfer_manager.h/.cc` | `AsyncHostToDeviceTransferManager`의 유일한 구체 구현, 지연 할당 + 청크 단위 스트리밍 전송 | | `semaphore.h/.cc` | 독립 카운팅 세마포어(RAII 예약 포함), 이 스코프 안에서는 미사용 | | `host_memory_allocator.h` | 정렬/NUMA/맵-언맵 옵션을 가진 호스트 메모리 할당자 인터페이스, `PjRtClient::GetHostMemoryAllocator()`가 반환 | | `host_memory_spaces.h` | `PjRtMemorySpace`의 3가지 구체 구현(`Unpinned`/`Pinned`/`CpuDeviceMemorySpace`), 각자 `PjRtDevice*`를 소유 | | `pjrt_future.h` | `xla/future.h`로의 순수 포워딩 헤더(구버전 `PjRtFuture` 이름 호환용으로 추정) |</p>
 <h2>중요한 설계 판단</h2>
-<ul><li>**지연 할당(lazy allocation)**: `CommonAsyncHostToDeviceTransferManager`는 실제 HBM 할당을 첫 데이터 청크가 도착할 때까지 미룬다(`allocation_events_[i].reset()`, `host_to_device_transfer_manager.cc:233,354`). 원격 소스에서 오는 데이터를 기다리는 동안 빈 메모리를 점유하지 않기 위한 명시적 트레이드오프(주석 `:87-91`).</li><li>**refcount를 join 프리미티브로 재사용**: `ScopedLauncher`가 명시적 카운터 대신 `tsl::RCReference&lt;Callee&gt;`의 소멸을 트리거로 쓰는 것은 락-프리에 가까운 경량 설계지만, 디버깅 시 &quot;왜 이 콜백이 실행되지 않았는가&quot;를 추적하려면 refcount 그래프를 이해해야 하는 비용이 있다.</li><li>**C-API 이중화(vtable) 패턴 반복**: `PjRtMemorySpace`/`PjRtMemorySpaceCApiDelegator`, `PjRtRawBuffer`/`PjRtRawBufferInterface`, `PjRtDeviceEvent(Ptr/Ref)`/`PJRT_DeviceEvent` 세 곳 모두 동일한 &quot;C++ 네이티브 구현과 C API 플러그인 구현을 같은 인터페이스로 다루기&quot; 패턴을 쓴다. 즉 이 모듈들은 순수 C++ 편의 계층이면서 동시에 PJRT C API ABI 경계이기도 하다.</li><li>**Donation과 다른 홀드 간 상호배제를 카운터+Mutex.Await로 구현**: 락-프리 자료구조 대신 `absl::Mutex::Await(Condition)`를 사용해 단순성을 택했다(`WaitForOutstandingUsageHolds`/`WaitForOutstandingDonationHold`).</li></ul>
+<ul><li>**버퍼는 MemorySpace만 소유하고 Device는 간접 참조한다.** `CommonPjRtBuffer`(`abstract_tracked_device_buffer.h:379`)의 유일한 위치 관련 필드는 `PjRtMemorySpace* const memory_space_`이며 `PjRtDevice*` 필드가 없다. `PjRtBuffer::device()`는 여전히 순수 가상으로 남아있지만 코드 주석에 `// TODO(b/277820585): remove device() after the migration is done.`(`pjrt_client.h:1189-1190`)이 붙어 있어, **이 저장소는 &quot;device() 제거&quot;라는 마이그레이션이 진행 중인 과도기 상태**임을 보여준다. 반대로 `host_memory_spaces.h`의 세 `PjRtMemorySpace` 구현은 모두 `PjRtDevice* device_`를 실제로 들고 있어, &quot;메모리 공간이 디바이스를 알고, 버퍼는 메모리 공간을 거쳐 디바이스에 도달한다&quot;는 문서의 역포인터 구조를 그대로 구현한다.</li><li>**raw_buffer.h는 &quot;메모리&quot;를, abstract_tracked_device_buffer.h는 &quot;생명주기/동기화&quot;를 담당하도록 명확히 분리되어 있다.** `PjRtRawBuffer`는 C ABI(`PJRT_RawBuffer`)를 직접 상속해 플러그인 경계를 넘나들 수 있는 반면, `AbstractTrackedDeviceBuffer`/`CommonPjRtBuffer`는 순수 C++이며 C API 미러가 없다. 이 분리 덕분에 raw buffer 하나를 여러 논리 버퍼가 공유(슬라이싱, 도네이션, staging)하면서도 이벤트/hold 규칙은 상위 계층에서만 관리된다.</li><li>**staging_buffer와 host_to_device_transfer_manager는 서로 다른 시점을 책임진다.** `staging_buffer`는 **단일 복사 연산** 단위에서 &quot;host-visible 포인터가 있으면 zero-copy, 없으면 스테이징 후 복사&quot;라는 저수준 linearize/delinearize 원시 연산(`raw_buffer.cc: ToStagingBuffer`)을 담당하는 반면, `host_to_device_transfer_manager`는 **버퍼 생명주기/멀티청크 스트리밍** 단위에서 &quot;데이터가 없는 상태로 버퍼 핸들을 즉시 내주고, 이후 여러 번에 걸쳐 청크를 흘려 넣는&quot; 상위 정책(지연 할당, `TransferRawDataToSubBuffer`의 `is_last_transfer` 분기)을 담당한다. 후자는 개념적으로 전자를 호출해 실제 바이트 변환을 수행할 것으로 추정된다.</li><li>**메모리 해제는 항상 이벤트 완료 뒤로 지연된다.** `AbstractTrackedDeviceBuffer::Delete` → `PjRtRawBuffer::DecrefAfter` → `RunWhenReady(events, DropRef)`로 이어지는 체인은, &quot;Delete는 즉시 반환하지만 실제 free는 진행 중인 async 작업이 끝난 뒤&quot;라는 설계를 관통한다. 이는 GPU/TPU에서 스트림 상의 아직 실행 중인 커널이 참조하는 메모리를 조기 해제하지 않기 위한 전형적 패턴이다.</li></ul>
 <h2>읽으면서 주의할 점</h2>
-<ul><li>이 체크아웃은 **`xla/pjrt/` 전체가 아니라 job.json에 명시된 17개 파일만 포함**한다. `common_pjrt_client.h`(`CommonPjRtClient::TrackFuture`, `CreateLinkedEventPromise`, `AllocateRawBuffer`, `DefineBuffer`, `LinearizeInto`, `AppendDescriptionToEvent` 등 핵심 오케스트레이션 함수가 전부 여기 정의됨)와 `xla/future.h`(`Future&lt;T&gt;`의 실제 정의)는 포함되지 않아, 이 문서의 여러 설명은 **호출 시그니처로부터의 추론**이다.</li><li>`semaphore.h`는 코드베이스 안에서 고아(orphan) 상태로 보이며, &quot;실행 큐잉과 semaphore의 연결&quot;을 코드에서 직접 증명할 수 없다. CPU/GPU 백엔드 구현을 추가로 확인해야 한다.</li><li>`PjRtBuffer::device()`는 존재하지만 deprecated 예정이므로, 새 코드를 작성/리뷰할 때 `memory_space()`를 우선해야 한다.</li><li>`ScopedHold`는 이동만 가능하고 복사 불가(`ScopedHold(const ScopedHold&amp;) = delete`), 소멸자가 자동으로 hold를 drop하므로 스코프 관리 실수 시 데드락(도네이션 홀드가 영원히 안 풀림) 위험이 있다.</li></ul>
+<ul><li>이 체크아웃에는 `common_pjrt_client.h/.cc`, `pjrt_client.cc`, `xla/future.h`가 **없다**. `AllocateRawBuffer`, `DefineBuffer`, `LinearizeInto`, `CreateLinkedEventPromise`, `TrackFuture`, `WaitOnStream`, `Future&lt;&gt;`/`tsl::MakePromise` 등은 모두 이 파일들에서 온 것이며, 이번 문서에서 그 동작은 호출 패턴으로 **역추정**한 것이지 소스로 확인한 것이 아니다.</li><li>`Semaphore`는 문서 요구사항(&quot;device_event/semaphore가 실행 큐잉과 어떻게 연결되는지&quot;)과 달리 이 스코프 안에서는 device_event와 **전혀 연결되어 있지 않다.** 실제 배선을 확인하려면 `xla/pjrt/cpu/` 또는 `xla/pjrt/gpu/` 등 플랫폼별 클라이언트 소스가 필요하다.</li><li>참고 문서(OpenXLA 공식 문서)는 `xla::Future&lt;&gt; ToLiteral(...)` 같은 최신 시그니처를 이미 반영하고 있어 코드와 일치하지만, `device_event.h`/`raw_buffer.h`/`staging_buffer.h` 같은 **내부 구현 세부사항은 공식 문서 어디에도 설명되어 있지 않다** — 참고자료 4개 문서 전체를 검색해도 &quot;definition event&quot;, &quot;raw buffer&quot;, &quot;staging&quot;에 대응하는 설명은 없었다. 즉 이 레이어는 공개 API 문서보다 한 단계 더 내부적인, 최근 도입된 리팩터링 계층으로 보인다(추정).</li><li>`AbstractTrackedDeviceBuffer::Delete`는 `std::unique_ptr&lt;AbstractTrackedDeviceBuffer&gt; device_buffer(this)`로 **자기 자신을 unique_ptr로 감싸 소멸시키는** 다소 특이한 패턴(L144)을 쓴다 — `this` 포인터 라이프타임에 유의해서 읽어야 한다.</li></ul>
 <h2>더 파볼 질문</h2>
-<ul><li>`CommonPjRtClient::TrackFuture`, `CreateLinkedEventPromise`, `LinearizeInto`, `AllocateRawBuffer`의 실제 구현(`common_pjrt_client.h/.cc`, 이번 범위 밖)을 봐야 device_event가 실제 백엔드(CPU/GPU) 실행 스트림과 어떻게 매핑되는지 확정할 수 있다.</li><li>`Semaphore`가 실제로 어느 백엔드에서 사용되는지(예: 동시 H2D 전송 개수 제한) 전체 리포지토리에서 확인이 필요하다.</li><li>`use_stream_based_compaction_`(`abstract_tracked_device_buffer.h:150`, `.cc:491-527`)가 켜졌을 때의 usage event 압축 로직이 GPU 스트림 기반 백엔드에서 어떻게 쓰이는지는 `GetDefinitionStream()`을 실제로 채우는 구현체를 봐야 한다.</li></ul>
+<ul><li>`CommonPjRtClient::DefineBuffer`/`AllocateRawBuffer`/`LinearizeInto`/`CreateLinkedEventPromise`의 실제 구현(`common_pjrt_client.cc`, 이번 스코프 밖)을 봐야 host→device 변환 로직과 raw buffer 할당 정책(재시도, OOM 처리)이 완전히 드러난다.</li><li>`Semaphore`의 실제 소비처(`xla/pjrt/cpu/cpu_client.cc` 또는 `xla/pjrt/gpu/*` 추정)를 찾아, 문서가 요구한 &quot;semaphore와 실행 큐잉의 연결&quot;을 실제로 검증할 필요가 있다.</li><li>`xla/future.h`의 `Future&lt;T&gt;`/`tsl::MakePromise&lt;T&gt;` 구현을 읽어, `PjRtFuture`에서 `xla::Future`로의 통합이 어떤 API 변화(콜백 체이닝, `Await()` 시맨틱 등)를 수반했는지 확인할 가치가 있다.</li><li>`use_stream_based_compaction_` 플래그(`abstract_tracked_device_buffer.h:150`)가 `AddUsageEvent`에서 스트림/시퀀스 기반으로 usage event를 압축하는 로직(`abstract_tracked_device_buffer.cc:491-509`)은 GPU 스트림 최적화로 보이는데, 이 최적화가 켜지는 조건(어느 백엔드가 `true`로 생성하는지)은 확인이 필요하다.</li></ul>
     </article>
   </main>
   <footer>
@@ -181,5 +269,12 @@
       코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
     </div>
   </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+  </script>
 </body>
 </html>

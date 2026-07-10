@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Distributed 런타임 (멀티 호스트 조정)</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <style>
     :root {
       color-scheme: light dark;
@@ -104,6 +105,15 @@
       border-radius: 12px;
       background: #080b11;
     }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
     code {
       font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
       font-size: 0.9em;
@@ -123,47 +133,136 @@
       <h1>Distributed 런타임 (멀티 호스트 조정)</h1>
       <p class="summary">참고 문서에는 설명되지 않은 xla/pjrt/distributed 디렉터리를 분석하여 멀티 프로세스/멀티 호스트 PJRT 클라이언트가 어떻게 토폴로지와 상태를 공유하는지 파악한다.</p>
       <div class="meta-row">
-        <span class="meta-pill">업데이트 2026-07-10</span>
+        <span class="meta-pill">업데이트 2026-07-11</span>
         <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span>
       </div>
     </div>
   </header>
   <main class="page-shell">
     <article>
-      <p>참고 문서 4개 어디에도 coordination service/incarnation 관련 언급이 없음을 확인했습니다. 이제 분석 문서를 작성합니다.</p>
-<h1>`xla/pjrt/distributed` 모듈 분석 — PJRT 멀티 호스트 조정 런타임</h1>
+      <p>코드 확인이 끝났습니다. 이제 분석 문서를 작성하겠습니다.</p>
+<p>---</p>
+<h1>XLA PJRT `distributed/` 모듈 분석 — 멀티 호스트 조정 런타임</h1>
 <h2>한 줄 요약</h2>
-<p>`xla/pjrt/distributed/`는 PJRT의 C API/플러그인 계층과는 별개로 존재하는 **C++ 전용 부트스트랩 라이브러리**로, 여러 프로세스(호스트)가 클러스터를 구성할 때 (1) gRPC 기반 코디네이터 서비스·클라이언트로 헬스체크/바리어를 수행하고 (2) 그 위에 얹힌 KV 스토어로 로컬 디바이스 토폴로지를 교환해 `GlobalTopologyProto`를 만든 뒤, 이를 이용해 `PjRtClient` 생성 이전 단계에서 글로벌 디바이스 ID·GPU 토폴로지를 확정하는 역할을 한다.</p>
+<p>`xla/pjrt/distributed/`는 PJRT 자체의 컴퓨팅 로직과는 독립된 **랑데부/바리어/KV 저장소 기반 클러스터 부트스트랩 레이어**로, 여러 프로세스가 자신의 로컬 디바이스 토폴로지를 교환해 하나의 `GlobalTopologyProto`를 만들고, 이를 GPU 백엔드가 `PjRtClient` 생성 시점에 사용할 수 있도록 준비하는 역할을 한다. (이 checked-out 스코프에는 그 GPU 백엔드 코드 자체는 포함되어 있지 않아, 연결부는 코드 근거 + 추정으로 설명한다.)</p>
 <h2>분석 범위</h2>
-<ul><li>대상: `xla/pjrt/distributed/{distributed,client,service,topology_util,key_value_store_interface,in_memory_key_value_store}.{h,cc}`, `protocol.proto` (총 12개 파일)</li><li>이 디렉터리는 저장소가 sparse-checkout으로 구성되어 있어 **이 12개 파일 외에는 로컬에 존재하지 않음**(`repo/.git/info/sparse-checkout` 확인). 따라서 `gpu/se_gpu_pjrt_client.cc` 등 상위 PJRT GPU 클라이언트 생성 경로나 `xla/pjrt/distributed/coordination/` 하위 모듈(실제 gRPC 서비스 구현체)은 이 리포지토리 스냅샷에서 직접 grep할 수 없었다. 해당 경로는 코드 내부 신호(포함 헤더, 주석, 타입 시그니처)를 근거로 **추정**했으며, 이는 아래에서 명시적으로 표시한다.</li><li>참고 문서 4종(PJRT Uniform Device API, C++ Device API 개요, 예제, 플러그인 통합)은 모두 `xla/pjrt/c/pjrt_c_api.h`의 **C ABI**를 다루며, `distributed/` 디렉터리는 언급되지 않는다.</li></ul>
+<ul><li>`distributed.h/.cc` — 서비스/클라이언트 생성 진입점(팩토리 함수)</li><li>`service.h/.cc` — `DistributedRuntimeService`, `CoordinationServiceImpl` (코디네이터 프로세스 측)</li><li>`client.h/.cc` — `DistributedRuntimeClient`, `DistributedRuntimeCoordinationServiceClient` (워커 프로세스 측)</li><li>`key_value_store_interface.h`, `in_memory_key_value_store.h/.cc` — KV 저장소 추상화와 단일 프로세스용 구현</li><li>`topology_util.h/.cc` — 로컬/글로벌 토폴로지 교환 및 GPU 토폴로지 구성</li><li>`protocol.proto` — 토폴로지 페이로드 메시지 정의</li></ul>
+<p>이 저장소 스니펫은 `repo/.git/info/sparse-checkout`에 명시된 대로 위 12개 파일만 체크아웃되어 있다(확인 완료). 따라서 `xla/pjrt/gpu/se_gpu_pjrt_client.cc` 등 상위 PJRT GPU 클라이언트 코드는 로컬에 존재하지 않으며, 이 문서의 &quot;PjRtClient와의 연결점&quot; 섹션은 **이 디렉터리 내부의 타입/주석 근거 + 명명 관례를 통한 추정**으로 작성했다.</p>
 <h2>전체 구조</h2>
-<pre><code>xla/pjrt/distributed/
-├─ distributed.{h,cc}          # 서비스/클라이언트 생성 팩토리 (insecure grpc credentials 기본 적용)
-├─ service.{h,cc}               # DistributedRuntimeService: 코디네이터(마스터) 프로세스 측 gRPC 서버
-├─ client.{h,cc}                # DistributedRuntimeClient: 각 워커 프로세스 측 gRPC 클라이언트
-├─ key_value_store_interface.h  # KV 스토어 추상 인터페이스 (Get/TryGet/Set/AsyncGet)
-├─ in_memory_key_value_store.{h,cc}  # KV 인터페이스의 단일 프로세스(테스트/단일 호스트) 구현체
-├─ topology_util.{h,cc}         # KV 스토어를 이용한 로컬→글로벌 디바이스 토폴로지 교환/조립
-└─ protocol.proto               # 토폴로지 관련 메시지 정의 (DeviceProto/LocalTopologyProto/GlobalTopologyProto)</code></pre>
-<p>이 12개 파일 자체는 실제 RPC 서버/클라이언트 로직을 구현하지 않는다. `service.cc`와 `client.cc`는 모두 `xla/pjrt/distributed/coordination/`(스코프 밖) 아래의 `CoordinationService`, `CoordinationServiceAgent`, `GrpcCoordinationServiceImpl`을 얇게 감싸는 어댑터다. 즉 실제 통신 프로토콜은 TensorFlow에서 이식된 범용 **coordination service**(`xla/tsl/protobuf/coordination_service.pb.h`)이고, `distributed/` 디렉터리는 그 위에 JAX 지향 API(`DistributedRuntimeClient`/`Service`)와 GPU 토폴로지 교환 로직(`topology_util.cc`)을 얹은 얇은 파사드다.</p>
+<p>이 모듈은 크게 3계층으로 나뉜다.</p>
+<p>1. **RPC/코디네이션 계층** — `service.*`, `client.*`가 `xla/pjrt/distributed/coordination/`(스코프 밖) 의 `CoordinationService`/`CoordinationServiceAgent`를 감싸는 얇은 어댑터다. 실제 barrier·heartbeat·KV RPC 로직은 이 스코프에 없다. 2. **KV 추상화 계층** — `key_value_store_interface.h`가 정의하는 `KeyValueStoreInterface`는 코디네이션 서비스에 종속되지 않은 범용 Get/Set 인터페이스이며, `InMemoryKeyValueStore`(단일 프로세스)와 `DistributedKeyValueStore`(client.cc 내부, gRPC 기반)가 이를 구현한다. 3. **토폴로지 계층** — `topology_util.*`가 KV 저장소를 이용해 각 노드의 `LocalTopologyProto`를 모아 `GlobalTopologyProto`/`GpuTopologyProto`로 합성한다. `protocol.proto`는 이 계층의 페이로드 메시지만 정의한다.</p>
+<h2>먼저 볼 코드 리딩 순서</h2>
+<p>1. **`key_value_store_interface.h`의 `KeyValueStoreInterface`, `MultiProcessKeyValueStore`** — 이 모듈 전체가 결국 &quot;Get/Set 가능한 KV 저장소 하나&quot;를 중심으로 돌아간다는 것을 먼저 이해해야 나머지 코드가 쉬워진다. 2. **`in_memory_key_value_store.cc`** — `absl::Mutex::AwaitWithTimeout`으로 blocking get을 구현한 가장 단순한 구현체라, KV 저장소의 동작 계약(존재하지 않으면 timeout 후 NotFound)을 코드 20줄 이내로 파악할 수 있다. 3. **`protocol.proto`** — `DeviceProto`/`LocalTopologyProto`/`GlobalTopologyProto`의 필드를 먼저 보면 이후 `topology_util.cc`의 로직이 &quot;무엇을 조립하는지&quot; 바로 이해된다. 4. **`topology_util.cc`의 `ExchangeTopologies`** — 이 모듈의 핵심 비즈니스 로직이며, KV 저장소를 이용한 리더 기반 랑데부 패턴을 직접 볼 수 있다. 5. **`topology_util.cc`의 `BuildGlobalTopology`, `BuildGpuTopology`** — `partition_index`/`global_device_id` 할당 규칙과 GPU 대칭성 검사를 이해하면 왜 이 정보가 PjRtClient 쪽에 필요한지 짐작할 수 있다. 6. **`service.h/.cc`** — `DistributedRuntimeService::Get` → `CoordinationServiceImpl` 생성 → `BuildAndStart` → `StartRpcThread` 순서로 코디네이터 프로세스의 초기화 흐름을 본다. 7. **`client.cc`의 `DistributedRuntimeCoordinationServiceClient`** — `Connect()`/`Shutdown()`과 KV API들이 전부 `coord_agent_`(스코프 밖 `CoordinationServiceAgent`)로 위임되는 얇은 어댑터임을 확인한다. 8. **`client.cc` 하단의 `DistributedKeyValueStore`, `GetDistributedKeyValueStore`** — client가 어떻게 `KeyValueStoreInterface`로 재포장되어 `topology_util.cc` 같은 소비자에게 넘어가는지 연결고리를 확인한다. 9. **`distributed.h/.cc`** — 위 모든 조각을 gRPC 채널/자격증명과 함께 묶는 최상위 팩토리 함수(`GetDistributedRuntimeService`, `GetDistributedRuntimeClient`)를 마지막에 본다.</p>
+<h2>로직 다이어그램</h2>
+<div class="mermaid">sequenceDiagram
+    participant App0 as &quot;Process 0 launcher&quot;
+    participant Svc as &quot;DistributedRuntimeService&quot;
+    participant C0 as &quot;Client rank 0&quot;
+    participant C1 as &quot;Client rank 1..N-1&quot;
+    participant KV as &quot;KV store via CoordinationServiceAgent&quot;
+
+    App0-&gt;&gt;Svc: GetDistributedRuntimeService address, options
+    Svc-&gt;&gt;Svc: CoordinationServiceImpl ctor builds grpc service
+    Svc-&gt;&gt;Svc: BuildAndStart then StartRpcThread
+    App0-&gt;&gt;C0: GetDistributedRuntimeClient channel, options
+    C1-&gt;&gt;C1: GetDistributedRuntimeClient channel, options
+    C0-&gt;&gt;Svc: Connect calls coord_agent Connect
+    C1-&gt;&gt;Svc: Connect calls coord_agent Connect
+    Svc--&gt;&gt;C0: cluster register barrier satisfied
+    Svc--&gt;&gt;C1: cluster register barrier satisfied
+    C0-&gt;&gt;KV: ExchangeTopologies Set local_topology rank0
+    C1-&gt;&gt;KV: ExchangeTopologies Set local_topology rank1
+    C0-&gt;&gt;KV: GetAllLocalTopologies rank0 only leader
+    C0-&gt;&gt;C0: BuildGlobalTopology
+    C0-&gt;&gt;KV: Set global_topology rank0 only
+    C1-&gt;&gt;KV: Get global_topology blocks until ready
+    KV--&gt;&gt;C1: GlobalTopologyProto bytes
+    C0--&gt;&gt;App0: GlobalTopologyProto for local PjRtClient build</div>
+<ul><li>`App0-&gt;&gt;Svc`: `distributed.cc:GetDistributedRuntimeService` → `service.cc:DistributedRuntimeService::Get`</li><li>`Svc-&gt;&gt;Svc` 두 단계: `service.cc:102-108`의 `DistributedRuntimeService` 생성자(`CoordinationServiceImpl` 생성 → `BuildAndStart` → `StartRpcThread`)</li><li>`App0-&gt;&gt;C0` / `C1-&gt;&gt;C1`: `distributed.cc:GetDistributedRuntimeClient` → `client.cc:274`의 `GetDistributedRuntimeClient(channel, options)`</li><li>`C0-&gt;&gt;Svc: Connect`: `client.cc:129 DistributedRuntimeCoordinationServiceClient::Connect()` → `coord_agent_-&gt;Connect()` (스코프 밖 `CoordinationServiceAgent`)</li><li>`C0-&gt;&gt;KV: Set local_topology`: `topology_util.cc:307 ExchangeTopologies` 내부의 `kv_store-&gt;Set(GetLocalTopologyKey(...), ...)`</li><li>`C0-&gt;&gt;KV: GetAllLocalTopologies`: `topology_util.cc:162` (node_id==0일 때만 실행, 스레드풀로 N개 blocking `Get` 병렬 실행)</li><li>`C0-&gt;&gt;C0: BuildGlobalTopology`: `topology_util.cc:212`</li><li>`C1-&gt;&gt;KV: Get global_topology`: `topology_util.cc:342`의 follower 경로(blocking get, `get_global_topology_timeout`으로 제한)</li></ul>
+<h2>모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+    subgraph Factory[&quot;distributed.h / distributed.cc&quot;]
+        GS[&quot;GetDistributedRuntimeService&quot;]
+        GC[&quot;GetDistributedRuntimeClient&quot;]
+    end
+    subgraph ServiceMod[&quot;service.h / service.cc&quot;]
+        DRS[&quot;DistributedRuntimeService&quot;]
+        CSI[&quot;CoordinationServiceImpl&quot;]
+    end
+    subgraph ClientMod[&quot;client.h / client.cc&quot;]
+        DRC[&quot;DistributedRuntimeClient interface&quot;]
+        DRCSC[&quot;DistributedRuntimeCoordinationServiceClient&quot;]
+        DKVS[&quot;DistributedKeyValueStore&quot;]
+    end
+    subgraph KVMod[&quot;key_value_store_interface.h&quot;]
+        KVI[&quot;KeyValueStoreInterface&quot;]
+        MPKV[&quot;MultiProcessKeyValueStore&quot;]
+    end
+    InMem[&quot;InMemoryKeyValueStore&quot;]
+    subgraph TopoMod[&quot;topology_util.h / topology_util.cc&quot;]
+        ET[&quot;ExchangeTopologies&quot;]
+        BGT[&quot;BuildGlobalTopology&quot;]
+        BGPU[&quot;BuildGpuTopology&quot;]
+    end
+    subgraph Proto[&quot;protocol.proto&quot;]
+        LTP[&quot;LocalTopologyProto&quot;]
+        GTP[&quot;GlobalTopologyProto&quot;]
+        DP[&quot;DeviceProto&quot;]
+    end
+
+    GS --&gt; DRS
+    DRS --&gt; CSI
+    GC --&gt; DRCSC
+    DRCSC -.implements.-&gt; DRC
+    DRC --&gt; DKVS
+    DKVS -.implements.-&gt; KVI
+    InMem -.implements.-&gt; KVI
+    MPKV --&gt; KVI
+    ET --&gt; KVI
+    ET --&gt; LTP
+    ET --&gt; GTP
+    BGT --&gt; DP
+    BGPU --&gt; GTP</div>
+<ul><li>`GS/GC`: `distributed.h`의 `GetDistributedRuntimeService`/`GetDistributedRuntimeClient` — gRPC 채널·자격증명을 결정하는 최상위 진입점.</li><li>`DRS --&gt; CSI`: `service.h`의 `DistributedRuntimeService`는 `CoordinationServiceImpl`을 멤버로 소유(`coord_impl_`)한다.</li><li>`DRCSC -.implements.-&gt; DRC`: `client.cc`의 구현 클래스가 `client.h`의 순수가상 인터페이스 `DistributedRuntimeClient`를 구현.</li><li>`DRC --&gt; DKVS`: `client.h`의 `GetDistributedKeyValueStore(client, prefix)`가 `DistributedRuntimeClient`를 감싸 `KeyValueStoreInterface`로 재노출.</li><li>`MPKV --&gt; KVI`: `key_value_store_interface.h:66`의 `MultiProcessKeyValueStore{key_value_store, process_index, process_count}`는 KV 저장소 하나와 프로세스 랭크/총수를 함께 들고 다니는 파라미터 묶음 — 상위 PjRtClient 팩토리로 전달될 형태로 보인다(추정, 아래 &quot;PjRtClient와의 연결점&quot; 참고).</li><li>`ET --&gt; KVI/LTP/GTP`: `topology_util.cc`의 `ExchangeTopologies`가 `KeyValueStoreInterface`를 사용해 `LocalTopologyProto`를 교환하고 `GlobalTopologyProto`를 만든다.</li></ul>
+<h2>서비스/클라이언트 역할 분리</h2>
+<h3>service 초기화 순서 (`service.h/.cc`)</h3>
+<p>`DistributedRuntimeService::Get(address, credentials, options)` (service.cc:84)가 유일한 생성 경로다.</p>
+<p>1. `grpc::ServerBuilder`를 만들고 `AddListeningPort(address, credentials)`로 리스닝 주소를 등록 (메시지 크기 제한 해제: `SetMax{Receive,Send}MessageSize(-1)`). 2. `DistributedRuntimeService` 생성자(service.cc:102)가 `CoordinationServiceImpl(options, &amp;builder)`를 생성한다. 이 안에서:</p>
+<p>3. `builder-&gt;BuildAndStart()`로 실제 gRPC 서버가 리스닝을 시작한다. 4. `coord_impl_-&gt;StartRpcThread()`가 별도 스레드에서 `HandleRPCsLoop()`을 돌려 RPC를 처리한다.</p>
+<ul><li>`EnableCoordinationService(options)`가 `xla::CoordinationService`(스코프 밖 타입)를 `num_tasks=num_nodes`, `cluster_register_with_barrier=true`, `heartbeat_timeout`, `shutdown_barrier_timeout` 등으로 구성.</li><li>4-스레드 `ThreadPool`(`coord_compute_pool_`) 생성.</li><li>`GrpcCoordinationServiceImpl`(스코프 밖)을 `builder`에 등록하고 방금 만든 `coord_service_` 인스턴스를 주입.</li></ul>
+<p>즉 **&quot;gRPC 서버 빌드 → 코디네이션 서비스 등록 → 서버 시작 → RPC 처리 스레드 시작&quot;** 순서가 고정되어 있고, 서버가 완전히 뜬 뒤에야 RPC 루프가 붙는다. `~CoordinationServiceImpl()`(service.cc:69)은 `coord_service_`를 먼저 파괴해 진행 중인 RPC를 정리한 뒤 `coord_rpc_service_-&gt;Shutdown()`을 부르는 순서를 명시적으로 지킨다(주석: &quot;Service object must be destroyed to clear all pending RPCs before shutting down the RPC service&quot;).</p>
+<h3>client 연결 흐름 (`client.h/.cc`)</h3>
+<p>`DistributedRuntimeCoordinationServiceClient` 생성자(client.cc:98)는:</p>
+<p>1. `Options`(`node_id`, `heartbeat_timeout`, `shutdown_timeout`, `init_timeout` 등)를 `CoordinationServiceAgent::Config`로 변환. 2. `NewGrpcCoordinationClient(channel)`로 리더(서비스)에 대한 gRPC 클라이언트 생성. 3. `CoordinationServiceAgent::Create(env, node_id, config, leader_client, missed_heartbeat_callback)`로 실제 에이전트(`coord_agent_`)를 만든다. 실패 시 생성자 자체는 죽지 않고 `LOG(ERROR)`만 남긴 채 `coord_agent_`가 null로 남는 점이 눈에 띈다(아래 &quot;주의할 점&quot; 참고).</p>
+<p>이후 `Connect()`(client.cc:129)는 `coord_agent_-&gt;Connect()` 한 줄로 위임되며, 이 호출이 &quot;모든 노드가 cluster register barrier에 도달할 때까지&quot; 블록한다(`cluster_register_with_barrier=true`가 service 쪽에 설정돼 있으므로). 타임아웃 시 `DeadlineExceeded`를 잡아 &quot;일부 태스크가 크래시/미스케줄됐을 수 있다&quot;는 힌트 로그를 남긴다(client.cc:134-143).</p>
+<p>`missed_heartbeat_callback`의 기본값(client.h:78-88)은 `LOG(FATAL)`로 프로세스를 통째로 죽이는 것이며, 테스트에서만 오버라이드 가능하다는 점이 이 모듈의 &quot;fail-fast&quot; 철학을 보여준다.</p>
+<h3>KV store 사용 지점</h3>
+<ul><li>`DistributedRuntimeClient`의 KV류 가상 함수(`BlockingKeyValueGet`, `KeyValueTryGet`, `KeyValueIncrement`, `KeyValueDirGet`, `KeyValueSet`, `KeyValueDelete`, `AsyncKeyValueGet`)는 전부 `coord_agent_`의 동명 메서드로 그대로 전달된다(client.cc:157-211). 즉 **KV 저장소의 실제 저장 위치는 코디네이션 서비스 프로세스(코디네이터) 안**이며, client는 RPC 클라이언트일 뿐이다.</li><li>`client.cc:283`의 `DistributedKeyValueStore`(내부 클래스)가 `DistributedRuntimeClient`를 `KeyValueStoreInterface`로 재포장하며, 모든 키에 `prefix_`를 붙인다. `GetDistributedKeyValueStore(client, prefix)`(client.cc:316)로 노출된다 — 이것이 `topology_util.cc` 같은 소비자가 실제로 받는 타입이다.</li><li>`WaitAtBarrier(barrier_id, timeout, nodes)`(client.h:161)는 이름이 명시하듯 **바리어** 전용 API이며, 코드상 `topology_util.cc`는 이걸 직접 쓰지 않고 대신 KV `Set`/`Get`을 리더-팔로워 패턴으로 직접 조합해 랑데부를 구현한다(아래 &quot;핵심 흐름&quot; 참고) — barrier API와 topology-exchange 로직이 서로 다른 동기화 메커니즘을 쓴다는 점은 설계상 주목할 부분.</li></ul>
+<h2>PjRtClient와의 연결점</h2>
+<h3>연결 지점 코드 근거</h3>
+<p>이 스코프 안에서 직접 확인 가능한 근거는 다음과 같다(모두 `xla/pjrt/gpu/...` 등 상위 파일을 열지 않고도 이 디렉터리 내부 문서/타입에서 확인됨):</p>
+<ul><li>`key_value_store_interface.h:31-37`의 클래스 주석: *&quot;In the multi-node case, the caller of **PjRtClient** can provide a key-value store accessible across nodes... The caller is responsible for avoiding key collisions between different users of key-value store.&quot;* — `KeyValueStoreInterface`가 PjRtClient 생성자에게 넘겨지는 파라미터로 설계되었음을 텍스트로 명시.</li><li>`key_value_store_interface.h:66-70`의 `MultiProcessKeyValueStore{key_value_store, process_index, process_count}` — KV 저장소 하나에 프로세스 랭크/총수를 묶은 구조체로, PjRtClient 팩토리 함수의 파라미터 형태와 정확히 일치하는 모양이다(추정: 실제 시그니처는 스코프 밖).</li><li>`topology_util.h:70-75`의 `BuildGpuTopology(GlobalTopologyProto, gpu::GpuTargetConfig, cpu::TargetMachineOptions) -&gt; GpuTopologyProto`에서 반환 타입 `GpuTopologyProto`는 `xla/service/gpu_topology.pb.h`에 정의되어 있고(include만 확인, 정의 파일은 스코프 밖), 이름 규칙상 GPU PjRtClient/PjRtTopologyDescription 쪽에서 소비될 가능성이 높다.</li><li>`protocol.proto`의 `DeviceProto`에 `fabric_uuid`(&quot;NVLink&quot;/&quot;SM100 Blackwell&quot; 명시), `compute_capability`, `shared_memory_per_block_optin`(CUDA 드라이버 enum 이름을 그대로 딴 필드) 등 CUDA/NVIDIA 특화 필드가 다수 존재 — 이 프로토콜이 범용이 아니라 사실상 GPU 백엔드 전용으로 설계되었음을 강하게 시사한다.</li></ul>
+<p>**확인이 필요함:** 실제로 `ExchangeTopologies`/`BuildGpuTopology`를 호출하는 코드(예상 위치: `xla/pjrt/gpu/se_gpu_pjrt_client.cc` 또는 `gpu_topology.cc`)는 이번 sparse-checkout에 포함되어 있지 않아 `grep`으로 직접 검증하지 못했다. 위 결론은 코드 내부 주석과 타입 설계, 명명 관례에 근거한 추정이다.</p>
+<h3>이 모듈이 없을 때(단일 호스트) vs 있을 때(멀티 호스트)의 차이</h3>
+<p>`ExchangeTopologies`(topology_util.cc:284) 안에 이 분기가 명시적으로 코드화되어 있다:</p>
+<ul><li>**단일 호스트 (`num_nodes == 1`)**: KV 저장소를 전혀 쓰지 않는다. `global_topology`에 자신의 `local_topology`를 그대로 복사하고, `global_device_id`를 `local_device_ordinal`로 바로 지정한다(topology_util.cc:294-300). `kv_store`가 `nullptr`이어도 동작한다.</li><li>**멀티 호스트 (`num_nodes &gt; 1`)**: `CHECK(kv_store != nullptr)`(topology_util.cc:302)로 KV 저장소가 필수임을 강제한다. 이후 리더(`node_id==0`)가 전 노드의 로컬 토폴로지를 KV에서 모아 `BuildGlobalTopology`로 합성하고 다시 KV에 발행하며, 나머지 노드는 그 결과를 KV에서 blocking get 한다. `partition_index`/`global_device_id`도 network proximity, fabric_uuid, boot_id 등 여러 호스트에 걸친 정보를 종합해 결정된다(단일 호스트에서는 이런 계산이 전혀 필요 없음).</li></ul>
+<p>즉 이 디렉터리는 &quot;멀티 호스트일 때만 활성화되는 조정 계층&quot;이며, 단일 호스트 실행 경로는 이 모듈을 사실상 우회한다 — `num_nodes==1` 분기가 그 근거다.</p>
 <h2>핵심 흐름</h2>
-<p>1. 코디네이터 프로세스가 `GetDistributedRuntimeService(address, options)` (`distributed.cc:33`) 호출 → `DistributedRuntimeService::Get` (`service.cc:84`) → gRPC `ServerBuilder`에 `CoordinationServiceImpl`을 등록하고 서버를 `BuildAndStart()`, RPC 스레드 시작. 2. 각 노드(코디네이터 자신 포함)가 `GetDistributedRuntimeClient(address, options)` (`distributed.cc:40`) → gRPC 채널 생성 → `DistributedRuntimeCoordinationServiceClient` 생성 → `Connect()` 호출. 모든 노드가 `Connect()`를 마칠 때까지 블로킹(`cluster_register_timeout`). 3. 연결 완료 후 각 노드는 `KeyValueStoreInterface`(client.h가 노출하는 `GetDistributedKeyValueStore`)를 통해 `topology_util::ExchangeTopologies()`를 호출, 자신의 `LocalTopologyProto`를 KV에 `Set`하고 노드 0이 전원의 값을 `Get`해 `BuildGlobalTopology()`로 병합, 다시 KV에 `Set` → 나머지 노드는 `Get`으로 수신. 4. GPU 백엔드는 이 `GlobalTopologyProto`를 `BuildGpuTopology()`에 넣어 `GpuTopologyProto`(파티션 수/호스트당 디바이스 수 등)를 얻는다 — 이 지점 이후는 스코프 밖(추정). 5. 종료 시 각 노드가 `Shutdown()`을 호출해 바리어를 통과해야 하며, 하나라도 실패 시 `missed_heartbeat_callback`(기본은 `LOG(FATAL)`)이 프로세스를 종료시킨다.</p>
+<p>**입력** → 각 프로세스가 `node_id`, `num_nodes`, 서비스 `address`, 자신의 `LocalTopologyProto`(로컬 디바이스 목록)를 갖고 시작.</p>
+<p>**변환/검증** →</p>
+<ul><li>`client.cc`의 `DistributedRuntimeCoordinationServiceClient::Connect()`가 클러스터 등록 바리어를 통과시켜 &quot;모든 노드가 살아있음&quot;을 검증.</li><li>`topology_util.cc:GetAllLocalTopologies`가 KV에서 모은 각 노드의 직렬화된 `LocalTopologyProto`를 파싱, 실패 시 최대 10개까지 에러 메시지를 모아 `InternalError`로 반환.</li><li>`SameLocalTopology`(topology_util.cc:71)로 재시작 시 기존 값과 새 값이 다르면 명시적으로 `InternalError`를 내는 idempotency 체크.</li></ul>
+<p>**상태 변경** →</p>
+<ul><li>KV 저장소(`InMemoryKeyValueStore` 또는 `DistributedKeyValueStore`)에 `local_topology/{platform}/{node_id}`, `global_topology/{platform}` 키가 채워짐.</li><li>`BuildGlobalTopology`가 입력 `local_topologies`의 `DeviceProto`를 **제자리에서 변형**(`partition_index`, `global_device_id` 필드를 설정)한다는 점이 주석(&quot;Steals the contents&quot;)에 명시되어 있다 — 호출자는 이후 원본 `local_topology`를 재사용하면 안 된다.</li></ul>
+<p>**외부 호출/결과** →</p>
+<ul><li>최종적으로 `GlobalTopologyProto`(및 GPU라면 `GpuTopologyProto`)가 만들어지고, 이 값이 (스코프 밖) PjRtClient 생성 경로로 전달된다고 추정된다.</li><li>`DistributedRuntimeClient::Shutdown()`은 `coord_agent_-&gt;Shutdown()`을 호출해 종료 바리어(`shutdown_timeout`)를 통과시키며, 이 타임아웃이 만료되면 에러 상태를 반환하되 프로세스를 강제 종료하지는 않는다(연결 실패 시 `missed_heartbeat_callback`이 `LOG(FATAL)`인 것과 대비됨).</li></ul>
 <h2>주요 파일과 역할</h2>
-<p>| 파일 | 핵심 타입/함수 | 역할 | |---|---|---| | `distributed.h/.cc` | `GetDistributedRuntimeService`, `GetDistributedRuntimeClient`, `GetDistributedRuntimeClientChannel` | insecure gRPC credential을 기본값으로 서비스/클라이언트를 생성하는 진입점. 다른 인증 방식이 필요하면 이 팩토리를 우회해 `DistributedRuntimeService::Get`/`GetDistributedRuntimeClient(channel, options)`를 직접 호출 가능 | | `service.h/.cc` | `CoordinationServiceImpl`, `DistributedRuntimeService` | 코디네이터 프로세스에서 gRPC 서버 기동, `num_nodes`/`heartbeat_timeout`/`cluster_register_timeout`/`shutdown_timeout` 등 클러스터 정책(`Options`) 보유 | | `client.h/.cc` | `DistributedRuntimeClient`(추상), `DistributedRuntimeCoordinationServiceClient`, `GetDistributedKeyValueStore` | 워커 프로세스의 gRPC 클라이언트. `BlockingKeyValueGet/KeyValueSet/KeyValueDelete/WaitAtBarrier/GetLiveNodesWithIncarnations` 등 노출. 내부적으로 `tsl::CoordinationServiceAgent`에 위임 | | `key_value_store_interface.h` | `KeyValueStoreInterface`, `MultiProcessKeyValueStore` | KV 스토어 추상화. 주석에 &quot;In the multi-node case, the caller of PjRtClient can provide a key-value store...&quot;라고 명시 — **PjRtClient 생성 API가 이 인터페이스를 파라미터로 받는 설계**임을 시사 | | `in_memory_key_value_store.h/.cc` | `InMemoryKeyValueStore` | 프로세스 내 `absl::flat_hash_map` 기반 KV. 단일 호스트/테스트용. `AsyncGet`은 `UnimplementedError` 반환 | | `topology_util.h/.cc` | `ExchangeTopologies`, `BuildGlobalTopology`, `BuildGpuTopology`, `GetBootIdString`, `GetNetworkNodes` | KV 스토어 기반 랑데부로 로컬 토폴로지를 모아 글로벌 토폴로지 구성, 글로벌 디바이스 ID 및 GPU 파티션(NVLink 등 fast-interconnect 도메인) 할당 | | `protocol.proto` | `DeviceProto`, `LocalTopologyProto`, `GlobalTopologyProto` | **RPC 서비스 정의 없음** — 데이터 구조만 정의. 헤더 주석은 &quot;barriers/health-check/topology 공유&quot;를 목적으로 서술하지만 실제 barrier·heartbeat RPC는 이 proto가 아니라 TSL의 `coordination_service.proto`가 담당 |</p>
+<p>| 파일 | 역할 | |---|---| | `distributed.h/.cc` | insecure credentials 기반 기본 service/client 팩토리. 보안 자격증명이 필요하면 사용자가 직접 `DistributedRuntimeService::Get`/`GetDistributedRuntimeClient(channel, options)`를 호출하도록 분리돼 있음(주석 명시). | | `service.h/.cc` | 코디네이터 프로세스용 gRPC 서버 래퍼. `CoordinationServiceImpl`이 실제 `CoordinationService`(스코프 밖) 인스턴스를 소유. | | `client.h/.cc` | 워커 프로세스용 클라이언트 인터페이스와 `CoordinationServiceAgent` 어댑터 구현. KV store를 `KeyValueStoreInterface`로 재노출하는 `GetDistributedKeyValueStore`도 여기 위치. | | `key_value_store_interface.h` | KV 저장소 추상 인터페이스 + `MultiProcessKeyValueStore` 파라미터 구조체. | | `in_memory_key_value_store.h/.cc` | 단일 프로세스/테스트용 KV 구현. `AsyncGet`은 미구현(`UnimplementedError`). | | `topology_util.h/.cc` | 로컬 토폴로지 수집→글로벌 토폴로지 합성→GPU 토폴로지 산출 로직. 이 모듈의 실질적 &quot;비즈니스 로직&quot;. | | `protocol.proto` | `DeviceProto`/`LocalTopologyProto`/`GlobalTopologyProto` 등 토폴로지 페이로드 메시지 정의. RPC(`service`/`rpc`)는 정의하지 않음. |</p>
 <h2>중요한 설계 판단</h2>
-<p>1. **역할 분리: Service(코디네이터) vs Client(모든 노드) vs KV Store(범용 상태 공유)**</p>
-<ul><li>`service.h`의 공개 인터페이스는 `Get()`(팩토리), `Shutdown()`, `server()` 뿐이다. 즉 서비스는 &quot;붙어서 요청을 처리하는 수동적 코디네이터&quot;로, 클러스터 정책(`CoordinationServiceImpl::Options`: `num_nodes`, `recoverable`, timeout 4종)만 소유하고 능동적으로 아무것도 하지 않는다.</li><li>`client.h`의 공개 인터페이스는 훨씬 크다: `Connect/Shutdown` 생명주기 API와, KV류(`BlockingKeyValueGet/AsyncKeyValueGet/KeyValueTryGet/KeyValueIncrement/KeyValueDirGet/KeyValueSet/KeyValueDelete`), 조정류(`WaitAtBarrier`, `GetLiveNodesWithIncarnations`, `GetLiveNodes`)로 나뉜다. **KV API에는 동시성 보장이 없다고 명시**(`client.h:118-120`)하고 있어, 순서 보장이 필요하면 `WaitAtBarrier`를 함께 써야 한다 — 이는 KV 스토어가 &quot;랑데부/바리어&quot;의 기반 프리미티브이지 그 자체로 동기화 프리미티브는 아니라는 설계 의도를 보여준다.</li><li>`KeyValueStoreInterface`는 `DistributedRuntimeClient`의 KV 메서드를 감싸는 `DistributedKeyValueStore`(client.cc:283) 어댑터로 구현되며, `prefix`를 붙여 네임스페이스를 분리한다(`GetDistributedKeyValueStore(client, prefix)`). 이 얇은 어댑터 덕분에 `topology_util.cc`나 상위 GPU 클라이언트는 gRPC/coordination 세부사항을 몰라도 되고, 테스트에서는 `InMemoryKeyValueStore`로 손쉽게 대체 가능하다 — **인터페이스 분리를 통한 테스트 용이성/구현 교체 가능성**이 명확한 설계 목표.</li></ul>
-<p>2. **`protocol.proto`는 더 이상 RPC 프로토콜이 아니다(문서-코드 불일치)**</p>
-<ul><li>파일 상단 주석은 &quot;barriers to wait for all clients... health checking... sharing GPU topology&quot;를 이 프로토콜의 목적으로 서술하지만, 실제 `service .proto`/`rpc` 키워드가 전혀 없다(확인함). barrier·heartbeat는 `xla/tsl/protobuf/coordination_service.pb.h`(TF에서 이식된 범용 coordination service)가 담당하고, `protocol.proto`는 오직 GPU 토폴로지 교환용 데이터 메시지(`DeviceProto`/`LocalTopologyProto`/`GlobalTopologyProto`)만 남아있다. 즉 이 모듈은 한때 자체 RPC 프로토콜을 가졌다가 범용 coordination service로 마이그레이션된 흔적으로 보인다(**추정**, git blame/역사 확인은 스코프 밖이라 불가).</li></ul>
-<p>3. **재시작 허용(`recoverable`)과 부팅 ID 기반 파티션 추정**</p>
-<ul><li>`ExchangeTopologies`는 동일 노드가 같은 로컬 토폴로지로 재설정(`AlreadyExists`)하는 경우를 재시작으로 간주해 허용하지만, 내용이 다르면 `InternalError`로 실패시킨다(`topology_util.cc:307-325`) — `Options.recoverable`과 맞물린 장애 복구 시나리오를 뒷받침.</li><li>`fabric_uuid`가 없을 때 `boot_id`(커널 재부팅마다 바뀌는 `/proc/sys/kernel/random/boot_id`)를 파티션 구분 키로 쓰는 fallback은, 실제 NVLink 클리크 정보가 없는 환경에서 &quot;같은 호스트=같은 파티션&quot;이라는 보수적 근사치로 동작한다는 뜻이다.</li></ul>
-<p>4. **`assign_global_device_ids` 플래그는 deprecated 진행 중**(`topology_util.h:51`의 TODO) — 과거에는 이 모듈이 글로벌 디바이스 ID를 직접 할당했지만, 점차 호출자(로컬 토폴로지에 이미 ID가 채워진 경우)가 책임지는 방향으로 바뀌는 것으로 보인다(**추정**).</p>
-<h2>PjRtClient와의 연결점 (근거와 한계)</h2>
-<ul><li>**직접적 코드 근거(스코프 내에서 확인됨):**</li><li>`key_value_store_interface.h:31-37` 주석: *&quot;In the multi-node case, the caller of **PjRtClient** can provide a key-value store accessible across nodes.&quot;* — `KeyValueStoreInterface`가 PjRtClient 생성 API의 파라미터로 흘러들어가는 것이 설계 의도임을 코드 자체가 명시.</li><li>`topology_util.h`는 `xla/backends/gpu/target_config/target_config.h`(`gpu::GpuTargetConfig`), `xla/backends/cpu/target_machine_options.h`(`cpu::TargetMachineOptions`), `xla/service/gpu_topology.pb.h`(`GpuTopologyProto`)를 포함한다. `BuildGpuTopology()`의 시그니처(`GlobalTopologyProto` + `GpuTargetConfig` + `TargetMachineOptions` → `GpuTopologyProto`)는 GPU PjRtClient/PjRtTopologyDescription 생성 경로에서 소비되도록 만들어진 것으로 강하게 시사된다.</li><li>`key_value_store_interface.h:66-70`의 `MultiProcessKeyValueStore` 구조체(`key_value_store` + `process_index` + `process_count`)는 PjRtClient 팩토리 함수(예: GPU 클라이언트 생성 함수)의 옵션 구조체에 그대로 끼워 넣기 좋은 형태로 설계되어 있다.</li><li>**확인이 필요함(스코프 제한):** 이 저장소 스냅샷에는 `xla/pjrt/gpu/se_gpu_pjrt_client.cc` 등 실제 소비 지점이 존재하지 않아(sparse-checkout으로 제외됨) `ExchangeTopologies`/`BuildGpuTopology`/`MultiProcessKeyValueStore`가 정확히 어떤 함수·어떤 인자 이름으로 GPU 클라이언트 생성 코드에 전달되는지는 grep으로 직접 확인하지 못했다. 위 시그니처/주석 근거로 볼 때 GPU(및 개연적으로 TPU) PjRtClient 생성 함수가 `MultiProcessKeyValueStore`를 옵션으로 받아 내부에서 `ExchangeTopologies` → `BuildGpuTopology`를 호출하고, 그 결과로 `PjRtTopologyDescription`/`PjRtDevice` 목록(글로벌 디바이스 ID, 파티션 정보 포함)을 구성한다는 것이 합리적 추정이지만, 단정하지 않는다.</li><li>**모듈 유무에 따른 차이:**</li><li>**단일 호스트**: `topology_util.cc:294`에서 `num_nodes == 1`이면 KV 스토어 없이 로컬 토폴로지를 그대로 글로벌 토폴로지로 승격하고 `global_device_id = local_device_ordinal`로 설정한다. `client.cc`/`service.cc`의 gRPC 경로 자체가 아예 필요 없다.</li><li>**멀티 호스트**: `num_nodes &gt; 1`이면 `kv_store != nullptr`이 강제되며(`CHECK`), `distributed/` 전체 스택(gRPC 서비스+클라이언트+KV 랑데부)이 없으면 서로 다른 프로세스의 디바이스 목록을 병합할 방법이 없어 각 프로세스가 자기 GPU만 보는 &quot;여러 개의 단일 호스트 클라이언트&quot;로 파편화된다. 즉 이 모듈은 멀티 호스트 collective(NCCL 등) 통신에 필요한 전역 디바이스 ID/파티션 합의를 만들어내는 유일한 경로다.</li></ul>
+<ul><li>**KV 저장소를 barrier/RPC와 분리된 범용 인터페이스로 추상화**: `KeyValueStoreInterface`는 코디네이션 서비스뿐 아니라 `InMemoryKeyValueStore` 같은 완전히 다른 구현으로도 교체 가능하게 설계됐다. 덕분에 `topology_util.cc`는 자신이 gRPC 위에서 도는지 단일 프로세스 테스트인지 몰라도 된다.</li><li>**토폴로지 교환에 전용 barrier API 대신 KV Get/Set 리더-팔로워 패턴 사용**: `WaitAtBarrier`가 이미 존재함에도 `ExchangeTopologies`는 이를 쓰지 않고 `node_id==0`을 리더로 삼아 직접 Get-all/Build/Set 패턴을 구현했다. 동기화와 데이터 교환(글로벌 토폴로지 자체를 전달)을 한 번에 처리해야 했기 때문으로 보인다(추정).</li><li>**`num_nodes==1` 최적화 분기**: KV 저장소 의존성을 단일 호스트 경로에서 완전히 제거해, 로컬 단일 프로세스 실행 시 이 모듈의 RPC/동기화 오버헤드가 전혀 들지 않도록 했다.</li><li>**fail-fast 기본 정책**: `missed_heartbeat_callback` 기본값이 `LOG(FATAL)`(client.h:78-88)이라, 별도 설정 없이는 한 노드의 장애가 전체 프로세스 그룹을 종료시킨다. `Options.recoverable`이 이를 완화할 수 있는 플래그로 존재하지만 기본값은 `false`.</li><li>**`protocol.proto`가 RPC를 정의하지 않는 설계**: barrier/heartbeat/KV RPC는 범용 `CoordinationService`(TSL 계층, 스코프 밖)에 위임하고, 이 proto는 그 KV 저장소에 실릴 &quot;페이로드 스키마&quot;만 담당한다. 즉 이 디렉터리는 PJRT 전용 새 RPC 프로토콜을 만든 게 아니라 기존 TensorFlow/TSL 코디네이션 서비스를 재사용하는 얇은 어댑터에 가깝다.</li></ul>
 <h2>읽으면서 주의할 점</h2>
-<ul><li>`protocol.proto`의 헤더 주석(barrier/health-check 언급)을 실제 RPC 명세로 오해하지 말 것 — 실질 RPC는 `coordination/` 서브모듈(스코프 밖)의 `coordination_service.proto`다.</li><li>`DistributedRuntimeClient::Options::missed_heartbeat_callback`의 기본값은 `LOG(FATAL)`로 **프로세스를 즉시 종료**시킨다(client.h:78-88). 커스텀 콜백을 넘기지 않으면 한 노드 장애가 전체 job을 죽인다 — `recoverable` 옵션과 함께 검토 필요.</li><li>`ExchangeTopologies`에서 노드 0(&quot;리더&quot;)이 전체 로컬 토폴로지 수집과 글로벌 토폴로지 계산을 전담한다(`topology_util.cc:330`). 리더가 느리거나 실패하면 나머지 노드는 `get_global_topology_timeout`까지 블로킹된다 — 단일 장애점 구조.</li><li>`InMemoryKeyValueStore::AsyncGet`은 미구현(`UnimplementedError` 즉시 반환)이라, 비동기 경로를 테스트에서 검증하려면 이 스텁으로는 부족하다.</li><li>`KeyValueStoreInterface`에 동시성 보장이 없다는 주석(`key_value_store_interface.h` 전반)을 무시하고 `Set`/`Delete`를 경쟁적으로 호출하면 레이스가 날 수 있음 — 반드시 `WaitAtBarrier`로 순서를 강제해야 한다.</li></ul>
+<ul><li>**`protocol.proto` 파일 상단 주석과 실제 메시지 정의가 어긋난다**: 주석(protocol.proto:18-22)은 &quot;barriers... health checking... GPU topology 공유&quot;를 이 프로토콜의 목적으로 설명하지만, 실제로 정의된 메시지는 `DeviceProto`/`LocalTopologyProto`/`GlobalTopologyProto`뿐이며 barrier/heartbeat용 RPC나 메시지는 이 파일에 없다(다른 proto인 TSL `coordination_service.proto`가 담당, 스코프 밖). 문서를 읽고 이 파일에서 barrier RPC 정의를 찾으면 안 된다.</li><li>**`BuildGlobalTopology`는 입력을 파괴적으로 변형한다**: `absl::Span&lt;LocalTopologyProto&gt; local_topologies`를 매개변수로 받아 `Swap`으로 내용을 훔쳐간다(주석 &quot;Steals the contents&quot;). 호출 후 원본 벡터를 재사용하면 안 된다.</li><li>**클라이언트 생성자가 에이전트 생성 실패를 조용히 삼킬 수 있다**: `client.cc:117`에서 `CoordinationServiceAgent::Create`가 실패하면 `LOG(ERROR)`만 남기고 `coord_agent_`는 null로 남는다. 이후 `Connect()` 등에서 `coord_agent_-&gt;Connect()`를 바로 호출하므로, 이 경로는 null 역참조 위험이 있다(스코프 안에서 명시적 null 체크는 보이지 않음 — &quot;확인이 필요함&quot;).</li><li>**`InMemoryKeyValueStore::AsyncGet`은 항상 실패한다**: `absl::UnimplementedError`를 즉시 `done()`으로 전달한다. `topology_util.cc`는 `AsyncGet`을 쓰지 않아 문제없지만, 이 KV 구현을 다른 곳에서 async 경로로 재사용하면 조용히 깨질 수 있다.</li><li>**`ExchangeTopologies`의 KV 재시도(`AlreadyExists`) 처리는 &quot;같은 노드의 재시작&quot;만 가정한다**: 다른 노드가 우연히 같은 키를 다시 쓰는 경쟁 상황은 고려되어 있지 않다(키가 `platform`+`node_id`로 이미 유일하므로 설계상 문제는 없지만, 재시작 판별 로직(`SameLocalTopology`)이 실패하면 전체 교환이 `InternalError`로 죽는다는 점은 운영상 주의할 부분).</li></ul>
 <h2>더 파볼 질문</h2>
-<ul><li>`xla/pjrt/gpu/se_gpu_pjrt_client.cc`(또는 TPU 대응 파일)에서 `MultiProcessKeyValueStore`/`ExchangeTopologies`/`BuildGpuTopology`를 실제로 어떤 함수가 호출하는지 — 풀 체크아웃에서 직접 확인 필요.</li><li>`xla/pjrt/distributed/coordination/`(`coordination_service.cc`, `grpc_coordination_service_impl.cc` 등)이 실제 barrier/heartbeat RPC를 어떻게 구현하는지 — 이번 분석 스코프 밖.</li><li>`protocol.proto`가 과거에 실제 `service`/`rpc`를 갖고 있었는지, 언제 coordination service로 마이그레이션됐는지(git log 필요, 이번엔 pack 파일만 있고 Bash 접근이 없어 확인 불가).</li><li>Python 쪽 `jax.distributed.initialize()`가 이 C++ API(`GetDistributedRuntimeService`/`Client`)를 어떤 pybind/nanobind 바인딩으로 노출하는지.</li></ul>
+<ul><li>**`distributed::Service`와 `distributed::Client`는 각각 어느 프로세스에서 실행되는가?** 이 스코프의 코드 자체는 프로세스 배치를 강제하지 않는다 — `GetDistributedRuntimeService`/`GetDistributedRuntimeClient`(distributed.h)는 완전히 독립된 팩토리 함수다. 다만 API 설계(`address`+`node_id`)로 미루어 보면 관례적으로 **한 프로세스(보통 rank 0)가 서비스+클라이언트를 동시에 띄우고, 나머지 프로세스는 클라이언트만 띄워 그 주소로 접속**하는 구조로 쓰인다(JAX의 `jax.distributed.initialize` 관례에 대한 일반 지식 기반 추정 — 그 상위 런처 코드는 스코프 밖).</li><li>**`protocol.proto`가 정의하는 RPC는 무엇을 조율하는가?** 엄밀히는 &quot;정의하는 RPC가 없다.&quot; 이 파일은 메시지 스키마만 정의하며, 실제 barrier/heartbeat/KV RPC는 TSL `CoordinationService`(스코프 밖)가 담당한다. `protocol.proto`가 실질적으로 조율하는 것은 **KV 저장소에 실리는 GPU 디바이스 토폴로지 페이로드의 직렬화 포맷**뿐이다.</li><li>**`topology_util.cc`가 만든 토폴로지 정보는 `PjRtClient`/`PjRtDevice`의 어느 코드 경로로 전달되는가?** `key_value_store_interface.h`의 클래스 주석(&quot;caller of PjRtClient can provide a key-value store&quot;)과 `BuildGpuTopology`의 반환 타입(`GpuTopologyProto`, `xla/service/gpu_topology.pb.h`)으로 미루어 GPU `PjRtClient` 생성 함수의 파라미터로 흘러들어간다고 추정되나, 실제 호출부(`xla/pjrt/gpu/se_gpu_pjrt_client.cc` 등)가 이 sparse-checkout에 없어 `grep`으로 확정할 수 없다. **다음 분석 스코프에 `xla/pjrt/gpu/se_gpu_pjrt_client.cc`와 `xla/pjrt/pjrt_client.h`를 포함시키면 이 연결을 코드로 직접 검증할 수 있다.**</li><li>**이 디렉터리가 4개 참고 문서 어디에도 언급되지 않은 이유**: 참고 문서 4편은 모두 `pjrt_c_api.h` 기반 **플러그인 C ABI**(`PJRT_Client_Create`, `PJRT_TopologyDescription_Create` 등)를 다루는 플러그인 개발자용 가이드다(문서 내 유일한 관련 언급은 &quot;PJRT 플러그인 통합&quot; 문서의 `PJRT_TopologyDescription_Create`뿐이며, 이는 &quot;[선택사항]&quot;으로 표시되어 있다). 반면 `xla/pjrt/distributed/`는 C++ 전용 내부 구현이고, `protocol.proto`의 `fabric_uuid`/`compute_capability`/CUDA 드라이버 enum 이름을 그대로 딴 필드들이 보여주듯 사실상 **GPU(NVIDIA) 백엔드 전용 구현체**에 가깝다. PJRT의 C ABI 계약은 토폴로지 교환 메커니즘을 규정하지 않으므로(오직 opaque `PJRT_TopologyDescription`만 요구), 플러그인 통합 가이드가 이 특정 구현을 언급할 필요가 없었을 것으로 추정된다.</li></ul>
     </article>
   </main>
   <footer>
@@ -171,5 +270,12 @@
       코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
     </div>
   </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+  </script>
 </body>
 </html>

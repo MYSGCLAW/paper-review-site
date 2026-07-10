@@ -14,7 +14,7 @@
     "gpu",
     "registration"
   ],
-  "updated": "2026-07-10",
+  "updated": "2026-07-11",
   "source": {
     "repo_url": null,
     "local_path": "/home/sam/xla/xla/pjrt",
