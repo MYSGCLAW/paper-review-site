@@ -1,0 +1,86 @@
+{
+  "title": "PJRT C API와 C++ 구현의 연결 지점",
+  "summary": "PJRT_Api 함수 테이블, GetPjRtApi, C→C++ 래퍼(CreateWrapperClient/CreatePjrtApi)를 통해 C API가 C++ PjRtClient를 어떻게 감싸는지 분석한다.",
+  "type": "코드 분석",
+  "tags": [
+    "XLA",
+    "PJRT",
+    "Runtime",
+    "OpenXLA",
+    "JAX",
+    "c-api",
+    "abi",
+    "wrapper",
+    "version"
+  ],
+  "updated": "2026-07-10",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/xla/xla/pjrt",
+    "branch": null,
+    "paths": [
+      "xla/pjrt/c/pjrt_c_api.h",
+      "xla/pjrt/c/pjrt_c_api_wrapper_impl.h",
+      "xla/pjrt/c/pjrt_c_api_wrapper_impl.cc",
+      "xla/pjrt/c/pjrt_c_api_helpers.h",
+      "xla/pjrt/c/pjrt_c_api_helpers.cc",
+      "xla/pjrt/c/pjrt_c_api_cpu.cc",
+      "xla/pjrt/c/pjrt_c_api_gpu.cc",
+      "xla/pjrt/c/pjrt_c_api_gpu_internal.cc",
+      "xla/pjrt/pjrt_api.h",
+      "xla/pjrt/pjrt_api.cc",
+      "xla/pjrt/pjrt_abi_version.h",
+      "xla/pjrt/c_api_client/pjrt_c_api_client.h",
+      "xla/pjrt/c_api_client/pjrt_c_api_client.cc"
+    ],
+    "reference_dir": "references/code-analysis/pjrt",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": "계획 단계에서 분리된 모듈만 깊게 분석한다. 상위 PJRT 전체 구조와의 연결도 짧게 설명한다.",
+    "sections": [
+      {
+        "title": "C→C++ 래퍼 흐름",
+        "prompt": "문서에 제시된 PJRT_Client_Create 의사코드를 pjrt_c_api_wrapper_impl.cc의 실제 CreateWrapperClient 구현과 대조하여 함수 호출 체인을 재구성하라.",
+        "required": [
+          "PJRT_Client_Create 실제 시그니처",
+          "CreateWrapperClient 내부 동작",
+          "PJRT_Api 함수 테이블 구성 방식(CreatePjrtApi)"
+        ]
+      },
+      {
+        "title": "버전 관리 및 문서-코드 차이",
+        "prompt": "pjrt_abi_version.h와 c/CHANGELOG.md(있다면) 기준으로 현재 ABI/API 버전 관리 방식을 정리하고, 참고 문서의 'ABI 호환성 곧 지원 예정' 서술과 비교해 차이점을 명시하라.",
+        "required": [
+          "현재 버전 관리 메커니즘 요약",
+          "문서 대비 달라진 점 또는 구체화된 점"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    }
+  ]
+}

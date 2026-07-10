@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PjRtClient / PjRtDevice / PjRtMemorySpace 계층</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+    header {
+      padding: 64px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, pre {
+      margin: 0 0 1.05em;
+    }
+    ul {
+      padding-left: 1.3em;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-shell">
+      <p class="eyebrow">코드 분석</p>
+      <h1>PjRtClient / PjRtDevice / PjRtMemorySpace 계층</h1>
+      <p class="summary">PJRT의 최상위 진입점인 PjRtClient와 이를 구성하는 PjRtDevice, PjRtMemorySpace의 책임 분리와 상호 참조(역포인터) 구조를 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-10</span>
+        <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">client</span><span class="tag">device</span><span class="tag">memory-space</span><span class="tag">entry-point</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell">
+    <article>
+      <h1>PjRtClient / PjRtDevice / PjRtMemorySpace 계층 분석</h1>
+<h2>한 줄 요약</h2>
+<p>`PjRtClient`는 디바이스·메모리 공간·컴파일/실행 API를 캡슐화하는 최상위 진입점이지만 실제 상태(디바이스 목록 등)는 거의 갖고 있지 않은 순수 인터페이스에 가깝고, 실질적인 공통 상태/실행 파이프라인 구현은 이후에 추가된 `common_pjrt_client.h/.cc`의 `CommonPjRtClient`/`CommonPjRtLoadedExecutable`이 담당한다.</p>
+<h2>분석 범위</h2>
+<p>`repo/xla/pjrt/` 하위 8개 파일만 포함된 스코프 스냅샷을 대상으로 한다(`pjrt_client.h/.cc`, `pjrt_device_description.h`, `common_pjrt_client.h/.cc`, `local_device_state.h`, `pjrt_client_utils.h/.cc`). 이 파일들이 `#include`하는 `pjrt_executable.h`, `pjrt_compiler.h`, `raw_buffer.h`, `device_event.h`, `abstract_tracked_device_buffer.h`, `xla/pjrt/se/local_device_state.h` 등은 저장소에 포함되어 있지 않아(확인 필요: 의도적으로 계획 단계에서 제외된 것으로 추정) 타입 시그니처만 참조하고 내부 구현은 다루지 않는다. 참고 문서는 `references/text/pjrt__PJRT C++ Device API 개요 ...txt`(openxla.org `cpp_api_overview` 한국어판)를 사용했다.</p>
+<h2>전체 구조 (PJRT 상위 구조와의 연결, 짧게)</h2>
+<p>PJRT는 프레임워크(JAX 등)와 디바이스 플러그인 사이의 균일한 C/C++ API다. C++ 계층은 `PjRtClient`(런타임 진입점) → `PjRtDevice`/`PjRtMemorySpace`(리소스 기술) → `PjRtBuffer`(데이터) → `PjRtExecutable`/`PjRtLoadedExecutable`(컴파일된 프로그램)로 이어지는 객체 그래프다. 이번 분석은 이 중 `PjRtClient`, `PjRtDevice`, `PjRtMemorySpace`와 이를 뒷받침하는 공통 구현 레이어(`CommonPjRtClient`)에 집중하고, `PjRtBuffer`/`PjRtCompiler`/`PjRtExecutable`은 필요한 범위(주로 `PjRtLoadedExecutable::Execute*` 인터페이스)에서만 다룬다.</p>
+<p>---</p>
+<h2>문서-코드 대응</h2>
+<h3>PjRtClient 클래스 요약</h3>
+<p>문서(참고 텍스트 205~207행)는 &quot;클라이언트는 기기와 프레임워크 간의 모든 통신을 관리하고 통신에 사용되는 모든 상태를 캡슐화합니다... 특정 플러그인의 기기와 메모리 공간을 소유합니다&quot;라고 설명하며 `pjrt_client.h#L486`을 가리킨다. 현재 스냅샷에서는 클래스 선언이 `xla/pjrt/pjrt_client.h:546`에서 시작한다(문서의 L486과 60줄 차이 — 아래 &quot;읽으면서 주의할 점&quot; 참조).</p>
+<p>`PjRtClient`(`pjrt_client.h:546-1113`)가 정의하는 것:</p>
+<ul><li>**디바이스/메모리 공간 조회**: `devices()`, `addressable_devices()`, `memory_spaces()`, `LookupDevice()`, `LookupAddressableDevice()` (모두 순수 가상, 546~603행) — 클라이언트가 &quot;소유&quot;한다고 문서에서 말하는 상태의 실체는 여기 접근자들이 정의한다.</li><li>**통신/좌표 채널**: `key_value_store()`(622행, 분산 코디네이션용), `UpdateGlobalProcessInfo(coordination::TaskInfo)`(596행), `CrossHostSendBuffers`/`CrossHostReceiveBuffers`/`MakeCrossHostReceiveBuffers`(1059~1108행, 크로스호스트 전송), `DmaMap`/`DmaUnmap`(1076~1086행).</li><li>**컴파일/로드**: `Compile`, `CompileAndLoad`(XlaComputation/MLIR 두 오버로드), `DeserializeExecutable`, `LoadSerializedExecutable`, `Load` (672~732행) — 전부 기본 구현이 `UnimplementedError`를 반환하는 **비순수** 가상 함수다.</li><li>**버퍼 생성**: `CreateUninitializedBuffer`, `CreateAliasBuffer`, `CreateErrorBuffer`, `BufferFromHostBuffer`, `BufferFromHostLiteral`, `CreateViewOfDeviceBuffer`, `CreateBuffersForAsyncHostToDevice`(734~1034행).</li><li>**실제 사설(private) 멤버는 단 하나뿐**: `std::unique_ptr&lt;PjRtHostMemoryForDeviceManager&gt; host_memory_for_device_manager_`(1111~1112행). 즉 `PjRtClient` 자체는 디바이스/메모리공간 벡터 같은 상태를 직접 들고 있지 않고, 그 상태의 &quot;모양&quot;(accessor 시그니처)만 규정하는 인터페이스에 가깝다 — 문서의 &quot;상태를 캡슐화&quot;라는 서술은 개념적으로는 맞지만, 실제 캡슐화(저장)는 서브클래스(`CommonPjRtClient` 또는 각 플러그인 클라이언트)의 책임이다.</li></ul>
+<h3>PjRtDevice 클래스 요약</h3>
+<p>문서(208~212행, `pjrt_client.h#L102` + `pjrt_device_description.h` 인용)는 &quot;기기 클래스는 단일 기기를 설명... 종류(해시)와 위치 정보... 연결된 메모리 공간과 소유한 클라이언트도 알고 있음... 실제 데이터의 버퍼를 알 필요는 없지만 연결된 메모리 공간을 살펴봄으로써 파악 가능&quot;이라고 설명한다.</p>
+<p>코드상 `PjRtDevice`(`pjrt_client.h:148-303`):</p>
+<ul><li>`client()`(153행) — 역포인터.</li><li>`description()`(158행) → `PjRtDeviceDescription`으로 위임(`id()`, `process_index()`, `device_kind()`, `DebugString()`, `Attributes()` 등 대부분이 여기로 forward됨, `pjrt_device_description.h:51-100`).</li><li>`global_device_id()`/`local_device_id()`/`local_hardware_id()`(186~199행) — ID 3종 분리(전역/로컬 논리/로컬 물리).</li><li>`memory_spaces()`, `default_memory_space()`, `memory_space_by_kind()`(260~270행) — **버퍼에 대한 직접 참조는 없다.** 문서 설명대로 `PjRtDevice`는 `PjRtBuffer`를 전혀 모르고, 오직 자신에 연결된 `PjRtMemorySpace` 목록만 노출한다.</li><li>`CreateAsyncTrackingEvent`, `TransferToInfeed`/`TransferFromOutfeed`, `GetAllocatorStats`, `PoisonExecution` 등 기기별 부가 기능.</li></ul>
+<h3>PjRtMemorySpace 클래스 요약</h3>
+<p>문서(213~216행, `pjrt_client.h#L72`)는 &quot;메모리 공간은 메모리의 위치를 설명... 연결된 데이터 버퍼와 메모리 공간이 연결된 기기(복수) 및 메모리 공간이 속한 클라이언트를 알고 있습니다&quot;라고 설명한다.</p>
+<p>코드상 `PjRtMemorySpace`(`pjrt_client.h:89-121`)는:</p>
+<pre><code>client(), devices(), id(), kind(), kind_id(), DebugString(), ToString()</code></pre>
+<p>만 정의한다. **문서가 말하는 &quot;연결된 데이터 버퍼를 안다&quot;는 부분은 이 추상 인터페이스에 대응하는 멤버가 없다** — `PjRtMemorySpace`에는 소속 `PjRtBuffer` 목록을 열거하는 메서드가 없다. 역방향(버퍼 → 메모리 공간)만 존재한다(`PjRtBuffer::memory_space()`, `pjrt_client.h:1188`). 이는 &quot;문서와 코드가 다르게 보이는&quot; 지점으로 아래 별도 항목에서 다룬다.</p>
+<h3>역포인터 관계 다이어그램(텍스트)</h3>
+<p>문서 204행의 정확한 요약(&quot;메모리 공간은 기기와 클라이언트를 알고, 기기는 클라이언트를 알고, 버퍼는 메모리 공간을 압니다&quot;)이 코드와 정확히 일치한다.</p>
+<pre><code>PjRtClient  ←────────────────────────────────────────┐
+   │  owns (accessor만 정의, 실제 저장은 서브클래스)     │
+   ├─ devices() ────────► PjRtDevice[]                │
+   │                         │ client() ──────────────┘
+   │                         │ memory_spaces() ──┐
+   │                         │ default_memory_space()
+   │                         ▼
+   ├─ memory_spaces() ──► PjRtMemorySpace[] ◄────┘
+   │                         │ client() ─────────────► PjRtClient
+   │                         │ devices() ────────────► PjRtDevice[] (연결된 기기들)
+   │                         │ (버퍼 목록 접근자 없음 — 코드/문서 불일치)
+   │
+   └─ (buffer는 Client가 직접 소유/열거하지 않음)
+
+PjRtBuffer (allocate/BufferFromHost* 등으로 생성됨)
+   ├─ memory_space() ──────► PjRtMemorySpace   (주 역참조)
+   ├─ device()  [DEPRECATED] ─► PjRtDevice
+   └─ client() ─────────────► PjRtClient
+
+PjRtLoadedExecutable
+   ├─ client() ─────────────► PjRtClient (CommonPjRtLoadedExecutable는 CommonPjRtClient*로 공변 오버라이드)
+   └─ addressable_devices() ► PjRtDevice[]</code></pre>
+<p>핵심 관찰: 역포인터는 **위쪽(자신을 소유/포함하는 객체) 방향으로만** 존재한다. `Client`가 `Device`/`MemorySpace` 목록을 열거할 수는 있지만, `Device`나 `MemorySpace`가 자신에 속한 `PjRtBuffer` 목록을 열거하는 API는 기본 인터페이스에 없다 — 버퍼 추적은 각 백엔드 구현(`AbstractTrackedDeviceBuffer` 등, 이번 스코프 밖)의 책임이다.</p>
+<p>---</p>
+<h2>공통 구현 레이어</h2>
+<p>`common_pjrt_client.h`(2025년 저작권 표기)의 `CommonPjRtClient : public PjRtClient`(62~449행)와 `CommonPjRtLoadedExecutable : public PjRtLoadedExecutable`(473~755행)은 &quot;raw buffer 기반 PjRt 클라이언트들을 위한 공통 베이스 클래스&quot;(61행 주석)다.</p>
+<h3>공통 구현이 제공하는 기능 목록</h3>
+<p>1. **호스트↔디바이스 버퍼 생성 파이프라인**: `BufferFromHostBuffer`(두 오버로드), `BufferFromHostLiteral`, `CreateAliasBuffer`, `CreateUninitializedBuffer`, `CreateViewOfDeviceBuffer`(공통_pjrt_client.h:260-300, .cc:419-583) — `PjRtClient`의 기본 `UnimplementedError`를 실제 구현으로 대체. 2. **범용 Execute 파이프라인**: `CommonPjRtLoadedExecutable`이 `Execute`/`ExecuteSharded`/`ExecutePortable`(공통_pjrt_client.cc:1795-2050)을 **Prepare → Launch 2단계**로 구현한다. `PrepareArguments`(static, .cc:786) → `ExecutePrepare`/`ExecutePrepareWithOomRetries`(OOM 재시도 루프 포함, .cc:1737-1780) → `ExecuteLaunch`(.cc:1704-1735) → 최종적으로 서브클래스가 준 `PjRtRawLoadedExecutable::Execute`(순수 가상, .h:464-470) 호출. 입력 도네이션은 `CommonPjRtBuffer::ScopedHold`로, 출력은 `AllocateOutputBuffersWithInputReuse`/`CreateOutputs`(.cc:982, 1482)로 처리된다. 3. **크로스호스트 전송**: `MakeCrossHostReceiveBuffers`, `CrossHostSendBuffers`, `CrossHostReceiveBuffers`의 기본 구현(.cc:1155-1481). 4. **레이아웃/트랜스포즈 유틸리티**: `MakeDefaultShapeForMemorySpace`, `GetTransposePlan`(`TransposePlanCache` 멤버 포함), `DelinearizeHostBuffer`. 5. **디바이스 이벤트/퓨처 계측**: `CreateProfiledFuture`, `CreateLinkedUserPromise`, `MakeTrackedReadyFuture`, `TrackFuture` — 프로파일링/트레이스미(traceme) 통합. 6. **`CommonPjRtBufferImpl`**: `PjRtBuffer` 인터페이스의 상당 부분(`ToLiteral`, `CopyToMemorySpace` 계열, `Bitcast`, `Delete`, `AcquireExternalReference` 등, .h:774-870)을 raw buffer 추상화 위에 구현.</p>
+<h3>백엔드별로 오버라이드해야 하는 지점</h3>
+<p>`CommonPjRtLoadedExecutable`을 상속하는 백엔드가 **반드시** 구현해야 하는 것(순수 가상):</p>
+<ul><li>`LoadRawExecutable(...)` (.h:684-687) — 실제 하드웨어에 launch 가능한 `PjRtRawLoadedExecutable`을 만드는 지점. 이것이 사실상 백엔드별 &quot;진짜 실행&quot; 로직이 들어가는 유일한 훅이다.</li><li>`input_output_alias_config()` (.h:693-694)</li><li>`client()` 공변 오버라이드(→ `CommonPjRtClient*`)</li><li>(`PjRtRawLoadedExecutable::Execute`, .h:464-470 — `LoadRawExecutable`이 반환하는 객체가 구현해야 함)</li></ul>
+<p>`CommonPjRtClient`를 상속하는 백엔드가 **기능을 살리려면** 오버라이드해야 하지만 기본값은 `UnimplementedError`(soft-required)인 것: `AllocateRawBuffer`/`AllocateRawBufferForExecute`, `ImportForeignMemory`, `LinearizeInto`/`LinearizeHostBufferInto`, `GetOnDeviceBytesCount`, `GetMemorySpaceKindForShape`, `CreateLinkedEventPromise`, `CreateDeviceEvent`, `CreateRawBufferChannel`, `WaitOnStream`(GPU 스트림 연동).</p>
+<p>`PjRtClient` 자체의 순수 가상 함수(`process_index`, `device_count`, `addressable_device_count`, `devices`, `addressable_devices`, `memory_spaces`, `platform_id`, `platform_name`, `platform_version`)는 `CommonPjRtClient`도 손대지 않으므로 여전히 최말단 백엔드가 직접 구현해야 한다.</p>
+<h3>문서에 언급되지 않은 이유(추정)</h3>
+<p>`common_pjrt_client.h`/`.cc`와 `pjrt_client_utils.h`/`.cc`는 파일 헤더에 **2025년** 저작권 표기가 있는 반면 `pjrt_client.h`(2017), `pjrt_client.cc`(2021), `pjrt_device_description.h`(2023)는 더 오래됐다. 문서가 인용하는 GitHub 커밋 해시(`924b74d8...`, `3e448cf9...`)의 라인 번호(`PjRtClient` L486, `PjRtDevice` L102, `PjRtMemorySpace` L72)는 현재 스냅샷의 실제 위치(각각 546, 148, 89행)보다 모두 앞서 있다 — 즉 문서 작성 시점 이후 `pjrt_client.h` 상단부에 코드가 추가됐다. 이는 raw-buffer/device-event 기반 공통 실행 경로(`CommonPjRtClient`)가 문서 작성 이후에 도입된 리팩터링이며, 문서(cpp_api_overview)가 아직 이 레이어를 반영하도록 갱신되지 않았을 가능성이 높다는 것을 시사한다(추정 — 커밋 로그를 직접 확인하지는 않았음).</p>
+<p>---</p>
+<h2>핵심 흐름</h2>
+<p>1. **초기화**: 플러그인이 `PjRtClient`(구체 서브클래스, 예: `CommonPjRtClient` 상속 클래스)를 생성 → 내부적으로 `PjRtDevice`/`PjRtMemorySpace` 인스턴스들을 만들고 서로 `client()` 역포인터를 연결. 2. **컴파일**: `PjRtClient::Compile`/`CompileAndLoad` 호출 → `PjRtExecutable`/`PjRtLoadedExecutable` 반환. 이 메서드들은 전부 기본 `UnimplementedError`이므로 **`PjRtClient` 레벨에서 강제되는 최소 인터페이스는 없다** — 플러그인마다 Compile-then-Load, CompileAndLoad 단일 스텝, 직렬화 로드(`DeserializeExecutable`+`Load`) 중 지원 조합이 다를 수 있다. 3. **버퍼 준비**: `BufferFromHostBuffer`/`BufferFromHostLiteral`(memory_space 지정) 또는 `CreateBuffersForAsyncHostToDevice`로 `PjRtBuffer` 생성. 4. **실행**: `PjRtLoadedExecutable::Execute`/`ExecuteSharded`/`ExecutePortable`(pjrt_client.h:1470-1544)는 **순수 가상**이다 — 이것이 실질적인 최소 실행 인터페이스다. `CommonPjRtLoadedExecutable`을 쓰면 Prepare/Launch 파이프라인이 이 계약을 대신 채워주고, 백엔드는 `LoadRawExecutable`만 구현하면 된다. 5. **결과 소비**: 반환된 `PjRtBuffer`에서 `ToLiteral`/`GetReadyFuture`로 결과를 회수하거나 `Delete`/`ReleaseDeviceMemoryOwnership`로 정리.</p>
+<p>---</p>
+<h2>주요 파일과 역할</h2>
+<p>| 파일 | 역할 | |---|---| | `pjrt_client.h` | `PjRtMemorySpace`, `PjRtDevice`, `PjRtClient`, `PjRtBuffer`, `PjRtLoadedExecutable`, `PjRtExecutableForwarder` 등 **추상 인터페이스 전체**. 상태보다 계약(contract) 정의 위주. | | `pjrt_client.cc` | 위 인터페이스의 소규모 디폴트 헬퍼 구현(C API 델리게이터, `UnsafeBufferPointer`, `HostShape`/`ToLiteral` 등). 백엔드 로직은 없음. | | `pjrt_device_description.h` | `PjRtDeviceDescription`, `PjRtMemorySpaceDescription` — `PjRtDevice`가 대부분의 정적 메타데이터를 위임하는 대상. | | `common_pjrt_client.h/.cc` | `CommonPjRtClient`/`CommonPjRtLoadedExecutable`/`CommonPjRtBufferImpl` — raw-buffer 기반 백엔드용 공통 구현 레이어(버퍼 생성, Execute 파이프라인, 크로스호스트 전송 등). | | `pjrt_client_utils.h/.cc` | `ConvertShapeSpecsToShapes` 단일 유틸 함수 — `ShapeSpec` + 선택적 레이아웃을 `Shape` 벡터로 변환. | | `local_device_state.h` | **2줄짜리 포워딩 헤더**(`#include &quot;xla/pjrt/se/local_device_state.h&quot;`). 실제 클래스는 이번 스코프에 없음. |</p>
+<p>---</p>
+<h2>중요한 설계 판단</h2>
+<p>1. **`PjRtClient`는 상태 컨테이너가 아니라 계약이다.** 유일한 private 멤버가 `host_memory_for_device_manager_` 하나뿐이라는 사실은, 디바이스/메모리 공간 벡터 저장 방식을 서브클래스에 완전히 위임함으로써 단일 프로세스/멀티 프로세스/C-API 위임 등 서로 다른 저장 전략을 자유롭게 쓸 수 있게 한 설계로 읽힌다. 2. **Compile은 선택, Execute는 필수.** `PjRtClient::Compile*` 계열은 모두 소프트(디폴트 에러) 가상 함수인 반면, `PjRtLoadedExecutable::Execute/ExecuteSharded/ExecutePortable`은 순수 가상이다. 즉 PJRT의 진짜 &quot;최소 실행 계약&quot;은 클라이언트가 아니라 로드된 실행 객체에 있다. 3. **역포인터는 상향 단방향.** `Buffer→MemorySpace→{Device,Client}`, `Device→Client` 방향만 있고 반대(부모가 자식 목록을 관리)는 인터페이스 레벨에 없다. 이는 개별 백엔드가 버퍼 생명주기 추적 방식(참조 카운팅, weak set 등)을 자유롭게 선택하도록 열어둔 결정으로 보인다. 4. **`CommonPjRtClient`의 Prepare/Launch 분리 + OOM 재시도.** `ExecutePrepareWithOomRetries`(.cc:1737)가 `ResourceExhausted` 상태를 감지해 `client()-&gt;ShouldRetryOnOom(...)`을 통해 백엔드에 재시도 여부를 위임하는 구조는, 디바이스 메모리 부족을 프레임워크 레벨에서 우아하게 처리하려는 설계 의도를 보여준다. 5. **`local_device_state.h`의 포워딩화.** 실제 상태 클래스가 `xla/pjrt/se/`로 이동한 것으로 보이며(코드에서 직접 확인, 이유는 추정), 이는 StreamExecutor 기반 구현과 raw-buffer 기반(`CommonPjRtClient`) 구현을 아키텍처적으로 분리하려는 흐름과 맥락이 닿아 보인다.</p>
+<h2>읽으면서 주의할 점</h2>
+<ul><li>**문서와 실제 라인 번호가 다르다.** 문서가 인용하는 `pjrt_client.h#L486/L102/L72`는 지금 각각 546/148/89행이다. 문서의 개념 설명은 유효하지만 딥링크는 낡았다.</li><li>**`PjRtMemorySpace`가 버퍼 목록을 안다는 문서 서술(216행)은 기본 추상 인터페이스와 불일치한다.** `PjRtMemorySpace` 클래스(pjrt_client.h:89-121)에는 buffers() 류의 접근자가 없다 — 문서의 이 문장은 개념적/구현별 설명이거나 오래된 서술일 수 있음(확인 필요).</li><li>**`CommonPjRtClient::async_work_runner()`는 기본값이 `nullptr`인데(.h:68), `LaunchOnDevice()`(.h:109-112)는 이를 역참조한다.** 백엔드가 `async_work_runner()`를 오버라이드하지 않고 `LaunchOnDevice`를 호출하는 경로를 타면 널 포인터 역참조로 이어질 수 있는 잠재적 위험 지점이다.</li><li>**이번 저장소 스냅샷은 스코프가 좁게 잘려 있다.** `xla/pjrt/se/local_device_state.h`, `pjrt_executable.h`, `raw_buffer.h`, `device_event.h`, `abstract_tracked_device_buffer.h` 등 다수의 의존 헤더가 실제로는 없다. 따라서 `LocalDeviceState`, `PjRtRawBuffer`, `AbstractTrackedDeviceBuffer`, `PjRtDeviceEvent`의 내부 구조에 대한 서술은 타입 시그니처 기반 추론이며 원문 확인이 필요하다.</li><li>**`PjRtDevice::id()`는 deprecated**(pjrt_client.h:166-167, `ABSL_DEPRECATED(&quot;Use global_device_id() instead&quot;)`) — 신규 코드 분석 시 `global_device_id()`/`local_device_id()`/`local_hardware_id()` 3분법을 기준으로 삼아야 한다.</li></ul>
+<h2>더 파볼 질문</h2>
+<ul><li>`xla/pjrt/se/local_device_state.h`의 실제 정의를 확인하고, `PjRtStreamExecutorDevice`(추정 클래스명) 등 구체적인 `PjRtDevice` 서브클래스가 이를 어떻게 소유/구성하는지 — 이번 스코프에서는 확인 불가.</li><li>`PjRtMemorySpace`가 실제로 버퍼 목록을 추적하는 백엔드 구현(예: CPU/GPU 클라이언트)이 있는지, 있다면 그 추적 방식이 공개 인터페이스 밖의 백엔드 전용 확장인지.</li><li>`CommonPjRtClient::ShouldRetryOnOom`을 실제로 오버라이드하는 백엔드(예: GPU)의 재시도 정책 구체값(최대 시도 횟수, 백오프 등).</li><li>문서(`PJRT 플러그인 통합`, `PJRT 예`)가 `CommonPjRtClient` 기반 구현 예제를 다루는지 — 다룬다면 그 문서와 본 코드 레이어를 추가로 대응시킬 가치가 있음(이번 분석 스코프 밖).</li></ul>
+    </article>
+  </main>
+  <footer>
+    <div class="page-shell">
+      코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+</body>
+</html>

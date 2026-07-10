@@ -1,0 +1,82 @@
+{
+  "title": "PjRtClient / PjRtDevice / PjRtMemorySpace 계층",
+  "summary": "PJRT의 최상위 진입점인 PjRtClient와 이를 구성하는 PjRtDevice, PjRtMemorySpace의 책임 분리와 상호 참조(역포인터) 구조를 분석한다.",
+  "type": "코드 분석",
+  "tags": [
+    "XLA",
+    "PJRT",
+    "Runtime",
+    "OpenXLA",
+    "JAX",
+    "client",
+    "device",
+    "memory-space",
+    "entry-point"
+  ],
+  "updated": "2026-07-10",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/xla/xla/pjrt",
+    "branch": null,
+    "paths": [
+      "xla/pjrt/pjrt_client.h",
+      "xla/pjrt/pjrt_client.cc",
+      "xla/pjrt/pjrt_device_description.h",
+      "xla/pjrt/common_pjrt_client.h",
+      "xla/pjrt/common_pjrt_client.cc",
+      "xla/pjrt/local_device_state.h",
+      "xla/pjrt/pjrt_client_utils.h",
+      "xla/pjrt/pjrt_client_utils.cc"
+    ],
+    "reference_dir": "references/code-analysis/pjrt",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": "계획 단계에서 분리된 모듈만 깊게 분석한다. 상위 PJRT 전체 구조와의 연결도 짧게 설명한다.",
+    "sections": [
+      {
+        "title": "문서-코드 대응",
+        "prompt": "'PJRT C++ Device API 개요' 문서의 PjRtClient/PjRtDevice/PjRtMemorySpace 설명 문단을 pjrt_client.h의 실제 클래스 선언 및 멤버 함수와 줄 단위로 대응시켜라.",
+        "required": [
+          "PjRtClient 클래스 요약",
+          "PjRtDevice 클래스 요약",
+          "PjRtMemorySpace 클래스 요약",
+          "역포인터 관계 다이어그램(텍스트)"
+        ]
+      },
+      {
+        "title": "공통 구현 레이어",
+        "prompt": "common_pjrt_client.h/.cc가 제공하는 공통 로직을 정리하고, 이것이 문서에는 언급되지 않은 이유(문서 작성 이후 추가된 리팩터링 가능성)를 추정하라.",
+        "required": [
+          "공통 구현이 제공하는 기능 목록",
+          "백엔드별로 오버라이드해야 하는 지점"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    }
+  ]
+}

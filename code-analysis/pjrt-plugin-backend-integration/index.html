@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plugin/Backend 통합 메커니즘 (CPU/GPU/TPU/예제 플러그인)</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+    header {
+      padding: 64px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, pre {
+      margin: 0 0 1.05em;
+    }
+    ul {
+      padding-left: 1.3em;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-shell">
+      <p class="eyebrow">코드 분석</p>
+      <h1>Plugin/Backend 통합 메커니즘 (CPU/GPU/TPU/예제 플러그인)</h1>
+      <p class="summary">새 디바이스/백엔드를 PJRT에 연결하기 위한 등록 패턴(static/dynamic registration)과 CPU/GPU 구체 구현을 example_plugin과 비교 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-10</span>
+        <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">plugin</span><span class="tag">backend</span><span class="tag">cpu</span><span class="tag">gpu</span><span class="tag">registration</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell">
+    <article>
+      <p>필요한 코드 근거는 모두 확보했습니다. 문서를 작성합니다.</p>
+<h1>PJRT 플러그인/백엔드 통합 메커니즘: example_plugin과 CPU/GPU/TPU 등록 레이어 분석</h1>
+<h2>한 줄 요약</h2>
+<p>`xla/pjrt/plugin/example_plugin`은 &quot;PJRT C++ 클라이언트 구현 → C API 래퍼로 감싸기 → `GetPjrtApi` 노출&quot;이라는 최소 통합 골격을 그대로 보여주는 스캐폴드이고, `plugin/xla_cpu`·`plugin/xla_gpu`는 그 골격을 실제 프로덕션 백엔드(`cpu/cpu_client.cc`, `gpu/se_gpu_pjrt_client.cc`)에 대해 반복하되, 구현체는 그대로 두고 **공개 진입점만 새 네임스페이스로 재노출(façade)** 하는 진행 중인 마이그레이션 레이어이며, `xla_tpu`는 아예 구현 없이 &quot;런타임에 `.so`를 찾아라&quot;는 지연 바인딩만 등록한다.</p>
+<h2>분석 범위</h2>
+<p>`job.json`에 명시된 19개 파일만 대상으로 하며, 계획 단계에서 이미 &quot;plugin 레이어&quot; 모듈로 분리된 파일들이다. 상위 PJRT 전체 구조(`pjrt_client.h`, `common_pjrt_client.h`, `xla/pjrt/c/pjrt_c_api.h`, `pjrt_c_api_wrapper_impl.h` 등)는 이 저장소 스냅샷에 포함되어 있지 않다 — 실제로 `Glob`으로 확인한 결과 이 작업 디렉터리의 `repo/`는 `job.json`의 `paths` 목록에 해당하는 파일들만 담긴 **부분(sparse) 체크아웃**이다(예: `myplugin_c_pjrt_internal.h`, `xla/pjrt/extensions/example/*`, `xla/pjrt/plugin/static_registration.h`, `dynamic_registration.h`, `plugin_names.h`, `cpu_client_options.h`, `xla_gpu_client_options.h` 등은 모두 `#include` 되지만 실제 파일은 없음). 따라서 이 문서는 주어진 19개 파일에서 직접 확인한 사실과, 이름·시그니처로부터의 추론을 구분해서 서술한다.</p>
+<h2>전체 구조</h2>
+<pre><code>xla/pjrt/
+├── plugin/
+│   ├── example_plugin/     ← 통합 방법을 보여주는 최소 예제 (오늘 분석 대상)
+│   ├── xla_cpu/            ← CPU 백엔드의 새 &quot;공개 진입점&quot; 파사드
+│   ├── xla_gpu/            ← GPU 백엔드의 새 &quot;공개 진입점&quot; 파사드
+│   └── xla_tpu/            ← 동적 로딩만 등록 (구현 없음)
+├── cpu/cpu_client.{h,cc}       ← CPU PjRtClient 실제 구현체 (레거시 위치)
+├── gpu/se_gpu_pjrt_client.{h,cc} ← GPU PjRtClient 실제 구현체 (레거시 위치)
+└── c/pjrt_c_api_*_internal.{h,cc} ← C API ↔ C++ 클라이언트 연결 glue (스코프 밖)</code></pre>
+<h2>핵심 흐름</h2>
+<p>세 백엔드(example_plugin, CPU, GPU) 모두 동일한 3계층 호출 체인을 따른다.</p>
+<pre><code>GetPjrtApi() [extern &quot;C&quot;, 로더가 호출]
+   → GetXxxPjrtApi() [pjrt::CreatePjrtApi(...)로 PJRT_Api 구조체 조립]
+        → PJRT_XxxClient_Create(args) [C API 콜백, C++ 클라이언트를 CreateWrapperClient로 감쌈]
+             → GetXxxPjRtClient()/CreateXxxPjrtClient() [실제 xla::PjRtClient 서브클래스 생성]</code></pre>
+<ul><li>example_plugin: `myplugin_c_pjrt.cc:GetPjrtApi` → `myplugin_c_pjrt_internal.cc:GetMyPluginPjrtApi`/`PJRT_MypluginClient_Create` → `myplugin_cpp_pjrt.cc:CreateMyPluginPjrtClient`</li><li>CPU: (스코프 밖의) `xla/pjrt/c/pjrt_c_api_cpu_internal.cc` → `plugin/xla_cpu/xla_cpu_pjrt_client.cc:GetXlaPjrtCpuClient` → `cpu/cpu_client.cc:GetPjRtCpuClient`</li><li>GPU: (스코프 밖의) `xla/pjrt/c/pjrt_c_api_gpu_internal.cc` → `plugin/xla_gpu/xla_gpu_pjrt_client.cc:GetXlaPjrtGpuClient` → `gpu/se_gpu_pjrt_client.cc:GetStreamExecutorGpuClient`</li></ul>
+<p>CPU/GPU의 최상단 C-API glue(`pjrt_c_api_*_internal.cc`)는 이번 체크아웃에 없으므로, `plugin/xla_cpu`·`plugin/xla_gpu`가 그 glue에 의해 실제로 호출되는지는 **확인이 필요함**(추정: `cpu_client.h`의 `GetPjRtCpuClient`에 붙은 `ABSL_DEPRECATED(&quot;Use public XLA:CPU GetXlaPjRtCpuClient instead&quot;)` 주석으로 미루어, 마이그레이션 방향은 `pjrt_c_api_cpu_internal.cc`가 결국 `GetXlaPjrtCpuClient`를 호출하도록 바뀌는 쪽으로 보인다).</p>
+<h2>주요 파일과 역할</h2>
+<p>| 파일 | 역할 | |---|---| | `example_plugin/myplugin_c_pjrt.h/.cc` | `extern &quot;C&quot; GetPjrtApi()` 공개 심볼 — 프레임워크/로더가 dlopen 후 찾는 유일한 진입점 | | `example_plugin/myplugin_c_pjrt_internal.cc` | `PJRT_Api` 조립(`pjrt::CreatePjrtApi`), `PJRT_MypluginClient_Create` 등 C API 콜백 정의, 확장(Extension) 배선 | | `example_plugin/myplugin_cpp_pjrt.h/.cc` | `MypluginPjrtClient : xla::PjRtClient` — 실제 C++ 클라이언트 골격 (디바이스 0개, Compile/Execute 미구현) | | `xla_cpu/xla_cpu_pjrt_client.h/.cc` | `GetXlaPjrtCpuClient(CpuClientOptions)` — `cpu/cpu_client.h`의 `GetPjRtCpuClient`를 그대로 호출하는 얇은 파사드 | | `xla_cpu/cpu_static_registration.cc` | `REGISTER_PJRT_PLUGIN(kCpuPjrtName, pjrt::cpu_plugin::GetCpuPjrtApi())` — 빌드 시점에 CPU를 레지스트리에 편입 | | `xla_gpu/xla_gpu_pjrt_client.h/.cc` | `GetXlaPjrtGpuClient(GpuClientOptions)` — `gpu/se_gpu_pjrt_client.h`의 `GetStreamExecutorGpuClient`를 호출하되 `use_tfrt_gpu_client` 옵션에 따라 `use_async_dispatch`를 강제하는 로직 한 줄 추가 | | `xla_gpu/gpu_static_registration.cc` | `REGISTER_PJRT_PLUGIN(kGpuPjrtName, pjrt::gpu_plugin::GetGpuPjrtApi())` | | `xla_tpu/tpu_dynamic_registration.cc` | `REGISTER_DYNAMIC_PJRT_PLUGIN(kTpuPjrtName, &quot;TPU_LIBRARY_PATH&quot;)` — 구현 코드 없이 이름과 환경변수만 등록 | | `cpu/cpu_client.h/.cc` | `PjRtCpuClient final : public CommonPjRtClient` — CPU 실행/컴파일/버퍼 관리 실구현 (497줄 헤더, deprecated된 팩토리 함수 보유) | | `cpu/cpu_pjrt_compiler.h` | `CpuPjRtCompiler : public PjRtCompiler` — 선택적 컴파일러 확장점의 CPU 구현 | | `gpu/se_gpu_pjrt_client.h/.cc` | `StreamExecutorGpuClient : public PjRtStreamExecutorClient` — GPU 실구현, `GetStreamExecutorGpuClient` (비-deprecated) | | `gpu/se_gpu_pjrt_compiler.h` | `StreamExecutorGpuCompiler : public PjRtCompiler` — GPU용 컴파일러 확장점 구현 |</p>
+<p>---</p>
+<h2>1. example_plugin 워크스루</h2>
+<p>참고 문서 &quot;PJRT 플러그인 통합&quot;은 통합을 3단계로 설명한다. 각 코드가 이 단계에 정확히 대응한다.</p>
+<p>**1단계 대응 코드 — PJRT C API 인터페이스 구현** 문서는 옵션 A(C API 직접 구현)와 옵션 B(C++ API 구현 후 C→C++ 래퍼 사용)를 제시하며, 옵션 B의 의사코드로 `PJRT_Client_Create`가 `GetPluginPjRtClient()`를 호출해 `pjrt::CreateWrapperClient(...)`로 감싸는 예를 보여준다. `myplugin_c_pjrt_internal.cc:40-46`의 `PJRT_MypluginClient_Create`가 문자 그대로 이 패턴이다.</p>
+<pre><code class="language-cpp">std::unique_ptr&lt;xla::PjRtClient&gt; client = CreateMyPluginPjrtClient();
+args-&gt;client = pjrt::CreateWrapperClient(GetMyPluginPjrtApi(), std::move(client));</code></pre>
+<p>`CreateMyPluginPjrtClient()`는 `myplugin_cpp_pjrt.cc:83-85`에 정의되어 있고, 이 안의 `MypluginPjrtClient` 클래스(`myplugin_cpp_pjrt.h/.cc`)가 문서에서 말하는 &quot;PJRT C++ 클라이언트&quot;에 해당한다. 문서가 언급한 선택 항목들도 코드에 그대로 나타난다: `PJRT_TopologyDescription_Create`(문서 기준 선택사항) → `PJRT_MypluginDeviceTopology_Create`가 `absl::UnimplementedError` 반환, `PJRT_Plugin_Initialize`(선택사항) → `pjrt::PJRT_Plugin_Initialize_NoOp` 사용.</p>
+<p>**2단계 대응 코드 — GetPjRtApi 구현** 문서 의사코드:</p>
+<pre><code class="language-cpp">const PJRT_Api* GetPjrtApi() {
+  static const PJRT_Api pjrt_api = pjrt::CreatePjrtApi(my_plugin::PJRT_Client_Create);
+  return &amp;pjrt_api;
+}</code></pre>
+<p>실제 코드는 `myplugin_c_pjrt_internal.cc:78-97`의 `GetMyPluginPjrtApi()`이며, `myplugin_c_pjrt.cc:21`의 공개 `GetPjrtApi()`가 이를 감싸 노출한다. 다만 실제 `CreatePjrtApi` 호출은 문서 예시보다 인자가 많다 — 클라이언트 생성 콜백 외에 `PJRT_MypluginExecuteContext_Create`, `PJRT_MypluginDeviceTopology_Create`, `PJRT_Plugin_Initialize_NoOp`, 확장 체인(`example_extension.base`), `PJRT_Plugin_Attributes_Xla`까지 6개 인자를 받는다. **문서와 코드의 차이**: 문서의 의사코드는 단순화된 예시(구버전 시그니처로 추정)이고, 실제 `CreatePjrtApi`는 ExecuteContext/확장(Extension) 메커니즘이 추가된 더 최신 시그니처를 요구한다.</p>
+<p>**3단계 대응 코드 — C API 구현 테스트** 문서는 `RegisterPjRtCApiTestFactory`를 언급하지만, 이 저장소 스냅샷에는 `job.json`의 `paths`에 테스트 파일이 포함되어 있지 않다. **example_plugin 디렉터리 자체에도 테스트 파일이 존재하지 않음**을 `Glob`으로 확인했다 — README.md 한 줄(&quot;Basics on how to write all the boilerplate code...&quot;)만 있고 테스트 코드는 없다. 3단계는 이 코드베이스 서브셋에서 확인 불가능하며, 검증이 필요한 항목으로 남긴다.</p>
+<p>**C API 직접 구현 vs C++ 래퍼 경로 비교** example_plugin은 **오직 옵션 B(C++ 래퍼) 경로만 보여준다.** `myplugin_c_pjrt_internal.cc`의 모든 C API 콜백은 궁극적으로 `pjrt::CreateWrapperClient`를 통해 C++ `xla::PjRtClient` 서브클래스로 위임되며, 옵션 A(C API를 필드 단위로 직접 채우는 방식)의 예시 코드는 이 서브셋에 존재하지 않는다.</p>
+<ul><li>**옵션 B(C++ + 래퍼)를 선택해야 하는 경우**: XLA 저장소를 포크하거나 bazel로 XLA C++ 코드에 링크할 수 있는 경우. `PjRtClient`의 가상 함수들만 구현하면 나머지 방대한 C API 표면(`pjrt_c_api.h`)은 래퍼가 자동으로 채워준다 — 문서 표현으로 &quot;래퍼를 사용하면 나머지 C API를 구현할 필요가 없습니다&quot;. CPU/GPU 백엔드가 실제로 이 경로다.</li><li>**옵션 A(C API 직접 구현)를 선택해야 하는 경우**: C++/XLA에 링크할 수 없는 언어·툴체인(순수 C, Rust, Zig 등)로 벤더가 독립적으로 플러그인을 만드는 경우. &quot;PJRT 예&quot; 문서가 예로 든 Tenstorrent-XLA 플러그인(`api_impl.cc`, MLIR 기반 C 플러그인)이 이 경로에 해당한다고 언급되어 있으나, 그 소스는 이번 분석 범위 밖이다.</li></ul>
+<h2>2. CPU/GPU 실제 구현과 등록 레이어 관계</h2>
+<p>**cpu 레이어 관계도**</p>
+<pre><code>cpu_static_registration.cc
+  → REGISTER_PJRT_PLUGIN(kCpuPjrtName, pjrt::cpu_plugin::GetCpuPjrtApi())
+       [xla/pjrt/c/pjrt_c_api_cpu_internal.h, 스코프 밖 — GetCpuPjrtApi 본체 미확인]
+            ↓ (추정: PJRT_Client_Create 콜백에서 호출)
+xla_cpu/xla_cpu_pjrt_client.cc: GetXlaPjrtCpuClient(CpuClientOptions)
+  → return xla::GetPjRtCpuClient(options);   // 순수 위임, 로직 없음
+       cpu/cpu_client.cc: GetPjRtCpuClient(CpuClientOptions)
+         → PjRtCpuDevice/CpuTopologyDescription 구성 후 PjRtCpuClient 생성
+              cpu_client.h:86  class PjRtCpuClient final : public CommonPjRtClient</code></pre>
+<p>`cpu_client.h:561-563`에서 `GetPjRtCpuClient`는 `ABSL_DEPRECATED(&quot;Use public XLA:CPU GetXlaPjRtCpuClient instead&quot;)`로 표시되어 있다. 즉 **`plugin/xla_cpu`는 `cpu/cpu_client.cc`를 대체하는 것이 아니라, 그 위에 얹힌 새 &quot;공개 이름표&quot;** 다. 실제 상태 저장·컴파일·실행 로직(`PjRtCpuExecutable`, `PjRtCpuLoadedExecutable`, `CompileAndAssignDevices` 등)은 전부 `cpu/cpu_client.h/cc`에 그대로 남아 있다. `xla_cpu_pjrt_client.cc:29`의 TODO 주석(&quot;Wrap the PjRtCPU Client inside the PJRT Sandwich&quot;)은 이 파사드가 향후 더 두꺼운 래핑 레이어(&quot;PJRT Sandwich&quot;)로 발전할 계획임을 시사한다 — 아직 구현되지 않은 미래 작업이므로 현재는 순수 pass-through다.</p>
+<p>흥미로운 세부사항: `cpu_client.h:59-60`은 이미 `xla/pjrt/plugin/xla_cpu/cpu_client_options.h`와 `cpu_topology_description.h`를 `#include`한다. 즉 **옵션/토폴로지 타입은 이미 `plugin/xla_cpu` 네임스페이스로 이전되었지만, 클라이언트 구현 클래스 자체는 아직 `cpu/`에 남아 있는 부분 마이그레이션 상태**다.</p>
+<p>**gpu 레이어 관계도**</p>
+<pre><code>gpu_static_registration.cc
+  → REGISTER_PJRT_PLUGIN(kGpuPjrtName, pjrt::gpu_plugin::GetGpuPjrtApi())
+       [xla/pjrt/c/pjrt_c_api_gpu_internal.h, 스코프 밖]
+            ↓ (추정)
+xla_gpu/xla_gpu_pjrt_client.cc: GetXlaPjrtGpuClient(GpuClientOptions options)
+  → if (options.use_tfrt_gpu_client) options.use_async_dispatch = true;
+  → return GetStreamExecutorGpuClient(options);
+       gpu/se_gpu_pjrt_client.cc:1883 GetStreamExecutorGpuClient(const GpuClientOptions&amp;)
+         → GetGpuXlaClient / BuildLocalDeviceStates / StreamExecutorGpuClient 생성
+              se_gpu_pjrt_client.h:112  class StreamExecutorGpuClient : public xla::PjRtStreamExecutorClient</code></pre>
+<p>CPU와 구조는 동일하지만 두 가지 차이가 있다. 1. `GetStreamExecutorGpuClient`에는 `ABSL_DEPRECATED` 표시가 **없다**(`se_gpu_pjrt_client.h:260-261` 확인) — CPU 쪽 마이그레이션이 더 앞서 있고 GPU는 아직 레거시 함수를 공식적으로 폐기 처리하지 않은 비대칭 상태다. 2. `xla_gpu_pjrt_client.cc`는 순수 pass-through가 아니라 `use_tfrt_gpu_client` 옵션 해석이라는 얇은 비즈니스 로직을 한 줄 갖고 있다.</p>
+<p>CPU와 마찬가지로 `se_gpu_pjrt_client.h:51-52`가 `plugin/xla_gpu/xla_gpu_allocator_config.h`, `xla_gpu_client_options.h`를 이미 include하고 있어, 옵션 타입만 먼저 새 레이어로 옮겨진 동일한 패턴이 반복된다.</p>
+<p>**registration 흐름** `cpu_static_registration.cc`/`gpu_static_registration.cc`는 각각 `xla/pjrt/c/pjrt_c_api_{cpu,gpu}_internal.h`에서 가져온 `GetCpuPjrtApi()`/`GetGpuPjrtApi()`(이 파일들의 실체는 스코프 밖)를, `plugin/plugin_names.h`의 이름 상수(`kCpuPjrtName`, `kGpuPjrtName`)와 함께 `REGISTER_PJRT_PLUGIN` 매크로에 전달한다. 이 매크로/`static_registration.h`의 본체는 이번 체크아웃에 없어 정확한 구현은 **확인이 필요함**이나, 이름과 사용 방식으로 미루어(추정) 이는 **정적 링크 시점에 프로세스 내 레지스트리(전역 테이블)에 &quot;이름 → `GetPjrtApi` 함수 포인터&quot;를 등록**하는 방식이며, 실행 파일에 CPU/GPU 구현이 직접 컴파일되어 들어있는 것을 전제로 한다.</p>
+<p>반면 `tpu_dynamic_registration.cc`는 `REGISTER_DYNAMIC_PJRT_PLUGIN(kTpuPjrtName, &quot;TPU_LIBRARY_PATH&quot;)` 단 한 줄이며, TPU 구현 함수를 전혀 참조하지 않는다. 여기서 `&quot;TPU_LIBRARY_PATH&quot;`는 함수가 아니라 **환경 변수 이름 문자열**이다. 이름으로 미루어(추정) 동적 등록은 **&quot;이름 → 환경변수&quot; 매핑만 미리 등록해 두고, 실제로 그 플랫폼이 요청되는 시점에 해당 환경변수 경로의 `.so`를 `dlopen`한 뒤 심볼 `GetPjrtApi`를 `dlsym`으로 찾아 호출**하는 지연 바인딩 방식이다. 즉 static/dynamic 등록의 차이는 &quot;GetPjRtApi를 언제 얻는가&quot;의 문제다 — static은 **컴파일/링크 시점**에 함수 포인터가 확정되고, dynamic은 **런타임(플랫폼 최초 요청 시점)**에 파일 시스템 경로에서 찾는다. TPU가 동적 등록을 쓰는 이유는(추정) TPU 런타임이 별도로 빌드·배포되는 독점 바이너리이기 때문일 가능성이 높다.</p>
+<h2>중요한 설계 판단</h2>
+<ul><li>**파사드로서의 `plugin/xla_cpu`, `plugin/xla_gpu`**: 두 디렉터리 모두 실질적 구현을 담고 있지 않다. `xla_cpu_pjrt_client.cc`는 3줄, `xla_gpu_pjrt_client.cc`는 6줄짜리 함수 하나가 전부다. 이는 &quot;새 기능 추가&quot;가 아니라 **공개 API 표면을 `plugin/xla_*` 네임스페이스로 통일하고, `cpu/`, `gpu/` 아래의 오래된 진입점을 서서히 폐기(`ABSL_DEPRECATED`)하려는 리팩터링/마이그레이션**으로 읽힌다.</li><li>**옵션 타입은 이미 이전됨, 구현 클래스는 아직 안 옮겨짐**: `cpu_client_options.h`, `cpu_topology_description.h`, `xla_gpu_client_options.h`, `xla_gpu_allocator_config.h`가 전부 `plugin/xla_cpu`, `plugin/xla_gpu` 아래 위치하는데도 `PjRtCpuClient`, `StreamExecutorGpuClient` 클래스 본체는 `cpu/`, `gpu/`에 남아 있다. 헤더 경계와 실제 구현 경계가 어긋난 과도기 상태이며, 향후 클래스 자체도 `plugin/` 아래로 옮겨질 가능성을 시사한다(추정).</li><li>**example_plugin은 &quot;컴파일되는 골격&quot;이지 &quot;동작하는 백엔드&quot;가 아니다**: `MypluginPjrtClient::device_count()`가 항상 0을 반환하고(`myplugin_cpp_pjrt.cc:61`), `Compile`/`Execute`/`BufferFromHostLiteral` 계열 메서드를 전혀 오버라이드하지 않는다. CPU/GPU 실구현이 각각 전용 `PjRtCompiler` 서브클래스(`CpuPjRtCompiler`, `StreamExecutorGpuCompiler`)와 수백 줄의 실행/버퍼 관리 로직을 갖는 것과 극명히 대비된다. 이는 &quot;PJRT C++ Device API 개요&quot; 문서가 말하는 &quot;`PjRtCompiler`는 플러그인이 반드시 구현할 필요는 없다&quot;는 원칙을 극단적으로 보여주는 사례이기도 하다 — example_plugin은 컴파일러조차 없다.</li><li>**CPU가 GPU보다 마이그레이션이 한 단계 앞서 있다**: CPU 쪽 레거시 함수(`GetPjRtCpuClient`)만 `ABSL_DEPRECATED`가 붙어 있고 GPU의 `GetStreamExecutorGpuClient`는 아직 붙어 있지 않다. 같은 리팩터링 패턴이 백엔드마다 다른 속도로 진행 중임을 뜻하며, 새 코드를 작성할 때 GPU 쪽에서 아직 레거시 함수를 직접 호출하는 코드가 존재할 수 있다는 뜻이다.</li></ul>
+<h2>읽으면서 주의할 점</h2>
+<ul><li>**`myplugin_c_pjrt_internal.h`가 실제로 이 저장소에 없다** — `myplugin_c_pjrt_internal.cc`가 이를 `#include`하지만 파일 자체는 이번 체크아웃(및 `job.json` paths)에 포함되어 있지 않다. `GetMyPluginPjrtApi()`가 헤더 없이 전방 선언(`myplugin_c_pjrt_internal.cc:38`)만으로 파일 내에서 재선언되고 있어, 실제 저장소에서는 헤더에 선언이 있고 `.cc`의 전방 선언은 중복/방어적 선언일 가능성이 높다(추정). 이 문서에서 서술한 &quot;1단계 코드&quot;는 헤더가 아닌 `.cc` 구현체 기준이다.</li><li>**`xla/pjrt/extensions/example/*`, `xla/pjrt/c/pjrt_c_api_wrapper_impl.h`, `static_registration.h`, `dynamic_registration.h`, `plugin_names.h` 모두 스코프 밖**이다. `CreateWrapperClient`, `CreatePjrtApi`, `CreateLayoutsExtension`, `CreateExampleExtension`, `REGISTER_PJRT_PLUGIN`, `REGISTER_DYNAMIC_PJRT_PLUGIN` 같은 핵심 헬퍼의 정확한 동작은 이름과 호출부의 사용 패턴으로부터의 추론이며, 원문 정의로 검증되지 않았다.</li><li>**문서의 &quot;1단계&quot; C API 의사코드와 실제 `CreatePjrtApi` 시그니처가 다르다** — 문서 예시는 클라이언트 생성 콜백 하나만 받지만, 실제 코드는 ExecuteContext/Topology/Initialize/Extension/Attributes까지 6개 인자를 받는다. 문서를 그대로 따라 구현하면 컴파일되지 않을 가능성이 높다 — 문서보다 실제 헤더(`pjrt_c_api_wrapper_impl.h`, 스코프 밖)를 우선해야 한다.</li><li>**static registration의 &quot;static&quot;은 C++ `static` 변수가 아니라 &quot;빌드/링크 시점에 고정&quot;이라는 의미로 추정**된다. `myplugin_c_pjrt_internal.cc:80-88`처럼 각 백엔드도 내부적으로 C++ `static` 지역 변수를 쓰지만, 이는 static/dynamic registration 구분과는 별개의 관용구(초기화 1회 보장)다. 혼동하지 않아야 한다.</li></ul>
+<h2>더 파볼 질문</h2>
+<ul><li>`xla/pjrt/c/pjrt_c_api_cpu_internal.cc`/`pjrt_c_api_gpu_internal.cc`가 실제로 `plugin/xla_cpu::GetXlaPjrtCpuClient`/`plugin/xla_gpu::GetXlaPjrtGpuClient`를 호출하는지, 아니면 여전히 `cpu/cpu_client.h`·`gpu/se_gpu_pjrt_client.h`의 (일부 deprecated된) 함수를 직접 호출하는지 — 이 파일들을 추가로 확보해 확인 필요.</li><li>`REGISTER_PJRT_PLUGIN`/`REGISTER_DYNAMIC_PJRT_PLUGIN` 매크로(`static_registration.h`, `dynamic_registration.h`)의 실제 구현: 전역 레지스트리가 정적 초기화 순서 문제(SIOF)를 어떻게 피하는지, 동적 등록 시 `.so` 로드 실패에 대한 폴백 정책은 무엇인지.</li><li>example_plugin의 `myplugin_c_pjrt_internal.h`는 왜 `paths`/저장소에서 빠져 있는가 — 의도적으로 생략된 것인지, 아니면 실제 upstream에도 헤더 없이 인라인 전방 선언만 쓰는 구조인지.</li><li>`xla_cpu_pjrt_client.cc`의 &quot;PJRT Sandwich&quot; TODO가 가리키는 후속 설계는 무엇이며, 완료되면 `cpu/cpu_client.h`의 `GetPjRtCpuClient`가 완전히 비공개로 전환되는지.</li></ul>
+    </article>
+  </main>
+  <footer>
+    <div class="page-shell">
+      코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{
+  "title": "Distributed 런타임 (멀티 호스트 조정)",
+  "summary": "참고 문서에는 설명되지 않은 xla/pjrt/distributed 디렉터리를 분석하여 멀티 프로세스/멀티 호스트 PJRT 클라이언트가 어떻게 토폴로지와 상태를 공유하는지 파악한다.",
+  "type": "코드 분석",
+  "tags": [
+    "XLA",
+    "PJRT",
+    "Runtime",
+    "OpenXLA",
+    "JAX",
+    "distributed",
+    "multi-host",
+    "topology",
+    "coordination"
+  ],
+  "updated": "2026-07-10",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/xla/xla/pjrt",
+    "branch": null,
+    "paths": [
+      "xla/pjrt/distributed/distributed.h",
+      "xla/pjrt/distributed/distributed.cc",
+      "xla/pjrt/distributed/client.h",
+      "xla/pjrt/distributed/client.cc",
+      "xla/pjrt/distributed/service.h",
+      "xla/pjrt/distributed/service.cc",
+      "xla/pjrt/distributed/topology_util.h",
+      "xla/pjrt/distributed/topology_util.cc",
+      "xla/pjrt/distributed/key_value_store_interface.h",
+      "xla/pjrt/distributed/in_memory_key_value_store.h",
+      "xla/pjrt/distributed/in_memory_key_value_store.cc",
+      "xla/pjrt/distributed/protocol.proto"
+    ],
+    "reference_dir": "references/code-analysis/pjrt",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": "계획 단계에서 분리된 모듈만 깊게 분석한다. 상위 PJRT 전체 구조와의 연결도 짧게 설명한다.",
+    "sections": [
+      {
+        "title": "서비스/클라이언트 역할 분리",
+        "prompt": "distributed/service.h와 distributed/client.h의 공개 인터페이스를 비교하여 각각의 책임과 상호작용 순서를 설명하라.",
+        "required": [
+          "service 초기화 순서",
+          "client 연결 흐름",
+          "KV store 사용 지점"
+        ]
+      },
+      {
+        "title": "PjRtClient와의 연결점",
+        "prompt": "topology_util.cc가 생성한 토폴로지 정보나 distributed client가 PjRtClient 생성 경로(예: gpu/se_gpu_pjrt_client.cc)에서 어떻게 참조되는지 grep으로 근거를 찾아 설명하라.",
+        "required": [
+          "연결 지점 코드 근거",
+          "이 모듈이 없을 때와 있을 때의 차이(단일 호스트 vs 멀티 호스트)"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    }
+  ]
+}

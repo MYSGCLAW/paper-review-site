@@ -516,7 +516,7 @@
 
       <div class="statistics">
         <span class="stat">논문 12편</span>
-        <span class="stat">전체 항목 12개</span>
+        <span class="stat">전체 항목 18개</span>
       </div>
     </div>
   </header>
@@ -532,7 +532,7 @@
 
         <a class="tab-link" href="#code-analysis">
           <span>코드 분석</span>
-          <small>0</small>
+          <small>6</small>
         </a>
         
 
@@ -885,15 +885,141 @@
           <h2>Code Analysis</h2>
           <p>라이브러리, 프레임워크, 코드베이스를 읽고 구조와 설계 판단을 정리합니다.</p>
         </div>
-        <span class="section-count">0개</span>
+        <span class="section-count">6개</span>
       </div>
 
       <div class="library-grid">
         
-    <section class="empty-state">
-      <h2>아직 코드 분석 노트가 없습니다.</h2>
-      <p>site/code-analysis/&lt;slug&gt;/index.html을 추가하면 이 탭에 표시됩니다.</p>
-    </section>
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/pjrt-buffer-data-movement/">
+            PjRtBuffer와 데이터 이동/비동기 이벤트
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-10</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">buffer</span><span class="tag">async</span><span class="tag">data-transfer</span><span class="tag">future</span></div>
+
+      <p class="summary">
+        PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-buffer-data-movement/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/pjrt-c-api-bridge/">
+            PJRT C API와 C++ 구현의 연결 지점
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-10</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">c-api</span><span class="tag">abi</span><span class="tag">wrapper</span><span class="tag">version</span></div>
+
+      <p class="summary">
+        PJRT_Api 함수 테이블, GetPjRtApi, C→C++ 래퍼(CreateWrapperClient/CreatePjrtApi)를 통해 C API가 C++ PjRtClient를 어떻게 감싸는지 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-c-api-bridge/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/pjrt-client-device/">
+            PjRtClient / PjRtDevice / PjRtMemorySpace 계층
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-10</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">client</span><span class="tag">device</span><span class="tag">memory-space</span><span class="tag">entry-point</span></div>
+
+      <p class="summary">
+        PJRT의 최상위 진입점인 PjRtClient와 이를 구성하는 PjRtDevice, PjRtMemorySpace의 책임 분리와 상호 참조(역포인터) 구조를 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-client-device/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/pjrt-distributed-runtime/">
+            Distributed 런타임 (멀티 호스트 조정)
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-10</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span></div>
+
+      <p class="summary">
+        참고 문서에는 설명되지 않은 xla/pjrt/distributed 디렉터리를 분석하여 멀티 프로세스/멀티 호스트 PJRT 클라이언트가 어떻게 토폴로지와 상태를 공유하는지 파악한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-distributed-runtime/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/pjrt-executable-compiler/">
+            PjRtExecutable / PjRtLoadedExecutable / PjRtCompiler
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-10</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">executable</span><span class="tag">compiler</span><span class="tag">execution</span><span class="tag">layout</span></div>
+
+      <p class="summary">
+        컴파일된 아티팩트를 나타내는 PjRtExecutable 계열과 컴파일 파이프라인(PjRtCompiler), 실행 진입점(Execute 계열 메서드)의 구조를 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-executable-compiler/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/pjrt-plugin-backend-integration/">
+            Plugin/Backend 통합 메커니즘 (CPU/GPU/TPU/예제 플러그인)
+          </a>
+        </h2>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-10</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">plugin</span><span class="tag">backend</span><span class="tag">cpu</span><span class="tag">gpu</span><span class="tag">registration</span></div>
+
+      <p class="summary">
+        새 디바이스/백엔드를 PJRT에 연결하기 위한 등록 패턴(static/dynamic registration)과 CPU/GPU 구체 구현을 example_plugin과 비교 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/pjrt-plugin-backend-integration/">
+        열기 →
+      </a>
+    </article>
     
       </div>
     </section>

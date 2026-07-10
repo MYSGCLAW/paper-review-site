@@ -1,0 +1,95 @@
+{
+  "title": "Plugin/Backend 통합 메커니즘 (CPU/GPU/TPU/예제 플러그인)",
+  "summary": "새 디바이스/백엔드를 PJRT에 연결하기 위한 등록 패턴(static/dynamic registration)과 CPU/GPU 구체 구현을 example_plugin과 비교 분석한다.",
+  "type": "코드 분석",
+  "tags": [
+    "XLA",
+    "PJRT",
+    "Runtime",
+    "OpenXLA",
+    "JAX",
+    "plugin",
+    "backend",
+    "cpu",
+    "gpu",
+    "registration"
+  ],
+  "updated": "2026-07-10",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/xla/xla/pjrt",
+    "branch": null,
+    "paths": [
+      "xla/pjrt/plugin/example_plugin/myplugin_c_pjrt.h",
+      "xla/pjrt/plugin/example_plugin/myplugin_c_pjrt.cc",
+      "xla/pjrt/plugin/example_plugin/myplugin_c_pjrt_internal.cc",
+      "xla/pjrt/plugin/example_plugin/myplugin_cpp_pjrt.h",
+      "xla/pjrt/plugin/example_plugin/myplugin_cpp_pjrt.cc",
+      "xla/pjrt/plugin/example_plugin/README.md",
+      "xla/pjrt/plugin/xla_cpu/xla_cpu_pjrt_client.h",
+      "xla/pjrt/plugin/xla_cpu/xla_cpu_pjrt_client.cc",
+      "xla/pjrt/plugin/xla_cpu/cpu_static_registration.cc",
+      "xla/pjrt/plugin/xla_gpu/xla_gpu_pjrt_client.h",
+      "xla/pjrt/plugin/xla_gpu/xla_gpu_pjrt_client.cc",
+      "xla/pjrt/plugin/xla_gpu/gpu_static_registration.cc",
+      "xla/pjrt/plugin/xla_tpu/tpu_dynamic_registration.cc",
+      "xla/pjrt/cpu/cpu_client.h",
+      "xla/pjrt/cpu/cpu_client.cc",
+      "xla/pjrt/cpu/cpu_pjrt_compiler.h",
+      "xla/pjrt/gpu/se_gpu_pjrt_client.h",
+      "xla/pjrt/gpu/se_gpu_pjrt_client.cc",
+      "xla/pjrt/gpu/se_gpu_pjrt_compiler.h"
+    ],
+    "reference_dir": "references/code-analysis/pjrt",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": "계획 단계에서 분리된 모듈만 깊게 분석한다. 상위 PJRT 전체 구조와의 연결도 짧게 설명한다.",
+    "sections": [
+      {
+        "title": "example_plugin 워크스루",
+        "prompt": "plugin/example_plugin의 파일들을 '플러그인 통합' 문서의 1~3단계(C API 구현, GetPjRtApi 구현, 테스트)와 일대일로 매핑하여 설명하라.",
+        "required": [
+          "1단계 대응 코드",
+          "2단계 대응 코드",
+          "3단계 대응 코드",
+          "C API 직접 구현 vs C++ 래퍼 경로 비교"
+        ]
+      },
+      {
+        "title": "CPU/GPU 실제 구현과 등록 레이어 관계",
+        "prompt": "cpu/cpu_client.cc와 plugin/xla_cpu/xla_cpu_pjrt_client.cc의 관계, se_gpu_pjrt_client.cc와 plugin/xla_gpu/xla_gpu_pjrt_client.cc의 관계를 각각 정리하고 static_registration.cc가 이들을 어떻게 노출하는지 설명하라.",
+        "required": [
+          "cpu 레이어 관계도",
+          "gpu 레이어 관계도",
+          "registration 흐름"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    }
+  ]
+}

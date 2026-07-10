@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PjRtExecutable / PjRtLoadedExecutable / PjRtCompiler</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+    header {
+      padding: 64px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
+        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, pre {
+      margin: 0 0 1.05em;
+    }
+    ul {
+      padding-left: 1.3em;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-shell">
+      <p class="eyebrow">코드 분석</p>
+      <h1>PjRtExecutable / PjRtLoadedExecutable / PjRtCompiler</h1>
+      <p class="summary">컴파일된 아티팩트를 나타내는 PjRtExecutable 계열과 컴파일 파이프라인(PjRtCompiler), 실행 진입점(Execute 계열 메서드)의 구조를 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-10</span>
+        <span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">executable</span><span class="tag">compiler</span><span class="tag">execution</span><span class="tag">layout</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell">
+    <article>
+      <h1>PjRtExecutable / PjRtCompiler / phase compile 모듈 분석</h1>
+<h2>한 줄 요약</h2>
+<p>이 모듈은 &quot;컴파일된 아티팩트를 어떻게 표현·직렬화할지&quot;(`PjRtExecutable`), &quot;그 아티팩트를 어떻게 만들지&quot;(`PjRtCompiler`/`PjRtPhaseCompiler`), &quot;인자/결과의 물리적 배치를 어떻게 결정할지&quot;(`PjRtLayout`/`LayoutMode`)를 담당하며, 실제로 프로그램을 &quot;실행&quot;하는 책임(`PjRtLoadedExecutable`, `Execute*`)은 이 스코프 밖(`pjrt_client.h`, 미포함)에 있다는 점이 구조의 핵심이다.</p>
+<h2>분석 범위</h2>
+<p>`job.json`의 `paths`에 지정된 12개 파일만 실제 저장소(`repo/xla/pjrt/`)에 체크아웃되어 있다(sparse checkout). 즉 `repo/` 디렉터리 안에는 아래 파일들만 존재하며, `PjRtClient`, `PjRtLoadedExecutable`, `PjRtBuffer`, `PjRtDevice`, `MaybeOwningMlirModule` 등은 전방 선언(forward declaration)이나 `#include`로만 등장하고 실체는 이 저장소에 없다. 이는 job의 `analysis_style` 지시(&quot;계획 단계에서 분리된 모듈만 깊게 분석&quot;)와 일치하며, 상위 PJRT 구조와의 연결은 짧게만 다룬다.</p>
+<ul><li>`pjrt_executable.h/.cc` — 컴파일된 아티팩트 인터페이스(`PjRtExecutable`)와 옵션(`CompileOptions`, `ExecuteOptions`)</li><li>`pjrt_compiler.h/.cc` — 컴파일러 레지스트리, `PjRtCompiler`/`PjRtPhaseCompiler`, 토폴로지 인터페이스</li><li>`pjrt_layout.h`, `layout_mode.h/.cc` — 레이아웃 값 타입과 레이아웃 결정 모드</li><li>`partial_program_utils.h/.cc` — phase compile용 C API ↔ protobuf 마샬링 유틸</li><li>`pjrt_phase_compile_sample_plugin.h/.cc` — phase compile 확장 메커니즘의 참조 구현 예제</li><li>`stream_executor_executable.h` — 단순 forwarding 헤더(아래 &quot;주의할 점&quot; 참고)</li></ul>
+<h2>전체 구조 (상위 PJRT와의 연결, 간략)</h2>
+<p>참고 문서(&quot;PJRT C++ Device API 개요&quot;)에 따르면 전체 흐름은 `PjRtClient`(디바이스/메모리 소유) → `PjRtCompiler`/`PjRtClient::Compile`(컴파일) → `PjRtLoadedExecutable`(로드된 실행 파일) → `PjRtBuffer`(입출력 데이터) 순으로 구성된다. 이 분석 대상 파일들은 이 중 **컴파일 계층**(`PjRtCompiler`)과 **컴파일 결과물의 정적 표현**(`PjRtExecutable`)에 해당하며, `PjRtClient`/`PjRtLoadedExecutable`/`PjRtBuffer`는 `pjrt_client.h`(미포함)에 있다.</p>
+<h2>컴파일 파이프라인</h2>
+<p>**Compile 호출 시그니처** (`pjrt_compiler.h:453-460`, 확인됨)</p>
+<pre><code class="language-cpp">class PjRtCompiler {
+  virtual absl::StatusOr&lt;std::unique_ptr&lt;PjRtExecutable&gt;&gt; Compile(
+      CompileOptions options, const XlaComputation&amp; computation,
+      const PjRtTopologyDescription&amp; topology, PjRtClient* client) = 0;
+
+  virtual absl::StatusOr&lt;std::unique_ptr&lt;PjRtExecutable&gt;&gt; Compile(
+      CompileOptions options, MaybeOwningMlirModule module,
+      const PjRtTopologyDescription&amp; topology, PjRtClient* client) = 0;
+};</code></pre>
+<p>두 오버로드는 입력 형식(레거시 `XlaComputation` vs MLIR 모듈)만 다르고 나머지는 동일하다. 진입점은 이 가상 메서드를 직접 호출하는 것이 아니라 자유 함수 `PjRtCompile(options, computation/module, topology, client=nullptr)`(`pjrt_compiler.h:497-504`, `.cc:195-226`)이며, 내부에서 `topology.compiler()`가 오버라이드를 제공하면 그것을, 아니면 `PjRtCompilerRegistry::Global().GetCompiler(platform_name, compiler_variant)`로 찾은 컴파일러를 호출한다. 레지스트리는 `(platform_name, variant_name)` 키의 전역 싱글턴(`PjRtCompilerRegistry::Global()`)이며, `RegisterFactory`/`RegisterCompiler`는 중복 등록 시 `AlreadyExistsError`를 반환한다.</p>
+<p>**중요**: 코드상 이 `Compile`은 `PjRtLoadedExecutable`이 아니라 `unique_ptr&lt;PjRtExecutable&gt;`을 반환한다. 참고 문서(라인 231)는 &quot;PjRtCompiler 또는 **PjRtClient::Compile**의 책임은 PjRtLoadedExecutable을 반환하는 것&quot;이라고 설명하는데, 이 두 문장을 코드와 맞춰보면 — `PjRtCompiler::Compile`(이 파일 범위)은 아직 어떤 클라이언트/디바이스에도 바인딩되지 않은 **이식 가능한(portable) 컴파일 결과물**을 만들고, 프레임워크가 보통 호출하는 `PjRtClient::Compile`(`pjrt_client.h`, 미포함)이 내부적으로 이를 호출한 뒤 &quot;로드&quot;하여 `PjRtLoadedExecutable`로 감싸는 구조로 추정된다(추정 — `pjrt_client.h`를 직접 확인해야 함).</p>
+<p>**레이아웃 결정 시점** (`pjrt_layout.h`, `layout_mode.h/.cc`, `pjrt_compiler.h`, `pjrt_executable.cc` 근거)</p>
+<p>레이아웃은 컴파일 전/중/후 세 단계로 나뉜다.</p>
+<p>1. **컴파일 이전 — 의도 선언**: `LayoutMode`(`layout_mode.h`)는 `kDefault`(플랫폼 기본 압축 레이아웃) / `kUserSpecified`(구체적 `Layout` 지정) / `kAuto`(컴파일러가 선택)라는 3가지 모드를 표현하며, 이 정보의 출처는 입력 MLIR 모듈의 `&quot;mhlo.layout_mode&quot;` 문자열 attribute라고 헤더 주석에 명시되어 있다. 즉 레이아웃 의도는 `CompileOptions`(전역 옵션)뿐 아니라 프로그램 자체의 attribute로도 전달될 수 있다. `CompileOptions::argument_layouts`(`pjrt_executable.h:88`)도 별도로 인자 레이아웃을 지정하는 통로다. 2. **컴파일 중 — 해석**: `kDefault`인 값은 `PjRtTopologyDescription::GetDefaultLayout(element_type, dims)`(`pjrt_compiler.h:396`)가 제공하는 플랫폼별 기본 레이아웃을 쓴다고 주석에 명시되어 있다. `kAuto`는 실제 XLA 컴파일러(이 스코프 밖)가 최적 레이아웃을 선택한다. 3. **컴파일 이후 — 결과 노출**: `PjRtExecutable::GetParameterLayouts()`/`GetOutputLayouts()`(`pjrt_executable.cc:408-456`)는 `GetHloModules()`로 얻은 `HloModule`의 `entry_computation_layout()`을 `FlattenedParameterLayouts`/`FlattenedResultLayouts`(`xla/pjrt/utils.h`, 미포함)로 펼친 뒤, 각 `xla::Layout`을 `PjRtLayout`(`pjrt_layout.h`)으로 감싸 반환한다. `PjRtLayout`은 값 타입(비교/해시/직렬화 가능)으로, 생성자에서 `memory_space`를 강제로 `kDefaultMemorySpace`로 지운다(주석: &quot;PJRT tracks memory space separately from layout&quot;) — 레이아웃과 메모리 공간을 의도적으로 분리한 설계다.</p>
+<p>**결과 타입**: `absl::StatusOr&lt;std::unique_ptr&lt;PjRtExecutable&gt;&gt;` (확인됨). `PjRtExecutable`은 실행 메서드가 전혀 없는 순수한 &quot;메타데이터 + 직렬화&quot; 인터페이스이며(아래 설계 판단 참고), 실제로 실행 가능한 `PjRtLoadedExecutable`은 이 스코프에 없다.</p>
+<h2>실행 메서드 3종 비교</h2>
+<p>**주의**: `Execute`/`ExecuteSharded`/`ExecutePortable`은 `PjRtLoadedExecutable`(`pjrt_client.h`)에 선언되며, 이 파일은 분석 대상 저장소에 없다. 아래 시그니처는 참고 문서(&quot;PJRT C++ Device API 개요&quot;, 커밋 `3e448cf9`)에서 인용한 것이며 코드로 직접 검증하지 못했다. 세 메서드가 공통으로 받는 `ExecuteOptions`(`pjrt_executable.h:242-354`)는 이 스코프 안에서 확인 가능하다.</p>
+<p>| 메서드 | 인자(참고 문서) | 반환 타입 | 적용 시나리오 | |---|---|---|---| | `Execute` | `absl::Span&lt;const std::vector&lt;PjRtBuffer*&gt;&gt; argument_handles` (디바이스별 인자 묶음) | `StatusOr&lt;vector&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;&gt;` (디바이스별 출력) | addressable한 여러 디바이스에 걸친 replica/SPMD 실행을 한 번의 호출로 처리. 일반적인 `jax.jit` 실행 경로 | | `ExecuteSharded` | `absl::Span&lt;PjRtBuffer* const&gt; argument_handles`, `PjRtDevice* device` (단일 디바이스 인자) | `StatusOr&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;` (단일 디바이스 출력) | 이미 다중 replica/partition으로 컴파일된 실행 파일에서, **사전에 배정된** 특정 device의 shard/replica/partition 하나만 실행. 멀티호스트 SPMD에서 호스트별 로컬 디바이스를 개별 구동할 때 | | `ExecutePortable` | `absl::Span&lt;PjRtBuffer* const&gt; argument_handles`, `PjRtDevice* device` | `StatusOr&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;` | `CompileOptions::compile_portable_executable = true`로, **device_assignment 없이** 단일 replica/partition으로 컴파일된 실행 파일을 실행 시점에 원하는 디바이스에 바인딩해 실행 |</p>
+<p>`ExecuteSharded`와 `ExecutePortable`은 시그니처가 동일해 보이지만 의미가 다르다. 그 근거는 이 스코프 안 `pjrt_executable.h:97-101`의 `CompileOptions::compile_portable_executable` 주석에서 찾을 수 있다: &quot;이 값이 true일 수 있는 것은 `!executable_build_options.has_device_assignment()`일 때뿐이며, 단일 디바이스 실행 파일에만 적용된다.&quot; 즉:</p>
+<ul><li>`ExecuteSharded` = 컴파일 시점에 이미 디바이스 배정(replica/partition assignment)이 고정된 실행 파일의 &quot;내 몫&quot; 실행.</li><li>`ExecutePortable` = 컴파일 시점에 특정 디바이스에 묶이지 않은(portable) 실행 파일을 실행 시점에 임의의 한 디바이스에 붙여 실행 — 동일 사양의 여러 디바이스에서 컴파일 캐시를 재사용하고 싶을 때 유용(추정).</li></ul>
+<h2>주요 파일과 역할</h2>
+<p>| 파일 | 역할 | |---|---| | `pjrt_executable.h` | `PjRtExecutable`(컴파일 결과의 추상 인터페이스), `CompileOptions`, `ExecuteOptions`, `MultiSliceConfig`, `ExecuteContext`, send/recv 콜백 구조체 정의 | | `pjrt_executable.cc` | `CompileOptions`/`ExecuteOptions`의 proto 변환, `PjRtExecutable`의 디폴트 구현(`GetOutputShapes`, `GetParameterLayouts` 등), `CompileOptions::ApplyOption*` (debug_options reflection 기반 동적 설정) | | `pjrt_compiler.h` | `PjRtCompilerRegistry`, `PjRtCompiler`(추상), `PjRtTopologyDescription`(디바이스 토폴로지 추상화), `PjRtPhaseCompiler`, `CompilationPhaseFunctions` | | `pjrt_compiler.cc` | 레지스트리 구현, 전역 `PjRtCompile()` 디스패치, `PjRtPhaseCompiler::RegisterPhase`/`RunPhases` 구현 | | `pjrt_layout.h` | `PjRtLayout` — `xla::Layout`을 감싸는 불변 값 타입(비교/해시/직렬화) | | `layout_mode.h/.cc` | `LayoutMode` — `mhlo.layout_mode` attribute와 매핑되는 default/user/auto 모드 | | `partial_program_utils.h/.cc` | `PjRtPartialProgramProto` ↔ C 스타일 `char*` 버퍼 변환 (PJRT C API ABI 경계를 넘기 위한 마샬링) | | `pjrt_phase_compile_sample_plugin.h/.cc` | phase compile 확장 메커니즘의 참조 구현(`SamplePhaseCompiler`, StableHLO 직렬화 헬퍼, PJRT C API 진입점들) | | `stream_executor_executable.h` | `xla/pjrt/se/stream_executor_executable.h`로의 forwarding include뿐(실제 정의는 미포함) |</p>
+<h2>중요한 설계 판단</h2>
+<p>1. **`PjRtExecutable`에는 실행 메서드가 하나도 없다** — `pjrt_executable.h` 전체를 확인한 결과 `Execute`류 메서드는 존재하지 않고, 순수 가상 메서드는 전부 메타데이터 조회(`num_replicas`, `num_partitions`, `name`, `GetHloModules`, `GetParameterMemoryKinds`, `GetOutputMemoryKinds`)뿐이다. 이는 참고 문서가 말하는 &quot;PjRtLoadedExecutable은 PjRtExecutable의 서브클래스&quot;라는 관계를 타입 레벨에서 강제하는 설계다 — 로드되지 않은 실행 파일은 애초에 실행할 방법이 없다. 2. **직렬화/역직렬화의 목적(추정)**: `SerializeExecutable()`, `FingerprintExecutable()`, `GetAbiVersion()`, `GetCompileOptions()`는 모두 기본 구현이 `UnimplementedError`인 옵트인 가상 메서드다. 이 조합(직렬화 + 지문 + ABI 버전)은 (a) 컴파일 캐싱(같은 프로그램을 재컴파일하지 않고 디스크/캐시에서 재사용) 및 (b) 컴파일과 실행을 분리한 배포(한 프로세스/호스트에서 컴파일 후 다른 프로세스/호스트로 전송해 로드)를 지원하기 위한 것으로 보인다. `FingerprintExecutable`/`GetAbiVersion`의 존재는 캐시 적중 시 버전 불일치로 잘못된 바이너리를 실행하는 사고를 막기 위한 안전장치로 추정된다. 3. **`PjRtLayout`은 memory_space를 의도적으로 제거한다** — 생성자가 항상 `kDefaultMemorySpace`로 되돌리며, 이는 &quot;레이아웃(물리적 배치)&quot;과 &quot;메모리 공간(어디에 저장되는가)&quot;을 별개 축으로 분리하려는 명시적 결정이다. 4. **phase compile은 별도의 컴파일 진입점을 만든다**: `PjRtPhaseCompiler`는 `PjRtCompiler`를 상속하지만, 샘플 플러그인(`SamplePhaseCompiler::Compile` 양쪽 오버로드)은 둘 다 `UnimplementedError`를 반환한다. 실제 작업은 `RunPhases(options, input_programs, topology, phases_to_run)`를 통해 이루어지며, 각 단계는 `RegisterPhase(name, {compiler, validator})`로 등록된 `CompilationPhaseFunctions`다 — `compiler`는 `vector&lt;PjRtPartialProgramProto&gt; → vector&lt;PjRtPartialProgramProto&gt;` 변환, `validator`는 실행 전 입력 포맷 검증을 담당한다. 샘플 구현은 StableHLO bytecode(`program_format() == &quot;bytecode&quot;`)를 역직렬화 → MLIR pass(`createStablehloAggressiveSimplificationPass`) 적용 → 재직렬화하는 식으로, 단계 간 데이터가 항상 **직렬화된 바이트열(proto)** 형태로 오가도록 설계되어 있다. 이는 `partial_program_utils.cc`의 char-buffer 변환 유틸과 함께 PJRT C API(ABI) 경계를 넘어 플러그인 간에 프로그램을 주고받기 위한 구조로 보인다. 5. **`AsPhaseCompiler()`를 통한 &quot;fallible downcast&quot;**: `PjRtCompiler::AsPhaseCompiler()`는 기본값이 `nullptr`이고 `PjRtPhaseCompiler`가 이를 오버라이드해 `this`를 반환한다. `dynamic_cast` 대신 이런 가상 메서드 기반 다운캐스트를 쓰는 것은, 공유 라이브러리/플러그인 경계를 넘나드는 RTTI의 불안정성을 피하기 위한 선택으로 보인다. `GetDefaultPjRtPhaseCompiler`(`pjrt_compiler.cc:176-187`)가 이를 사용해 &quot;phase compile을 지원하지 않는 컴파일러&quot;를 명확한 에러로 걸러낸다.</p>
+<h2>읽으면서 주의할 점</h2>
+<ul><li>이 저장소는 **plan 단계에서 분리된 스코프만 담은 sparse checkout**이다. `PjRtLoadedExecutable`, `PjRtClient`, `PjRtBuffer`, `PjRtDevice`, `MaybeOwningMlirModule`, `PjRtPartialProgramProto`/`CompileOptionsProto`(proto 메시지 본체), `xla/pjrt/se/stream_executor_executable.h`의 실제 구현은 이 안에 없다. 이 문서에서 이들에 대해 서술한 내용은 이름/사용 맥락/참고 문서에 근거한 **추정**이지 코드로 직접 검증한 것이 아니다.</li><li>`stream_executor_executable.h`는 5줄짜리 forwarding 헤더(`#include &quot;xla/pjrt/se/stream_executor_executable.h&quot;`)일 뿐이다 — 실제 클래스는 `xla/pjrt/se/`로 이동했고 이번 체크아웃에는 없다. 이 파일만 보고 구체 구현을 판단하면 안 된다.</li><li>`Execute`/`ExecuteSharded`/`ExecutePortable` 시그니처는 참고 문서(커밋 `3e448cf9` 스냅샷)에서 인용한 것으로, 현재 `pjrt_client.h`와 다를 수 있다(버전 드리프트 가능성) — 실제 사용 전에는 반드시 `pjrt_client.h`를 직접 확인해야 한다.</li><li>`PjRtPhaseCompiler::RunPhases`는 호출자가 넘긴 `phases_to_run` 순서대로만 단계를 실행하며, `PjRtPartialProgramProto`의 `producer_phase`/`consumer_phases` 필드(샘플 플러그인이 채워 넣는 메타데이터)를 이용해 순서를 자동 검증하거나 정렬하지는 않는다. `validator`는 `program_format` 같은 값만 체크하므로, 잘못된 순서의 `phases_to_run`을 넘겨도 이 코드 레벨에서는 막히지 않는다.</li><li>`CompileOptions::compile_portable_executable`의 &quot;device_assignment와 동시에 true일 수 없다&quot;는 제약은 주석으로만 존재하고, 이 헤더/`.cc` 안에서 런타임으로 강제하는 코드는 보이지 않는다.</li><li>`ExecuteOptions::ToProto()`는 `context`, `multi_slice_config`, send/recv 콜백, `execution_profile`이 non-null/non-empty이면 `UnimplementedError`를 반환한다 — 이 고급 훅들을 쓰는 `ExecuteOptions`는 직렬화(캐싱/원격 전송 등)가 불가능하다.</li></ul>
+<h2>더 파볼 질문</h2>
+<ul><li>`pjrt_client.h`를 직접 읽고 `PjRtLoadedExecutable`이 실제로 `PjRtExecutable`을 상속하는지, `Execute`/`ExecuteSharded`/`ExecutePortable`의 현재 시그니처가 참고 문서와 일치하는지, 그리고 `PjRtClient::Compile`이 `PjRtCompiler::Compile` 결과를 어떻게 &quot;Load&quot;해서 `PjRtLoadedExecutable`로 만드는지 확인.</li><li>`xla/pjrt/se/stream_executor_executable.h`를 읽고 `StreamExecutorExecutable`이 `PjRtExecutable`의 어떤 구체 서브클래스인지, `SerializeExecutable`/`GetCompileOptions`/`FingerprintExecutable`을 실제로 구현하는지 확인.</li><li>`xla/pjrt/c/pjrt_c_api_phase_compile_extension.h`/`pjrt_c_api_phase_compile_internal.h`를 읽고, `RunPhases`를 호출하는 C API 드라이버가 `producer_phase`/`consumer_phases` 메타데이터를 실제로 순서 검증에 사용하는지 확인.</li><li>`MaybeOwningMlirModule`의 실제 정의를 확인해 `allow_in_place_mlir_modification` 옵션이 &quot;owning&quot;이 아닌 모듈에 대해서도 안전하게 동작하는지 검토.</li></ul>
+    </article>
+  </main>
+  <footer>
+    <div class="page-shell">
+      코드 분석은 저장소의 특정 revision과 분석 범위에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+</body>
+</html>

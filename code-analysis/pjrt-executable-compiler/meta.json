@@ -1,0 +1,86 @@
+{
+  "title": "PjRtExecutable / PjRtLoadedExecutable / PjRtCompiler",
+  "summary": "컴파일된 아티팩트를 나타내는 PjRtExecutable 계열과 컴파일 파이프라인(PjRtCompiler), 실행 진입점(Execute 계열 메서드)의 구조를 분석한다.",
+  "type": "코드 분석",
+  "tags": [
+    "XLA",
+    "PJRT",
+    "Runtime",
+    "OpenXLA",
+    "JAX",
+    "executable",
+    "compiler",
+    "execution",
+    "layout"
+  ],
+  "updated": "2026-07-10",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/xla/xla/pjrt",
+    "branch": null,
+    "paths": [
+      "xla/pjrt/pjrt_executable.h",
+      "xla/pjrt/pjrt_executable.cc",
+      "xla/pjrt/pjrt_compiler.h",
+      "xla/pjrt/pjrt_compiler.cc",
+      "xla/pjrt/pjrt_layout.h",
+      "xla/pjrt/layout_mode.h",
+      "xla/pjrt/layout_mode.cc",
+      "xla/pjrt/partial_program_utils.h",
+      "xla/pjrt/partial_program_utils.cc",
+      "xla/pjrt/pjrt_phase_compile_sample_plugin.h",
+      "xla/pjrt/pjrt_phase_compile_sample_plugin.cc",
+      "xla/pjrt/stream_executor_executable.h"
+    ],
+    "reference_dir": "references/code-analysis/pjrt",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": "계획 단계에서 분리된 모듈만 깊게 분석한다. 상위 PJRT 전체 구조와의 연결도 짧게 설명한다.",
+    "sections": [
+      {
+        "title": "컴파일 파이프라인",
+        "prompt": "입력 모듈(MLIR/HLO)이 PjRtCompiler를 거쳐 PjRtLoadedExecutable이 되는 과정을 pjrt_compiler.h/.cc와 pjrt_executable.h를 근거로 정리하라.",
+        "required": [
+          "Compile 호출 시그니처",
+          "레이아웃 결정 시점(pjrt_layout.h/layout_mode.h 관련)",
+          "결과 타입"
+        ]
+      },
+      {
+        "title": "실행 메서드 3종 비교",
+        "prompt": "Execute/ExecuteSharded/ExecutePortable의 시그니처와 사용 시나리오를 표로 비교하라.",
+        "required": [
+          "각 메서드의 인자 차이",
+          "반환 타입 차이",
+          "적용 시나리오(단일 디바이스/샤딩/포터블)"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    }
+  ]
+}

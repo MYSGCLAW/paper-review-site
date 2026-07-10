@@ -1,0 +1,92 @@
+{
+  "title": "PjRtBuffer와 데이터 이동/비동기 이벤트",
+  "summary": "PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.",
+  "type": "코드 분석",
+  "tags": [
+    "XLA",
+    "PJRT",
+    "Runtime",
+    "OpenXLA",
+    "JAX",
+    "buffer",
+    "async",
+    "data-transfer",
+    "future"
+  ],
+  "updated": "2026-07-10",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/xla/xla/pjrt",
+    "branch": null,
+    "paths": [
+      "xla/pjrt/pjrt_client.h",
+      "xla/pjrt/raw_buffer.h",
+      "xla/pjrt/raw_buffer.cc",
+      "xla/pjrt/staging_buffer.h",
+      "xla/pjrt/staging_buffer.cc",
+      "xla/pjrt/host_to_device_transfer_manager.h",
+      "xla/pjrt/host_to_device_transfer_manager.cc",
+      "xla/pjrt/device_event.h",
+      "xla/pjrt/device_event.cc",
+      "xla/pjrt/device_event_utils.h",
+      "xla/pjrt/device_event_utils.cc",
+      "xla/pjrt/abstract_tracked_device_buffer.h",
+      "xla/pjrt/abstract_tracked_device_buffer.cc",
+      "xla/pjrt/host_memory_allocator.h",
+      "xla/pjrt/host_memory_spaces.h",
+      "xla/pjrt/semaphore.h",
+      "xla/pjrt/semaphore.cc",
+      "xla/pjrt/pjrt_future.h"
+    ],
+    "reference_dir": "references/code-analysis/pjrt",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": "계획 단계에서 분리된 모듈만 깊게 분석한다. 상위 PJRT 전체 구조와의 연결도 짧게 설명한다.",
+    "sections": [
+      {
+        "title": "버퍼 생명주기",
+        "prompt": "PjRtBuffer 생성부터 Delete까지의 생명주기를 pjrt_client.h의 관련 메서드와 raw_buffer/abstract_tracked_device_buffer 구현을 근거로 단계별로 정리하라.",
+        "required": [
+          "생성 경로",
+          "전송 경로",
+          "삭제/외부 참조(external reference) 처리"
+        ]
+      },
+      {
+        "title": "비동기 동기화 메커니즘",
+        "prompt": "device_event, semaphore, pjrt_future.h가 어떻게 조합되어 Future 기반 비동기 실행 모델을 구현하는지 설명하라.",
+        "required": [
+          "Future 개념과 GetReadyFuture 대응 코드",
+          "device_event의 역할",
+          "semaphore가 사용되는 지점"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    }
+  ]
+}
