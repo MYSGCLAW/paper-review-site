@@ -495,6 +495,16 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-q10-gc-없는-pim의-epoch-quiescent-reclamation">관련 맥락 / 배경 설명 — Q10: GC 없는 PIM의 epoch/quiescent reclamation</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-21">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-22">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-22-codex">Turn 22 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-23">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-23">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-11">더 구체화한 부분</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-11">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-16">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-17">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-18">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-22">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-23">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -523,7 +533,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q5</strong> 상태 전이 — seed가 명시적으로 나열한 <code>cancelled</code> 상태를 지금까지 14턴이 한 번도 파헤치지 않았다. 이번 턴은 <strong>task가 <code>running</code>에서 <code>cancelled</code>로 가는 경로</strong>를 정식화하고, 그것이 <code>failed</code>와 <strong>다른 종착점</strong>임을 확정한다 - <strong>Q4</strong> 스케줄 정책 — 스케줄러가 task에게서 CPU를 강제로</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 15는 cancellation/preemption을 단일 task 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>structured concurrency</strong>를 런타임 내부 구조로 환원한다. 핵심은 다음이다. <code></code>`text 개별 ta</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 자원 — 지금까지 15턴이 buffer·queue·slot을 자원으로 다뤘지만, <strong>&quot;보내도 되는 권리(credit/demand/window/permit)&quot; 자체가 할당·회수·소유되는 1급 자원</strong>임을 정식화한다. Reactive Streams <code>request(n)</code>, HTTP/2 window, Tokio <code>Permit</code>이 그 실체다. - **</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 16이 남긴 <strong>exception aggregation / partial-result policy</strong>를 런타임 내부 모듈로 격상한다. 지금까지 <code>completed</code>, <code>failed</code>, <code>cancelled</code>는 task 하나의 종착</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q3, Q7</code> — Turn 16·18(Codex)이 structured concurrency/outcome 계열을 다뤘고 Turn 17(Claude)이 backpressure로 빠졌으므로, 규칙에 따라 이번 턴은 <strong>언어 런타임의 더 아래층 — &quot;중단된 계산(suspended computation)은 물리적으로 무엇인가&quot;</strong> 로 복귀한다. 이것은 Turn 16/</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q3, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 19가 “중단된 계산은 stackful 또는 stackless 표현”이라고 정리했다면, 이번 턴은 그 표현이 <strong>checkpoint/restore와 외부 참조 안정성</strong> 앞에서 어떻게 깨지는지를 확장한다. 핵심 결론은 다음이다. <code></code>`text 중단</td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q7, Q8</code> — Turn 19(표현: stackful/stackless)와 Turn 20(checkpoint/rebinding/address-stability)이 <strong>2턴 연속 &quot;중단된 계산을 저장·이동하는&quot; 하위 주제</strong>에 머물렀다. 드리프트 방지 규칙에 따라 이번 턴은 <strong>언어 런타임의 명시적 미답 영역 — 우선순위 3의 &quot;GC/cleanup&quot;</strong> 로 복귀</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q5</strong> 상태 전이 — seed가 명시적으로 나열한 <code>cancelled</code> 상태를 지금까지 14턴이 한 번도 파헤치지 않았다. 이번 턴은 <strong>task가 <code>running</code>에서 <code>cancelled</code>로 가는 경로</strong>를 정식화하고, 그것이 <code>failed</code>와 <strong>다른 종착점</strong>임을 확정한다 - <strong>Q4</strong> 스케줄 정책 — 스케줄러가 task에게서 CPU를 강제로</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 15는 cancellation/preemption을 단일 task 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>structured concurrency</strong>를 런타임 내부 구조로 환원한다. 핵심은 다음이다. <code></code>`text 개별 ta</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 자원 — 지금까지 15턴이 buffer·queue·slot을 자원으로 다뤘지만, <strong>&quot;보내도 되는 권리(credit/demand/window/permit)&quot; 자체가 할당·회수·소유되는 1급 자원</strong>임을 정식화한다. Reactive Streams <code>request(n)</code>, HTTP/2 window, Tokio <code>Permit</code>이 그 실체다. - **</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 16이 남긴 <strong>exception aggregation / partial-result policy</strong>를 런타임 내부 모듈로 격상한다. 지금까지 <code>completed</code>, <code>failed</code>, <code>cancelled</code>는 task 하나의 종착</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q3, Q7</code> — Turn 16·18(Codex)이 structured concurrency/outcome 계열을 다뤘고 Turn 17(Claude)이 backpressure로 빠졌으므로, 규칙에 따라 이번 턴은 <strong>언어 런타임의 더 아래층 — &quot;중단된 계산(suspended computation)은 물리적으로 무엇인가&quot;</strong> 로 복귀한다. 이것은 Turn 16/</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q3, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 19가 “중단된 계산은 stackful 또는 stackless 표현”이라고 정리했다면, 이번 턴은 그 표현이 <strong>checkpoint/restore와 외부 참조 안정성</strong> 앞에서 어떻게 깨지는지를 확장한다. 핵심 결론은 다음이다. <code></code>`text 중단</td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q7, Q8</code> — Turn 19(표현: stackful/stackless)와 Turn 20(checkpoint/rebinding/address-stability)이 <strong>2턴 연속 &quot;중단된 계산을 저장·이동하는&quot; 하위 주제</strong>에 머물렀다. 드리프트 방지 규칙에 따라 이번 턴은 <strong>언어 런타임의 명시적 미답 영역 — 우선순위 3의 &quot;GC/cleanup&quot;</strong> 로 복귀</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q7, Q8, Q9, Q10</strong> Turn 21은 “회수는 누가 결정하는가”를 GC/epoch 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>allocation pressure control</strong>을 런타임 내부 모듈로 세운다. 핵심은 다음이다. <code></code>`text 생산률 &gt; 소비/회수율 stream runtime → p</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -2339,8 +2349,125 @@ mutator를 얼마나 방해하나? → write/read barrier 세금, &quot;mutator 
 <ol><li><strong>PIM <code>PimHeap</code>/<code>PimEpochReclaimer</code>를 구체 IR로 설계하라(Q7·Q10).</strong> <code>buffer_epoch</code>, <code>outstanding_ref_count</code>(어느 in-flight 명령이 이 버퍼를 참조하나), <code>commit_watermark</code>(완료 관측된 최신 epoch), <code>reclaim_free_list</code>를 필드로 놓고, completion polling(Turn 14)이 <code>commit_watermark</code>를 전진시키면 <code>outstanding_ref_count==0 &amp;&amp; epoch&lt;=watermark</code>인 버퍼를 회수하는 RCU식 알고리즘을 상태기계로 그려라. 그리고 이 회수기가 <strong>Turn 20의 <code>dma_mapped</code>/<code>externally_borrowed</code> pin 상태와 어떻게 상호작용<strong>하는지(pinned 버퍼는 epoch 무관하게 회수 금지), reset-orphaned 버퍼의 </strong>부분 writeback을 회수 전에 무효화(invalidate)하는 fence</strong>를 Turn 18의 <code>invalidated_epochs</code>와 병합하라.</li></ol>
 <p>--- Sources:</p>
 <ul><li><a href="https://go.dev/doc/gc-guide" target="_blank" rel="noopener noreferrer">Go GC Guide — concurrent tri-color, non-moving</a></li><li><a href="https://engineering.linecorp.com/en/blog/go-gc/" target="_blank" rel="noopener noreferrer">LINE Engineering: Go GC (non-compacting, hybrid write barrier)</a></li><li><a href="https://openjdk.org/jeps/474" target="_blank" rel="noopener noreferrer">JEP 474: ZGC — Generational Mode by Default</a></li><li><a href="https://openjdk.org/jeps/490" target="_blank" rel="noopener noreferrer">JEP 490: ZGC — Remove the Non-Generational Mode</a></li><li><a href="https://openjdk.org/jeps/421" target="_blank" rel="noopener noreferrer">JEP 421: Deprecate Finalization for Removal</a></li><li><a href="https://peps.python.org/pep-0683/" target="_blank" rel="noopener noreferrer">PEP 683: Immortal Objects</a></li><li><a href="https://docs.rs/crossbeam-epoch/" target="_blank" rel="noopener noreferrer">crossbeam-epoch — epoch-based reclamation</a></li><li><a href="https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html" target="_blank" rel="noopener noreferrer">What is RCU? (Linux kernel docs)</a></li></ul>
+<h3 id="turn-22-codex">Turn 22 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-23">이번 턴의 확장 요약</h2>
+<p>이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q7, Q8, Q9, Q10</strong></p>
+<p>Turn 21은 “회수는 누가 결정하는가”를 GC/epoch 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>allocation pressure control</strong>을 런타임 내부 모듈로 세운다.</p>
+<p>핵심은 다음이다.</p>
+<pre><code class="language-text">생산률 &gt; 소비/회수율
+  stream runtime  → producer backpressure
+  GC runtime      → allocator / mutator assist / allocation stall
+  OS/container    → memory pressure eviction / OOM kill
+  PIM runtime     → admission stop / buffer pool wait / epoch reclaim wait</code></pre>
+<p>즉 Q4의 스케줄링 정책은 “ready task를 어느 worker에 배치하나”만이 아니라, <strong>새 객체·buffer·command를 계속 만들게 둘 것인가</strong>까지 포함한다.</p>
+<h2 id="새로-추가한-사실-23">새로 추가한 사실</h2>
+<p>Go GC 가이드는 <code>GOMEMLIMIT</code>/<code>SetMemoryLimit</code>이 런타임 총 메모리 목표를 잡지만, 너무 낮게 잡으면 GC thrashing이 생기므로 런타임이 메모리 초과를 허용할 수 있다고 설명한다. 현재 구현은 GC CPU 사용을 대략 50% 선에서 제한해, GC가 프로그램 진행을 무기한 삼키지 않도록 한다. <a href="https://go.dev/doc/gc-guide" target="_blank" rel="noopener noreferrer">Go GC Guide</a></p>
+<ol><li><strong>Go의 <code>GOMEMLIMIT</code>은 hard cap이 아니라 soft limit이다.</strong></li></ol>
+<p>Go 문서는 goroutine이 <code>runtime.gcAssistAlloc</code>에 오래 머무르면 애플리케이션의 할당 속도가 GC의 mark/scan 처리율을 앞지르고 있다는 뜻이라고 설명한다. 이것은 “할당하는 mutator가 GC 작업을 대신 수행하게 만드는” 방식의 backpressure다. <a href="https://go.dev/doc/gc-guide" target="_blank" rel="noopener noreferrer">Go GC Guide</a></p>
+<ol><li><strong>Go의 <code>runtime.gcAssistAlloc</code>은 allocation-rate backpressure의 직접 신호다.</strong></li></ol>
+<p>Oracle G1 튜닝 문서는 Full GC가 보통 evacuation failure와 함께 나타나며, 애플리케이션이 너무 많은 객체를 할당해 concurrent marking이 제때 space-reclamation phase를 시작하지 못할 때 발생한다고 설명한다. 대응은 old generation allocation rate 감소, heap 증가, concurrent marking thread 증가, marking 조기 시작 등이다. <a href="https://docs.oracle.com/en/java/javase/25/gctuning/garbage-first-garbage-collector-tuning.html" target="_blank" rel="noopener noreferrer">Oracle G1 Tuning</a></p>
+<ol><li><strong>JVM G1에서 Full GC는 allocation rate와 marking 속도 불일치의 종착 경로다.</strong></li></ol>
+<p>Node CLI 문서는 <code>--max-old-space-size</code>로 V8 old space 최대 크기를 정하고, 메모리 사용량이 한계에 가까워지면 V8이 unused memory를 회수하려고 GC에 더 많은 시간을 쓴다고 설명한다. <a href="https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-mib" target="_blank" rel="noopener noreferrer">Node CLI</a></p>
+<ol><li><strong>Node/V8도 heap limit 근처에서는 GC 시간을 늘리는 방식으로 allocation pressure를 흡수한다.</strong></li></ol>
+<p>kubelet은 <code>memory.available</code> 같은 eviction signal이 threshold 아래로 떨어지면 먼저 node-level reclaim을 시도하고, 부족하면 pod를 eviction한다. eviction 순서는 request 초과 여부, Pod priority, request 대비 사용량을 본다. <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/node-pressure-eviction/" target="_blank" rel="noopener noreferrer">Kubernetes Node-pressure Eviction</a></p>
+<ol><li><strong>Kubernetes eviction은 언어 런타임 바깥의 최후 pressure valve다.</strong></li></ol>
+<h2 id="더-구체화한-부분-11">더 구체화한 부분</h2>
+<p>Turn 17의 backpressure는 queue/stream 중심이었다. 이번 턴의 확장은 <strong>allocator도 producer</strong>라는 점이다.</p>
+<pre><code class="language-text">producer = object allocator / buffer allocator / command submitter
+consumer = GC / reclaimer / completion poller / memory controller
+bounded resource = heap headroom / free regions / buffer pool / queue slots</code></pre>
+<p>따라서 런타임에는 다음 하위시스템이 필요하다.</p>
+<pre><code class="language-text">AllocationPressureManager
+├── allocation rate meter
+├── reclaim rate meter
+├── heap / pool / queue watermark
+├── assist policy
+├── stall policy
+├── admission rejection policy
+├── eviction / OOM escalation policy
+└── diagnostics</code></pre>
+<p>상태기계는 다음처럼 정리된다.</p>
+<pre><code class="language-text">allocating
+  → below_soft_limit
+  → pressure_detected
+  ├→ assist_required          # Go gcAssistAlloc류
+  ├→ allocation_slow_path     # GC trigger, region refill, sweep wait
+  ├→ allocation_stalled       # JVM allocation failure / pool wait
+  ├→ admission_rejected       # 새 task/buffer/command 거부
+  ├→ victim_evicted           # kubelet / OS / runtime outer layer
+  └→ oom_failed               # 더 이상 회수·지연 불가</code></pre>
+<p>여기서 중요한 차이는 <strong>assist, stall, reject, kill은 모두 다른 정책</strong>이라는 점이다.</p>
+<div class="table-wrap"><table><thead><tr><th>정책</th><th>의미</th><th>장점</th><th>위험</th></tr></thead><tbody><tr><td>assist</td><td>할당자가 회수 작업을 일부 수행</td><td>전체 진행 유지</td><td>tail latency 증가</td></tr><tr><td>stall</td><td>할당자를 멈추고 회수 대기</td><td>메모리 한계 방어</td><td>deadlock/thrashing</td></tr><tr><td>reject</td><td>새 work admission 거부</td><td>기존 work 보호</td><td>caller가 retry/backoff 필요</td></tr><tr><td>shed/evict</td><td>일부 work/container 제거</td><td>시스템 생존</td><td>산출물 손실</td></tr><tr><td>OOM fail</td><td>process/task 실패</td><td>빠른 실패</td><td>복구 비용 큼</td></tr></tbody></table></div>
+<h2 id="관련-맥락-배경-설명-11">관련 맥락 / 배경 설명</h2>
+<p>Q8 관점에서 allocation pressure는 소유권 경계를 드러낸다.</p>
+<pre><code class="language-text">객체 생성 권한       → mutator / application
+heap target 결정     → language runtime
+physical memory 한계 → OS / cgroup / node runtime
+eviction 결정        → kubelet / supervisor
+buffer 재사용 가능성 → driver / device completion / epoch reclaimer</code></pre>
+<p>즉 “메모리가 부족하다”는 단일 상태가 아니다.</p>
+<pre><code class="language-text">language heap은 여유 있음, cgroup은 부족
+heap은 부족, OS memory는 여유 있음
+buffer pool은 부족, GC heap은 여유 있음
+PIM epoch가 안 끝나서 free list만 부족</code></pre>
+<p>이 구분이 없으면 정책이 틀어진다. 예를 들어 Go의 <code>GOMEMLIMIT</code>은 Go runtime이 아는 메모리를 기준으로 하고, cgo/native 메모리나 co-tenant memory pressure는 별도 층이다. 반대로 Kubernetes eviction은 언어 heap 안의 object reachability를 보지 못하고 pod 단위로만 판단한다.</p>
+<h2 id="런타임-내부-구조로-환원-16">런타임 내부 구조로 환원</h2>
+<p>Q2 관점에서 런타임 내부는 이제 이렇게 확장된다.</p>
+<pre><code class="language-text">Runtime
+├── scheduler
+├── allocator
+├── reclamation manager
+├── flow-control manager
+├── cancellation/scope manager
+├── outcome manager
+└── pressure manager
+    ├── cpu pressure
+    ├── memory pressure
+    ├── queue pressure
+    ├── device/buffer pressure
+    └── escalation policy</code></pre>
+<p>Turn 17의 credit ledger와 Turn 21의 GC pacer는 같은 추상 구조를 가진다.</p>
+<pre><code class="language-text">available_capacity = limit - live_or_outstanding
+if producer_rate &gt; reclaim_or_consume_rate:
+    throttle producer</code></pre>
+<p>차이는 capacity의 단위다.</p>
+<div class="table-wrap"><table><thead><tr><th>런타임</th><th>capacity 단위</th><th>replenish 조건</th><th>throttle 방식</th></tr></thead><tbody><tr><td>Go GC</td><td>heap target / memory limit</td><td>mark-sweep 진행</td><td>mutator assist, 더 잦은 GC</td></tr><tr><td>JVM G1</td><td>free regions / old occupancy</td><td>marking + evacuation</td><td>allocation stall, Full GC</td></tr><tr><td>Node/V8</td><td>old space limit</td><td>GC reclaim</td><td>GC 시간 증가, OOM</td></tr><tr><td>Kubernetes</td><td>node/cgroup memory</td><td>pod kill / reclaim</td><td>eviction</td></tr><tr><td>PIM</td><td>free DMA buffers / queue slots</td><td>completion epoch commit</td><td>admission stop, submit wait</td></tr></tbody></table></div>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-17">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p>Q4의 스케줄링은 두 레벨로 나뉜다.</p>
+<pre><code class="language-text">work scheduler:
+  runnable task 중 무엇을 실행할까?
+
+pressure scheduler:
+  producer에게 계속 생성 권한을 줄까?
+  producer가 회수 작업을 돕게 할까?
+  일부 work를 버릴까?</code></pre>
+<p>Go의 mutator assist는 두 스케줄러가 합쳐진 사례다. 원래 애플리케이션 task였던 goroutine이 allocation slow path에서 GC worker처럼 행동한다. 즉 task의 논리 상태는 <code>running</code>이지만, 실제 CPU 시간은 application work가 아니라 runtime reclamation work에 쓰인다.</p>
+<pre><code class="language-text">task_running_application_code
+  → allocation_fast_path_failed
+  → gc_assist_debt_assigned
+  → task_running_gc_work
+  → debt_paid
+  → allocation_completed
+  → task_running_application_code</code></pre>
+<p>이 상태는 기존 <code>blocked</code>와 다르다. 멈춘 것이 아니라 <strong>런타임 채무를 갚는 중</strong>이다.</p>
+<h2 id="다른-런타임과의-비교-18">다른 런타임과의 비교</h2>
+<div class="table-wrap"><table><thead><tr><th>시스템</th><th>pressure 감지</th><th>1차 대응</th><th>최후 대응</th></tr></thead><tbody><tr><td>Go</td><td>heap target, memory limit, assist time</td><td>GC 빈도 증가, mutator assist</td><td>soft limit 초과 허용 또는 OOM</td></tr><tr><td>JVM G1</td><td>occupancy, evacuation failure</td><td>marking 조기화, concurrent threads, heap 조정</td><td>Full GC, allocation failure</td></tr><tr><td>Node/V8</td><td>old space limit 근접</td><td>GC 시간 증가</td><td>fatal OOM</td></tr><tr><td>Kubernetes</td><td>eviction threshold</td><td>node-level reclaim</td><td>pod eviction</td></tr><tr><td>PIM runtime</td><td>free buffer/queue slot 부족</td><td>submit wait, admission reject</td><td>scope failure/reset diagnostics</td></tr></tbody></table></div>
+<p>공통 구조는 <strong>producer throttle → reclaim attempt → escalation</strong>이다. 차이는 escalation의 단위다. 언어 런타임은 object allocation을 늦추고, OS/container runtime은 process/pod를 죽이며, PIM runtime은 command scope나 buffer epoch를 실패 처리한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-22">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>Go <code>GOMEMLIMIT</code>을 hard memory guarantee로 쓰면 안 된다.</strong> 공식 문서상 soft limit이며, thrashing을 피하려고 초과할 수 있다. container limit보다 약간 낮게 잡더라도 native/cgo 메모리와 co-tenant pressure를 따로 봐야 한다.</li></ul>
+<ul><li><strong>GC assist는 일반적인 “스케줄 yield”가 아니다.</strong> goroutine이 쉬는 것이 아니라 GC mark/scan 일을 수행한다. 따라서 latency에는 나쁘지만 throughput 관점에서는 reclaim work를 앞당긴다.</li></ul>
+<ul><li><strong>JVM G1의 Full GC를 단순히 “heap이 작다”로만 보면 부족하다.</strong> allocation rate, humongous object fragmentation, marking 시작 시점, concurrent marking thread 수가 함께 원인이다.</li></ul>
+<ul><li><strong>Kubernetes eviction은 runtime-level cleanup과 다르다.</strong> kubelet은 Java Cleaner, Go finalizer, PIM epoch 같은 내부 상태를 해석하지 않는다. graceful termination 시간이 없거나 hard eviction이면 런타임 outcome ledger가 끝까지 flush되지 않을 수 있다.</li></ul>
+<ul><li><strong>PIM에서 buffer pressure는 GC로 해결되지 않는다.</strong> completion을 관측해야 free list가 늘어난다. 따라서 polling budget, epoch commit, admission policy가 회수 성능의 일부다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-23">다음 에이전트가 이어서 확장할 지점</h2>
+<p><code>allocation_rate</code>, <code>reclaim_rate</code>, <code>live_bytes</code>, <code>heap_goal</code>, <code>assist_time</code>, <code>queue_depth</code>, <code>free_buffer_count</code>, <code>completion_lag</code>를 공통 metric schema로 만들고, Q12식 observability와 연결하라.</p>
+<ol><li><strong><code>PressureManager</code>의 관측 지표를 정식화하라.</strong></li></ol>
+<p>allocation stall이나 PIM buffer wait 때문에 deadline을 넘긴 work를 <code>cancelled_queued_only</code>, <code>deadline_failed</code>, <code>resource_exhausted</code> 중 무엇으로 분류할지 Q5/Q6 상태기계로 내려라.</p>
+<ol><li><strong>deadline과 memory pressure를 결합하라.</strong></li></ol>
+<p><code>buffer_pool_low_watermark</code>, <code>epoch_commit_watermark</code>, <code>outstanding_commands</code>, <code>admission_budget</code>, <code>reset_orphaned_bytes</code>를 필드로 두고, buffer shortage 시 <code>wait</code>, <code>reject</code>, <code>shed</code>, <code>reset_escalate</code> 중 어떤 정책을 고를지 API와 상태 전이로 확장하라.</p>
+<ol><li><strong>PIM <code>PimPressureManager</code>를 구체 설계하라.</strong></li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T17:45:53.394043+00:00</li><li>누적 턴 수: 21</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T17:47:30.004689+00:00</li><li>누적 턴 수: 22</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
