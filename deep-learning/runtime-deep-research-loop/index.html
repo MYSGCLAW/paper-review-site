@@ -520,6 +520,16 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-25">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-25">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-25">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-26-codex">Turn 26 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-26">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-26">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-25">더 구체화한 부분</a>
+<a class="toc-level-3" href="#1-4계층-상태-전파-강제-규칙">1. 4계층 상태 전파 강제 규칙</a>
+<a class="toc-level-3" href="#2-pim_future_t-는-origin-identity를-내장해야-한다">2. `pim_future_t`는 origin identity를 내장해야 한다</a>
+<a class="toc-level-3" href="#3-pim_queue_drain_barrier-도입">3. `pim_queue_drain_barrier()` 도입</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-26">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-26">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-26">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -539,7 +549,7 @@
 <h2 id="우선-확장-순서">우선 확장 순서</h2>
 <ol><li>Runtime의 일반 모델: init, context, scheduler, allocator, executor, event loop, error/completion.</li><li>OS runtime과 language runtime: Linux process scheduler, JVM, Go runtime, Tokio/Node.js event loop.</li><li>Accelerator runtime: CUDA Runtime/Driver, Level Zero, ROCm/HIP, OpenCL/SYCL.</li><li>ML compiler runtime: PJRT, XLA, StableHLO lowering, buffer/executable/event.</li><li>PIM runtime: UPMEM, HBM-PIM/LPDDR-PIM 후보, memory-side command, host synchronization.</li><li>설계 도출: LPDDR6-PIM runtime object model, state machine, scheduler, allocator, API 후보.</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 누적 자료가 없는 상태에서 5개 축(CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LPDDR6-PIM)에 대한 기초 골격을 구축했다. 각 런타임의 핵심 추상화 계층, 메모리/실행 모델, 상호 비교 지점을 정리하고, 특히 LPDDR6-PIM은 표준화 미완료 상태임을 명시했다. ## 새로</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 런타임을 “컨텍스트 소유권”, “명령 제출 경로”, “동기화/완료 통지”, “PIM용 메모리 속성” 관점으로 확장했다. 특히 이전 턴의 LPDDR6 상태 설명은 2026년 7월 기준 수정이 필요하다. LPDDR6 자체는 이미 JEDEC JESD209-6으로 공개되었다고 보도되어 있으나, “LPDDR6-PIM 런타임 표준”은 여전히 공개 표준으로 확인되</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 없어 이번 턴은 실시간 웹 검증 없이 진행한다. 대신 아직 다루지 않은 두 축 — (1) UPMEM tasklet 동기화 프리미티브의 구체 API, (2) seed의 핵심 질문 5번(ready/running/blocked/waiting/completed/failed/cancelled 상태 전이)을 여러 런타임에 걸쳐 통일된 상태표로 정리하는 작업 — 을 추가하고, 이</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 턴의 확인 필요 항목 중 두 논문을 원문 검색으로 대조했다. <code>UPMEM Unleashed</code>와 <code>PIM-SHERPA</code>는 실제 존재하며, 이전 턴의 큰 방향은 유지 가능하다. 다만 여기서 멈추지 않고, 런타임 상태 모델을 <strong>host thread 상태</strong>, <strong>runtime queue 상태</strong>, <strong>device/PIM 실행 상태</strong>, **memor</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 WebSearch/WebFetch 도구 사용 권한이 요청 시 거부되어, Turn 4가 남긴 원문 대조 과제(PIM-SHERPA의 DDB/OWR 단계, JESD209-6 세부 사양)를 다시 완료하지 못했다. 대신 Turn 4의 세 번째 확장 지점 — &quot;Go/Tokio/Node.js의 ready/wake 모델을 CUDA/Level Zero/PJRT eve</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 5의 “굵은 reset vs 가는 협조적 취소” 구분을 더 밀어붙여, <strong>reset의 blast radius</strong>, <strong>PIM-SHERPA의 DDB/OWR 흐름</strong>, <strong>LPDDR-PIM 런타임 API가 반드시 가져야 할 memory-state transition</strong>을 구체화한다. 핵심은 <code>cancel(task)</code>보다 `quiesce → dra</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번 턴에서도 거부되어, Turn 6이 요청한 Level Zero 원문 대조와 PIM-SHERPA 비용 모델 검증은 이번에도 완료하지 못했습니다. 대신 Turn 6이 명시적으로 요청한 LPDDR-PIM 에러 모델 설계를 완성하고, seed 질문 8(런타임 vs OS kernel/driver/compiler/framework의 상태 소유권 경계)이 지금까지 다뤄지지 않</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 Turn 7의 <code>drm_sched</code>/<code>dma_fence</code> 도입을 더 정밀하게 다룬다. 핵심 수정은 <strong><code>dma_fence</code>를 모든 CUDA/Level Zero/PJRT event의 보편적 하부 구현처럼 말하면 과도한 일반화</strong>라는 점이다. Linux DRM/오픈 GPU 드라이버 계층에서는 강력한 공통 동기화 객체지만, NVIDIA CUDA 독점</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(Turn 3, 5, 7에 이어 4번째), Level Zero 공식 spec 원문 대조와 <code>dma_resv</code> 원문 검증은 여전히 완료하지 못했다. 대신 지금까지 다뤄지지 않은 seed 질문 3번(&quot;task, process, thread, fiber, coroutine, stream, command queue는 런타임 안</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 9가 남긴 세 가지 축 중 두 가지를 실제 문서 기준으로 보강한다. 첫째, Level Zero의 <code>zeCommandListReset</code>, <code>zeCommandQueueSynchronize</code>, <code>zeFenceHostSynchronize</code>를 원문 헤더 기준으로 확인해 “reset은 실행 중 command 취소가 아니다”를 더 강하게 확정한다. 둘째,</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 권한이 이번에도 거부되어 UPMEM SDK 원문 확인은 이번에도 못했다. 다만 주목할 점은 Turn 8과 Turn 10(Codex)에서는 실제로 출처 링크를 인용한 것으로 보인다는 것이다 — 즉 이 세션은 &quot;웹 접근이 전면 차단&quot;된 것이 아니라, 에이전트/도구별로 권한이 비대칭적으로 부여되고 있을 가능성이 높다. 이는 Turn 9의 진단(&quot;세션 자</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 UPMEM 관련 가정을 일부 보정하고, LPDDR6-PIM 런타임 설계에 <strong>topology-aware scheduling</strong>과 <strong>region/sub-region reservation 정책</strong>을 붙인다. 핵심은 PIM 런타임이 GPU 런타임처럼 “큐에 커널을 넣는다”로 끝나지 않고, **rank/channel/bank/topology와</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(5회 연속 — Turn 3, 5, 7, 9, 13) UPMEM SDK 원문(<code>dpu_launch</code>/<code>dpu_sync</code> 시그니처) 검증은 이번에도 완료하지 못했다. 다만 Turn 11의 관찰(Turn 8·10에서는 실제로 출처가 인용됨)을 고려하면 이는 세션 전체 차단이 아니라 턴/에이전트별 권한 비대칭일 가능성이 크다</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 13의 gang scheduling/BSP 관점을 유지하되, 이를 <strong>PIM 런타임 객체 모델의 정책 필드</strong>로 끌어내린다. 핵심 보강은 두 가지다. 1. PIM launch 단위는 단순 <code>task</code>가 아니라 <code>gang</code>, <code>placement</code>, <code>partition</code>이 결합된 제출 단위로 봐야 한다. 2. host-side async runt</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(6회 연속 — Turn 3, 5, 7, 9, 13, 15) UPMEM SDK 원문 확인은 또다시 불발됐다. 대신 Turn 14가 남긴 세 과제 중 두 가지를 정면으로 다룬다. 첫째, <code>pim_future_t</code>를 command-completion/visibility-completion으로 분리하고 Linux의 실제 ex</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 fd/future 설계를 한 단계 더 정리한다. 핵심 보강은 두 가지다. 1. <code>sync_file</code>은 “PIM event fd”의 좋은 선례지만, 정확히는 <strong>dma-buf에 현재 붙어 있는 fence 집합의 snapshot fd</strong>이므로, PIM command 하나당 항상 1:1로 대응한다고 단정하면 안 된다. 2. <code>io_uring</code>식</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 도구 사용을 시도했으나 이번에도 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17), UPMEM SDK 원문 및 io_uring 의존성 체이닝(<code>IORING_OP_LINK_TIMEOUT</code>) 확인 모두 이번에도 불발됐다. 이는 Turn 13/15가 제안한 대로 &quot;확인 시도를 반복하기보다 미확인 상태를 명시한 채 설계를 확정&quot;하</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 두 축을 이어받아 <strong>자원 회수</strong>와 <strong>우선순위 기반 admission control</strong>을 런타임 객체 모델 안으로 더 밀어 넣는다. 보정할 점도 있다. Turn 17은 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>의 stream-ordered free를 일반 지식으로만 설명했지만, NVIDIA CUDA Programmin</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 직전 내용의 <code>Aliased</code>/<code>Donated</code> 모델을 더 정리한다. 핵심 보강은 두 가지다. 1. <code>Aliased</code>는 상태가 아니라 <strong>물리 region을 공유하는 alias group 속성</strong>으로 모델링해야 한다. 2. donation은 단순 플래그가 아니라 <strong>핸들 무효화, alias 해제, conflict policy, completion 진단</strong></td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(UPMEM <code>dpu_launch</code>/<code>dpu_sync</code> 시그니처, CUDA <code>cudaMemPoolTrimTo</code> 세부 동작 확인 재시도가 모두 불발) 미확인 UPMEM 항목은 이번에도 이월된다. 대신 Turn 20이 남긴 세 과제 중 **①<code>pim_region_pool</code> 객체 설계<strong>와 </strong>②alias group tear</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 21의 <code>pim_region_pool</code>과 alias teardown을 이어서, 아직 비어 있던 <strong>placement fallback 정책</strong>과 <strong>runtime object lifetime 그래프</strong>를 구체화한다. 핵심 추가는 세 가지다. 1. <code>pim_pool_alloc()</code>은 단순히 “pool에서 할당 성공/실패”가 아니라, 요청 placem</td></tr><tr><td>23</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(CUDA <code>cuCtxDestroy</code> 미완료 작업 처리, Vulkan <code>VK_ERROR_DEVICE_LOST</code> 의미론 확인 모두 불발) 원문 검증 없이 일반 지식 기반으로 서술한다. 이번 턴은 Turn 22가 남긴 세 과제 중 **②<code>pim_alias_group_t</code> 구체화<strong>와 </strong>③<code>pim_context</code> teard</td></tr><tr><td>24</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 23의 미완 지점 세 개를 이어받아 <strong>placement fallback 상태표</strong>, <strong>alias group과 region의 순환 참조 소유권</strong>, <strong>device reset 중 유령 task 처리</strong>를 구체화한다. 동시에 Turn 23의 <code>OwnerDied -&gt; Active</code> 표현은 약간 보정한다. 프로세스 사망 후 같은 `pim_contex</td></tr><tr><td>25</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번에도 거부되어(8회 연속) 이번 턴 역시 일반 아키텍처 지식(미검증 표시)에 기반해 작성한다. Turn 24가 위임한 세 과제 — canonical completion struct, <code>DeviceResetPending</code> 이후 effect-class별 recovery policy 표, <code>pim_region_ref_t</code> 기반 stale handle 규칙 — 을 정면으</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 누적 자료가 없는 상태에서 5개 축(CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LPDDR6-PIM)에 대한 기초 골격을 구축했다. 각 런타임의 핵심 추상화 계층, 메모리/실행 모델, 상호 비교 지점을 정리하고, 특히 LPDDR6-PIM은 표준화 미완료 상태임을 명시했다. ## 새로</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 런타임을 “컨텍스트 소유권”, “명령 제출 경로”, “동기화/완료 통지”, “PIM용 메모리 속성” 관점으로 확장했다. 특히 이전 턴의 LPDDR6 상태 설명은 2026년 7월 기준 수정이 필요하다. LPDDR6 자체는 이미 JEDEC JESD209-6으로 공개되었다고 보도되어 있으나, “LPDDR6-PIM 런타임 표준”은 여전히 공개 표준으로 확인되</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 없어 이번 턴은 실시간 웹 검증 없이 진행한다. 대신 아직 다루지 않은 두 축 — (1) UPMEM tasklet 동기화 프리미티브의 구체 API, (2) seed의 핵심 질문 5번(ready/running/blocked/waiting/completed/failed/cancelled 상태 전이)을 여러 런타임에 걸쳐 통일된 상태표로 정리하는 작업 — 을 추가하고, 이</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 턴의 확인 필요 항목 중 두 논문을 원문 검색으로 대조했다. <code>UPMEM Unleashed</code>와 <code>PIM-SHERPA</code>는 실제 존재하며, 이전 턴의 큰 방향은 유지 가능하다. 다만 여기서 멈추지 않고, 런타임 상태 모델을 <strong>host thread 상태</strong>, <strong>runtime queue 상태</strong>, <strong>device/PIM 실행 상태</strong>, **memor</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 WebSearch/WebFetch 도구 사용 권한이 요청 시 거부되어, Turn 4가 남긴 원문 대조 과제(PIM-SHERPA의 DDB/OWR 단계, JESD209-6 세부 사양)를 다시 완료하지 못했다. 대신 Turn 4의 세 번째 확장 지점 — &quot;Go/Tokio/Node.js의 ready/wake 모델을 CUDA/Level Zero/PJRT eve</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 5의 “굵은 reset vs 가는 협조적 취소” 구분을 더 밀어붙여, <strong>reset의 blast radius</strong>, <strong>PIM-SHERPA의 DDB/OWR 흐름</strong>, <strong>LPDDR-PIM 런타임 API가 반드시 가져야 할 memory-state transition</strong>을 구체화한다. 핵심은 <code>cancel(task)</code>보다 `quiesce → dra</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번 턴에서도 거부되어, Turn 6이 요청한 Level Zero 원문 대조와 PIM-SHERPA 비용 모델 검증은 이번에도 완료하지 못했습니다. 대신 Turn 6이 명시적으로 요청한 LPDDR-PIM 에러 모델 설계를 완성하고, seed 질문 8(런타임 vs OS kernel/driver/compiler/framework의 상태 소유권 경계)이 지금까지 다뤄지지 않</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 Turn 7의 <code>drm_sched</code>/<code>dma_fence</code> 도입을 더 정밀하게 다룬다. 핵심 수정은 <strong><code>dma_fence</code>를 모든 CUDA/Level Zero/PJRT event의 보편적 하부 구현처럼 말하면 과도한 일반화</strong>라는 점이다. Linux DRM/오픈 GPU 드라이버 계층에서는 강력한 공통 동기화 객체지만, NVIDIA CUDA 독점</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(Turn 3, 5, 7에 이어 4번째), Level Zero 공식 spec 원문 대조와 <code>dma_resv</code> 원문 검증은 여전히 완료하지 못했다. 대신 지금까지 다뤄지지 않은 seed 질문 3번(&quot;task, process, thread, fiber, coroutine, stream, command queue는 런타임 안</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 9가 남긴 세 가지 축 중 두 가지를 실제 문서 기준으로 보강한다. 첫째, Level Zero의 <code>zeCommandListReset</code>, <code>zeCommandQueueSynchronize</code>, <code>zeFenceHostSynchronize</code>를 원문 헤더 기준으로 확인해 “reset은 실행 중 command 취소가 아니다”를 더 강하게 확정한다. 둘째,</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 권한이 이번에도 거부되어 UPMEM SDK 원문 확인은 이번에도 못했다. 다만 주목할 점은 Turn 8과 Turn 10(Codex)에서는 실제로 출처 링크를 인용한 것으로 보인다는 것이다 — 즉 이 세션은 &quot;웹 접근이 전면 차단&quot;된 것이 아니라, 에이전트/도구별로 권한이 비대칭적으로 부여되고 있을 가능성이 높다. 이는 Turn 9의 진단(&quot;세션 자</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 UPMEM 관련 가정을 일부 보정하고, LPDDR6-PIM 런타임 설계에 <strong>topology-aware scheduling</strong>과 <strong>region/sub-region reservation 정책</strong>을 붙인다. 핵심은 PIM 런타임이 GPU 런타임처럼 “큐에 커널을 넣는다”로 끝나지 않고, **rank/channel/bank/topology와</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(5회 연속 — Turn 3, 5, 7, 9, 13) UPMEM SDK 원문(<code>dpu_launch</code>/<code>dpu_sync</code> 시그니처) 검증은 이번에도 완료하지 못했다. 다만 Turn 11의 관찰(Turn 8·10에서는 실제로 출처가 인용됨)을 고려하면 이는 세션 전체 차단이 아니라 턴/에이전트별 권한 비대칭일 가능성이 크다</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 13의 gang scheduling/BSP 관점을 유지하되, 이를 <strong>PIM 런타임 객체 모델의 정책 필드</strong>로 끌어내린다. 핵심 보강은 두 가지다. 1. PIM launch 단위는 단순 <code>task</code>가 아니라 <code>gang</code>, <code>placement</code>, <code>partition</code>이 결합된 제출 단위로 봐야 한다. 2. host-side async runt</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(6회 연속 — Turn 3, 5, 7, 9, 13, 15) UPMEM SDK 원문 확인은 또다시 불발됐다. 대신 Turn 14가 남긴 세 과제 중 두 가지를 정면으로 다룬다. 첫째, <code>pim_future_t</code>를 command-completion/visibility-completion으로 분리하고 Linux의 실제 ex</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 fd/future 설계를 한 단계 더 정리한다. 핵심 보강은 두 가지다. 1. <code>sync_file</code>은 “PIM event fd”의 좋은 선례지만, 정확히는 <strong>dma-buf에 현재 붙어 있는 fence 집합의 snapshot fd</strong>이므로, PIM command 하나당 항상 1:1로 대응한다고 단정하면 안 된다. 2. <code>io_uring</code>식</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 도구 사용을 시도했으나 이번에도 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17), UPMEM SDK 원문 및 io_uring 의존성 체이닝(<code>IORING_OP_LINK_TIMEOUT</code>) 확인 모두 이번에도 불발됐다. 이는 Turn 13/15가 제안한 대로 &quot;확인 시도를 반복하기보다 미확인 상태를 명시한 채 설계를 확정&quot;하</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 두 축을 이어받아 <strong>자원 회수</strong>와 <strong>우선순위 기반 admission control</strong>을 런타임 객체 모델 안으로 더 밀어 넣는다. 보정할 점도 있다. Turn 17은 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>의 stream-ordered free를 일반 지식으로만 설명했지만, NVIDIA CUDA Programmin</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 직전 내용의 <code>Aliased</code>/<code>Donated</code> 모델을 더 정리한다. 핵심 보강은 두 가지다. 1. <code>Aliased</code>는 상태가 아니라 <strong>물리 region을 공유하는 alias group 속성</strong>으로 모델링해야 한다. 2. donation은 단순 플래그가 아니라 <strong>핸들 무효화, alias 해제, conflict policy, completion 진단</strong></td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(UPMEM <code>dpu_launch</code>/<code>dpu_sync</code> 시그니처, CUDA <code>cudaMemPoolTrimTo</code> 세부 동작 확인 재시도가 모두 불발) 미확인 UPMEM 항목은 이번에도 이월된다. 대신 Turn 20이 남긴 세 과제 중 **①<code>pim_region_pool</code> 객체 설계<strong>와 </strong>②alias group tear</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 21의 <code>pim_region_pool</code>과 alias teardown을 이어서, 아직 비어 있던 <strong>placement fallback 정책</strong>과 <strong>runtime object lifetime 그래프</strong>를 구체화한다. 핵심 추가는 세 가지다. 1. <code>pim_pool_alloc()</code>은 단순히 “pool에서 할당 성공/실패”가 아니라, 요청 placem</td></tr><tr><td>23</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(CUDA <code>cuCtxDestroy</code> 미완료 작업 처리, Vulkan <code>VK_ERROR_DEVICE_LOST</code> 의미론 확인 모두 불발) 원문 검증 없이 일반 지식 기반으로 서술한다. 이번 턴은 Turn 22가 남긴 세 과제 중 **②<code>pim_alias_group_t</code> 구체화<strong>와 </strong>③<code>pim_context</code> teard</td></tr><tr><td>24</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 23의 미완 지점 세 개를 이어받아 <strong>placement fallback 상태표</strong>, <strong>alias group과 region의 순환 참조 소유권</strong>, <strong>device reset 중 유령 task 처리</strong>를 구체화한다. 동시에 Turn 23의 <code>OwnerDied -&gt; Active</code> 표현은 약간 보정한다. 프로세스 사망 후 같은 `pim_contex</td></tr><tr><td>25</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번에도 거부되어(8회 연속) 이번 턴 역시 일반 아키텍처 지식(미검증 표시)에 기반해 작성한다. Turn 24가 위임한 세 과제 — canonical completion struct, <code>DeviceResetPending</code> 이후 effect-class별 recovery policy 표, <code>pim_region_ref_t</code> 기반 stale handle 규칙 — 을 정면으</td></tr><tr><td>26</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 25가 남긴 세 과제 중 <strong>4계층 상태 전파 규칙</strong>, <strong>future의 origin region 참조 방식</strong>, <strong>CQE drain barrier</strong>를 확장한다. 핵심 보강은 세 가지다. 1. <code>device / context / alias_group / region</code> 상태는 독립 enum이 아니라 **상위 failure domain이 하위</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -2258,8 +2268,153 @@ device 단위:      DeviceLost (Turn 23) — 이 device를 공유하는 모든 c
 <ul><li>CUDA의 sticky error 구체적 목록(<code>cudaErrorIllegalAddress</code> 등 정확히 어떤 오류 코드가 sticky인지)과 <code>cudaGetLastError</code>/<code>cudaPeekAtLastError</code>의 정확한 초기화 시맨틱은 일반 지식이며 이번 세션에서 공식 문서로 재검증하지 못했다.</li><li>EBR/RCU의 grace period 개념을 tombstone 해제 순서에 그대로 적용했지만, RCU는 보통 단일 프로세스 내 메모리 모델을 다루는 반면 PIM의 completion queue는 비동기 하드웨어 신호를 다루므로, &quot;5번(미소비 CQE 없음)을 어떻게 검증 가능한 방식으로 판정하는가&quot;(polling? 별도 drain barrier API?)는 이번 턴에서 API로 확정하지 않았다.</li><li>§3의 표에서 &quot;실행 중 중단됨 + ACCUMULATE → POISON_REGION&quot;은 보수적 선택이며, 만약 PIM 하드웨어가 실제로 누적 연산의 중간 상태를 checkpoint/rollback할 수 있다면 지나치게 보수적일 수 있다 — 이는 하드웨어 능력에 대한 가정 없이 내린 최악 시나리오 대응이다.</li><li><code>pim_future_wait</code>의 <code>region_ref_hint</code> 파라미터가 실제로 필요한지(즉 future가 origin region을 스스로 추적하지 못해 호출자가 매번 힌트를 넘겨야 하는 설계가 맞는지)는 재검토가 필요하다 — future 내부에 <code>region_ref</code>를 아예 내장시키는 대안이 API를 더 단순하게 만들 수 있다.</li><li>네 계층(region/alias group/context/device) 간 전파 규칙을 아직 표로 정리하지 않았으므로, 현재 설계에는 &quot;device는 lost인데 특정 alias group만 여전히 Consistent로 남아있는&quot; 모순 상태가 이론적으로 가능하다 — 다음 턴에서 반드시 막아야 한다.</li></ul>
 <h2 id="다음-에이전트가-이어서-확장할-지점-25">다음 에이전트가 이어서 확장할 지점</h2>
 <ol><li>region/alias group/context/device 4계층의 <strong>상태 전파 강제 규칙</strong>을 진리표로 만든다(예: <code>device=Lost</code>이면 그 device의 모든 <code>context.state</code>는 자동으로 최소 <code>ContextCorrupted</code>로 강등되어야 하고, 이를 검사하는 invariant-check 함수가 필요한지).</li><li><code>pim_future_wait</code>에 <code>region_ref_hint</code>를 별도 인자로 넘기는 현재 설계와, <code>pim_future_t</code> 내부에 origin <code>region_ref</code>를 내장시키는 대안을 비교하고 하나를 canonical로 확정한다.</li><li>§1의 tombstone 5단계 순서 중 &quot;미소비 CQE 없음&quot;을 실제로 어떻게 검증하는지(<code>pim_queue_drain_barrier()</code> 같은 명시적 API 필요 여부)를 정의하고, 이를 <code>pim_context_destroy()</code>의 <code>DrainRequested</code> 단계와 연결한다.</li></ol>
+<h3 id="turn-26-codex">Turn 26 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-26">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 25가 남긴 세 과제 중 <strong>4계층 상태 전파 규칙</strong>, <strong>future의 origin region 참조 방식</strong>, <strong>CQE drain barrier</strong>를 확장한다. 핵심 보강은 세 가지다.</p>
+<ol><li><code>device / context / alias_group / region</code> 상태는 독립 enum이 아니라 <strong>상위 failure domain이 하위 객체를 강제로 강등시키는 계층적 불변식</strong>으로 관리해야 한다.</li><li><code>pim_future_wait(future, region_ref_hint)</code>처럼 호출자가 region 힌트를 넘기는 방식은 stale handle 방지에 취약하므로, <code>pim_future_t</code> 내부에 origin identity를 내장하는 쪽이 canonical에 더 적합하다.</li><li>alias group tombstone을 안전하게 해제하려면 “미소비 CQE 없음”을 감으로 판단할 수 없고, queue별 drain barrier 또는 epoch barrier가 필요하다.</li></ol>
+<h2 id="새로-추가한-사실-26">새로 추가한 사실</h2>
+<p><strong>Linux file descriptor 모델은 handle 자체에 identity를 내장하지 않는다</strong></p>
+<p>Unix/Linux의 fd는 프로세스별 정수 handle이고, close 후 같은 숫자가 재사용될 수 있다. 이 때문에 fd 값만 오래 저장해 두면 “내가 기다리던 객체”가 아니라 “나중에 같은 번호로 열린 다른 객체”를 가리킬 수 있다. PIM runtime의 <code>region_id + generation</code>, <code>task_generation</code>, <code>context_generation</code> 설계는 이 문제를 피하기 위한 명시적 identity tagging이다.</p>
+<p>PIM에 주는 교훈은 다음이다.</p>
+<div class="table-wrap"><table><thead><tr><th>일반 fd 문제</th><th>PIM 대응</th></tr></thead><tbody><tr><td>fd 번호 재사용</td><td><code>region_generation</code>, <code>task_generation</code></td></tr><tr><td>late event가 새 객체에 붙을 위험</td><td>tombstone + drain barrier</td></tr><tr><td>caller가 별도 hint를 잘못 넘길 수 있음</td><td>future 내부에 origin identity 내장</td></tr><tr><td>close 이후 wait/use 혼동</td><td>stale generation 즉시 실패</td></tr></tbody></table></div>
+<p>즉 PIM future는 단순 fd wrapper가 아니라, 최소한 “무엇의 completion인가”를 자기 안에 들고 있어야 한다.</p>
+<p><strong>Vulkan timeline semaphore는 completion을 단일 이벤트가 아니라 증가하는 값으로 표현한다</strong></p>
+<p>Vulkan의 timeline semaphore 계열은 binary event보다 넓은 모델을 제공한다. completion을 “신호됨/안 됨” 하나로 보지 않고, monotonically increasing counter 값으로 표현한다. 이 구조는 PIM의 <code>pim_queue_drain_barrier()</code>에 적합하다. queue별로 “이 submit id 이하의 CQE가 모두 발행 또는 폐기 처리됐다”는 barrier value를 만들 수 있기 때문이다.</p>
+<p>PIM에 적용하면 다음과 같다.</p>
+<pre><code class="language-text">binary event:
+  task A 끝났는가?
+
+timeline/drain epoch:
+  queue Q에서 submit_id &lt;= N에 대한 모든 CQE 경로가 닫혔는가?</code></pre>
+<p>alias group tombstone 해제에는 후자가 필요하다. 개별 task event만 기다려서는 late diagnostic CQE, placement warning CQE, visibility CQE가 남아 있을 수 있다.</p>
+<h2 id="더-구체화한-부분-25">더 구체화한 부분</h2>
+<h3 id="1-4계층-상태-전파-강제-규칙">1. 4계층 상태 전파 강제 규칙</h3>
+<p>Turn 25는 <code>region / alias_group / context / device</code> failure domain을 계층화했지만, 전파 규칙은 미정으로 남겼다. canonical invariant는 다음처럼 잡는 편이 안전하다.</p>
+<pre><code class="language-text">device
+  contains contexts
+
+context
+  owns queues, submit generations, pool registry
+
+alias_group
+  belongs to one context generation
+  references backing region identity
+
+region
+  belongs to one pool and one context-visible allocation generation</code></pre>
+<p>상위 상태가 하위 상태를 강제하는 표는 다음과 같다.</p>
+<div class="table-wrap"><table><thead><tr><th>상위 상태</th><th>강제 전파</th></tr></thead><tbody><tr><td><code>DeviceLost</code></td><td>모든 child context는 <code>ContextCorrupted</code> 또는 <code>DeviceLostObserved</code></td></tr><tr><td><code>DeviceResetPending</code></td><td>신규 submit 금지, running task는 <code>AbandonedPending</code></td></tr><tr><td><code>ContextCorrupted</code></td><td>모든 queue close, future는 terminal error, alias group은 최소 <code>OWNER_DIED</code></td></tr><tr><td><code>OwnerDied</code> context generation</td><td>해당 generation의 alias group은 <code>OWNER_DIED</code>, region은 <code>RecoveryRequired</code></td></tr><tr><td><code>AliasGroupPoisoned</code></td><td>backing region 전체 또는 affected subrange를 <code>Poisoned</code></td></tr><tr><td><code>RegionPoisoned</code></td><td>해당 region을 참조하는 future/task completion은 <code>POISON_REGION</code> hint</td></tr></tbody></table></div>
+<p>이를 invariant 함수로 표현하면 다음과 같다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_DEVICE_ACTIVE,
+  PIM_DEVICE_RESET_PENDING,
+  PIM_DEVICE_LOST
+} pim_device_state_t;
+
+typedef enum {
+  PIM_CONTEXT_ACTIVE,
+  PIM_CONTEXT_DRAIN_REQUESTED,
+  PIM_CONTEXT_OWNER_DIED,
+  PIM_CONTEXT_CORRUPTED,
+  PIM_CONTEXT_DEVICE_LOST_OBSERVED,
+  PIM_CONTEXT_DESTROYED
+} pim_context_state_t;
+
+bool pim_invariant_check_object_tree(pim_context_t *ctx);
+void pim_propagate_failure_from_device(pim_device_t *dev, int error_code);
+void pim_propagate_failure_from_context(pim_context_t *ctx, int error_code);
+void pim_propagate_failure_from_alias_group(pim_alias_group_t *g, int error_code);</code></pre>
+<p>중요한 규칙은 <strong>하위 객체가 상위 객체보다 더 건강한 상태로 남을 수 없다는 것</strong>이다.</p>
+<pre><code class="language-text">invalid:
+  device = DeviceLost
+  context = Active
+  alias_group = Consistent
+  region = HostVisible
+
+valid:
+  device = DeviceLost
+  context = DeviceLostObserved
+  alias_group = Unrecoverable
+  region = Poisoned or Stale</code></pre>
+<h3 id="2-pim_future_t-는-origin-identity를-내장해야-한다">2. <code>pim_future_t</code>는 origin identity를 내장해야 한다</h3>
+<p>Turn 25의 <code>pim_future_wait(future, region_ref_hint)</code>는 호출자 실수를 API가 받아들이는 구조다. future가 이미 어떤 event에서 왔는지 알고 있다면, origin identity는 future 내부에 저장하는 편이 낫다.</p>
+<pre><code class="language-c">typedef struct {
+  uint64_t context_generation;
+  uint64_t submit_id;
+  uint64_t task_generation;
+
+  pim_region_ref_t *origin_regions;
+  size_t num_origin_regions;
+
+  uint64_t queue_id;
+  uint64_t queue_epoch;
+  pim_event_t *event;
+} pim_future_t;</code></pre>
+<p>이 경우 wait API는 단순해진다.</p>
+<pre><code class="language-c">int pim_future_wait(
+  pim_future_t *future,
+  uint64_t timeout_ns,
+  pim_completion_t *out
+);</code></pre>
+<p>stale check는 runtime이 내부에서 수행한다.</p>
+<div class="table-wrap"><table><thead><tr><th>검사</th><th>실패 시</th></tr></thead><tbody><tr><td><code>future.context_generation</code>이 retired</td><td><code>PIM_ERR_CONTEXT_GENERATION_STALE</code></td></tr><tr><td>origin region generation mismatch</td><td>completion kind를 <code>REJECTED_ERROR</code>, recovery hint를 <code>POISON_REGION</code> 또는 <code>DESTROY_CONTEXT</code></td></tr><tr><td>queue epoch가 이미 tombstone drain 이후</td><td><code>PIM_ERR_STALE_FUTURE</code></td></tr><tr><td>event는 signaled지만 origin region이 released</td><td>completion은 반환하되 <code>visibility_state=STALE</code></td></tr></tbody></table></div>
+<p>이 설계의 장점은 completion 해석이 deterministic해진다는 점이다. 호출자가 잘못된 <code>region_ref_hint</code>를 넘겨서 정상 future를 stale로 오판하거나, stale future를 정상으로 오판하는 경로가 사라진다.</p>
+<h3 id="3-pim_queue_drain_barrier-도입">3. <code>pim_queue_drain_barrier()</code> 도입</h3>
+<p>Turn 25의 tombstone 해제 순서 중 가장 약한 부분은 “in-flight completion queue에 이 group id를 참조하는 미소비 CQE가 없음”을 어떻게 증명하느냐다. 이를 위해 queue별 drain barrier를 둔다.</p>
+<pre><code class="language-c">typedef struct {
+  uint64_t queue_id;
+  uint64_t barrier_epoch;
+  uint64_t last_submit_id;
+  uint64_t last_cqe_sequence;
+} pim_queue_barrier_t;
+
+int pim_queue_drain_barrier(
+  pim_queue_t *queue,
+  uint64_t up_to_submit_id,
+  pim_queue_barrier_t *out
+);</code></pre>
+<p>의미는 다음과 같다.</p>
+<pre><code class="language-text">pim_queue_drain_barrier(Q, N)
+  returns only after:
+    submit_id &lt;= N인 task가 terminal state에 도달했고
+    그 task와 연결된 command/visibility/diagnostic CQE가 모두 발행됐고
+    queue 내부에서 더 이상 group_id/region_id를 참조하지 않음</code></pre>
+<p>이 barrier는 “사용자가 CQE를 읽었다”까지 요구하지 않는다. 사용자가 CQE를 아직 소비하지 않았더라도, CQE payload가 tombstone을 직접 가리키지 않고 stable id/generation만 담고 있으면 tombstone free가 가능하다.</p>
+<p>따라서 CQE에는 포인터 대신 identity를 넣어야 한다.</p>
+<pre><code class="language-c">typedef struct {
+  uint64_t region_id;
+  uint64_t region_generation;
+  uint64_t alias_group_id;
+  uint64_t alias_group_generation;
+} pim_object_identity_t;</code></pre>
+<p><code>pim_completion_t</code> 안의 <code>pim_region_t *region</code> 필드는 제거하거나 debug-only weak pointer로 격하하는 편이 안전하다.</p>
+<h2 id="관련-맥락-배경-설명-26">관련 맥락 / 배경 설명</h2>
+<p>이번 확장은 PIM runtime을 <strong>event-driven object graph</strong>로 보는 관점이다. event와 completion은 단순 알림이 아니라 객체 lifetime을 지연시키는 참조 경로다. 따라서 allocator, scheduler, completion queue, future API가 모두 같은 identity 체계를 공유해야 한다.</p>
+<pre><code class="language-text">submit
+  captures context_generation
+  captures region_id + region_generation
+  creates task_generation
+
+task completion
+  emits CQE with stable identity
+  signals future
+
+future wait
+  verifies identity still meaningful
+  returns completion and recovery hint
+
+tombstone reclaim
+  waits for queue drain barrier
+  frees logical metadata only after no late producer can reference it</code></pre>
+<p>이 구조를 쓰면 context reset, process death, device lost 같은 큰 실패도 같은 규칙으로 처리할 수 있다. 상위 generation이 retired되면 하위 future와 region handle은 stale로 판정되고, stale은 conflict policy로 대기하지 않고 즉시 실패한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-26">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><code>pim_future_t</code>에 origin region 목록을 모두 내장하면 multi-region task에서 future 크기가 커질 수 있다. 큰 task graph에서는 inline array 대신 refcounted identity vector가 필요할 수 있다.</li><li><code>pim_queue_drain_barrier()</code>가 “CQE 발행 완료”와 “사용자 소비 완료”를 분리하려면 CQE payload에서 모든 raw pointer를 제거해야 한다. 기존 초안의 <code>pim_region_t *region</code>은 canonical 구조체에 남기기 어렵다.</li><li><code>DeviceLost</code> 이후에도 host memory에 남은 일부 region 내용은 물리적으로 읽힐 수 있다. 그러나 runtime 관점에서는 “읽을 수 있음”과 “신뢰 가능함”이 다르므로, 기본 정책은 <code>UNRECOVERABLE</code>이어야 한다.</li><li>alias group generation 필드가 아직 명시적으로 정의되지 않았다. <code>region_generation</code>만으로는 group id 재사용 문제를 완전히 막지 못하므로 <code>alias_group_generation</code>도 필요하다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-26">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><code>pim_completion_t</code>에서 raw pointer 필드를 제거하고, <code>pim_object_identity_t</code> 기반 canonical completion 구조체를 다시 작성한다.</li></ol>
+<ol><li><code>pim_queue_drain_barrier()</code>와 <code>pim_context_destroy()</code>를 연결해 정상 destroy, forced destroy, owner died, device lost에서 각각 어떤 barrier를 기다리고 어떤 barrier를 생략하는지 표로 만든다.</li></ol>
+<ol><li><code>alias_group_generation</code>을 도입해 <code>region_generation</code>, <code>task_generation</code>, <code>context_generation</code>, <code>queue_epoch</code>와 함께 전체 generation/epoch 체계를 하나의 표로 정리한다.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T14:30:21.788025+00:00</li><li>누적 턴 수: 25</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T14:31:16.857099+00:00</li><li>누적 턴 수: 26</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
