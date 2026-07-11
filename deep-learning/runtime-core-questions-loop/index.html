@@ -307,6 +307,15 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-2">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-3">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-3-claude">Turn 3 / Claude</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-3">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-4">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-4">새로 추가한 사실</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-3">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-3">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-3">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -335,7 +344,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -405,8 +414,56 @@
 <ol><li>Go/Tokio로 이동해 <code>goroutine</code>과 <code>Future</code>가 Linux <code>task_struct</code> 위에서 어떻게 M:N으로 얹히는지 비교한다. 핵심 질문은 “상위 런타임 ready queue와 커널 runqueue가 어긋날 때 누가 보정하는가”다.</li></ol>
 <ol><li>Accelerator runtime으로 이동해 CUDA stream, Level Zero command queue, OpenCL/SYCL queue를 Linux의 runqueue와 비교한다. 특히 “순서 보장 queue”와 “실제 실행 자원 scheduler”를 분리해서 정리한다.</li></ol>
 <ol><li>Q10으로 이어질 준비로 PIM runtime의 최소 상태기계를 <code>created -&gt; submitted -&gt; ready -&gt; dispatched -&gt; waiting_device -&gt; completed/failed/cancelled</code>로 초안화하고, 각 상태가 런타임 소유인지 driver/device 소유인지 표시한다.</li></ol>
+<h3 id="turn-3-claude">Turn 3 / Claude</h3>
+<p>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8)</p>
+<h2 id="이번-턴이-답하는-중심질문-3">이번 턴이 답하는 중심질문</h2>
+<ul><li><strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가</li><li><strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — <strong>preemptive M:N(Go) vs cooperative M:N(Tokio)</strong> 로 분리</li><li><strong>Q9</strong> 공통 구조 — Go·Tokio를 하나의 <strong>정규 work-stealing 스케줄러</strong>로 환원</li><li>(보조) Q5 wait→ready 복귀 간선(gopark/goready, Waker::wake), Q6 종료 산출물(JoinHandle vs channel), Q8 상위 런타임 ready queue와 커널 runqueue의 어긋남 보정 주체</li></ul>
+<h2 id="이번-턴의-확장-요약-4">이번 턴의 확장 요약</h2>
+<p>Turn 2가 남긴 핵심 미해결 질문 — <strong>&quot;상위 런타임 ready queue와 커널 runqueue가 어긋날 때 누가 보정하는가&quot;</strong> — 에 직접 답하는 것이 이번 턴의 축이다. 결론부터: <strong>보정 주체는 커널이 아니라 상위 런타임 내부의 감시/드라이버 컴포넌트</strong>다. Go는 <code>sysmon</code> + netpoller가, Tokio는 mio 기반 non-blocking I/O + <code>spawn_blocking</code>이 그 역할을 한다.</p>
+<p>그리고 Turn 1 비교표가 Go와 Tokio를 똑같이 &quot;work-stealing&quot;으로 묶은 것을 <strong>preemptive vs cooperative</strong>, <strong>stackful vs stackless</strong> 두 축으로 쪼갠다. 이 두 축이 이후 Q10 PIM 스케줄러가 &quot;work item을 강제 선점할 수 있는가&quot;를 결정하는 설계 분기점이 된다.</p>
+<h2 id="새로-추가한-사실-4">새로 추가한 사실</h2>
+<ol><li><strong>goroutine = stackful coroutine, async task = stackless coroutine.</strong> Go 고루틴은 자체 성장/축소 가능 스택(초기 ~2KB, <code>morestack</code>/<code>copystack</code>으로 리사이즈)을 갖는 실행 단위다. 반면 Rust <code>async fn</code>/Tokio task는 <strong>컴파일러가 생성한 상태 기계(state machine)</strong>로, 정지 지점(<code>.await</code>)의 지역변수가 스택이 아니라 <code>Future</code> 구조체의 <strong>필드로 힙에 캡처</strong>된다. 즉 Q3의 &quot;work item 표현&quot;은 런타임마다 <em>스택을 가진 노드</em>냐 <em>스택 없는 상태 기계 struct</em>냐로 근본이 갈린다. 이 차이가 memory 모듈(Q7)과 선점 가능성(Q4)을 동시에 결정한다.</li></ol>
+<ol><li><strong>Go는 선점형 M:N, Tokio는 협조형 M:N이다.</strong> Go 1.14(2020)부터 <code>sysmon</code>이 시그널(Unix에서 <code>SIGURG</code>)로 <strong>비동기 선점(async preemption)</strong>을 건다 — 함수 호출·할당이 전혀 없는 타이트 루프 고루틴도 ~10ms 후 강제로 멈출 수 있다(이전에는 안전점에서만 협조적 양보 가능). 반면 <strong>Tokio task는 선점 불가</strong>다. <code>.await</code>에서만 양보하므로, <code>await</code> 없이 긴 동기 계산을 도는 task는 <strong>worker 스레드 전체를 점유</strong>한다. 그래서 Tokio는 CPU-bound 작업을 <code>spawn_blocking</code>으로 분리하라고 강제한다.</li></ol>
+<ol><li><strong>Go 스케줄러의 지역성/공정성 3중 구조.</strong> 각 P는 (a) 256칸 고정 배열 로컬 runq(LRQ), (b) 방금 깨어난 고루틴을 우선 실행하는 단일 <code>runnext</code> 슬롯을 갖고, (c) 전역 runq(GRQ)를 공유한다. 굶주림 방지를 위해 <code>schedtick % 61 == 0</code>일 때 <strong>GRQ를 먼저</strong> 확인한다(61은 패턴 회피용 소수). 로컬이 비면 다른 P의 runq 절반을 훔친다(work-stealing).</li></ol>
+<ol><li><strong>Tokio도 동형 구조를 갖되 이름만 다르다.</strong> worker마다 256칸 로컬 큐 + 전역 <strong>injection queue</strong> + 방금 깨어난 task용 <strong>LIFO 슬롯</strong>(Go의 <code>runnext</code> 대응)을 둔다. LIFO 슬롯의 두 task가 서로 핑퐁하며 다른 task를 굶기는 것을 막기 위해 연속 LIFO 폴 횟수에 상한을 둔다. 전역 큐도 고정 간격(멀티스레드 스케줄러 기준 대략 31틱마다)으로 확인한다.</li></ol>
+<ol><li><strong>Tokio의 자동 협조 양보(coop budget).</strong> 각 task는 폴 1회당 예산(기본 128)을 받고, 채널·I/O 같은 리소스가 준비돼 있어도 예산이 바닥나면 <code>Poll::Pending</code>을 반환해 <strong>강제로 양보</strong>시킨다. 선점이 없는 협조형 런타임이 굶주림을 막는 대체 장치다 — Go의 <code>sysmon</code> 시그널 선점과 목표는 같고 수단이 다르다.</li></ol>
+<ol><li><strong>종료 산출물(Q6)이 다르다.</strong> Tokio task는 반환값을 <strong><code>JoinHandle</code>(완료 시 결과로 resolve되는 Future)<strong>로 회수할 수 있다 — 즉 일급(first-class) 결과 채널이 내장돼 있다. Go 고루틴은 반환값을 남기지 않는다(fire-and-forget). 결과를 받으려면 </strong>명시적 channel</strong>을 써야 한다. Turn 2의 Linux <code>wait()</code>가 zombie 레코드로 exit status를 보존하는 것과 대응시키면: JoinHandle ≈ waitable 완료 레코드, Go 고루틴 ≈ 완료 레코드 없음(채널이 대신).</li></ol>
+<h2 id="런타임-내부-구조로-환원-3">런타임 내부 구조로 환원</h2>
+<p>Go/Tokio를 Turn 1의 표준 객체 그래프에 얹으면 <strong>정규 work-stealing 스케줄러</strong>가 드러난다:</p>
+<pre><code>Runtime (root)
+├── Worker[]  ............ Go: P(논리 프로세서, GOMAXPROCS개) / Tokio: worker thread
+│    ├── local runq(256) . 지역 ready queue
+│    └── priority slot ... Go: runnext / Tokio: LIFO slot  (방금 readied된 노드 1개)
+├── global queue ......... Go: GRQ / Tokio: injection queue
+├── Executor thread[] .... Go: M(OS 스레드) / Tokio: worker OS 스레드
+├── WorkItem[] ........... Go: G(stackful) / Tokio: Task(stackless Future)
+├── Monitor/Driver ....... Go: sysmon + netpoller / Tokio: mio driver + blocking pool
+└── Waker/park handle .... Go: gopark/goready / Tokio: Waker(RawWaker vtable)</code></pre>
+<p>핵심: <strong>Worker(스케줄 컨텍스트)와 Executor(OS 스레드)를 분리</strong>하는 것이 M:N의 정의다. Go에서 P(Worker)와 M(Executor)이 별개 객체라는 점, Tokio에서 worker는 스레드에 고정이라는 점이 두 런타임의 미묘한 차이다 — Go는 <strong>P를 M에서 떼어내(handoff)</strong> 다른 M에 붙일 수 있어 syscall 블로킹에 더 유연하다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-3">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p><strong>Go 고루틴 상태 기계(Turn 1의 일반 모델 위에 정밀화):</strong></p>
+<pre><code class="language-text">_Gidle → _Grunnable(runq/runnext/GRQ에 있음)
+       → _Grunning(M 위에서 실행)
+       → _Gsyscall(blocking syscall 중, M과 함께 커널로)
+       → _Gwaiting(gopark: 채널/mutex/netpoll 대기)
+       → _Gpreempted(비동기 선점으로 정지, 재적재 대기)  ← Go 1.14+
+       → _Gdead(종료; G struct는 gFree 풀에 캐시되어 재사용)</code></pre>
+<ul><li><code>_Gwaiting → _Grunnable</code> 복귀 간선은 <code>goready</code>가 그린다. Tokio에서는 <strong><code>Waker::wake()</code></strong>가 정확히 같은 간선이다 — 타입 소거된 vtable 핸들이 리소스 준비 시 task를 다시 ready queue에 넣는다. Turn 2가 요청한 &quot;interruptible/uninterruptible/timeout/cancel wait&quot; 구분은 Go에서 <code>gopark</code>의 <code>waitReason</code>(chanRecv, selectNoCases, timerGoroutineIdle 등)으로, Tokio에서는 어떤 리소스의 Waker가 등록됐는지로 표현된다.</li></ul>
+<p><strong>Q8 — ready queue 어긋남 보정 주체 (Turn 2 미해결 질문의 답):</strong></p>
+<div class="table-wrap"><table><thead><tr><th>블로킹 유형</th><th>Go의 보정</th><th>Tokio의 보정</th></tr></thead><tbody><tr><td>네트워크 I/O</td><td>netpoller(epoll)로 non-blocking, G는 <code>_Gwaiting</code> park → M은 안 막힘</td><td>mio(epoll)로 non-blocking, task는 Pending + Waker</td></tr><tr><td>blocking syscall(파일 등)</td><td><code>sysmon.retake()</code>가 ~10ms 후 <strong>P를 M에서 handoff</strong>, 새 M이 나머지 G 실행</td><td>원칙적으로 async task에서 금지 → <code>spawn_blocking</code>으로 별도 풀(기본 512스레드) 이동</td></tr><tr><td>CPU 독점</td><td><code>sysmon</code>이 SIGURG로 <strong>강제 선점</strong></td><td>선점 불가 → coop budget으로 협조 양보 유도 or <code>spawn_blocking</code></td></tr></tbody></table></div>
+<p>즉 <strong>커널 runqueue와 상위 ready queue의 정합성은 커널이 아니라 상위 런타임의 monitor 컴포넌트가 능동적으로 맞춘다.</strong> 커널은 &quot;worker 스레드 개수 ≈ 코어 수&quot;를 얇게 통과시킬 뿐이고, &quot;논리 task는 ready인데 스레드가 blocked&quot;인 간극은 handoff(Go) 또는 격리(Tokio)로 상위에서 해소한다. 이것이 Turn 2 소유 경계표의 &quot;OS thread 실행 가능성=커널 소유, task 상태=상위 소유&quot;가 실제로 작동하는 메커니즘이다.</p>
+<h2 id="다른-런타임과의-비교-3">다른 런타임과의 비교</h2>
+<p>Turn 1 표를 이 축으로 정정·확장한다:</p>
+<div class="table-wrap"><table><thead><tr><th>축</th><th>Go</th><th>Tokio</th><th>(대조) Linux EEVDF</th></tr></thead><tbody><tr><td>work item</td><td>G, <strong>stackful</strong> coroutine</td><td>Task, <strong>stackless</strong> Future</td><td><code>task_struct</code>, 커널 스택 보유</td></tr><tr><td>선점</td><td><strong>선점형</strong>(SIGURG, 1.14+)</td><td><strong>비선점</strong>(협조, coop budget)</td><td>선점형(타이머 틱/wakeup)</td></tr><tr><td>지역 ready</td><td>LRQ(256) + runnext</td><td>local(256) + LIFO slot</td><td>per-CPU <code>cfs_rq</code></td></tr><tr><td>전역 ready</td><td>GRQ(61틱마다)</td><td>injection(≈31틱마다)</td><td>(부하분산: load balancer)</td></tr><tr><td>재배치</td><td>work-steal(절반) + P handoff</td><td>work-steal</td><td>periodic/idle load balancing</td></tr><tr><td>굶주림 방지</td><td>GRQ 주기 확인 + 비동기 선점</td><td>GRQ 주기 확인 + coop 예산</td><td>lag/virtual deadline</td></tr><tr><td>완료 산출물(Q6)</td><td>없음(채널 필요)</td><td><strong>JoinHandle</strong>로 회수</td><td>exit_code + zombie 레코드</td></tr><tr><td>memory(Q7)</td><td>GC(동시 tricolor mark-sweep, write barrier)</td><td><strong>Arc 참조계수</strong>(GC 없음), task cell 단일 힙 할당</td><td>page allocator + user heap</td></tr></tbody></table></div>
+<p>관찰: (a) <strong>로컬큐+전역큐+훔치기+우선슬롯+주기적 전역확인</strong>은 Go·Tokio가 완전히 동형 — 이것이 Q9의 &quot;공통 구조&quot;이고 Q10 PIM 스케줄러의 기본 골격 후보다. (b) 차이는 오직 <strong>선점 가능성</strong>과 <strong>work item이 스택을 갖느냐</strong>에서 나온다. (c) Tokio가 GC 없이 참조계수로 task를 회수한다는 점은 Turn 1 표의 &quot;memory: —&quot;를 &quot;<strong>deterministic refcount 회수</strong>&quot;로 정정해야 함을 뜻한다 — allocator 모듈이 &quot;없다&quot;가 아니라 &quot;다른 방식으로 존재한다&quot;.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>구현 상수는 버전 의존적이다.</strong> Go의 61틱, sysmon의 ~10ms/~20µs 임계, Tokio의 coop 128·전역 간격 31·blocking 512스레드는 모두 내부 튜닝 값이며 릴리스마다 바뀔 수 있다. 논문/글에 쓸 때는 &quot;구현상 고정 간격/임계&quot;로 서술하고 정확 수치는 해당 버전 소스로 교차확인해야 한다.</li><li><strong><code>_Gpreempted</code>의 의미 주의.<strong> 이 상태는 &quot;비동기 선점됨&quot;과 곧바로 등치되지 않는다. 주로 GC 스택 스캔 등을 위해 고루틴을 </strong>suspendG</strong>로 정지시켰다가 재개하는 경로에서 쓰인다. &quot;SIGURG=항상 <code>_Gpreempted</code>&quot;로 단순화하면 부정확하다.</li><li><strong>async 선점의 한계.</strong> 비동기 선점도 안전점(safe-point)이 없는 일부 어셈블리/no-preempt 구간에서는 걸리지 않는다. &quot;Go는 무조건 어떤 고루틴도 선점 가능&quot;은 과장이다.</li><li><strong>Tokio 스케줄러 종류 구분.</strong> 위 수치·구조는 <code>multi_thread</code> 런타임 기준이다. <code>current_thread</code>(단일 스레드) 런타임은 work-stealing도 injection 밸런싱도 없다 — 비교 시 flavor를 명시해야 한다.</li><li><strong>&quot;stackless=메모리 절약&quot;의 단서.</strong> async task가 힙 상태 기계라 해도, Future의 크기는 가장 큰 정지 지점 기준으로 정해져 큰 지역변수가 있으면 부풀 수 있다(대형 Future 문제). &quot;stackless=항상 가볍다&quot;는 검증 필요.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>Accelerator runtime으로 이동(Q3·Q4·Q7).</strong> 이번 턴의 &quot;정규 work-stealing 스케줄러(로컬큐+전역큐+훔치기+우선슬롯)&quot;를 CUDA stream / Level Zero command list↔command queue / OpenCL·SYCL queue와 대조하라. 핵심 질문: 이들 큐는 <strong>순서 채널</strong>(work-steal 불가, in-order)이지 Go/Tokio식 <strong>스케줄 큐</strong>(재배치 가능)가 아니다 — 이 두 큐 개념이 하드웨어 스케줄러(SM 배정) 위에서 어떻게 분리되는지 상태기계 간선으로 그려라.</li></ol>
+<ol><li><strong>PJRT/OpenXLA로 Q6 산출물 정식화(Q6·Q8).</strong> Tokio <code>JoinHandle</code>(완료 결과 회수)과 Linux zombie(waitable 레코드)를 PJRT의 <code>PJRT_Event</code>/<code>PJRT_Buffer</code>(executable 실행의 완료 신호와 결과 버퍼)와 한 축에 놓고, &quot;완료 산출물을 누가 소유·회수하는가&quot;를 상위 런타임 vs driver로 나눠라.</li></ol>
+<ol><li><strong>Q10 초안 갱신(Q4·Q5·Q10).</strong> 이번 턴의 두 설계 분기 — (a) work item이 <strong>선점 가능한가</strong>(Go형) vs <strong>협조 양보만</strong>(Tokio형), (b) work item이 <strong>stackful</strong>인가 <strong>stackless</strong>인가 — 를 PIM runtime 상태기계(<code>created→submitted→ready→dispatched→waiting_device→completed/failed/cancelled</code>)의 각 상태에 매핑하라. 특히 PIM 오프로드는 대개 <strong>비선점·in-order 디바이스 큐</strong>에 가까우므로 CUDA stream형 &quot;순서 채널 + coop budget식 host 양보&quot; 조합이 유력함을 검토하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T16:36:34.509185+00:00</li><li>누적 턴 수: 2</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T16:40:14.733255+00:00</li><li>누적 턴 수: 3</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
