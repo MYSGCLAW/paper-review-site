@@ -473,6 +473,17 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-q10-pim-op는-재개-불가-stackless-라는-가장-제약된-표현">관련 맥락 / 배경 설명 — Q10: PIM op는 &quot;재개 불가 stackless&quot;라는 가장 제약된 표현</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-19">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-20">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-20-codex">Turn 20 / Codex</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-17">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-21">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-21">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-10">더 구체화한 부분</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-10">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-14">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-15">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-16">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-20">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-21">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -501,7 +512,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q5</strong> 상태 전이 — seed가 명시적으로 나열한 <code>cancelled</code> 상태를 지금까지 14턴이 한 번도 파헤치지 않았다. 이번 턴은 <strong>task가 <code>running</code>에서 <code>cancelled</code>로 가는 경로</strong>를 정식화하고, 그것이 <code>failed</code>와 <strong>다른 종착점</strong>임을 확정한다 - <strong>Q4</strong> 스케줄 정책 — 스케줄러가 task에게서 CPU를 강제로</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 15는 cancellation/preemption을 단일 task 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>structured concurrency</strong>를 런타임 내부 구조로 환원한다. 핵심은 다음이다. <code></code>`text 개별 ta</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 자원 — 지금까지 15턴이 buffer·queue·slot을 자원으로 다뤘지만, <strong>&quot;보내도 되는 권리(credit/demand/window/permit)&quot; 자체가 할당·회수·소유되는 1급 자원</strong>임을 정식화한다. Reactive Streams <code>request(n)</code>, HTTP/2 window, Tokio <code>Permit</code>이 그 실체다. - **</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 16이 남긴 <strong>exception aggregation / partial-result policy</strong>를 런타임 내부 모듈로 격상한다. 지금까지 <code>completed</code>, <code>failed</code>, <code>cancelled</code>는 task 하나의 종착</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q3, Q7</code> — Turn 16·18(Codex)이 structured concurrency/outcome 계열을 다뤘고 Turn 17(Claude)이 backpressure로 빠졌으므로, 규칙에 따라 이번 턴은 <strong>언어 런타임의 더 아래층 — &quot;중단된 계산(suspended computation)은 물리적으로 무엇인가&quot;</strong> 로 복귀한다. 이것은 Turn 16/</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q5</strong> 상태 전이 — seed가 명시적으로 나열한 <code>cancelled</code> 상태를 지금까지 14턴이 한 번도 파헤치지 않았다. 이번 턴은 <strong>task가 <code>running</code>에서 <code>cancelled</code>로 가는 경로</strong>를 정식화하고, 그것이 <code>failed</code>와 <strong>다른 종착점</strong>임을 확정한다 - <strong>Q4</strong> 스케줄 정책 — 스케줄러가 task에게서 CPU를 강제로</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 15는 cancellation/preemption을 단일 task 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>structured concurrency</strong>를 런타임 내부 구조로 환원한다. 핵심은 다음이다. <code></code>`text 개별 ta</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 자원 — 지금까지 15턴이 buffer·queue·slot을 자원으로 다뤘지만, <strong>&quot;보내도 되는 권리(credit/demand/window/permit)&quot; 자체가 할당·회수·소유되는 1급 자원</strong>임을 정식화한다. Reactive Streams <code>request(n)</code>, HTTP/2 window, Tokio <code>Permit</code>이 그 실체다. - **</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 16이 남긴 <strong>exception aggregation / partial-result policy</strong>를 런타임 내부 모듈로 격상한다. 지금까지 <code>completed</code>, <code>failed</code>, <code>cancelled</code>는 task 하나의 종착</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q3, Q7</code> — Turn 16·18(Codex)이 structured concurrency/outcome 계열을 다뤘고 Turn 17(Claude)이 backpressure로 빠졌으므로, 규칙에 따라 이번 턴은 <strong>언어 런타임의 더 아래층 — &quot;중단된 계산(suspended computation)은 물리적으로 무엇인가&quot;</strong> 로 복귀한다. 이것은 Turn 16/</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q3, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 19가 “중단된 계산은 stackful 또는 stackless 표현”이라고 정리했다면, 이번 턴은 그 표현이 <strong>checkpoint/restore와 외부 참조 안정성</strong> 앞에서 어떻게 깨지는지를 확장한다. 핵심 결론은 다음이다. <code></code>`text 중단</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -2105,8 +2116,136 @@ Structured task tree:
 <ol><li><strong>PIM <code>PimFrame</code>(재개 불가 stackless 프레임)의 구체 IR과, 이를 CPU 연속체와 잇는 host-side &quot;shadow continuation&quot;을 설계하라(Q3·Q10).<strong> launch 후 재개 불가인 PIM op를, host 쪽에서는 </strong>재개 가능한 연속체(대기 중인 <code>Future</code>/virtual thread)로 감싸</strong> completion 폴링(Turn 14)이 그 host 연속체를 unpark하는 2층 구조를 그려라 — 즉 &quot;device는 stackless·재개불가, host는 그 완료를 기다리는 stackful/stackless 연속체&quot;라는 분리가 Turn 13의 producer/consumer 분할 소유와 어떻게 대응하는지, 그리고 이 shadow continuation이 Turn 15의 cancel(대기 취소는 host에서만, device op는 불가)과 Turn 17의 backpressure(host 연속체 suspend)를 어디서 흡수하는지 상태기계로 병합하라.</li></ol>
 <p>--- Sources:</p>
 <ul><li><a href="https://openjdk.org/jeps/491" target="_blank" rel="noopener noreferrer">JEP 491: Synchronize Virtual Threads without Pinning (JDK 24)</a></li><li><a href="https://foojay.io/today/the-basis-of-virtual-threads-continuations/" target="_blank" rel="noopener noreferrer">The Basis of Virtual Threads: Continuations (Foojay)</a></li><li><a href="https://go.dev/doc/go1.3" target="_blank" rel="noopener noreferrer">Go 1.3 Release Notes — contiguous stacks</a></li><li><a href="https://go.dev/doc/go1.4" target="_blank" rel="noopener noreferrer">Go 1.4 Release Notes — 2KB initial stacks</a></li><li><a href="https://blog.cloudflare.com/how-stacks-are-handled-in-go/" target="_blank" rel="noopener noreferrer">How Stacks are Handled in Go (Cloudflare)</a></li><li><a href="https://agis.io/post/contiguous-stacks-golang/" target="_blank" rel="noopener noreferrer">Contiguous stacks in Go (Agis Anastasopoulos)</a></li></ul>
+<h3 id="turn-20-codex">Turn 20 / Codex</h3>
+<h2 id="이번-턴이-답하는-중심질문-17">이번 턴이 답하는 중심질문</h2>
+<p>이번 턴이 답하는 중심질문: <strong>Q3, Q6, Q7, Q8, Q9, Q10</strong></p>
+<h2 id="이번-턴의-확장-요약-21">이번 턴의 확장 요약</h2>
+<p>Turn 19가 “중단된 계산은 stackful 또는 stackless 표현”이라고 정리했다면, 이번 턴은 그 표현이 <strong>checkpoint/restore와 외부 참조 안정성</strong> 앞에서 어떻게 깨지는지를 확장한다.</p>
+<p>핵심 결론은 다음이다.</p>
+<pre><code class="language-text">중단된 계산을 저장할 수 있는가?
+  = 프레임/스택 메모리만 저장하면 되는가?
+  + scheduler queue / waker / carrier binding / fd / socket / device state도 복원 가능한가?
+  + 외부 코드나 장치가 그 프레임 내부 주소를 잡고 있지는 않은가?</code></pre>
+<p>따라서 런타임 객체는 이제 <code>Task</code>, <code>Continuation</code>, <code>StackChunk</code>, <code>FutureFrame</code>만으로 부족하다. 다음 메타데이터가 필요하다.</p>
+<pre><code class="language-text">ContinuationRecord
+├── representation        # stackful stack chunk / stackless frame / device packet
+├── suspend_state         # runnable / blocked / mounted / unmounted / pinned
+├── restore_class         # serializable / rebind-required / non-restorable
+├── external_refs         # fd, socket, native pointer, DMA mapping, device handle
+├── wakeup_capability     # waker, futex, eventfd, completion queue entry
+└── cleanup_or_replay_plan</code></pre>
+<p>즉 checkpoint 가능성은 “스택을 힙에 갖고 있느냐”가 아니라 <strong>런타임 내부 상태와 외부 capability를 함께 다시 묶을 수 있느냐</strong>의 문제다.</p>
+<h2 id="새로-추가한-사실-21">새로 추가한 사실</h2>
+<p>JEP 444는 virtual thread가 특정 OS thread에 묶이지 않는 <code>java.lang.Thread</code>이며, JDK scheduler가 virtual thread를 platform thread carrier에 mount/unmount한다고 설명한다. scheduler는 FIFO 모드의 work-stealing <code>ForkJoinPool</code>이고, virtual thread용 time sharing은 현재 구현하지 않는다고 명시한다. 따라서 “힙 stack chunk가 있으니 virtual thread 하나를 독립적으로 저장/이동할 수 있다”는 결론은 아직 과도하다. <a href="https://openjdk.org/jeps/444" target="_blank" rel="noopener noreferrer">JEP 444</a></p>
+<ol><li><strong>Java virtual thread는 개별 task 직렬화 기능이 아니라 JVM 내부 M:N scheduling 객체다.</strong></li></ol>
+<p>OpenJDK CRaC 프로젝트는 Java instance를 checkpoint하는 메커니즘과 애플리케이션을 조정하고, checkpoint/restore event를 알려 주는 mechanism-agnostic API를 목표로 한다. 즉 CRaC는 “모든 resource를 투명하게 저장한다”가 아니라, <strong>저장 전 닫거나 정리해야 할 resource를 프로그램이 협조적으로 처리하게 하는 런타임 프로토콜</strong>에 가깝다. <a href="https://openjdk.org/projects/crac/" target="_blank" rel="noopener noreferrer">OpenJDK CRaC</a></p>
+<ol><li><strong>CRaC의 핵심은 JVM snapshot 자체보다 “checkpoint/restore event를 애플리케이션에 알리는 표준 API”다.</strong></li></ol>
+<p>CRIU는 Linux process 또는 container를 freeze하고 state를 disk에 저장한 뒤 복원하는 도구다. 하지만 CRIU 문서도 “모든 task state bit를 저장/복원할 수는 없다”는 별도 항목을 둔다. 이것은 Turn 11의 ①/②/③ 분류를 OS 수준에서도 재확인한다. <a href="https://criu.org/Main_Page" target="_blank" rel="noopener noreferrer">CRIU Main Page</a></p>
+<ol><li><strong>CRIU는 process/container 상태를 저장하지만, 저장 불가능하거나 바뀌는 상태를 별도 문제로 다룬다.</strong></li></ol>
+<p>Rust 문서는 async function이 만드는 <code>Future</code> state machine이 self-referential address-sensitive 값이 될 수 있고, 한번 pinned 상태가 되면 drop 전까지 같은 주소에 유효해야 한다고 설명한다. 중요한 점은 <code>Pin</code>이 컴파일된 메모리 동작을 마법처럼 바꾸는 것이 아니라, 안전한 API가 의존할 수 있는 <strong>주소 안정성 계약</strong>을 제공한다는 것이다. [Rust <code>std::pin</code>](https://doc.rust-lang.org/std/pin/index.html)</p>
+<ol><li><strong>Rust <code>Pin</code>은 “이동 금지”를 타입/API 계약으로 만든다.</strong></li></ol>
+<p>Go 문서는 C로 전달되는 Go pointer가 pinned Go memory를 가리켜야 하며, C code가 Go pointer를 보관할 수 있는 기간은 그 memory가 pinned된 동안뿐이라고 규정한다. <code>runtime.Pinner</code>로 일부 Go memory를 명시적으로 pin할 수 있지만, string/slice/channel 같은 값은 C가 보관할 수 없다. <a href="https://pkg.go.dev/cmd/cgo#hdr-Passing_pointers" target="_blank" rel="noopener noreferrer">Go cgo pointer rules</a></p>
+<ol><li><strong>Go cgo pointer 규칙은 외부 참조가 movable runtime과 충돌하는 전형 사례다.</strong></li></ol>
+<h2 id="더-구체화한-부분-10">더 구체화한 부분</h2>
+<p>Turn 19의 “스택이 움직이는 자원”은 이제 다음 원리로 일반화된다.</p>
+<pre><code class="language-text">이동 가능한 runtime object는
+외부 세계가 내부 주소를 잡는 순간
+이동 불가능하거나 재검증 필요 상태가 된다.</code></pre>
+<p>이 원리는 여러 런타임에서 같은 모양으로 나타난다.</p>
+<div class="table-wrap"><table><thead><tr><th>런타임</th><th>이동 가능한 것</th><th>외부 참조가 생기는 순간</th><th>대응</th></tr></thead><tbody><tr><td>Go</td><td>goroutine stack / Go heap object</td><td>C가 Go pointer 보관</td><td>cgo pinning, <code>runtime.Pinner</code></td></tr><tr><td>Rust async</td><td><code>Future</code> frame</td><td>self-reference / intrusive pointer</td><td><code>Pin</code>, <code>!Unpin</code></td></tr><tr><td>JVM virtual thread</td><td>carrier와 분리되는 continuation</td><td>native/FFM callback 중 blocking</td><td>pinning event, carrier 점유</td></tr><tr><td>CRIU</td><td>process memory/register/fd</td><td>복원 불가능 kernel/device state</td><td>dump 거부 또는 special handling</td></tr><tr><td>PIM runtime</td><td>host descriptor / buffer</td><td>memory controller/DMA가 physical address 사용</td><td>pinned buffer, epoch, queue drain</td></tr></tbody></table></div>
+<p>따라서 Q7의 자원 목록에 <code>address stability</code>를 1급 자원으로 추가해야 한다.</p>
+<pre><code class="language-text">Resource
+├── memory capacity
+├── queue slot
+├── execution slot
+├── credit / permit
+├── wakeup capability
+└── address-stability lease   # 신규</code></pre>
+<p><code>address-stability lease</code>는 “이 객체를 움직이지 않겠다”는 런타임의 약속이다. 이 lease가 길어질수록 GC compacting, stack relocation, checkpoint, migration, cancellation cleanup이 어려워진다.</p>
+<h2 id="관련-맥락-배경-설명-10">관련 맥락 / 배경 설명</h2>
+<p>Checkpoint/restore 관점에서 continuation state는 세 부류로 나뉜다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태</th><th>예</th><th>checkpoint 분류</th><th>이유</th></tr></thead><tbody><tr><td>pure value frame</td><td>primitive/local value만 가진 stackless frame</td><td>① 직렬화 가능 후보</td><td>외부 capability 없음</td></tr><tr><td>unmounted continuation</td><td>virtual thread stack chunk, suspended future</td><td>② 재검증 필요</td><td>scheduler/waker/context를 다시 묶어야 함</td></tr><tr><td>blocked syscall / fd wait</td><td>epoll, futex, socket wait</td><td>② 또는 ③</td><td>kernel wait queue와 상대 endpoint 상태 필요</td></tr><tr><td>native/FFI pinned frame</td><td>cgo, JNI/FFM, native callback</td><td>③ 재생성/거부 후보</td><td>외부 코드가 주소/스레드 정체성에 의존</td></tr><tr><td>in-flight accelerator/PIM command</td><td>launched GPU/PIM op</td><td>③ 재생성 불가, wait/reset</td><td>device 내부 실행 상태를 꺼낼 수 없음</td></tr><tr><td>completed committed epoch</td><td>PIM committed epoch, flushed trace</td><td>① 가능</td><td>runtime-visible durable outcome</td></tr></tbody></table></div>
+<p>이 표의 핵심은 <strong>unmounted가 곧 portable checkpoint는 아니라는 점</strong>이다. unmounted continuation은 carrier를 놓았을 뿐이고, 여전히 그 continuation을 깨울 <code>Waker</code>, eventfd, futex wait, completion queue, parent scope, cancellation token을 다시 연결해야 한다.</p>
+<p>PIM에 적용하면 host와 device의 표현을 반드시 분리해야 한다.</p>
+<pre><code class="language-text">Host side:
+  PimFuture / virtual-thread wait frame
+  → cancellable
+  → checkpoint 후보
+  → wakeup 재바인딩 필요
+
+Device side:
+  PimFrame / command packet / in-flight bank op
+  → launch 후 cancel 불가
+  → checkpoint 불가
+  → completion 또는 reset만 가능</code></pre>
+<p>즉 PIM API에서 <code>PimFuture</code>를 checkpoint할 수 있다는 말은 <strong>host 대기 상태를 저장한다</strong>는 뜻이지, <strong>PIM 내부 실행 상태를 저장한다</strong>는 뜻이 아니다.</p>
+<h2 id="런타임-내부-구조로-환원-14">런타임 내부 구조로 환원</h2>
+<p>Checkpoint 가능한 runtime은 <code>ContinuationManager</code>와 별도로 <code>RebindingManager</code>가 필요하다.</p>
+<pre><code class="language-text">Runtime
+├── continuation manager
+│   ├── stack chunk / future frame / task state
+│   └── mounted / unmounted / pinned 상태
+├── resource manager
+│   ├── fd / socket / memory / queue / buffer
+│   └── external handle registry
+├── wakeup manager
+│   ├── waker / futex / eventfd / completion queue
+│   └── blocked wait set
+└── rebinding manager
+    ├── before_checkpoint hooks
+    ├── restore-time validation
+    ├── handle rebinding
+    ├── stale capability invalidation
+    └── replay or fail policy</code></pre>
+<p>상태 전이는 다음처럼 확장된다.</p>
+<pre><code class="language-text">running
+  → suspended
+  → checkpoint_requested
+  → quiesce_requested
+  ├→ quiesced_serializable
+  ├→ quiesced_rebind_required
+  ├→ pinned_checkpoint_denied
+  └→ in_flight_device_checkpoint_denied
+
+restore
+  → memory_restored
+  → handles_rebound
+  → wakeups_rearmed
+  → scheduler_requeued
+  ├→ resumed
+  └→ restore_failed</code></pre>
+<p>여기서 <code>wakeups_rearmed</code>가 중요하다. Turn 14가 completion과 wakeup을 분리했듯이, checkpoint 후 복원에서도 <strong>완료 기록을 복원하는 것</strong>과 <strong>다시 깨울 수 있는 capability를 복원하는 것</strong>은 다르다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-15">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p>Q8 관점에서 checkpoint는 소유권 경계를 드러내는 테스트다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태</th><th>소유자</th><th>checkpoint 시 처리</th></tr></thead><tbody><tr><td>stack/future frame</td><td>language runtime</td><td>저장 가능 후보</td></tr><tr><td>scheduler queue 위치</td><td>runtime scheduler</td><td>재큐잉 필요</td></tr><tr><td>waker/futex/eventfd</td><td>runtime + OS kernel</td><td>재등록/재무장 필요</td></tr><tr><td>fd/socket</td><td>OS kernel + 외부 peer</td><td>재검증 또는 복구 프로토콜 필요</td></tr><tr><td>native pointer</td><td>foreign runtime/C code</td><td>pin 또는 checkpoint 거부</td></tr><tr><td>DMA/PIM buffer</td><td>driver/device/memory controller</td><td>pin, drain, epoch 검증</td></tr><tr><td>in-flight device execution</td><td>device</td><td>보통 저장 불가</td></tr></tbody></table></div>
+<p>이 관점에서 <code>pinned</code>는 단순 성능 문제가 아니다. <code>pinned</code>는 <strong>runtime이 소유한 이동 가능 상태를 외부 소유자가 일시적으로 붙잡은 상태</strong>다. 그래서 pinned 상태에서는 stack compaction, carrier release, checkpoint, migration, cancellation cleanup이 모두 제한된다.</p>
+<h2 id="다른-런타임과의-비교-16">다른 런타임과의 비교</h2>
+<div class="table-wrap"><table><thead><tr><th>런타임</th><th>checkpoint에 유리한 상태</th><th>위험 상태</th><th>핵심 원리</th></tr></thead><tbody><tr><td>JVM virtual thread</td><td>unmounted continuation</td><td>native/FFM pinning</td><td>carrier 분리는 가능하지만 외부 handle은 별도</td></tr><tr><td>Go</td><td>Go-only goroutine state</td><td>cgo pointer retention</td><td>C가 보는 Go memory는 pinned 필요</td></tr><tr><td>Rust async</td><td><code>Future</code> frame이 값으로 소유됨</td><td><code>!Unpin</code>, unsafe projection</td><td>주소 안정성을 타입 계약으로 표현</td></tr><tr><td>CRIU/Linux</td><td>process memory/fd 일부</td><td>복원 불가능 kernel/device 상태</td><td>OS-visible state를 image로 저장하되 예외 존재</td></tr><tr><td>CUDA/PIM</td><td>완료된 buffer/epoch</td><td>in-flight kernel/op</td><td>device 실행 상태는 보통 host가 직렬화 불가</td></tr><tr><td>Node/Tokio</td><td>pending task/future</td><td>external fd wait, native addon</td><td>waker와 reactor registration 복원 필요</td></tr></tbody></table></div>
+<p>공통 구조는 다음이다.</p>
+<pre><code class="language-text">Serializable state:
+  value, frame, ledger, committed outcome
+
+Rebind state:
+  fd, socket, event registration, waker, queue membership
+
+Non-restorable state:
+  native stack dependency, device in-flight execution, unowned external side effect</code></pre>
+<p>이것이 Q9의 새로운 비교축이다. “task를 어떻게 표현하는가”만 비교하면 부족하고, <strong>그 표현이 외부 capability와 얼마나 강하게 묶이는가</strong>까지 봐야 한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-20">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>“힙 stack chunk = 직렬화 가능”은 성립하지 않는다.</strong> JVM이 virtual thread stack을 힙 내부 표현으로 관리하더라도, Java API 차원에서 개별 virtual thread를 portable하게 저장/복원한다는 뜻은 아니다.</li></ul>
+<ul><li><strong>CRaC와 CRIU를 같은 층으로 놓으면 안 된다.</strong> CRaC는 Java 프로그램과 checkpoint mechanism을 조정하는 API/프로젝트이고, CRIU는 Linux process/container C/R 도구다. 둘은 결합될 수 있지만 소유 층이 다르다.</li></ul>
+<ul><li><strong>Rust <code>Pin</code>은 “값을 heap에 둔다”와 동의어가 아니다.</strong> <code>Pin&lt;&amp;mut T&gt;</code>도 가능하고, 핵심은 heap 여부가 아니라 “pinned 이후 주소가 바뀌지 않는다”는 계약이다.</li></ul>
+<ul><li><strong>Go pinning은 전체 goroutine stack 고정과 동일하지 않다.</strong> cgo 규칙은 C에 전달되는 Go memory region의 pinning을 다룬다. goroutine scheduling/cgo blocking과 연결되지만, 같은 메커니즘으로 단순화하면 부정확하다.</li></ul>
+<ul><li><strong>PIM checkpoint 가능성은 command granularity에 좌우된다.</strong> 명령이 짧고 idempotent하면 replay가 가능할 수 있지만, partial writeback을 남기는 명령은 epoch/commit log 없이는 재시작 의미를 정의하기 어렵다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-21">다음 에이전트가 이어서 확장할 지점</h2>
+<p>fd, socket, eventfd, futex wait, Tokio <code>Waker</code>, Java virtual thread park state, PIM completion queue wait를 한 표에 놓고, checkpoint 후 <code>restore → wakeups_rearmed → scheduler_requeued</code>가 어떻게 구현되는지 Q5 상태기계로 내려라.</p>
+<ol><li><strong><code>RebindingManager</code>를 구체화하라.</strong></li></ol>
+<p>Go <code>runtime.Pinner</code>, Rust <code>Pin</code>, Java native/FFM pinning, GPU/PIM pinned host buffer를 비교해 <code>movable</code>, <code>pinned</code>, <code>dma_mapped</code>, <code>externally_borrowed</code> 상태를 allocator의 1급 상태로 세워라. 핵심 질문은 “누가 unpin 권한을 갖는가”다.</p>
+<ol><li><strong>외부 참조 안정성을 allocator 정책으로 연결하라.</strong></li></ol>
+<p>device 쪽 <code>PimFrame</code>은 재개 불가이지만 host 쪽 <code>PimFuture</code>는 checkpoint/rebind 후보가 된다. <code>PimFuture</code>가 completion ring offset, command id, buffer epoch, cancel token, wakeup handle을 어떻게 보관하고, restore 시 in-flight command를 <code>wait</code>, <code>replay</code>, <code>declare_lost</code> 중 무엇으로 분기할지 상태기계로 확장하라.</p>
+<ol><li><strong>PIM host-side shadow continuation을 설계하라.</strong></li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T17:37:48.570450+00:00</li><li>누적 턴 수: 19</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T17:39:32.455495+00:00</li><li>누적 턴 수: 20</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
