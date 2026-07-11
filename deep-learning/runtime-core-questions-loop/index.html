@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runtime 중심질문 재시작 루프</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">딥러닝</p>
+      <h1>Runtime 중심질문 재시작 루프</h1>
+      <p class="summary">Claude와 Codex가 번갈아 자료를 확장하며 매 턴의 변화와 응답 누적을 저장하는 실제 실행 로그입니다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-11</span>
+        <span class="tag">Claude</span><span class="tag">Codex</span><span class="tag">runtime-study</span><span class="tag">deep-research-loop</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#목표">목표</a>
+<a class="toc-level-2" href="#초기-seed">초기 seed</a>
+<a class="toc-level-2" href="#중심-질문">중심 질문</a>
+<a class="toc-level-2" href="#드리프트-방지-규칙">드리프트 방지 규칙</a>
+<a class="toc-level-2" href="#우선-확장-순서">우선 확장 순서</a>
+<a class="toc-level-2" href="#매-턴-출력-형식">매 턴 출력 형식</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실">새로 추가한 사실</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#확인-필요-지점">확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-2" href="#누적-응답-로그">누적 응답 로그</a>
+<a class="toc-level-2" href="#전체-응답-누적">전체 응답 누적</a>
+<a class="toc-level-3" href="#turn-1-claude">Turn 1 / Claude</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-2">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-2">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-2">새로 추가한 사실</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-2">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-2">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-2">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-2" href="#현재-상태">현재 상태</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="runtime-중심질문-재시작-루프">Runtime 중심질문 재시작 루프</h1>
+<h2 id="목표">목표</h2>
+<p>Claude와 Codex가 서로의 응답을 검증 종료점이 아니라 다음 확장의 입력으로 사용하며 자료를 누적한다.</p>
+<h2 id="초기-seed">초기 seed</h2>
+<h1 id="runtime-중심질문-재시작-seed">Runtime 중심질문 재시작 seed</h1>
+<p>이 루프의 목표는 런타임을 넓게 조사하되, 항상 아래 중심질문으로 되돌아오는 것이다. 특정 하위 주제(PIM, DRAM, RowHammer, 특정 논문, 특정 API)에 오래 머무르지 않는다. 하위 주제는 중심질문을 설명하는 사례로만 사용한다.</p>
+<h2 id="중심-질문">중심 질문</h2>
+<ol><li>런타임이란 무엇인가?</li><li>런타임 내부는 어떤 모듈로 구성되는가?</li><li>task, process, thread, fiber, coroutine, stream, command queue는 런타임 안에서 어떻게 표현되는가?</li><li>런타임은 task/process/work item을 어떤 정책으로 스케줄링하는가?</li><li>스케줄링 상태는 ready, running, blocked, waiting, completed, failed, cancelled 같은 상태로 어떻게 이동하는가?</li><li>프로그램이나 task는 어떤 상태와 산출물을 남기고 런타임을 빠져나가는가?</li><li>런타임은 CPU, GPU, accelerator, memory, buffer, queue, event, context, handle 같은 자원을 어떻게 할당하고 회수하는가?</li><li>런타임이 소유하는 상태와 OS kernel, device driver, compiler, framework가 소유하는 상태는 어떻게 나뉘는가?</li><li>CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, JVM, Go, Tokio, Node.js, Linux scheduler를 비교하면 어떤 공통 구조가 보이는가?</li><li>PIM 또는 LPDDR6-PIM runtime을 설계한다면 어떤 최소 runtime object, state machine, scheduler, allocator, API가 필요한가?</li></ol>
+<h2 id="드리프트-방지-규칙">드리프트 방지 규칙</h2>
+<ul><li>매 턴은 반드시 중심질문 1~10 중 최소 2개에 직접 답해야 한다.</li><li>매 턴 첫 부분에 <code>이번 턴이 답하는 중심질문: Qx, Qy</code>를 적는다.</li><li>한 하위 주제가 2턴 이상 이어지면 다음 턴은 반드시 일반 runtime 모델, OS/language runtime, accelerator runtime 중 하나로 돌아온다.</li><li>PIM/DRAM/RowHammer/refresh 같은 하드웨어 세부사항은 Q10의 설계 사례로만 다루고, 전체 턴의 절반을 넘기지 않는다.</li><li>외부 문헌을 찾더라도 결론은 반드시 runtime object, state transition, scheduler, resource ownership 중 하나로 환원한다.</li><li>&quot;검증 완료&quot;, &quot;문제 없음&quot;, &quot;추가 없음&quot;으로 끝내지 않는다.</li></ul>
+<h2 id="우선-확장-순서">우선 확장 순서</h2>
+<ol><li>일반 런타임 모델: init, context, scheduler, allocator, executor, event loop, error/completion.</li><li>OS runtime: Linux process/thread scheduler, process state, syscall/blocking/wakeup, exit status.</li><li>언어 런타임: JVM, Go, Tokio, Node.js의 task 표현, work-stealing, event loop, GC/cleanup.</li><li>Accelerator runtime: CUDA Runtime/Driver, Level Zero, ROCm/HIP, OpenCL/SYCL의 context, stream/queue, event, memory object.</li><li>ML compiler/runtime: PJRT/OpenXLA의 client/device/buffer/executable/event 구조.</li><li>PIM runtime 설계: 앞의 공통 모델을 바탕으로 최소 object model, state machine, scheduler, allocator, API 후보를 도출한다.</li></ol>
+<h2 id="매-턴-출력-형식">매 턴 출력 형식</h2>
+<h2 id="이번-턴이-답하는-중심질문">이번 턴이 답하는 중심질문</h2>
+<h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
+<h2 id="새로-추가한-사실">새로 추가한 사실</h2>
+<h2 id="런타임-내부-구조로-환원">런타임 내부 구조로 환원</h2>
+<h2 id="상태-전이-스케줄링-자원-소유-관점">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<h2 id="다른-런타임과의-비교">다른 런타임과의 비교</h2>
+<h2 id="확인-필요-지점">확인 필요 지점</h2>
+<h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
+<h2 id="누적-응답-로그">누적 응답 로그</h2>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr></tbody></table></div>
+<h2 id="전체-응답-누적">전체 응답 누적</h2>
+<h3 id="turn-1-claude">Turn 1 / Claude</h3>
+<p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
+<h2 id="이번-턴이-답하는-중심질문-2">이번 턴이 답하는 중심질문</h2>
+<ul><li><strong>Q1</strong> 런타임이란 무엇인가</li><li><strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가</li><li><strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수</li><li>(보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</li></ul>
+<h2 id="이번-턴의-확장-요약-2">이번 턴의 확장 요약</h2>
+<p>누적 응답이 없으므로, 이후 모든 턴이 되돌아올 <strong>일반 런타임 참조 모델(canonical runtime reference model)</strong> 을 먼저 못박는다. 핵심 주장은 하나다: 어떤 런타임이든 <strong><code>(object model) + (state machine) + (scheduler) + (allocator) + (API/ABI surface)</code></strong> 의 5요소로 환원된다. 이 턴은 이 5요소를 정의하고, CUDA·Level Zero·JVM·Go·Tokio·Node.js·Linux·PJRT를 이 축 위에 얹은 비교 스켈레톤을 만들어 드리프트 방지의 기준선으로 삼는다.</p>
+<h2 id="새로-추가한-사실-2">새로 추가한 사실</h2>
+<ol><li><strong>&quot;런타임&quot;은 3의미가 겹쳐 쓰인다.</strong> ① 시점(runtime=실행 시각, compile time의 반대), ② 소프트웨어 실체(runtime system/library, 예: <code>cudart</code>, <code>libgo</code>, JVM), ③ 환경(runtime environment, 예: JRE). 이 루프에서 관심 대상은 ②다. Q1의 답은 &quot;언어/실행 모델이 <em>가정하지만 스스로 구현하지 않는</em> 서비스를, 프로그램이 도는 동안 공급하는 소프트웨어 계층&quot;이다.</li><li><strong>런타임의 공통 서비스 목록</strong>: 메모리 관리(할당·회수·GC), 실행 단위의 생성/스케줄/동기화, 하드웨어 자원 추상화(device/queue/buffer), 오류·예외·완료 신호, 동적 로딩/링킹, ABI/calling convention 지원, 메타데이터/리플렉션. 이 목록 자체가 Q2의 모듈 경계와 1:1로 대응한다.</li><li><strong>Linux 기본 스케줄러는 더 이상 CFS가 아니다.</strong> 커널 6.6(2023-10)부터 <strong>EEVDF(Earliest Eligible Virtual Deadline First)</strong> 가 기본이다. Q4/Q9에서 &quot;Linux scheduler=CFS&quot;라고 쓰면 최신 커널 기준으로 틀린다.</li><li><strong>CUDA Runtime API는 명시적 context를 노출하지 않는다.</strong> <code>cudart</code>는 지연 초기화되며 device마다 <strong>primary context</strong>를 자동 생성·공유한다. 명시적 <code>CUcontext</code>는 Driver API(<code>cuda</code>)에서만 다룬다. 즉 &quot;context 객체&quot;가 API 표면에서 <em>보이느냐</em>는 런타임마다 다르지만, 내부에 반드시 <em>존재</em>한다는 점이 Q8의 핵심.</li><li><strong>실행 단위(work item)의 상태 기계는 런타임 불문 거의 동형이다</strong>: <code>created → ready → running → (blocked/waiting) ⇄ ready → completed/failed/cancelled</code>. 이름만 다르다(Linux <code>TASK_RUNNING</code>, goroutine <code>_Grunnable/_Grunning</code>, CUDA stream op의 pending/executing).</li></ol>
+<h2 id="런타임-내부-구조로-환원-2">런타임 내부 구조로 환원</h2>
+<p>일반 런타임의 표준 객체 그래프(루트에서 잎으로):</p>
+<pre><code>Context / Instance (루트, &quot;세계&quot;)
+├── Device[] ................ 실행 자원의 추상 (CPU set / GPU / accelerator)
+├── Allocator / Heap ........ memory·buffer·handle 생성/회수
+├── Scheduler / RunQueue[] .. 어떤 work item을 언제/어디서 실행할지 결정
+├── Executor / Worker[] ..... 실제 실행 주체 (thread / stream / worker)
+├── WorkItem / Task[] ....... 실행 단위 객체 (상태 기계를 가진 노드)
+├── Event / Future[] ........ 완료·의존성 신호
+└── HandleTable ............. 위 객체들을 외부에 노출하는 불투명 핸들</code></pre>
+<p><strong>5요소 매핑</strong>: object model = {Context, Device, WorkItem, Event, Buffer}, state machine = WorkItem의 상태 전이, scheduler = RunQueue 정책, allocator = Heap/Allocator, API/ABI = HandleTable을 통한 진입점. Q2에 대한 답은 &quot;이 7개 모듈 + 초기화(init)/종료(teardown) 단계&quot;다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-2">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<ul><li><strong>생애주기(라이프사이클)</strong>: <code>init(부트스트랩·device discovery) → context 생성 → resource acquire → work submit → schedule → execute → event/completion → teardown(회수)</code>. Q6(&quot;빠져나가는 산출물&quot;)은 이 teardown 단계에서 <strong>exit status + 남긴 side effect(파일/버퍼/로그) + event 최종 상태</strong>로 정의된다.</li><li><strong>자원 소유 분할(Q7·Q8의 선긋기)</strong>:</li><li><em>런타임 소유</em>: Context, 논리 heap, RunQueue, worker pool, Event 객체, HandleTable.</li><li><em>OS kernel 위임</em>: 물리 페이지, 커널 스레드, CPU time-slice, futex/wait_queue.</li><li><em>device driver 위임</em>: device memory, 하드웨어 command queue, doorbell/MMIO, 인터럽트.</li><li>즉 런타임은 대개 <strong>논리 자원의 소유자이자 물리 자원의 임차인(lessee)</strong> 이다. 이 이중성이 이후 모든 비교의 축이 된다.</li></ul>
+<h2 id="다른-런타임과의-비교-2">다른 런타임과의 비교</h2>
+<div class="table-wrap"><table><thead><tr><th>개념</th><th>CUDA Runtime</th><th>Level Zero</th><th>JVM</th><th>Go</th><th>Tokio</th><th>Node.js</th><th>Linux</th><th>PJRT</th></tr></thead><tbody><tr><td>루트 context</td><td>primary context(암묵)</td><td><code>ze_context</code></td><td>JavaVM 인스턴스</td><td>runtime(G-M-P)</td><td><code>Runtime</code></td><td>process+libuv loop</td><td>(커널)</td><td><code>PJRT_Client</code></td></tr><tr><td>device</td><td><code>CUdevice</code></td><td><code>ze_device</code></td><td>— (JIT/GC)</td><td><code>P</code> (GOMAXPROCS)</td><td>worker set</td><td>1 loop + threadpool</td><td>CPU cores</td><td><code>PJRT_Device</code></td></tr><tr><td>work item</td><td>stream op / kernel</td><td>command list 항목</td><td>Thread/Runnable, 가상스레드</td><td>goroutine <code>G</code></td><td>task(Future)</td><td>callback/microtask</td><td><code>task_struct</code></td><td>executable exec</td></tr><tr><td>scheduler/queue</td><td>stream(순서큐)</td><td>command queue</td><td>OS 스레드+JIT</td><td>work-stealing(GRQ/LRQ)</td><td>멀티스레드 work-stealing</td><td>event loop phases</td><td>EEVDF runqueue</td><td>stream/executor</td></tr><tr><td>event/sync</td><td><code>cudaEvent_t</code></td><td><code>ze_event</code></td><td>monitor/Future</td><td>channel</td><td><code>Waker</code>/<code>Notify</code></td><td>Promise</td><td>futex</td><td><code>PJRT_Event</code></td></tr><tr><td>memory</td><td><code>cudaMalloc</code></td><td><code>zeMemAlloc*</code></td><td>heap(GC)</td><td>heap(GC)</td><td>—</td><td>V8 heap(GC)</td><td>page allocator</td><td><code>PJRT_Buffer</code></td></tr></tbody></table></div>
+<p>관찰: (a) <strong>event/future 객체는 예외 없이 존재</strong>한다 — 동기화는 런타임의 필수 모듈이다. (b) &quot;queue&quot;가 <em>순서 보장 채널</em>(CUDA stream)인지 <em>스케줄 큐</em>(EEVDF runqueue)인지 두 의미로 갈린다 — Q3/Q4에서 반드시 구분해야 함. (c) GC 유무가 allocator 모듈의 성격을 가른다(수동 회수 vs 자동 추적).</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>CUDA stream을 &quot;scheduler&quot;로 부르면 부정확</strong>하다. stream은 <em>순서(ordering) 채널</em>이고, 실제 SM 배정 스케줄링은 하드웨어 GPU 스케줄러가 한다. 표의 &quot;scheduler/queue&quot; 칸은 이 두 층을 묶은 근사임을 명시.</li><li><strong>Node.js의 병렬성 경계</strong>: JS 콜백은 단일 스레드 event loop에서 돌지만, <code>fs</code>/<code>dns</code>/<code>crypto</code>는 libuv threadpool(기본 4)로 오프로딩된다. &quot;Node=완전 싱글스레드&quot;는 과장 — worker_threads·threadpool 층을 다음 턴에서 분리 검증 필요.</li><li><strong>JVM 실행 단위 표현 갱신</strong>: JDK 21(2023)의 <strong>가상 스레드(Project Loom)</strong> 는 M:N 스케줄되는 별도 work item이다. &quot;JVM thread = OS thread 1:1&quot;은 platform thread에만 맞다. Q3에서 재확인 대상.</li><li><strong>EEVDF 전환 시점</strong>의 정확도(6.6 기본화)와, 배포판별 백포트 여부는 커널 문서로 교차확인 권장.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>OS runtime 심화(Q5·Q6·Q8)</strong>: Linux <code>task_struct</code>의 상태값(<code>TASK_RUNNING</code>/<code>TASK_INTERRUPTIBLE</code>/<code>TASK_UNINTERRUPTIBLE</code>/<code>__TASK_STOPPED</code>/<code>EXIT_ZOMBIE</code>)과 syscall→block→wakeup 경로, <code>exit_code</code>/reaping을 위 표준 상태기계에 매핑하고, &quot;런타임 소유 vs 커널 소유&quot; 선을 handle table 수준에서 구체화.</li><li><strong>accelerator runtime의 queue 이중성 해소(Q3·Q7)</strong>: CUDA stream/event 순서 의미론과 Level Zero의 command list↔command queue 분리를, &quot;순서 채널&quot;과 &quot;스케줄 큐&quot;라는 두 개념으로 나눠 정식화하고 completion/event가 상태기계에 거는 간선을 그린다.</li><li><strong>언어 런타임 work-stealing 비교(Q4·Q9)</strong>: Go(G-M-P, GRQ/LRQ, hand-off/steal)와 Tokio(멀티스레드 스틸러, <code>Waker</code> 기반 재적재)를 동일한 runqueue 모델로 환원해, 이후 Q10(PIM runtime scheduler) 설계의 후보 정책 목록을 만들 준비.</li></ol>
+<h2 id="현재-상태">현재 상태</h2>
+<ul><li>마지막 업데이트: 2026-07-11T16:35:24.490052+00:00</li><li>누적 턴 수: 1</li><li>중단 사유: 아직 실행 가능</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+  </script>
+</body>
+</html>

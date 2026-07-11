@@ -1,0 +1,14 @@
+{
+  "title": "Runtime 중심질문 재시작 루프",
+  "summary": "Claude와 Codex가 번갈아 자료를 확장하며 매 턴의 변화와 응답 누적을 저장하는 실제 실행 로그입니다.",
+  "type": "딥러닝",
+  "topic": "Runtime 중심질문 재시작 루프",
+  "scope": "# Runtime 중심질문 재시작 seed\n\n이 루프의 목표는 런타임을 넓게 조사하되, 항상 아래 중심질문으로 되돌아오는 것이다. 특정 하위 주제(PIM, DRAM, RowHammer, 특정 논문, 특정 API)에 오래 머무르지 않는다. 하위 주제는 중심질문을 설명하는 사례로만 사용한다.\n\n## 중심 질문\n\n1. 런타임이란 무엇인가?\n2. 런타임 내부는 어떤 모듈로 구성되는가?\n3. task, process, thread, fiber, coroutine, stream, command queue는 런타임 안에서 어떻게 표현되는가?\n4. 런타임은 task/process/work item을 어떤 정책으로 스케줄링하는가?\n5. 스케줄링 상태는 ready, running, blocked, waiting, completed, failed, cancelled 같은 상태로 어떻게 이동하는가?\n6. 프로그램이나 task는 어떤 상태와 산출물을 남기고 런타임을 빠져나가는가?\n7. 런타임은 CPU, G",
+  "tags": [
+    "Claude",
+    "Codex",
+    "runtime-study",
+    "deep-research-loop"
+  ],
+  "updated": "2026-07-11"
+}
