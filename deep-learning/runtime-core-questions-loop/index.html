@@ -326,6 +326,16 @@
 <a class="toc-level-2" href="#다른-런타임과의-비교-4">다른 런타임과의 비교</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-5">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-5-claude">Turn 5 / Claude</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-4">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-6">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-6">새로 추가한 사실</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-5">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-5">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-5">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-q10-pim-런타임-갱신">관련 맥락 / 배경 설명 — Q10 PIM 런타임 갱신</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-5">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-6">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -354,7 +364,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -575,8 +585,83 @@ completion object</code></pre>
 <ol><li><strong>PIM runtime Q10 초안을 시작하라.</strong></li></ol>
 <p><code>created → recorded → submitted → dependency_wait → device_pending → executing → writeback/visibility → completed/failed</code>로 두고, 각 상태가 host runtime, driver, PIM device 중 누구 소유인지 표로 분해한다.</p>
 <ol><li><strong>상태기계를 PIM에 맞게 좁혀라.</strong></li></ol>
+<h3 id="turn-5-claude">Turn 5 / Claude</h3>
+<h2 id="이번-턴이-답하는-중심질문-4">이번 턴이 답하는 중심질문</h2>
+<ul><li><strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다</li><li><strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 <strong>compiler를 일급 소유자로 승격</strong>시키고, 소유가 4~5층 스택으로 쌓인다</li><li><strong>Q9</strong> 공통 구조 — 모든 런타임을 <strong>&quot;스케줄링이 일어나는 위치(compile-time ↔ host runtime ↔ device HW)&quot;</strong> 라는 새 축 하나로 정렬</li><li>(보조) <strong>Q4</strong> 컴파일타임 스케줄 이동, <strong>Q7</strong> buffer donation/placement, <strong>Q10</strong> PIM 설계 갱신</li></ul>
+<h2 id="이번-턴의-확장-요약-6">이번 턴의 확장 요약</h2>
+<p>Turn 4의 <strong>accelerator device API(CUDA/Level Zero/OpenCL)</strong> 에서 한 층 위, <strong>ML compiler runtime(PJRT/OpenXLA)</strong> 로 이동한다(확장 순서 5번). 이 턴의 축은 두 가지다.</p>
+<ol><li><strong>PJRT는 device API가 아니라 framework↔compiler ABI 경계다.</strong> 즉 Turn 1 비교표가 PJRT를 CUDA와 같은 열에 나란히 둔 것은 <strong>추상화 레벨을 뭉갠 근사</strong>다. PJRT는 CUDA와 peer가 아니라 CUDA <em>위에</em> 얹히는 상위 계층(superstrate)이다.</li><li><strong>PJRT/XLA는 스케줄링의 큰 덩어리를 런타임에서 컴파일타임으로 옮긴다.</strong> op 순서, buffer 배치, fusion, collective overlap이 전부 XLA 컴파일 단계에서 결정되고, 런타임은 그 결과(thunk 시퀀스)를 <strong>재생(playback)</strong> 한다. 이 관찰이 Q4/Q9를 관통하는 새 축 — <strong>&quot;스케줄링은 어디에서 일어나는가&quot;</strong> — 을 만들고, 그 축의 극단에 PIM(Q10)을 놓는다.</li></ol>
+<h2 id="새로-추가한-사실-6">새로 추가한 사실</h2>
+<p>실제 계층은 이렇게 쌓인다. <code></code><code>text JAX / PyTorch-XLA / TF   (framework: 프로그램=StableHLO/MLIR 소유) │  PJRT C API (안정 ABI 경계) PJRT plugin (예: XLA:GPU)   (compiler+runtime 번들) │ XLA runtime (thunk sequence 실행) │ StreamExecutor (stream/event/memory 추상) │ CUDA / ROCm driver → GPU </code><code></code> Turn 4의 CUDA/Level Zero는 위 그림에서 <strong>아래 두 층</strong>에 해당한다. PJRT는 그 위에서 backend를 갈아끼우는(plugin) 계층이다.</p>
+<ol><li><strong>PJRT는 device API가 아니라 &quot;framework↔compiler ABI 경계&quot;다.</strong></li></ol>
+<p><code>PJRT_Api</code> 구조체(major/minor 버전 필드 포함)가 모든 진입점을 담고, 플러그인 <code>.so</code>는 <code>GetPjrtApi()</code> 엔트리 하나만 노출한다. framework는 이 심볼을 dlopen으로 얻는다. 즉 Turn 1이 언급만 하고 넘어간 <strong>&quot;동적 로딩/링킹 모듈&quot;과 &quot;opaque handle&quot;</strong> 이 여기서 ABI 안정성의 실체가 된다 — C 함수 포인터 테이블이라야 컴파일러·프레임워크·드라이버를 서로 다른 팀이 서로 다른 속도로 빌드해도 링크가 유지된다.</p>
+<ol><li><strong>PJRT의 API/ABI 표면은 &quot;버전드 함수 포인터 테이블&quot;이다.</strong></li></ol>
+<p><code>PJRT_LoadedExecutable_Execute</code>는 output <code>PJRT_Buffer</code> 핸들을 <strong>동기적으로 즉시</strong> 돌려주지만, 그 버퍼의 <strong>내용은 비동기로</strong> 유효해진다. 각 버퍼는 내부 <strong>definition event</strong>(≈ <code>PJRT_Buffer_ReadyEvent</code>)를 갖고, 실행 완료를 알리는 <code>device_complete_events</code>가 별도로 나온다. 정리하면 Q6의 산출물은: <code></code><code>text 즉시:   output buffer handle (아직 못 읽음) 비동기: definition event 시그널 → buffer contents 유효 비동기: device_complete_event → 실행 종료 비동기: async error (실행 중 오류는 event/consume 시점에 표출) </code><code></code> Turn 4의 &quot;완료는 세 층(device 완료 / driver 관측 / host 반환)&quot;이 PJRT에서는 <strong>핸들 반환과 내용 유효를 시간축에서 분리</strong>하는 방식으로 구체화된다.</p>
+<ol><li><strong>Execute의 산출물이 이중 시점을 갖는다(Q6 정밀화).</strong></li></ol>
+<p>실행 시 input buffer를 &quot;donate&quot;로 표시하면(<code>input_output_aliases</code>) 런타임은 그 메모리를 output으로 <strong>재사용</strong>하고, donate된 input 핸들은 <strong>무효화</strong>된다. 즉 buffer는 단순 메모리가 아니라 <strong>소유권과 생명주기를 가진 런타임 객체</strong>이며, 실행이 그 소유권을 소비할 수 있다. 이건 Rust <code>move</code> 시맨틱과 동형이고, PIM 설계에서 &quot;in-place 연산 시 입력 버퍼를 소비&quot;로 그대로 이어진다.</p>
+<ol><li><strong>Buffer donation은 allocator 차원의 소유권 이전이다(Q7·Q8).</strong></li></ol>
+<p>XLA는 컴파일 시 (a) HLO scheduling(피크 메모리 최소화 순서), (b) buffer assignment(liveness 기반 재사용), (c) fusion(op 병합), (d) collective/latency hiding(통신-계산 오버랩)을 결정하고, GPU backend는 이를 <strong>thunk 시퀀스</strong>(kernel launch·memcpy·collective의 순서화된 명령 목록)로 낮춘다. <strong>런타임은 이 시퀀스를 스트림에 재생할 뿐</strong>이다. 즉 PJRT의 &quot;work item&quot;은 개별 커널이 아니라 <strong>executable 실행 1회</strong>이고, 그 내부의 세밀한 스케줄은 이미 컴파일러가 소유·확정했다.</p>
+<ol><li><strong>XLA는 스케줄링을 컴파일타임으로 옮긴다(Q4의 축 이동).</strong></li></ol>
+<p>CUDA는 <code>CUstream</code>을 사용자에게 노출하지만, PJRT는 compute/h2d/d2h/collective 스트림을 <strong>플러그인 내부에 은닉</strong>한다. 사용자는 executable을 제출하고 event를 받을 뿐이다. Turn 4의 &quot;순서 채널(stream)&quot;이 PJRT 레벨에서는 사라지고 <strong>buffer/event 의존성 그래프</strong>로만 표현된다 — 순서화 객체를 어느 층까지 노출하느냐가 런타임마다 다르다는 Q8 명제의 또 다른 사례.</p>
+<ol><li><strong>PJRT는 stream을 감춘다.</strong></li></ol>
+<p>버퍼는 그냥 device가 아니라 <strong>memory space</strong>(device HBM / pinned host / unpinned host 등)에 거주한다. 이는 Turn 4에서 buffer를 &quot;placement + coherence + owner&quot;로 봐야 한다고 한 예고를 PJRT가 실제 타입으로 구현한 것 — PIM의 bank/subarray placement로 직결된다.</p>
+<ol><li><strong>PJRT_Memory(메모리 공간)가 별도 일급 객체다.</strong></li></ol>
+<h2 id="런타임-내부-구조로-환원-5">런타임 내부 구조로 환원</h2>
+<p>PJRT를 Turn 1의 5요소에 얹으면 <strong>&quot;스케줄러가 대부분 비어 있는(컴파일러로 옮겨간) 런타임&quot;</strong> 이 드러난다.</p>
+<div class="table-wrap"><table><thead><tr><th>5요소</th><th>PJRT/XLA에서의 형태</th></tr></thead><tbody><tr><td>object model</td><td><code>PJRT_Client</code>(루트), <code>PJRT_Device</code>, <code>PJRT_Memory</code>, <code>PJRT_Buffer</code>, <code>PJRT_Executable</code>/<code>LoadedExecutable</code>, <code>PJRT_Event</code>, <code>PJRT_Error</code></td></tr><tr><td>state machine</td><td>buffer 유효성(definition event) + execution 완료(complete event) + async error 표출</td></tr><tr><td><strong>scheduler</strong></td><td><strong>컴파일타임(XLA)이 대부분</strong> + host는 executable 디스패치 + device HW가 SM/engine 배정</td></tr><tr><td>allocator</td><td>client 소유 BFC(Best-Fit w/ Coalescing) 계열 할당자, buffer donation/aliasing, memory space별 풀</td></tr><tr><td>API/ABI</td><td>버전드 <code>PJRT_Api</code> 함수 포인터 테이블, opaque handle, <code>GetPjrtApi</code> 엔트리</td></tr></tbody></table></div>
+<p>즉 Q2의 &quot;scheduler 모듈&quot;은 PJRT에서 <strong>런타임 안에 거의 없다</strong>. 이것이 Go/Tokio(모든 스케줄이 런타임)와의 근본 대비다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-5">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p><strong>Buffer 상태 기계(PJRT의 핵심 상태는 task가 아니라 buffer다):</strong></p>
+<pre><code class="language-text">unallocated
+  → allocating           # memory space에서 backing 확보
+  → pending              # definition event 미시그널(내용 아직 무효)
+  → ready                # definition event 시그널, 내용 유효, host 읽기 가능
+  → donated              # 실행에 소비되어 핸들 무효화 (소유권 이전)
+  → deleted              # 명시 해제 / client teardown</code></pre>
+<p>Go/Tokio가 <strong>task 상태 기계</strong>, Linux가 <strong>task_struct 상태 기계</strong>였다면 ML compiler runtime의 1차 상태 기계는 <strong>data(buffer) 상태 기계</strong>다. 실행은 buffer를 pending→ready로 미는 간선일 뿐. 이 시점 이동이 Q3/Q5의 &quot;실행 단위&quot; 정의를 데이터 흐름 쪽으로 뒤집는다.</p>
+<p><strong>소유 스택(Q8 — compiler를 일급으로 승격):</strong></p>
+<div class="table-wrap"><table><thead><tr><th>상태/자원</th><th>framework</th><th>PJRT runtime</th><th><strong>compiler(XLA)</strong></th><th>driver/device</th></tr></thead><tbody><tr><td>프로그램(StableHLO/MLIR)</td><td>소유</td><td>전달</td><td>소비→executable</td><td>—</td></tr><tr><td>op 순서·fusion·buffer 배치</td><td>아니오</td><td>아니오</td><td><strong>소유(컴파일타임)</strong></td><td>아니오</td></tr><tr><td>executable(thunk seq)</td><td>참조</td><td>로드/관리</td><td><strong>생성</strong></td><td>실행</td></tr><tr><td>buffer handle</td><td>참조</td><td><strong>소유</strong></td><td>배치 결정</td><td>bytes backing</td></tr><tr><td>device 배정(SM/engine)</td><td>아니오</td><td>제한적</td><td>힌트</td><td><strong>소유</strong></td></tr><tr><td>event/완료</td><td>query</td><td><strong>소유</strong></td><td>—</td><td>signal</td></tr><tr><td>async error</td><td>관찰</td><td>전파</td><td>—</td><td>발생</td></tr></tbody></table></div>
+<p>Turn 2가 &quot;런타임 vs 커널&quot;, Turn 4가 &quot;런타임 vs driver&quot;를 그었다면, PJRT는 <strong>&quot;런타임 vs 컴파일러&quot;</strong> 라는 세 번째 경계를 강제로 드러낸다. Q8의 원문(&quot;compiler가 소유하는 상태&quot;)이 여기서 비로소 구체값 — <em>op 스케줄·buffer assignment·fusion 결정</em> — 을 얻는다.</p>
+<h2 id="다른-런타임과의-비교-5">다른 런타임과의 비교</h2>
+<p>이번 턴의 핵심 종합. <strong>스케줄링이 세 위치(컴파일타임 / 호스트 런타임 / 디바이스 HW) 중 어디에 얼마나 실리는가</strong>로 모든 런타임을 한 축에 정렬한다.</p>
+<div class="table-wrap"><table><thead><tr><th>런타임</th><th>컴파일타임 스케줄</th><th>호스트 런타임 스케줄</th><th>디바이스 HW 스케줄</th></tr></thead><tbody><tr><td>Go / Tokio</td><td>거의 없음</td><td><strong>전부</strong>(work-steal, 선점/coop)</td><td>(OS/HW에 위임)</td></tr><tr><td>Linux(EEVDF)</td><td>없음</td><td><strong>전부</strong>(lag/virtual deadline)</td><td>HW는 실행만</td></tr><tr><td>CUDA/L0</td><td>없음(수동 stream 배치)</td><td>제출 순서·event 의존성</td><td><strong>SM/engine 배정</strong></td></tr><tr><td><strong>PJRT/XLA</strong></td><td><strong>큼</strong>(op순서·buffer·fusion·collective)</td><td>executable 디스패치(얇음)</td><td>SM/engine 배정</td></tr><tr><td><strong>PIM(제안, Q10)</strong></td><td><strong>매우 큼</strong>(placement+command seq)</td><td>mode/refresh 회피·디스패치</td><td>fixed-function 실행(스케줄 여지 최소)</td></tr></tbody></table></div>
+<p>관찰: (a) 왼쪽(Go/Linux)에서 오른쪽(PIM)으로 갈수록 <strong>런타임의 scheduler 모듈이 얇아지고 컴파일러/HW로 무게가 옮겨간다.</strong> (b) 반대로 <strong>allocator·placement 모듈은 오른쪽으로 갈수록 무거워진다</strong>(unified→memory space→bank placement). (c) 이 두 경향의 교차점이 Q10 PIM 설계의 핵심 트레이드오프다: <strong>&quot;스케줄은 컴파일러에, 배치는 할당자에&quot;</strong>.</p>
+<h2 id="관련-맥락-배경-설명-q10-pim-런타임-갱신">관련 맥락 / 배경 설명 — Q10 PIM 런타임 갱신</h2>
+<p>위 축에서 PIM은 극우단이다. PIM 연산은 (i) 매우 미세립(원소 단위 add/mul/mac), (ii) <strong>데이터 배치에 종속</strong>(연산은 피연산자가 상주한 bank/subarray에서만 가능), (iii) 제어흐름/데이터 종속 분기가 빈약. 따라서 개별 op를 런타임에서 디스패치하면 오버헤드가 폭발하고, <strong>XLA처럼 컴파일타임에 명령 시퀀스로 낮추는 것이 사실상 필수</strong>다.</p>
+<p><strong>PIM 스타일이 둘로 갈린다는 점을 먼저 못박는다(object model이 여기서 분기):</strong></p>
+<div class="table-wrap"><table><thead><tr><th>스타일</th><th>예</th><th>PimKernel의 정체</th></tr></thead><tbody><tr><td>프로그래머블 near-bank 프로세서</td><td>UPMEM DPU</td><td>컴파일된 <strong>DPU 바이너리</strong>(IRAM/WRAM 보유), host가 MRAM에 명시 copy 후 launch, <strong>코히런스 없음</strong></td></tr><tr><td>고정기능 bank-level ALU</td><td>Samsung HBM-PIM, SK hynix AiM, LPDDR6-PIM류</td><td><strong>opcode 선택 + 피연산자 bank 레이아웃</strong>(임의 코드 아님)</td></tr></tbody></table></div>
+<p><strong>최소 PIM object model(Q10):</strong></p>
+<pre><code class="language-text">PimContext   # 루트: channel/rank 토폴로지, memory-mode 상태 소유
+├── PimDevice        # rank / bank-group 단위 실행 자원
+├── PimMemory        # bank/subarray 단위 placement 공간 (PJRT_Memory의 극단화)
+├── PimBuffer        # handle + placement(rank/bank/subarray) + coherence + owner
+├── PimKernel        # (프로그래머블) DPU 바이너리 / (고정기능) opcode+operand layout
+├── PimCommandSeq    # 컴파일타임 산출 스케줄 (XLA thunk의 PIM판)
+├── PimQueue         # in-order·비선점 순서 채널 (CUDA stream형; work-steal 아님)
+├── PimEvent         # 완료 + visibility 경계 (refresh/mode 전환 반영)
+└── PimAllocator     # bank 단위 placement-aware 할당자</code></pre>
+<p><strong>PIM 상태 기계(Turn 4 초안 + refresh/mode 상태 추가):</strong></p>
+<pre><code class="language-text">created
+  → recorded           # 컴파일: placement 확정, PimCommandSeq로 낮춤
+  → submitted          # PimQueue 제출
+  → placement_wait     # 피연산자가 대상 bank에 없으면 copy/재배치  [runtime+allocator 소유]
+  → mode_wait          # 채널을 PIM 모드로 전환, CPU 메모리 트래픽과 경합  [memory controller 소유]
+  → refresh_wait       # DRAM refresh 창(tREFI 주기)에 막힘         [device/컨트롤러 소유]  ← HW 유지보수 상태
+  → executing          # bank 내 PIM 유닛 실행                       [PIM device 소유]
+  → writeback          # 결과를 셀에 기록, coherence 규칙 하 host 가시화
+  → completed / failed / cancelled(제한적: mode reset/fault 단위)</code></pre>
+<p>핵심 신규 상태 두 개 — <code>mode_wait</code>(공유 데이터 버스/채널 모드 경합)와 <code>refresh_wait</code>(DRAM 유지보수) — 는 CPU/GPU 런타임에 없던 <strong>&quot;디바이스가 자기 유지보수 때문에 실행을 못 하는 대기&quot;</strong> 다. Turn 2가 Linux wait를 interruptible/uninterruptible/timeout으로 나눈 것처럼, PIM은 <strong>placement_wait / mode_wait / refresh_wait</strong>를 별도 대기로 둬야 스케줄러가 이들을 회피·배칭할 수 있다.</p>
+<p><strong>PIM 소유 경계(Q8):</strong></p>
+<div class="table-wrap"><table><thead><tr><th>상태/자원</th><th>app/compiler</th><th>PimRuntime</th><th>memory controller</th><th>PIM device</th></tr></thead><tbody><tr><td>command 시퀀스·placement</td><td><strong>compiler</strong></td><td>로드</td><td>—</td><td>실행</td></tr><tr><td>bank 배치·copy</td><td>요청</td><td><strong>소유</strong></td><td>경로 제공</td><td>셀 backing</td></tr><tr><td>memory-mode 전환</td><td>아니오</td><td>요청</td><td><strong>소유</strong></td><td>진입</td></tr><tr><td>refresh 창</td><td>아니오</td><td>회피 스케줄만</td><td><strong>소유</strong></td><td>강제됨</td></tr><tr><td>coherence/가시성</td><td>(UPMEM: 명시 copy)</td><td>규칙 집행</td><td>버스 조정</td><td>셀 write</td></tr></tbody></table></div>
+<p>PJRT/XLA에서 얻은 교훈이 그대로 이식된다: <strong>PIM 런타임의 scheduler 모듈은 얇게(디스패치 + mode/refresh 회피), 무게는 컴파일러(placement+command seq)와 placement-aware allocator로.</strong></p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-5">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>&quot;PJRT는 스케줄러가 없다&quot;는 과장이다.</strong> 정확히는 <em>세밀한(op 단위) 스케줄이 컴파일타임으로 옮겨졌다</em>는 것이고, executable 간 디스패치·multi-device SPMD 실행·collective 조율·async prefetch는 여전히 런타임이 한다. 표의 &quot;런타임 스케줄=얇음&quot;은 op 단위 기준의 근사임을 명시해야 한다.</li><li><strong>BFC 할당자·thunk·스트림 개수는 XLA:GPU backend 내부 구현</strong>이며 PJRT 규약이 아니다. 다른 플러그인(TPU, CPU, Apple 등)은 다른 할당자·실행기를 쓴다. &quot;PJRT=BFC/thunk&quot;로 등치하면 부정확 — 소스/버전 교차확인 필요.</li><li><strong>UPMEM은 &quot;고정기능 PIM&quot;이 아니다.</strong> UPMEM DPU는 범용 소형 프로세서라 PimKernel이 바이너리다. Samsung HBM-PIM/SK hynix AiM류(그리고 LPDDR6-PIM 계열)만 고정기능 opcode 모델이다. Q10에서 두 스타일을 뭉개면 object model이 틀어진다.</li><li><strong><code>mode_wait</code>/<code>refresh_wait</code>를 상태로 노출할지 여부는 설계 선택</strong>이다. HW가 이를 완전히 감추면(펌웨어가 refresh를 삽입) 런타임은 <code>device_pending</code> 하나로 관측할 수도 있다. &quot;런타임이 refresh를 스케줄한다&quot;고 단정하면 과설계 위험 — 관측 가능성부터 확인해야 한다.</li><li><strong>PJRT의 async error는 &quot;언제 표출되는가&quot;가 미묘하다.</strong> 실행 오류가 complete event에 실릴 수도, buffer를 host로 가져올 때(<code>ToHostBuffer</code>) 표출될 수도 있다. Q6에서 &quot;오류=즉시 반환&quot;으로 단순화하면 안 된다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-6">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>JVM/GC를 &quot;cleanup·teardown 모듈&quot;로 정식화하라(Q6·Q7).</strong> 지금까지 allocator를 Go(tracing GC)·Tokio(refcount)·PJRT(BFC+donation)·PIM(placement) 축으로만 봤다. JVM의 세대별 GC, safepoint, finalizer/<code>Cleaner</code>, JNI 전역참조 회수를 <strong>&quot;프로그램이 빠져나갈 때 런타임이 회수하는 상태&quot;</strong> 로 환원하고, PJRT의 buffer teardown·PIM의 bank 회수와 한 표에 놓아라. 특히 GC의 safepoint가 Turn 3의 Go 비동기 선점(safe-point)과 같은 메커니즘임을 연결하라.</li></ol>
+<ol><li><strong>multi-device / collective를 자원 소유 축으로 열어라(Q7·Q9).</strong> PJRT의 SPMD 실행(sharded buffer, device mesh, collective)과 CUDA의 NCCL/멀티스트림을 &quot;여러 실행 자원에 걸친 하나의 work item&quot;으로 모델링하고, 이를 PIM의 <strong>여러 bank/rank에 분산된 buffer + bank 간 데이터 이동(=collective의 PIM판)</strong> 으로 사상하라. 핵심 질문: PIM에서 bank 간 이동은 누가 소유하는가(host copy vs on-die interconnect).</li></ol>
+<ol><li><strong>&quot;스케줄 위치 축&quot;을 Q10 최종 설계 원칙으로 굳혀라(Q4·Q10).</strong> 이번 턴이 만든 <em>compile-time ↔ host runtime ↔ device HW</em> 축 위에서, PIM의 어떤 결정(placement, op 순서, mode 전환 타이밍, refresh 회피, in-place donation)을 각각 어느 위치에 배치할지 <strong>결정표</strong>를 만들어라. 그리고 이 배치가 PIM API 표면(무엇을 노출하고 무엇을 감출지 — PJRT가 stream을 감춘 것처럼)을 어떻게 결정하는지 도출하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T16:41:22.441803+00:00</li><li>누적 턴 수: 4</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T16:46:15.273803+00:00</li><li>누적 턴 수: 5</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
