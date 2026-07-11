@@ -433,12 +433,42 @@
 <a class="toc-level-2" href="#이번-턴의-확장-요약-17">이번 턴의 확장 요약</a>
 <a class="toc-level-2" href="#새로-추가한-사실-17">새로 추가한 사실</a>
 <a class="toc-level-2" href="#더-구체화한-부분-16">더 구체화한 부분</a>
-<a class="toc-level-3" href="#1-pim_runtime-h-통합-초안-이름-충돌-정리">1. `pim_runtime.h` 통합 초안 — 이름 충돌 정리</a>
-<a class="toc-level-3" href="#2-충돌-정책-시나리오-상태-전이표-turn-16-과제-2">2. 충돌 정책 × 시나리오 상태 전이표 (Turn 16 과제 2)</a>
-<a class="toc-level-3" href="#3-tensor-state-machine-command-visibility-future와의-결합-turn-16-과제-3">3. Tensor state machine — command/visibility future와의 결합 (Turn 16 과제 3)</a>
+<a class="toc-level-3" href="#turn-16-오류-수정-pim_completion_t-에-진단-필드가-실제로-빠져-있었다">Turn 16 오류 수정: `pim_completion_t`에 진단 필드가 실제로 빠져 있었다</a>
+<a class="toc-level-3" href="#admission-control에-우선순위-priority-inheritance-추가">Admission control에 우선순위·priority inheritance 추가</a>
+<a class="toc-level-3" href="#자원-회수-상태-머신-fence-gated-deallocation">자원 회수 상태 머신: fence-gated deallocation</a>
 <a class="toc-level-2" href="#관련-맥락-배경-설명-17">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-17">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-17">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-18-codex">Turn 18 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-18">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-18">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-17">더 구체화한 부분</a>
+<a class="toc-level-3" href="#pim_region-회수-상태-머신-보강">`pim_region` 회수 상태 머신 보강</a>
+<a class="toc-level-3" href="#priority-inheritance용-필드-확장">Priority inheritance용 필드 확장</a>
+<a class="toc-level-3" href="#conflict-policy별-상태-전이">Conflict policy별 상태 전이</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-18">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-18">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-18">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-17-claude-2">Turn 17 / Claude</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-19">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-19">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-18">더 구체화한 부분</a>
+<a class="toc-level-3" href="#1-pim_runtime-h-통합-초안-이름-충돌-정리">1. `pim_runtime.h` 통합 초안 — 이름 충돌 정리</a>
+<a class="toc-level-3" href="#2-충돌-정책-시나리오-상태-전이표-turn-16-과제-2">2. 충돌 정책 × 시나리오 상태 전이표 (Turn 16 과제 2)</a>
+<a class="toc-level-3" href="#3-tensor-state-machine-command-visibility-future와의-결합-turn-16-과제-3">3. Tensor state machine — command/visibility future와의 결합 (Turn 16 과제 3)</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-19">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-19">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-19">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-20-codex">Turn 20 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-20">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-20">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-19">더 구체화한 부분</a>
+<a class="toc-level-3" href="#pim_region_t-상태와-alias-필드">`pim_region_t` 상태와 alias 필드</a>
+<a class="toc-level-3" href="#donation-필드를-pim_submit_desc_t-에-추가">Donation 필드를 `pim_submit_desc_t`에 추가</a>
+<a class="toc-level-3" href="#donation과-conflict-policy의-상호작용">Donation과 conflict policy의 상호작용</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-20">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-20">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-20">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -458,7 +488,7 @@
 <h2 id="우선-확장-순서">우선 확장 순서</h2>
 <ol><li>Runtime의 일반 모델: init, context, scheduler, allocator, executor, event loop, error/completion.</li><li>OS runtime과 language runtime: Linux process scheduler, JVM, Go runtime, Tokio/Node.js event loop.</li><li>Accelerator runtime: CUDA Runtime/Driver, Level Zero, ROCm/HIP, OpenCL/SYCL.</li><li>ML compiler runtime: PJRT, XLA, StableHLO lowering, buffer/executable/event.</li><li>PIM runtime: UPMEM, HBM-PIM/LPDDR-PIM 후보, memory-side command, host synchronization.</li><li>설계 도출: LPDDR6-PIM runtime object model, state machine, scheduler, allocator, API 후보.</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 누적 자료가 없는 상태에서 5개 축(CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LPDDR6-PIM)에 대한 기초 골격을 구축했다. 각 런타임의 핵심 추상화 계층, 메모리/실행 모델, 상호 비교 지점을 정리하고, 특히 LPDDR6-PIM은 표준화 미완료 상태임을 명시했다. ## 새로</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 런타임을 “컨텍스트 소유권”, “명령 제출 경로”, “동기화/완료 통지”, “PIM용 메모리 속성” 관점으로 확장했다. 특히 이전 턴의 LPDDR6 상태 설명은 2026년 7월 기준 수정이 필요하다. LPDDR6 자체는 이미 JEDEC JESD209-6으로 공개되었다고 보도되어 있으나, “LPDDR6-PIM 런타임 표준”은 여전히 공개 표준으로 확인되</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 없어 이번 턴은 실시간 웹 검증 없이 진행한다. 대신 아직 다루지 않은 두 축 — (1) UPMEM tasklet 동기화 프리미티브의 구체 API, (2) seed의 핵심 질문 5번(ready/running/blocked/waiting/completed/failed/cancelled 상태 전이)을 여러 런타임에 걸쳐 통일된 상태표로 정리하는 작업 — 을 추가하고, 이</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 턴의 확인 필요 항목 중 두 논문을 원문 검색으로 대조했다. <code>UPMEM Unleashed</code>와 <code>PIM-SHERPA</code>는 실제 존재하며, 이전 턴의 큰 방향은 유지 가능하다. 다만 여기서 멈추지 않고, 런타임 상태 모델을 <strong>host thread 상태</strong>, <strong>runtime queue 상태</strong>, <strong>device/PIM 실행 상태</strong>, **memor</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 WebSearch/WebFetch 도구 사용 권한이 요청 시 거부되어, Turn 4가 남긴 원문 대조 과제(PIM-SHERPA의 DDB/OWR 단계, JESD209-6 세부 사양)를 다시 완료하지 못했다. 대신 Turn 4의 세 번째 확장 지점 — &quot;Go/Tokio/Node.js의 ready/wake 모델을 CUDA/Level Zero/PJRT eve</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 5의 “굵은 reset vs 가는 협조적 취소” 구분을 더 밀어붙여, <strong>reset의 blast radius</strong>, <strong>PIM-SHERPA의 DDB/OWR 흐름</strong>, <strong>LPDDR-PIM 런타임 API가 반드시 가져야 할 memory-state transition</strong>을 구체화한다. 핵심은 <code>cancel(task)</code>보다 `quiesce → dra</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번 턴에서도 거부되어, Turn 6이 요청한 Level Zero 원문 대조와 PIM-SHERPA 비용 모델 검증은 이번에도 완료하지 못했습니다. 대신 Turn 6이 명시적으로 요청한 LPDDR-PIM 에러 모델 설계를 완성하고, seed 질문 8(런타임 vs OS kernel/driver/compiler/framework의 상태 소유권 경계)이 지금까지 다뤄지지 않</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 Turn 7의 <code>drm_sched</code>/<code>dma_fence</code> 도입을 더 정밀하게 다룬다. 핵심 수정은 <strong><code>dma_fence</code>를 모든 CUDA/Level Zero/PJRT event의 보편적 하부 구현처럼 말하면 과도한 일반화</strong>라는 점이다. Linux DRM/오픈 GPU 드라이버 계층에서는 강력한 공통 동기화 객체지만, NVIDIA CUDA 독점</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(Turn 3, 5, 7에 이어 4번째), Level Zero 공식 spec 원문 대조와 <code>dma_resv</code> 원문 검증은 여전히 완료하지 못했다. 대신 지금까지 다뤄지지 않은 seed 질문 3번(&quot;task, process, thread, fiber, coroutine, stream, command queue는 런타임 안</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 9가 남긴 세 가지 축 중 두 가지를 실제 문서 기준으로 보강한다. 첫째, Level Zero의 <code>zeCommandListReset</code>, <code>zeCommandQueueSynchronize</code>, <code>zeFenceHostSynchronize</code>를 원문 헤더 기준으로 확인해 “reset은 실행 중 command 취소가 아니다”를 더 강하게 확정한다. 둘째,</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 권한이 이번에도 거부되어 UPMEM SDK 원문 확인은 이번에도 못했다. 다만 주목할 점은 Turn 8과 Turn 10(Codex)에서는 실제로 출처 링크를 인용한 것으로 보인다는 것이다 — 즉 이 세션은 &quot;웹 접근이 전면 차단&quot;된 것이 아니라, 에이전트/도구별로 권한이 비대칭적으로 부여되고 있을 가능성이 높다. 이는 Turn 9의 진단(&quot;세션 자</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 UPMEM 관련 가정을 일부 보정하고, LPDDR6-PIM 런타임 설계에 <strong>topology-aware scheduling</strong>과 <strong>region/sub-region reservation 정책</strong>을 붙인다. 핵심은 PIM 런타임이 GPU 런타임처럼 “큐에 커널을 넣는다”로 끝나지 않고, **rank/channel/bank/topology와</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(5회 연속 — Turn 3, 5, 7, 9, 13) UPMEM SDK 원문(<code>dpu_launch</code>/<code>dpu_sync</code> 시그니처) 검증은 이번에도 완료하지 못했다. 다만 Turn 11의 관찰(Turn 8·10에서는 실제로 출처가 인용됨)을 고려하면 이는 세션 전체 차단이 아니라 턴/에이전트별 권한 비대칭일 가능성이 크다</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 13의 gang scheduling/BSP 관점을 유지하되, 이를 <strong>PIM 런타임 객체 모델의 정책 필드</strong>로 끌어내린다. 핵심 보강은 두 가지다. 1. PIM launch 단위는 단순 <code>task</code>가 아니라 <code>gang</code>, <code>placement</code>, <code>partition</code>이 결합된 제출 단위로 봐야 한다. 2. host-side async runt</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(6회 연속 — Turn 3, 5, 7, 9, 13, 15) UPMEM SDK 원문 확인은 또다시 불발됐다. 대신 Turn 14가 남긴 세 과제 중 두 가지를 정면으로 다룬다. 첫째, <code>pim_future_t</code>를 command-completion/visibility-completion으로 분리하고 Linux의 실제 ex</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 fd/future 설계를 한 단계 더 정리한다. 핵심 보강은 두 가지다. 1. <code>sync_file</code>은 “PIM event fd”의 좋은 선례지만, 정확히는 <strong>dma-buf에 현재 붙어 있는 fence 집합의 snapshot fd</strong>이므로, PIM command 하나당 항상 1:1로 대응한다고 단정하면 안 된다. 2. <code>io_uring</code>식</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 누적 자료가 없는 상태에서 5개 축(CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LPDDR6-PIM)에 대한 기초 골격을 구축했다. 각 런타임의 핵심 추상화 계층, 메모리/실행 모델, 상호 비교 지점을 정리하고, 특히 LPDDR6-PIM은 표준화 미완료 상태임을 명시했다. ## 새로</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 런타임을 “컨텍스트 소유권”, “명령 제출 경로”, “동기화/완료 통지”, “PIM용 메모리 속성” 관점으로 확장했다. 특히 이전 턴의 LPDDR6 상태 설명은 2026년 7월 기준 수정이 필요하다. LPDDR6 자체는 이미 JEDEC JESD209-6으로 공개되었다고 보도되어 있으나, “LPDDR6-PIM 런타임 표준”은 여전히 공개 표준으로 확인되</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 없어 이번 턴은 실시간 웹 검증 없이 진행한다. 대신 아직 다루지 않은 두 축 — (1) UPMEM tasklet 동기화 프리미티브의 구체 API, (2) seed의 핵심 질문 5번(ready/running/blocked/waiting/completed/failed/cancelled 상태 전이)을 여러 런타임에 걸쳐 통일된 상태표로 정리하는 작업 — 을 추가하고, 이</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 턴의 확인 필요 항목 중 두 논문을 원문 검색으로 대조했다. <code>UPMEM Unleashed</code>와 <code>PIM-SHERPA</code>는 실제 존재하며, 이전 턴의 큰 방향은 유지 가능하다. 다만 여기서 멈추지 않고, 런타임 상태 모델을 <strong>host thread 상태</strong>, <strong>runtime queue 상태</strong>, <strong>device/PIM 실행 상태</strong>, **memor</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 WebSearch/WebFetch 도구 사용 권한이 요청 시 거부되어, Turn 4가 남긴 원문 대조 과제(PIM-SHERPA의 DDB/OWR 단계, JESD209-6 세부 사양)를 다시 완료하지 못했다. 대신 Turn 4의 세 번째 확장 지점 — &quot;Go/Tokio/Node.js의 ready/wake 모델을 CUDA/Level Zero/PJRT eve</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 5의 “굵은 reset vs 가는 협조적 취소” 구분을 더 밀어붙여, <strong>reset의 blast radius</strong>, <strong>PIM-SHERPA의 DDB/OWR 흐름</strong>, <strong>LPDDR-PIM 런타임 API가 반드시 가져야 할 memory-state transition</strong>을 구체화한다. 핵심은 <code>cancel(task)</code>보다 `quiesce → dra</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번 턴에서도 거부되어, Turn 6이 요청한 Level Zero 원문 대조와 PIM-SHERPA 비용 모델 검증은 이번에도 완료하지 못했습니다. 대신 Turn 6이 명시적으로 요청한 LPDDR-PIM 에러 모델 설계를 완성하고, seed 질문 8(런타임 vs OS kernel/driver/compiler/framework의 상태 소유권 경계)이 지금까지 다뤄지지 않</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 Turn 7의 <code>drm_sched</code>/<code>dma_fence</code> 도입을 더 정밀하게 다룬다. 핵심 수정은 <strong><code>dma_fence</code>를 모든 CUDA/Level Zero/PJRT event의 보편적 하부 구현처럼 말하면 과도한 일반화</strong>라는 점이다. Linux DRM/오픈 GPU 드라이버 계층에서는 강력한 공통 동기화 객체지만, NVIDIA CUDA 독점</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(Turn 3, 5, 7에 이어 4번째), Level Zero 공식 spec 원문 대조와 <code>dma_resv</code> 원문 검증은 여전히 완료하지 못했다. 대신 지금까지 다뤄지지 않은 seed 질문 3번(&quot;task, process, thread, fiber, coroutine, stream, command queue는 런타임 안</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 9가 남긴 세 가지 축 중 두 가지를 실제 문서 기준으로 보강한다. 첫째, Level Zero의 <code>zeCommandListReset</code>, <code>zeCommandQueueSynchronize</code>, <code>zeFenceHostSynchronize</code>를 원문 헤더 기준으로 확인해 “reset은 실행 중 command 취소가 아니다”를 더 강하게 확정한다. 둘째,</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 권한이 이번에도 거부되어 UPMEM SDK 원문 확인은 이번에도 못했다. 다만 주목할 점은 Turn 8과 Turn 10(Codex)에서는 실제로 출처 링크를 인용한 것으로 보인다는 것이다 — 즉 이 세션은 &quot;웹 접근이 전면 차단&quot;된 것이 아니라, 에이전트/도구별로 권한이 비대칭적으로 부여되고 있을 가능성이 높다. 이는 Turn 9의 진단(&quot;세션 자</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 UPMEM 관련 가정을 일부 보정하고, LPDDR6-PIM 런타임 설계에 <strong>topology-aware scheduling</strong>과 <strong>region/sub-region reservation 정책</strong>을 붙인다. 핵심은 PIM 런타임이 GPU 런타임처럼 “큐에 커널을 넣는다”로 끝나지 않고, **rank/channel/bank/topology와</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(5회 연속 — Turn 3, 5, 7, 9, 13) UPMEM SDK 원문(<code>dpu_launch</code>/<code>dpu_sync</code> 시그니처) 검증은 이번에도 완료하지 못했다. 다만 Turn 11의 관찰(Turn 8·10에서는 실제로 출처가 인용됨)을 고려하면 이는 세션 전체 차단이 아니라 턴/에이전트별 권한 비대칭일 가능성이 크다</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 13의 gang scheduling/BSP 관점을 유지하되, 이를 <strong>PIM 런타임 객체 모델의 정책 필드</strong>로 끌어내린다. 핵심 보강은 두 가지다. 1. PIM launch 단위는 단순 <code>task</code>가 아니라 <code>gang</code>, <code>placement</code>, <code>partition</code>이 결합된 제출 단위로 봐야 한다. 2. host-side async runt</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(6회 연속 — Turn 3, 5, 7, 9, 13, 15) UPMEM SDK 원문 확인은 또다시 불발됐다. 대신 Turn 14가 남긴 세 과제 중 두 가지를 정면으로 다룬다. 첫째, <code>pim_future_t</code>를 command-completion/visibility-completion으로 분리하고 Linux의 실제 ex</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 fd/future 설계를 한 단계 더 정리한다. 핵심 보강은 두 가지다. 1. <code>sync_file</code>은 “PIM event fd”의 좋은 선례지만, 정확히는 <strong>dma-buf에 현재 붙어 있는 fence 집합의 snapshot fd</strong>이므로, PIM command 하나당 항상 1:1로 대응한다고 단정하면 안 된다. 2. <code>io_uring</code>식</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 도구 사용을 시도했으나 이번에도 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17), UPMEM SDK 원문 및 io_uring 의존성 체이닝(<code>IORING_OP_LINK_TIMEOUT</code>) 확인 모두 이번에도 불발됐다. 이는 Turn 13/15가 제안한 대로 &quot;확인 시도를 반복하기보다 미확인 상태를 명시한 채 설계를 확정&quot;하</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 두 축을 이어받아 <strong>자원 회수</strong>와 <strong>우선순위 기반 admission control</strong>을 런타임 객체 모델 안으로 더 밀어 넣는다. 보정할 점도 있다. Turn 17은 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>의 stream-ordered free를 일반 지식으로만 설명했지만, NVIDIA CUDA Programmin</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 직전 내용의 <code>Aliased</code>/<code>Donated</code> 모델을 더 정리한다. 핵심 보강은 두 가지다. 1. <code>Aliased</code>는 상태가 아니라 <strong>물리 region을 공유하는 alias group 속성</strong>으로 모델링해야 한다. 2. donation은 단순 플래그가 아니라 <strong>핸들 무효화, alias 해제, conflict policy, completion 진단</strong></td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -1259,15 +1289,161 @@ typedef struct {
 <ol><li>command-completion future와 visibility-completion future를 ML framework 관점의 tensor state machine에 연결해 <code>DeviceDirty</code>, <code>PimDirty</code>, <code>HostVisible</code>, <code>Poisoned</code>, <code>Donated</code>, <code>Aliased</code> 상태를 확장한다.</li></ol>
 <h3 id="turn-17-claude">Turn 17 / Claude</h3>
 <h2 id="이번-턴의-확장-요약-17">이번 턴의 확장 요약</h2>
+<p>WebSearch 도구 사용을 시도했으나 이번에도 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17), UPMEM SDK 원문 및 io_uring 의존성 체이닝(<code>IORING_OP_LINK_TIMEOUT</code>) 확인 모두 이번에도 불발됐다. 이는 Turn 13/15가 제안한 대로 &quot;확인 시도를 반복하기보다 미확인 상태를 명시한 채 설계를 확정&quot;하는 방향으로 완전히 전환할 시점임을 재확인한다.</p>
+<p>대신 이번 턴은 지금까지 16개 턴에서 상대적으로 소홀했던 <strong>seed 질문 7번의 후반부(&quot;자원을 어떻게 회수하는가&quot;)</strong>를 정면으로 다룬다. 지금까지의 논의는 할당·예약·완료 통지에 집중되었고, &quot;완료된 자원을 언제 안전하게 재사용하는가&quot;는 거의 다뤄지지 않았다. 이를 CUDA의 stream-ordered memory allocator라는 구체적 선례로 메운다. 또한 Turn 16의 <code>pim_completion_t</code> 구조체에서 발견한 실제 불일치(diagnostic flag 누락)를 수정하고, gang 간 우선순위 충돌이라는 지금까지 다루지 않은 correctness 위험(priority inversion)을 admission control에 추가한다.</p>
+<h2 id="새로-추가한-사실-17">새로 추가한 사실</h2>
+<p><strong>CUDA stream-ordered memory allocator — &quot;언제 free해도 안전한가&quot;에 대한 실제 선례</strong></p>
+<ul><li>CUDA 11.2부터 도입된 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>는 메모리 할당·해제를 즉시 수행하지 않고 <strong>스트림의 실행 순서에 편입</strong>시킨다. <code>cudaFreeAsync(ptr, stream)</code>을 호출해도 메모리는 즉시 회수되지 않고, 해당 스트림 상에서 그 지점까지의 모든 선행 작업이 끝난 뒤에야 memory pool로 반환되어 재사용 가능해진다.</li><li>이는 GPU 드라이버가 내부적으로 memory pool과 stream-ordering 이벤트를 결합해 &quot;이 포인터를 가리키는 마지막 커널이 끝났다&quot;는 사실을 추적한다는 뜻이다 — 즉 free 자체가 하나의 fence-gated 연산이다.</li><li>이 패턴을 지금까지 설계해 온 <code>pim_region</code>/<code>pim_reservation</code>에 그대로 적용할 수 있다: <code>pim_free_region</code>을 즉시 free가 아니라 <strong>가장 최근에 그 region에 걸린 write reservation event가 signal될 때까지 지연되는 비동기 연산</strong>으로 설계하면, Turn 15~16의 <code>pim_future</code>/completion queue 인프라를 재활용해 별도의 메커니즘 없이 자원 회수를 구현할 수 있다.</li></ul>
+<p><strong>Priority inversion — gang 간 reservation 충돌에서 지금까지 빠져 있던 correctness 위험</strong></p>
+<ul><li>실시간 스케줄링 이론(Sha, Rajkumar, Lehoczky, 1990)의 priority inheritance protocol은, 낮은 우선순위 작업이 잠금을 쥐고 있을 때 높은 우선순위 작업이 그 잠금을 기다리며 무한정 밀리는 현상(priority inversion)을 막기 위해, 잠금을 쥔 낮은 우선순위 작업의 우선순위를 일시적으로 대기 중인 작업 수준까지 끌어올리는 방식이다. 이 문제는 1997년 Mars Pathfinder 소프트웨어 리셋 사고로 실제 시스템 장애 사례가 있다(일반적으로 알려진 사실, 원문 미재검증).</li><li>지금까지(Turn 14~16) admission control 표는 gang 간 write 충돌을 &quot;직렬화할 것인가/거부할 것인가&quot;만 다뤘고, <strong>우선순위</strong>는 전혀 고려하지 않았다. 그러나 LPDDR6-PIM처럼 여러 프레임워크 op이 같은 channel/bank를 두고 경쟁하는 환경에서, <code>PIM_CONFLICT_QUEUE_WAIT</code> 정책을 쓰면서 낮은 우선순위 gang이 먼저 큐에 들어가 bank를 오래 점유하면, 나중에 도착한 높은 우선순위 gang(예: 지연에 민감한 inference 요청)이 무한정 대기하는 고전적 priority inversion이 그대로 재현된다.</li></ul>
+<h2 id="더-구체화한-부분-16">더 구체화한 부분</h2>
+<h3 id="turn-16-오류-수정-pim_completion_t-에-진단-필드가-실제로-빠져-있었다">Turn 16 오류 수정: <code>pim_completion_t</code>에 진단 필드가 실제로 빠져 있었다</h3>
+<p>Turn 16은 &quot;자동 직렬화를 쓸 때 completion에 <code>PIM_CQE_SERIALIZED_CONFLICT</code> 같은 diagnostic flag를 남기는 편이 좋다&quot;고 서술했지만, 정작 <code>pim_cqe_kind_t</code> enum과 <code>pim_completion_t</code> 구조체 어디에도 그런 필드나 값이 존재하지 않는다. 이는 텍스트 제안과 실제 타입 정의가 어긋난 사례다. 이를 바로잡고, 우선순위 정보까지 함께 반영한다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_CQE_COMMAND_COMPLETE,
+  PIM_CQE_VISIBILITY_COMPLETE,
+  PIM_CQE_REJECTED_NOT_READY,
+  PIM_CQE_REJECTED_ERROR,
+  PIM_CQE_TIMEOUT,
+  PIM_CQE_RESET_COMPLETE,
+  PIM_CQE_SERIALIZED_CONFLICT   // Turn 16이 언급했으나 struct에 누락되어 있었음
+} pim_cqe_kind_t;
+
+typedef struct {
+  uint64_t user_data;
+  pim_task_t *task;
+  pim_event_t *event;
+  pim_cqe_kind_t kind;
+  int result;
+  uint32_t completed_participants;
+  uint32_t rejected_participants;
+  pim_region_t *region;
+  size_t offset;
+  size_t length;
+  bool priority_boosted;        // 신규: priority inheritance 발동 여부
+  uint32_t held_by_priority;    // 신규: 충돌을 유발한 gang의 원래 우선순위
+} pim_completion_t;</code></pre>
+<h3 id="admission-control에-우선순위-priority-inheritance-추가">Admission control에 우선순위·priority inheritance 추가</h3>
+<p>Turn 15의 admission-control 표에 우선순위 축을 더한다.</p>
+<div class="table-wrap"><table><thead><tr><th>시나리오</th><th>제출 gang 우선순위</th><th>점유 중인 gang 우선순위</th><th>정책</th><th>판정</th></tr></thead><tbody><tr><td>동일 우선순위 충돌</td><td>P</td><td>P</td><td><code>QUEUE_WAIT</code></td><td>FIFO 순서로 hold</td></tr><tr><td>낮은 우선순위가 먼저 점유, 높은 우선순위가 대기</td><td>High</td><td>Low</td><td><code>QUEUE_WAIT</code> + priority inheritance 없음</td><td>Low gang이 끝날 때까지 대기(inversion 위험)</td></tr><tr><td>낮은 우선순위가 먼저 점유, 높은 우선순위가 대기</td><td>High</td><td>Low</td><td><code>QUEUE_WAIT</code> + priority inheritance 적용</td><td>점유 중인 Low gang의 실행 우선순위를 일시적으로 High로 격상, 빠르게 반납하도록 유도</td></tr><tr><td>중간 우선순위 gang이 무관한 자원으로 계속 스케줄됨</td><td>High(대기 중)</td><td>Low(점유)</td><td>중간 우선순위 gang들이 스케줄러를 계속 점유</td><td>고전적 priority inversion — Mars Pathfinder 패턴</td></tr></tbody></table></div>
+<p>이 표가 시사하는 것은, <code>PIM_CONFLICT_QUEUE_WAIT</code>를 기본으로 채택하려면 반드시 priority inheritance(또는 최소한 priority ceiling)를 함께 구현해야 한다는 점이다 — 그렇지 않으면 Turn 16이 제안한 &quot;편의성 높은&quot; 정책이 실시간성이 중요한 워크로드(예: latency-sensitive inference)에서 오히려 예측 불가능한 지연을 유발할 수 있다.</p>
+<h3 id="자원-회수-상태-머신-fence-gated-deallocation">자원 회수 상태 머신: fence-gated deallocation</h3>
+<p>Turn 12~16에서 <code>pim_region</code>의 allocation/reservation/visibility 상태는 다뤘지만, &quot;언제 물리 메모리가 실제로 회수되어 다른 텐서에 재할당 가능해지는가&quot;는 명시된 적이 없다. CUDA stream-ordered allocator 패턴을 적용해 다음 상태 머신을 추가한다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태</th><th>진입 조건</th><th>탈출 조건</th></tr></thead><tbody><tr><td><code>Allocated</code></td><td><code>pim_alloc_region()</code> 성공</td><td><code>pim_free_region_async()</code> 호출</td></tr><tr><td><code>PendingFree</code></td><td>free 요청됨, 아직 마지막 참조 event 미완료</td><td>해당 region에 걸린 모든 outstanding read/write event가 signal</td></tr><tr><td><code>Quarantined</code></td><td>모든 event 완료, 즉시 재사용은 하지 않고 한 epoch 유예</td><td>epoch reclamation 주기 경과(RCU 유사 패턴)</td></tr><tr><td><code>Free(poolable)</code></td><td>quarantine 종료</td><td>다음 <code>pim_alloc_region()</code> 요청과 매칭되어 재사용, 또는 실제 하드웨어 반환</td></tr></tbody></table></div>
+<pre><code class="language-c">pim_future_t pim_free_region_async(pim_region_t *region);</code></pre>
+<p><code>Quarantined</code> 단계를 두는 이유는, PIM 컨트롤러가 completion 신호를 보냈더라도 물리적으로 진행 중인 write-back이나 캐시 라인 flush가 완전히 끝나지 않았을 가능성(Turn 16의 &quot;event ready ≠ visibility ready&quot;와 동일한 문제의식)을 한 박자 늦춰 흡수하기 위함이다. 이는 Rust의 <code>crossbeam::epoch</code>이나 Linux RCU의 grace period와 구조적으로 같은 아이디어다.</p>
+<h2 id="관련-맥락-배경-설명-17">관련 맥락 / 배경 설명</h2>
+<p>JVM과 Go 같은 &quot;독립 스레드&quot; 런타임도 사실은 완전히 독립적이지 않다는 점이 이번 턴에서 드러난 함의다. GC의 stop-the-world 단계는 모든 mutator 스레드가 <strong>safepoint</strong>(GC가 스레드 상태를 안전하게 스캔할 수 있는 지점)에 도달할 때까지 기다린 뒤 동시에 정지시키는 구조다. 이는 Turn 13이 정리한 &quot;독립적 실행 단위 = 공정성 기반 스케줄링&quot; 축과 모순되는 것이 아니라, <strong>평소에는 독립적으로 스케줄되던 실행 단위도 특정 전역 이벤트(GC, checkpoint, barrier) 순간에는 일시적으로 gang scheduling과 유사한 전원-정지(all-stop) 모드로 전환된다</strong>는 것을 보여준다. 즉 &quot;독립 스케줄링 vs gang scheduling&quot;은 런타임 종류에 따라 고정된 이분법이 아니라, 같은 런타임 안에서도 국면(phase)에 따라 전환될 수 있는 스펙트럼이다. LPDDR6-PIM 런타임에도 이 통찰이 적용된다 — 평소에는 channel/rank별로 독립 스케줄링하다가, 전역 topology 재구성이나 firmware 업데이트 같은 드문 이벤트에서는 전체 시스템이 safepoint에 도달할 때까지 기다린 뒤 정지시키는 별도 모드가 필요할 수 있다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-17">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li>CUDA stream-ordered allocator(<code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>, memory pool)의 도입 버전(11.2)과 정확한 내부 동작(pool 간 메모리 이전, <code>cudaMemPoolTrimTo</code> 같은 API)은 일반적으로 알려진 지식에 기반하며, 이번 턴에도 공식 문서로 재검증하지 못했다.</li><li>Mars Pathfinder priority inversion 사고 서술은 소프트웨어 공학계에 널리 알려진 사례이지만, 세부 경위(정확히 어떤 우선순위 값이 충돌했는지)는 이번 턴에서 1차 자료로 확인하지 않았다 — 개념 설명을 위한 예시로만 사용해야 한다.</li><li><code>Quarantined</code> 상태(epoch reclamation)의 유예 기간을 어떻게 결정할지(고정 시간 vs 다음 alloc 요청 시점까지 lazy하게 미루는 방식)는 이번 턴에서 설계하지 않았다 — 실제 RCU/crossbeam 구현은 이 부분에 상당한 복잡도가 있다.</li><li>priority inheritance를 PIM 하드웨어 스케줄러 레벨(engine이 실제로 실행 순서를 바꿀 수 있는가)까지 내릴 수 있는지, 아니면 host-side runtime의 큐 재정렬로만 흉내낼 수 있는지는 하드웨어 세부사항에 의존하며 미확인이다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-17">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><code>pim_free_region_async</code>의 <code>Quarantined</code> 유예 기간 정책(고정 timeout vs lazy reclamation vs 명시적 <code>pim_epoch_advance()</code> API)을 구체적으로 설계하고, 이를 Turn 16의 completion queue 모델과 연결한다.</li><li>priority inheritance를 <code>pim_gang_desc_t</code>에 우선순위 필드로 명시하고, <code>PIM_CONFLICT_QUEUE_WAIT</code> 정책 하에서 실제로 우선순위를 격상시키는 스케줄러 알고리즘(priority ceiling protocol 방식 채택 여부 포함)을 정리한다.</li><li>GC safepoint류의 &quot;국면별 all-stop 전환&quot; 개념을 <code>pim_context</code>의 전역 상태(정상 운영 vs topology 재구성/firmware 업데이트 모드)로 명시적 상태 머신에 추가하고, 이 모드 전환이 진행 중인 gang/reservation에 어떤 영향을 주는지 정의한다.</li></ol>
+<h3 id="turn-18-codex">Turn 18 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-18">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 17의 두 축을 이어받아 <strong>자원 회수</strong>와 <strong>우선순위 기반 admission control</strong>을 런타임 객체 모델 안으로 더 밀어 넣는다. 보정할 점도 있다. Turn 17은 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>의 stream-ordered free를 일반 지식으로만 설명했지만, NVIDIA CUDA Programming Guide v13.3 기준 문서에서 실제로 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>가 stream argument를 받아 allocation/deallocation의 유효 시점을 스트림 순서에 묶는다고 확인된다. 출처: <a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/stream-ordered-memory-allocation.html" target="_blank" rel="noopener noreferrer">NVIDIA CUDA Stream-Ordered Memory Allocator</a></p>
+<p>이번 확장의 핵심은 <code>free</code>를 단순 API 호출이 아니라 <strong>reservation/event/future에 의해 지연되는 런타임 작업</strong>으로 모델링해야 한다는 점이다. 또한 priority inheritance는 단순히 <code>priority_boosted</code> 플래그 하나로 끝나지 않고, reservation wait graph와 scheduler queue ordering을 함께 바꾸는 정책이어야 한다.</p>
+<h2 id="새로-추가한-사실-18">새로 추가한 사실</h2>
+<p><strong>CUDA stream-ordered allocator는 pool, stream, access ordering을 함께 다룬다</strong></p>
+<p>CUDA 문서는 stream-ordered allocator가 기존 <code>cudaMalloc</code>/<code>cudaFree</code>의 전역 동기화 부담을 줄이고, allocation/free를 stream 내 다른 작업과 순서화한다고 설명한다. <code>cudaFreeAsync()</code>는 host나 다른 stream을 block하지 않고, 사용자는 free가 allocation 및 모든 memory access 뒤에 오도록 event/stream synchronization을 보장해야 한다. 출처: <a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/stream-ordered-memory-allocation.html" target="_blank" rel="noopener noreferrer">CUDA Programming Guide, Stream-Ordered Memory Allocator</a></p>
+<p>PIM에 주는 의미는 명확하다.</p>
+<div class="table-wrap"><table><thead><tr><th>CUDA 개념</th><th>PIM 대응</th></tr></thead><tbody><tr><td>stream-ordered allocation/free</td><td>queue/reservation-ordered region allocation/free</td></tr><tr><td>cuda event로 cross-stream access 보장</td><td><code>pim_event</code>/<code>pim_future</code>로 cross-gang access 보장</td></tr><tr><td>memory pool</td><td>topology-aware <code>pim_region_pool</code></td></tr><tr><td>pool access control</td><td>channel/rank/bank/host visibility access mask</td></tr></tbody></table></div>
+<p>즉 <code>pim_free_region_async()</code>는 단순히 refcount가 0인지 보는 API가 아니라, 해당 region에 걸린 마지막 write/read reservation, visibility transform, imported alias까지 기다리는 <strong>fence-gated reclamation</strong> API가 되어야 한다.</p>
+<p><strong>RCU는 Turn 17의 <code>Quarantined</code> 상태를 설명하는 더 정확한 선례다</strong></p>
+<p>Linux RCU 문서는 update를 “removal”과 “reclamation”으로 나누고, 제거된 객체를 실제로 해제하기 전에 기존 reader가 모두 끝날 때까지 기다린다고 설명한다. <code>synchronize_rcu()</code>는 기존 read-side critical section 완료를 기다리고, <code>call_rcu()</code>는 그 이후 callback을 실행하는 비동기 방식이다. 출처: <a href="https://docs.kernel.org/RCU/whatisRCU.html" target="_blank" rel="noopener noreferrer">Linux Kernel RCU documentation</a></p>
+<p>PIM 런타임의 <code>Quarantined</code>는 “completion을 한 번 더 기다리는 막연한 유예”라기보다 다음처럼 정의하는 편이 정확하다.</p>
+<pre><code class="language-text">Remove:
+  region을 allocator의 active set에서 제거
+  새 submit이 해당 region을 참조하지 못하게 막음
+
+Grace:
+  이미 제출된 gang, imported alias, host-visible future가 모두 종료될 때까지 대기
+
+Reclaim:
+  region을 pool free-list로 반환하거나 OS/driver에 실제 반환</code></pre>
+<p><strong>Linux rt-mutex는 priority inheritance가 wait graph 문제임을 보여준다</strong></p>
+<p>Linux RT-mutex 문서는 priority inversion을 “낮은 우선순위 owner가 가진 lock 때문에 높은 우선순위 task가 무기한 막히는 상황”으로 설명하고, priority inheritance는 owner가 waiter의 우선순위를 상속받는 방식이라고 설명한다. 또한 PI chain은 lock과 task가 이어진 ordered chain이다. 출처: <a href="https://docs.kernel.org/locking/rt-mutex-design.html" target="_blank" rel="noopener noreferrer">Linux RT-mutex implementation design</a></p>
+<p>PIM에서 reservation 충돌도 사실상 lock 충돌이다. 따라서 priority inheritance는 <code>gang.priority</code> 하나만 바꾸는 것이 아니라 다음 그래프를 갱신해야 한다.</p>
+<pre><code class="language-text">High-priority gang
+  waits on reservation R(bank/subrange)
+    held by Low-priority gang
+      waits on reservation S
+        held by another gang</code></pre>
+<p>이 경우 boost는 직접 owner 하나에만 적용하면 부족하고, PI chain을 따라 전파되어야 한다.</p>
+<h2 id="더-구체화한-부분-17">더 구체화한 부분</h2>
+<h3 id="pim_region-회수-상태-머신-보강"><code>pim_region</code> 회수 상태 머신 보강</h3>
+<p>Turn 17의 <code>Allocated -&gt; PendingFree -&gt; Quarantined -&gt; Free</code>를 다음처럼 더 세분화한다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태</th><th>의미</th><th>submit 허용</th><th>allocator 재사용</th></tr></thead><tbody><tr><td><code>Allocated</code></td><td>정상 사용 가능</td><td>허용</td><td>불가</td></tr><tr><td><code>FreeRequested</code></td><td>사용자가 free 요청, 새 참조 차단</td><td>불가</td><td>불가</td></tr><tr><td><code>DrainingReservations</code></td><td>기존 read/write reservation 완료 대기</td><td>불가</td><td>불가</td></tr><tr><td><code>VisibilityClosing</code></td><td>host/device/PIM visibility fence 정리</td><td>불가</td><td>불가</td></tr><tr><td><code>Quarantined</code></td><td>alias/imported handle/late completion grace period</td><td>불가</td><td>불가</td></tr><tr><td><code>Poolable</code></td><td>pool 내부 재사용 가능</td><td>새 allocation으로 가능</td><td>가능</td></tr><tr><td><code>Released</code></td><td>driver/OS/hardware에 반환</td><td>불가</td><td>불가</td></tr></tbody></table></div>
+<p>API는 다음 정도가 최소다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_RECLAIM_LAZY,
+  PIM_RECLAIM_EPOCH,
+  PIM_RECLAIM_IMMEDIATE_AFTER_FENCES
+} pim_reclaim_policy_t;
+
+typedef struct {
+  pim_reclaim_policy_t policy;
+  uint64_t min_epoch;
+  bool require_host_visibility_close;
+  bool release_to_os;
+} pim_free_desc_t;
+
+pim_future_t pim_free_region_async(
+  pim_region_t *region,
+  const pim_free_desc_t *desc
+);</code></pre>
+<p><code>PIM_RECLAIM_IMMEDIATE_AFTER_FENCES</code>는 이름과 달리 물리적으로 즉시 free를 보장하지 않는다. 의미는 “런타임이 아는 fence가 모두 끝나면 즉시 poolable로 이동”이다. 하드웨어 writeback이나 driver 내부 deferred free는 여전히 남을 수 있다.</p>
+<h3 id="priority-inheritance용-필드-확장">Priority inheritance용 필드 확장</h3>
+<p>Turn 17의 <code>priority_boosted</code>는 completion 진단에는 유용하지만, 스케줄러 입력에는 부족하다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_PRIORITY_NORMAL,
+  PIM_PRIORITY_LATENCY,
+  PIM_PRIORITY_BACKGROUND,
+  PIM_PRIORITY_REALTIME
+} pim_priority_class_t;
+
+typedef struct {
+  pim_gang_scope_t scope;
+  pim_placement_t placement;
+  uint32_t participant_mask;
+  bool allow_partial;
+
+  pim_priority_class_t priority_class;
+  uint32_t base_priority;
+  uint32_t effective_priority;
+  bool allow_priority_inheritance;
+} pim_gang_desc_t;</code></pre>
+<p>scheduler는 admission 시 다음을 수행한다.</p>
+<pre><code class="language-text">if conflict_policy == QUEUE_WAIT:
+  build wait edge: waiting_gang -&gt; owning_gang
+  if waiting priority &gt; owner effective priority:
+    boost owner effective priority
+    propagate boost along PI chain
+  schedule runnable gangs by effective_priority, then FIFO/order</code></pre>
+<h3 id="conflict-policy별-상태-전이">Conflict policy별 상태 전이</h3>
+<div class="table-wrap"><table><thead><tr><th>정책</th><th>WAW conflict 발생</th><th>상태 전이</th><th>장점</th><th>위험</th></tr></thead><tbody><tr><td><code>PIM_CONFLICT_REJECT</code></td><td>즉시 반환</td><td><code>Submitted -&gt; RejectedNotReady</code></td><td>병목이 명시적</td><td>호출자가 retry/backoff 필요</td></tr><tr><td><code>PIM_CONFLICT_QUEUE_WAIT</code></td><td>queue에서 대기</td><td><code>Submitted -&gt; WaitingReservation -&gt; Executing</code></td><td>사용 편함</td><td>PI 없으면 priority inversion</td></tr><tr><td><code>PIM_CONFLICT_AUTO_DEPEND</code></td><td>앞선 event를 deps에 삽입</td><td><code>Submitted -&gt; BlockedOnEvent -&gt; Ready -&gt; Executing</code></td><td>graph runtime에 적합</td><td>silent serialization</td></tr><tr><td><code>PIM_CONFLICT_PREEMPT_LOW</code></td><td>낮은 우선순위 gang 중단 시도</td><td><code>Running -&gt; PreemptRequested -&gt; Cancelled/Checkpointed</code></td><td>latency 개선 가능</td><td>PIM command가 preemptible해야 함</td></tr></tbody></table></div>
+<p>마지막 <code>PREEMPT_LOW</code>는 1차 API에는 넣기 위험하다. 많은 PIM command는 중간 preemption/checkpoint가 불가능할 수 있으므로, 기본 설계는 priority inheritance와 admission reordering까지로 제한하는 편이 안전하다.</p>
+<h2 id="관련-맥락-배경-설명-18">관련 맥락 / 배경 설명</h2>
+<p>지금까지의 PIM runtime 설계는 “실행 제출” 중심이었지만, 실제 런타임의 안정성은 <strong>teardown path</strong>에서 갈린다. GPU, OS kernel, async runtime 모두 빠른 path보다 free/cancel/error/reset path가 더 어렵다.</p>
+<p>PIM에서는 특히 다음 네 상태가 서로 다르다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태</th><th>의미</th></tr></thead><tbody><tr><td>command complete</td><td>PIM engine이 명령 실행을 끝냄</td></tr><tr><td>reservation released</td><td>scheduler가 해당 region/subrange를 다른 gang에 줄 수 있음</td></tr><tr><td>visibility closed</td><td>host/framework가 올바른 layout/coherency 상태로 볼 수 있음</td></tr><tr><td>memory reclaimable</td><td>allocator가 같은 물리 영역을 다른 tensor/region에 재사용 가능</td></tr></tbody></table></div>
+<p>따라서 <code>event ready</code>만 보고 region을 free하면 use-after-free나 stale visibility가 생길 수 있다. 반대로 너무 보수적으로 region-level global fence만 쓰면 bank-level 병렬성이 사라진다. 좋은 PIM 런타임은 이 둘 사이에서 <code>reservation scope</code>, <code>visibility scope</code>, <code>reclaim policy</code>를 분리해야 한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-18">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li>Turn 17의 CUDA 설명은 방향은 맞지만, “free가 마지막 커널 완료 뒤 자동으로 안전하다”라고 단순화하면 안 된다. CUDA 문서상 cross-stream access는 사용자가 event/stream synchronization으로 free 이전에 완료되도록 보장해야 한다.</li><li><code>Quarantined</code>를 고정 timeout으로 구현하는 것은 근거가 약하다. RCU식 epoch/grace period나 explicit fence set 기반으로 정의하는 편이 더 정확하다.</li><li>priority inheritance는 host scheduler queue에는 적용 가능하지만, 이미 PIM engine에서 실행 중인 gang의 실제 실행 속도를 높일 수 있는지는 하드웨어 의존적이다.</li><li><code>PIM_CONFLICT_AUTO_DEPEND</code>는 correctness에는 편하지만, ML graph runtime에서 예상보다 긴 tail latency를 만들 수 있다. completion에 serialization reason과 wait duration을 반드시 남겨야 한다.</li><li>imported/shared region이 있는 경우 exporting process의 free와 importing process의 free 순서를 어떻게 보장할지 별도 IPC fence 규칙이 필요하다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-18">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><code>pim_region_pool</code>을 별도 객체로 도입하고, pool의 topology locality, NUMA locality, release threshold, fragmentation metric, IPC/export 가능 여부를 표로 정리한다.</li></ol>
+<ol><li><code>pim_submit_desc_t</code>, <code>pim_gang_desc_t</code>, <code>pim_free_desc_t</code>, <code>pim_completion_t</code>를 통합한 <code>pim_runtime.h</code> 초안을 작성해 이름 충돌과 lifetime 규칙을 한 번에 검토한다.</li></ol>
+<ol><li>shared/imported PIM region의 teardown 프로토콜을 설계한다. exporting context, importing context, region alias, IPC fence, visibility close, final reclaim 순서를 상태 머신으로 확장한다.</li></ol>
+<h3 id="turn-17-claude-2">Turn 17 / Claude</h3>
+<h2 id="이번-턴의-확장-요약-19">이번 턴의 확장 요약</h2>
 <p>이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한 문제로 보이며, 이번 턴은 PJRT/XLA 구조에 대한 <strong>일반적으로 알려진 아키텍처 지식</strong>(미검증 표시)에 기반해 서술한다.</p>
 <p>이번 턴은 Turn 16이 남긴 세 과제를 모두 다룬다.</p>
 <ol><li>지금까지 13개 턴에 걸쳐 산발적으로 정의된 구조체들을 <code>pim_runtime.h</code> 초안으로 통합하고, 그 과정에서 발견된 <strong>이름 충돌/중복 정의</strong>를 바로잡는다.</li><li><code>PIM_CONFLICT_REJECT</code> / <code>QUEUE_WAIT</code> / <code>AUTO_DEPEND</code> 3개 정책 × 4개 시나리오의 상태 전이표를 완성한다.</li><li>command-completion/visibility-completion future를 ML framework의 tensor state machine(<code>DeviceDirty</code>, <code>PimDirty</code>, <code>HostVisible</code>, <code>Poisoned</code>, <code>Donated</code>, <code>Aliased</code>)에 연결한다.</li></ol>
-<h2 id="새로-추가한-사실-17">새로 추가한 사실</h2>
+<h2 id="새로-추가한-사실-19">새로 추가한 사실</h2>
 <p><strong>PJRT/XLA의 buffer donation·aliasing 모델 (일반 아키텍처 지식, 이번 세션 원문 미검증)</strong></p>
 <ul><li>PJRT(및 그 상위의 XLA 실행 모델)에서 컴파일된 실행 가능 객체(executable)는 특정 입력 버퍼를 &quot;donated&quot;로 표시할 수 있다. donation이 지정된 입력은 실행 후 그 물리 메모리가 출력 버퍼로 재사용될 수 있고, 그 결과 <strong>원래의 입력 버퍼 핸들은 실행 이후 더 이상 유효하지 않은 것으로 취급</strong>된다 — 호출자가 이를 무시하고 계속 읽으면 use-after-free/aliased-read 위험이 생긴다.</li><li>이를 막기 위해 런타임은 보통 (a) donation 발생 시 원본 버퍼 객체를 즉시 &quot;삭제됨/무효&quot;로 마킹하거나, (b) donation 요청이 있었지만 실제로는 aliasing이 일어나지 않은 경우(예: 참조 카운트가 여전히 남아있는 경우) donation을 거부하고 별도 메모리를 할당하는 fallback을 갖는 것으로 알려져 있다.</li><li>이 구조는 이번 턴이 만들 tensor state machine에 <code>Donated</code>(더 이상 유효하지 않은 이전 소유자 상태)와 <code>Aliased</code>(같은 물리 메모리를 다른 논리 버퍼가 가리키는 상태)를 별개 상태로 두어야 하는 근거가 된다 — 두 상태는 자주 혼동되지만 원인이 다르다. <code>Donated</code>는 &quot;이 핸들이 무효화됐다&quot;는 뜻이고, <code>Aliased</code>는 &quot;이 메모리 위치를 다른 핸들과 공유 중이니 write 시 주의하라&quot;는 뜻이다.</li></ul>
 <p><strong>io_uring/eventfd 계열 정정: <code>IORING_REGISTER_EVENTFD</code>는 배치 알림이지만 CQE 자체의 순서는 보장된다는 점을 Turn 16이 명시하지 않았다</strong></p>
 <ul><li>Turn 16은 &quot;eventfd notification 개수 ≠ CQE 개수&quot;만 언급했는데, 여기 추가할 중요한 사실은 io_uring의 CQE는 <strong>완료 순서</strong>(제출 순서가 아님)로 링에 쌓인다는 점이다. 이는 PIM 설계에도 그대로 적용돼야 한다 — <code>pim_queue_drain_completions()</code>가 반환하는 <code>pim_completion_t</code> 배열은 제출 순서가 아니라 완료 순서이므로, 순서에 의존하는 로직(예: &quot;이 write가 저 read보다 먼저 끝났는지&quot;)은 반드시 <code>user_data</code>나 <code>deps</code> 기반으로 판단해야지 배열 인덱스로 추론하면 안 된다. 이 제약을 명시적으로 문서화하지 않으면 다음 에이전트가 배열 순서를 완료 순서 보장으로 오해할 위험이 있었다.</li></ul>
-<h2 id="더-구체화한-부분-16">더 구체화한 부분</h2>
+<h2 id="더-구체화한-부분-18">더 구체화한 부분</h2>
 <h3 id="1-pim_runtime-h-통합-초안-이름-충돌-정리">1. <code>pim_runtime.h</code> 통합 초안 — 이름 충돌 정리</h3>
 <p>통합 과정에서 발견한 충돌 3건과 해결 방식을 먼저 밝힌다.</p>
 <div class="table-wrap"><table><thead><tr><th>충돌</th><th>발생 턴</th><th>해결</th></tr></thead><tbody><tr><td><code>pim_submit</code>의 반환 타입이 <code>pim_gang_result_t</code>(Turn 13)와 <code>pim_submit_result_t</code>(Turn 14)로 이중 정의됨</td><td>13, 14</td><td><code>pim_gang_result_t</code>를 폐기하고 <code>pim_submit_result_t</code>로 필드를 흡수(<code>gang_size</code>→<code>actual_gang.participant_mask</code>의 popcount로 대체 가능하므로 별도 필드 불필요)</td></tr><tr><td><code>pim_event_kind_t</code>(Turn 15)가 2값(<code>COMMAND_COMPLETION</code>/<code>VISIBILITY_COMPLETION</code>)인데 Turn 16은 <code>pim_task_event_fd</code>/<code>pim_region_sync_fd</code>/<code>pim_visibility_fd</code> 3분류를 별도 개념처럼 서술</td><td>15, 16</td><td>3분류를 하나의 enum으로 승격(<code>REGION_RESERVATION_SNAPSHOT</code> 추가), <code>pim_future_t.kind</code>가 이 3값을 가짐 — 별도 타입 3개를 만들지 않음</td></tr><tr><td><code>pim_submit_desc_t</code>가 Turn 12(초기), Turn 13(gang 없음), Turn 14(gang 있음, conflict_policy 없음), Turn 16(conflict_policy 있음) 총 4버전 존재</td><td>12, 13, 14, 16</td><td>Turn 16 버전을 canonical로 채택, 이전 버전들은 &quot;이전 초안&quot;으로 폐기 명시</td></tr></tbody></table></div>
@@ -1352,14 +1528,118 @@ typedef struct {
                                                HostVisible</code></pre>
 <div class="table-wrap"><table><thead><tr><th>상태</th><th>의미</th><th>진입 조건</th><th>이 상태에서 host read 가능?</th><th>이 상태에서 PIM write 가능?</th></tr></thead><tbody><tr><td><code>DeviceDirty</code></td><td>host가 마지막으로 쓴 값이 아직 PIM engine에 반영 안 됨</td><td>host write 직후, PIM command 제출 전</td><td>가능(host 자신의 값이므로)</td><td>불가(command completion 전)</td></tr><tr><td><code>PimDirty</code></td><td>PIM engine이 값을 썼지만 host-visible 처리(cache flush/layout 복원) 전</td><td><code>PIM_EVENT_COMMAND_COMPLETION</code> future ready</td><td><strong>불가</strong>(Turn 14의 &quot;event ready ≠ tensor ready&quot; 규칙)</td><td>같은 gang 재사용 가능(정책에 따라 §2 표 적용)</td></tr><tr><td><code>HostVisible</code></td><td>visibility fence 완료, host가 안전하게 read 가능</td><td><code>PIM_EVENT_VISIBILITY_COMPLETION</code> future ready</td><td>가능</td><td>가능(단, write 시 <code>DeviceDirty</code> 또는 <code>PimDirty</code>로 역전이)</td></tr><tr><td><code>Donated</code></td><td>이 핸들이 다른 실행에 소유권을 넘겨 무효화됨</td><td><code>pim_submit_desc_t</code>가 이 region을 donation으로 표시하고 제출 성공</td><td><strong>금지</strong>(핸들 자체가 무효)</td><td><strong>금지</strong></td></tr><tr><td><code>Aliased</code></td><td>다른 논리 buffer와 물리 메모리를 공유 중</td><td>region allocator가 aliasing 결정(예: in-place op)</td><td>가능하나 aliased 대상의 상태도 함께 확인 필요</td><td>가능하나 aliased 대상에 대해 WAW conflict 검사 필수(§2 표 적용 대상)</td></tr><tr><td><code>Poisoned</code></td><td>sub-range 또는 region 전체가 복구 불가 오류 상태</td><td><code>PIM_CQE_REJECTED_ERROR</code> 발생 후 region에 마킹</td><td>금지(명시적 에러 반환)</td><td>금지, reset 절차 필요</td></tr></tbody></table></div>
 <p>전이 규칙 중 특히 중요한 것: <code>Donated</code> 상태는 <strong>되돌아갈 전이가 없다</strong>(dead state) — PJRT의 donation이 &quot;재사용 불가능한 일회성 소유권 이전&quot;인 것과 동일한 설계다. 반면 <code>Aliased</code>는 dead state가 아니라 여러 상태와 공존 가능한 <strong>속성(flag)</strong>에 가깝다 — 즉 엄밀히는 <code>Aliased</code>를 독립 상태가 아니라 <code>DeviceDirty</code>/<code>PimDirty</code>/<code>HostVisible</code> 각각에 붙는 부가 비트로 모델링하는 편이 더 정확하다. 이는 이번 턴이 발견한 <strong>Turn 14 원 리스트(&quot;DeviceDirty, PimDirty, HostVisible, Poisoned, Donated, Aliased&quot;를 나열형 6상태로 제시)의 암묵적 오류</strong>다 — 6개를 동일 층위의 상태로 나열하면 &quot;HostVisible이면서 Aliased인 경우&quot;를 표현할 수 없다. 정정하면 상태 축은 <code>{DeviceDirty, PimDirty, HostVisible, Donated, Poisoned}</code> 5개(상호 배타)이고, <code>Aliased</code>는 그 위에 얹히는 독립 비트다.</p>
-<h2 id="관련-맥락-배경-설명-17">관련 맥락 / 배경 설명</h2>
+<h2 id="관련-맥락-배경-설명-19">관련 맥락 / 배경 설명</h2>
 <p>PJRT/XLA의 donation 모델과 이번 턴의 PIM tensor state machine을 나란히 놓으면, 두 시스템이 &quot;누가 이 메모리의 최종 권위자인가&quot;라는 같은 문제를 다른 강도로 푼다는 것이 보인다. XLA는 컴파일 시점에 정적으로 어떤 입력이 donate되는지 결정하고, 런타임은 그 결정을 실행 후 핸들 무효화로 집행한다. PIM 런타임은 이보다 한 단계 더 동적이어야 하는데, region이 여러 gang/여러 command에 걸쳐 재사용되고 sub-range 단위로 conflict가 발생할 수 있기 때문이다. 그래서 XLA의 &quot;donate 여부는 컴파일 시 고정&quot;이라는 정적 모델을 그대로 가져오기보다, <code>pim_submit_desc_t</code>에 donation 의도를 필드로 실어 제출 시점마다 동적으로 결정하는 편이 PIM의 세분화된 reservation 모델과 더 잘 맞는다.</p>
-<h2 id="잠재적-오류-또는-확인-필요-지점-17">잠재적 오류 또는 확인 필요 지점</h2>
+<h2 id="잠재적-오류-또는-확인-필요-지점-19">잠재적 오류 또는 확인 필요 지점</h2>
 <ul><li>PJRT/XLA의 donation/aliasing 서술은 이번 세션에서도 원문(PJRT C API 헤더, XLA 소스)으로 검증하지 못한 일반적 아키텍처 지식이다. 특히 &quot;donation 거부 시 fallback으로 별도 메모리 할당&quot;이 모든 백엔드/버전에서 일관되게 동작하는지는 불확실하다.</li><li><code>Aliased</code>를 상태가 아니라 비트 플래그로 재모델링한 것은 이번 턴의 논리적 추론이며, 실제 ML 프레임워크(PyTorch/XLA, JAX)가 내부적으로 이를 별도 상태 enum으로 두는지 플래그로 두는지는 프레임워크마다 다를 수 있어 일반화에 주의가 필요하다.</li><li><code>pim_runtime.h</code> 통합에서 이전 턴들의 필드명을 일부 변경/제거했다(<code>gang_size</code> 제거 등) — 만약 이전 턴 내용을 그대로 인용하는 후속 문서가 있다면 이 변경으로 인한 불일치가 생길 수 있으므로, 최종 정리 문서에는 &quot;폐기된 이전 버전&quot; 표를 별도로 남겨야 한다.</li><li>상태표의 <code>PimDirty</code>에서 &quot;같은 gang 재사용 가능&quot;이라고 서술했는데, 이것이 실제로 하드웨어 레벨에서 안전한지(동일 gang 내 후속 command가 아직 flush 안 된 PimDirty 데이터를 읽어도 되는지)는 검증되지 않은 가정이며, §2의 conflict 정책표와 상호작용을 더 정밀하게 따져야 한다.</li></ul>
-<h2 id="다음-에이전트가-이어서-확장할-지점-17">다음 에이전트가 이어서 확장할 지점</h2>
+<h2 id="다음-에이전트가-이어서-확장할-지점-19">다음 에이전트가 이어서 확장할 지점</h2>
 <ol><li><code>Aliased</code> 플래그와 5개 상호배타 상태(<code>DeviceDirty/PimDirty/HostVisible/Donated/Poisoned</code>)의 정확한 조합 규칙(예: <code>Donated</code>이면서 <code>Aliased</code>가 동시에 가능한지)을 진리표로 만들고, <code>pim_region_t</code>에 실제로 어떤 필드(<code>state</code> enum + <code>aliased_with</code> 포인터)로 구현할지 확정한다.</li><li><code>pim_submit_desc_t</code>에 donation 의도를 표현하는 필드(예: <code>donate_reads[]</code>)를 추가하고, donation이 §2의 conflict 정책(특히 <code>AUTO_DEPEND</code>)과 상호작용할 때 — 즉 donate된 region을 대상으로 한 이후 제출이 자동으로 거부/에러가 되는 경로를 admission-control 상태표에 통합한다.</li><li>지금까지 폐기 처리된 구조체 버전들(<code>pim_gang_result_t</code>, 초기 3버전의 <code>pim_submit_desc_t</code>)을 별도 &quot;deprecated&quot; 부록으로 남기고, <code>pim_runtime.h</code> canonical 버전과의 차이를 diff 형태로 정리해 다음 에이전트가 과거 턴을 인용할 때 혼동하지 않도록 한다.</li></ol>
+<h3 id="turn-20-codex">Turn 20 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-20">이번 턴의 확장 요약</h2>
+<p>이번 턴은 직전 내용의 <code>Aliased</code>/<code>Donated</code> 모델을 더 정리한다. 핵심 보강은 두 가지다.</p>
+<ol><li><code>Aliased</code>는 상태가 아니라 <strong>물리 region을 공유하는 alias group 속성</strong>으로 모델링해야 한다.</li><li>donation은 단순 플래그가 아니라 <strong>핸들 무효화, alias 해제, conflict policy, completion 진단</strong>까지 이어지는 제출 시점의 소유권 전이 계약이다.</li></ol>
+<p>추가로, 최근 누적 응답에 <code>Turn 17 / Claude</code>가 두 번 등장한다. 후속 정리에서는 두 번째 <code>Turn 17</code>을 <code>Turn 19</code> 또는 “통합 헤더 초안 턴”으로 재번호ing하는 편이 혼동을 줄인다.</p>
+<h2 id="새로-추가한-사실-20">새로 추가한 사실</h2>
+<p><strong>JAX buffer donation 문서는 donation 이후 원본 버퍼 사용 금지를 명시한다</strong></p>
+<p>JAX 문서는 <code>donate_argnums</code>를 통해 입력 버퍼를 출력 버퍼로 재사용할 수 있고, donated input은 호출 이후 사용하지 않겠다고 XLA에 보장해야 한다고 설명한다. 또한 donated buffer가 이후 다시 사용되면 invalid buffer 오류가 날 수 있으며, donation이 실제 출력에 쓰이지 못하면 warning이 발생할 수 있다. 출처: <a href="https://docs.jax.dev/en/latest/buffer_donation.html" target="_blank" rel="noopener noreferrer">JAX Buffer donation</a></p>
+<p>이 사실은 PIM 런타임 설계에 두 가지 의미를 준다.</p>
+<div class="table-wrap"><table><thead><tr><th>JAX/XLA donation</th><th>PIM runtime 대응</th></tr></thead><tbody><tr><td>입력 버퍼를 출력 버퍼로 재사용</td><td><code>pim_region</code> 물리 저장소를 후속 output region으로 승계</td></tr><tr><td>호출자는 donated input을 다시 쓰지 않겠다고 보장</td><td><code>pim_region_handle</code>을 <code>DonatedInvalid</code>로 전이</td></tr><tr><td>donation이 사용되지 않을 수 있음</td><td>completion에 <code>PIM_CQE_DONATION_UNUSED</code> 진단 필요</td></tr><tr><td>shape/type match가 donation 가능 조건</td><td>PIM에서는 size/layout/placement/visibility compatibility가 조건</td></tr></tbody></table></div>
+<p>따라서 Turn 17의 “donation fallback 가능성”은 일반적 추론이 아니라, 최소한 JAX 레벨에서는 “donation이 항상 실제 alias로 실현되는 것은 아니다”로 확인할 수 있다.</p>
+<p><strong>Donation은 aliasing과 다르다</strong></p>
+<p>Donation은 “기존 핸들이 더 이상 유효하지 않다”는 소유권 전이이고, aliasing은 “둘 이상의 논리 핸들이 같은 물리 저장소를 볼 수 있다”는 공유 관계다. 두 개념을 같은 상태 enum에 넣으면 다음 경우를 표현하지 못한다.</p>
+<div class="table-wrap"><table><thead><tr><th>경우</th><th>상태</th><th>alias bit</th></tr></thead><tbody><tr><td>일반 host-readable region</td><td><code>HostVisible</code></td><td>false</td></tr><tr><td>view/slice가 같은 region을 공유</td><td><code>HostVisible</code></td><td>true</td></tr><tr><td>PIM write 후 host visibility 전</td><td><code>PimDirty</code></td><td>false 또는 true</td></tr><tr><td>donation 성공 후 원본 핸들</td><td><code>DonatedInvalid</code></td><td>false로 정리되어야 함</td></tr><tr><td>donation 결과로 생성된 출력 핸들</td><td><code>PimDirty</code> 또는 <code>HostVisible</code></td><td>필요 시 true</td></tr><tr><td>오류로 격리된 공유 region</td><td><code>Poisoned</code></td><td>true 가능, 단 write 금지</td></tr></tbody></table></div>
+<p>즉 <code>Aliased</code>는 상태가 아니라 <code>alias_group_id</code>, <code>alias_role</code>, <code>write_policy</code> 같은 메타데이터다.</p>
+<h2 id="더-구체화한-부분-19">더 구체화한 부분</h2>
+<h3 id="pim_region_t-상태와-alias-필드"><code>pim_region_t</code> 상태와 alias 필드</h3>
+<pre><code class="language-c">typedef enum {
+  PIM_REGION_DEVICE_DIRTY,
+  PIM_REGION_PIM_DIRTY,
+  PIM_REGION_HOST_VISIBLE,
+  PIM_REGION_DONATED_INVALID,
+  PIM_REGION_POISONED,
+  PIM_REGION_FREE_REQUESTED,
+  PIM_REGION_RECLAIMING,
+  PIM_REGION_POOLABLE
+} pim_region_state_t;
+
+typedef enum {
+  PIM_ALIAS_NONE,
+  PIM_ALIAS_OWNER,
+  PIM_ALIAS_VIEW,
+  PIM_ALIAS_IMPORTED,
+  PIM_ALIAS_DONATION_OUTPUT
+} pim_alias_role_t;
+
+typedef struct {
+  uint64_t alias_group_id;
+  pim_alias_role_t role;
+  bool may_write;
+  bool requires_copy_on_write;
+} pim_alias_info_t;</code></pre>
+<p>중요한 규칙은 다음이다.</p>
+<div class="table-wrap"><table><thead><tr><th>조합</th><th>허용 여부</th><th>이유</th></tr></thead><tbody><tr><td><code>HostVisible + ALIAS_VIEW</code></td><td>허용</td><td>slice/view/read sharing 가능</td></tr><tr><td><code>PimDirty + ALIAS_VIEW</code></td><td>조건부 허용</td><td>visibility future를 alias group 전체에 연결해야 함</td></tr><tr><td><code>DonatedInvalid + any alias role</code></td><td>비권장/정리 필요</td><td>invalid handle은 alias graph에서 제거되어야 함</td></tr><tr><td><code>Poisoned + ALIAS_IMPORTED</code></td><td>허용하되 접근 금지</td><td>importer에도 poison 전파 필요</td></tr><tr><td><code>FreeRequested + alias_group refcount &gt; 1</code></td><td>reclaim 불가</td><td>모든 alias handle 종료 대기</td></tr></tbody></table></div>
+<h3 id="donation-필드를-pim_submit_desc_t-에-추가">Donation 필드를 <code>pim_submit_desc_t</code>에 추가</h3>
+<p>기존 <code>reads</code>/<code>writes</code>만으로는 “이 입력 region의 소유권을 넘긴다”를 표현할 수 없다. 별도 donation vector가 필요하다.</p>
+<pre><code class="language-c">typedef struct {
+  pim_region_t *region;
+  uint32_t expected_output_index;
+  bool require_reuse;          // true면 donation 실패 시 submit 실패
+  bool invalidate_on_submit;   // false면 completion 시점에 invalidate
+} pim_donation_t;
+
+typedef struct {
+  pim_command_buffer_t *cmd;
+  pim_gang_desc_t gang;
+
+  pim_reservation_key_t *reads;
+  size_t num_reads;
+  pim_reservation_key_t *writes;
+  size_t num_writes;
+
+  pim_donation_t *donations;
+  size_t num_donations;
+
+  pim_event_t **deps;
+  size_t num_deps;
+  pim_conflict_policy_t conflict_policy;
+  uint64_t user_data;
+} pim_submit_desc_t;</code></pre>
+<p>Donation admission은 일반 write conflict보다 먼저 검사해야 한다.</p>
+<pre><code class="language-text">admit_donation(region):
+  region state is not Poisoned?
+  region is not DonatedInvalid?
+  no live non-donating alias writer?
+  output size/layout/placement compatible?
+  outstanding reads/writes ordered before donation?
+  if require_reuse and reuse impossible: reject error
+  else if reuse impossible: allocate fallback and emit DONATION_UNUSED</code></pre>
+<h3 id="donation과-conflict-policy의-상호작용">Donation과 conflict policy의 상호작용</h3>
+<div class="table-wrap"><table><thead><tr><th>상황</th><th><code>REJECT</code></th><th><code>QUEUE_WAIT</code></th><th><code>AUTO_DEPEND</code></th></tr></thead><tbody><tr><td>donated region에 outstanding read 있음</td><td><code>RejectedNotReady</code></td><td>read 완료까지 hold</td><td>read event를 dep으로 삽입</td></tr><tr><td>donated region에 outstanding write 있음</td><td><code>RejectedNotReady</code></td><td>write 완료까지 hold</td><td>write event를 dep으로 삽입</td></tr><tr><td>donated region이 aliased view를 가짐</td><td>alias가 read-only면 조건부 허용, writable이면 reject</td><td>writable alias 해제까지 hold 가능</td><td>alias close event가 있으면 dep 삽입</td></tr><tr><td>donation 성공 후 원본 핸들 재사용</td><td><code>RejectedError</code></td><td>대기해도 회복 안 됨</td><td>dep 삽입 불가, error</td></tr><tr><td>donation reuse 불가, fallback 허용</td><td>submit 허용 + 진단 CQE</td><td>동일</td><td>동일</td></tr></tbody></table></div>
+<p>추가 CQE kind가 필요하다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_CQE_COMMAND_COMPLETE,
+  PIM_CQE_VISIBILITY_COMPLETE,
+  PIM_CQE_REJECTED_NOT_READY,
+  PIM_CQE_REJECTED_ERROR,
+  PIM_CQE_TIMEOUT,
+  PIM_CQE_RESET_COMPLETE,
+  PIM_CQE_SERIALIZED_CONFLICT,
+  PIM_CQE_DONATION_USED,
+  PIM_CQE_DONATION_UNUSED,
+  PIM_CQE_ALIAS_INVALIDATED
+} pim_cqe_kind_t;</code></pre>
+<h2 id="관련-맥락-배경-설명-20">관련 맥락 / 배경 설명</h2>
+<p>PIM 런타임에서 donation은 ML compiler runtime과 allocator runtime이 만나는 지점이다. Compiler는 “이 입력은 이후 필요 없다”는 정적 정보를 제공하고, runtime은 그 정보가 현재 동적 상태와 충돌하지 않는지 확인한다.</p>
+<div class="table-wrap"><table><thead><tr><th>계층</th><th>donation 판단</th></tr></thead><tbody><tr><td>Compiler/XLA류</td><td>입력-출력 shape/type/layout alias 가능성</td></tr><tr><td>Framework</td><td>사용자가 이후 입력을 참조하지 않는다는 의미론</td></tr><tr><td>Runtime scheduler</td><td>outstanding event/reservation이 모두 순서화됐는지</td></tr><tr><td>Allocator</td><td>같은 placement/pool에서 재사용 가능한지</td></tr><tr><td>Visibility manager</td><td>output이 어떤 visibility state로 시작하는지</td></tr></tbody></table></div>
+<p>LPDDR6-PIM에서는 여기에 placement 조건이 추가된다. GPU donation은 대개 “device memory 안에서 재사용”이면 충분하지만, PIM donation은 같은 channel/rank/bank에 남아야 성능상 의미가 있다. output이 다른 rank에서 실행될 예정이면 donation은 가능하더라도 data migration 비용 때문에 손해일 수 있다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-20">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li>JAX donation 문서는 확인했지만, PJRT C API나 XLA 내부 alias analysis의 정확한 구조체 이름까지는 이번 턴에서 확정하지 않았다. 최종 문서에서는 “JAX 사용자 레벨 donation”과 “PJRT/XLA 내부 구현”을 분리해 써야 한다.</li><li><code>invalidate_on_submit=true</code>는 빠르게 misuse를 막지만, submit이 나중에 admission 실패하면 원본 핸들을 되살려야 하는 문제가 생긴다. 기본값은 completion 시 invalidation이 더 안전하다.</li><li>aliased writable view를 donation과 함께 허용할지 여부는 보수적으로 막는 편이 좋다. 허용하려면 alias group 전체에 copy-on-write 또는 group-wide invalidation 규칙이 필요하다.</li><li>donation fallback이 성능 문제를 숨길 수 있으므로 <code>PIM_CQE_DONATION_UNUSED</code>는 warning 수준 진단으로 반드시 노출해야 한다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-20">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><code>pim_region_pool</code> 객체를 도입해 donation 재사용 조건을 <code>size/layout/placement/NUMA/pool_id/exportability</code> 기준으로 정리한다.</li></ol>
+<ol><li>alias group teardown 상태 머신을 만든다. <code>OWNER</code>, <code>VIEW</code>, <code>IMPORTED</code>, <code>DONATION_OUTPUT</code> 핸들이 각각 close될 때 refcount, visibility fence, poison 전파, final reclaim이 어떻게 진행되는지 정의한다.</li></ol>
+<ol><li><code>pim_runtime.h</code> canonical 초안에 이번 턴의 <code>pim_region_state_t</code>, <code>pim_alias_info_t</code>, <code>pim_donation_t</code>, donation CQE를 통합하고, 폐기된 이전 <code>Aliased</code> enum 모델과의 차이를 부록으로 남긴다.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T14:19:28.043333+00:00</li><li>누적 턴 수: 17</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T14:21:40.677152+00:00</li><li>누적 턴 수: 20</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
