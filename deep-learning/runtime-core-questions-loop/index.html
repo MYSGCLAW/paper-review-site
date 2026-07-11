@@ -415,6 +415,14 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-q10-pim에서-하드웨어-큐-abi가-깨지는-지점">관련 맥락 / 배경 설명 — Q10: PIM에서 하드웨어 큐 ABI가 깨지는 지점</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-13">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-14">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-14-codex">Turn 14 / Codex</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-11">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-15">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-15">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-7">더 구체화한 부분</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-7">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-14">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-15">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -443,7 +451,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -1483,8 +1491,100 @@ ROCm/HIP:
 <ol><li><strong>PIM doorbell/completion을 구체 레지스터·메모리 레이아웃 스케치로 낮춰라(Q10·Q7).</strong> 이번 턴의 &quot;non-PIM 예약 영역 링 + mode-reg doorbell + status-word 폴링&quot;을 실제 배치로 그려라: 링 영역과 Turn 7의 뱅크 대칭 데이터 영역이 물리적으로 어떻게 공존하는가(같은 랭크? 별도 채널?), status word를 어느 주소에 두면 refresh/mode 전환 중에도 host가 안전히 읽는가, 그리고 이 폴링 레이아웃이 Turn 11의 checkpoint 시 ③ &quot;재생성 필수&quot; 부류인지(복원 시 링 인덱스·doorbell 상태를 리셋해야 하는지) 분해하라.</li></ol>
 <p>--- Sources:</p>
 <ul><li><a href="http://hsafoundation.com/wp-content/uploads/2021/02/HSA-SysArch-1.2.pdf" target="_blank" rel="noopener noreferrer">HSA Platform System Architecture Specification 1.2 (AQL packets, queues, doorbell)</a></li><li><a href="https://deepwiki.com/ROCm/ROCR-Runtime/3.3-queues-and-packet-processing" target="_blank" rel="noopener noreferrer">ROCR-Runtime: Queues and Packet Processing</a></li><li><a href="https://gitlab.com/gromacs/gromacs/-/work_items/4965" target="_blank" rel="noopener noreferrer">GROMACS #4965 — ROCm queue multiplexing / GPU_MAX_HW_QUEUES</a></li><li><a href="https://github.com/ROCm/ROCm/issues/2705" target="_blank" rel="noopener noreferrer">ROCm #2705 — separated HSA queues in HIP</a></li><li><a href="https://spdk.io/doc/nvme_spec.html" target="_blank" rel="noopener noreferrer">SPDK: Submitting I/O to an NVMe Device (SQ/CQ/doorbell)</a></li><li><a href="https://blog.westerndigital.com/nvme-queues-explained/" target="_blank" rel="noopener noreferrer">NVMe Queues Explained (Western Digital)</a></li></ul>
+<h3 id="turn-14-codex">Turn 14 / Codex</h3>
+<h2 id="이번-턴이-답하는-중심질문-11">이번 턴이 답하는 중심질문</h2>
+<p>이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong></p>
+<h2 id="이번-턴의-확장-요약-15">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타임에는 그 위에 <strong>wakeup policy</strong>가 한 층 더 있다.</p>
+<pre><code class="language-text">submission ring      # work descriptor 전달
+completion ring      # 결과 기록
+notification/wakeup  # consumer 또는 producer를 깨울지 결정</code></pre>
+<p>따라서 Q5의 상태 전이는 이제 다음처럼 수정된다.</p>
+<pre><code class="language-text">submitted
+  → visible_to_consumer
+  → consumed/executing
+  → completion_written
+  → completion_observable
+  → wakeup_delivered?        # 선택적, 억제될 수 있음
+  → completion_reaped</code></pre>
+<p>중요한 결론은 <strong>completion과 wakeup은 다르다</strong>는 것이다. 완료 레코드가 링에 기록되어도, interrupt/eventfd/futex wakeup은 억제될 수 있다. 반대로 런타임은 busy polling으로 wakeup 없이 완료를 직접 발견할 수 있다. PIM runtime 설계에서도 <code>PimEvent.completed()</code>와 “host dispatcher가 깨어남”을 같은 사건으로 두면 안 된다.</p>
+<h2 id="새로-추가한-사실-15">새로 추가한 사실</h2>
+<p>Virtio 1.2 명세는 각 virtqueue가 <code>Descriptor Table</code>, <code>Available Ring</code>, <code>Used Ring</code>으로 구성된다고 설명한다. descriptor table은 buffer chain을 담고, available ring은 driver가 device에 제공한 descriptor head index를 담으며, used ring은 device가 처리 완료한 buffer를 돌려주는 completion 영역이다. 즉 Turn 13의 “virtio 열은 추정”이었던 부분은 공식 구조로 확정된다. <a href="https://docs.oasis-open.org/virtio/virtio/v1.2/virtio-v1.2.html" target="_blank" rel="noopener noreferrer">Virtio 1.2 §2.6-2.7</a></p>
+<ol><li><strong>virtio split virtqueue는 descriptor table, available ring, used ring의 3부분이다.</strong></li></ol>
+<p>PCI transport에서는 driver가 queue notify 주소에 virtqueue index 또는 notification data를 write한다. MMIO transport에서는 <code>QueueNotify</code>에 write한다. 즉 virtio의 doorbell은 GPU doorbell처럼 고정된 한 형태가 아니라, PCI/MMIO/channel I/O 같은 transport가 구현하는 <strong>알림 추상</strong>이다.</p>
+<ol><li><strong>virtio의 doorbell은 transport-specific notification이다.</strong></li></ol>
+<p>used buffer notification suppression과 available buffer notification suppression이 따로 있다. <code>VIRTIO_F_EVENT_IDX</code>가 없으면 flags로 단순 억제하고, 있으면 <code>used_event</code>/<code>avail_event</code>로 어느 지점까지 진행해야 알릴지 조정한다. 이것은 “완료마다 interrupt”가 아니라 <strong>batch boundary마다 wakeup</strong>을 선택하는 정책이다.</p>
+<ol><li><strong>virtio에는 notification suppression이 1급 메커니즘으로 들어 있다.</strong></li></ol>
+<p>packed virtqueue는 별도의 avail/used ring을 두지 않고 descriptor ring에 available/used 상태를 함께 인코딩한다. 명세는 packed virtqueue가 driver와 device가 모두 read/write하는 memory layout이라고 설명한다. 따라서 소유 경계가 split ring보다 더 세밀하다.</p>
+<ol><li><strong>packed virtqueue는 split ring과 달리 driver/device가 같은 descriptor ring을 같이 읽고 쓴다.</strong></li></ol>
+<p>io_uring 설계 문서는 submission에서는 application이 producer, kernel이 consumer이고, completion에서는 kernel이 producer, application이 consumer라고 설명한다. SQ/CQ 두 링은 app-kernel 공유 메모리이고, CQE의 <code>res</code>가 결과 또는 음수 errno를 담는다. <a href="https://kernel.dk/io_uring.pdf" target="_blank" rel="noopener noreferrer">Efficient IO with io_uring</a></p>
+<ol><li><strong>io_uring은 “kernel을 consumer로 둔 virtqueue”에 가깝다.</strong></li></ol>
+<p><code>IORING_ENTER_GETEVENTS</code>는 completion이 최소 개수만큼 올 때까지 기다리게 하고, <code>IORING_SETUP_SQPOLL</code>에서는 kernel SQ poll thread가 submission을 소비한다. <code>IORING_ENTER_SQ_WAKEUP</code>은 그 SQ kernel thread를 깨우는 명시 wakeup이다. 즉 io_uring도 “ring은 공유하지만 wakeup은 별도 정책”이라는 구조를 갖는다. <a href="https://man7.org/linux/man-pages/man2/io_uring_enter.2.html" target="_blank" rel="noopener noreferrer">io_uring_enter(2)</a></p>
+<ol><li><strong>io_uring은 completion wait를 syscall, SQPOLL, polling 조합으로 분리한다.</strong></li></ol>
+<p>futex는 user-space word를 기준으로 대부분의 동기화는 user space에서 처리하고, 오래 block해야 할 때만 kernel wait queue에 들어간다. kernel은 futex word 값 확인과 block을 원자적으로 묶는다. 이것은 런타임 wakeup 설계의 가장 작은 형태다: <strong>상태 word는 user/runtime 소유, park/unpark는 kernel 소유</strong>. <a href="https://man7.org/linux/man-pages/man2/futex.2.html" target="_blank" rel="noopener noreferrer">futex(2)</a></p>
+<ol><li><strong>futex는 wakeup 층의 최소 원형이다.</strong></li></ol>
+<h2 id="더-구체화한-부분-7">더 구체화한 부분</h2>
+<p>Turn 13의 4요소 ABI는 다음처럼 5요소로 확장해야 한다.</p>
+<pre><code class="language-text">Queue ABI
+├── descriptor / packet storage
+├── producer index
+├── consumer index
+├── doorbell / notify path
+├── completion storage
+└── wakeup policy              # 신규: interrupt, eventfd, futex, poll, suppression</code></pre>
+<p><code>completion storage</code>와 <code>wakeup policy</code>를 분리해야 하는 이유는 다음이다.</p>
+<div class="table-wrap"><table><thead><tr><th>런타임/장치</th><th>완료 기록</th><th>wakeup 방식</th><th>핵심 차이</th></tr></thead><tbody><tr><td>HSA AQL</td><td>signal / queue state</td><td>signal wait, interrupt, polling</td><td>fence scope가 visibility 결정</td></tr><tr><td>NVMe</td><td>CQ entry + phase bit</td><td>MSI-X interrupt 또는 polling</td><td>phase bit로 wakeup 없이 완료 발견 가능</td></tr><tr><td>virtio split</td><td>used ring entry</td><td>device-to-driver notification, suppression 가능</td><td>used ring 기록과 interrupt가 분리</td></tr><tr><td>io_uring</td><td>CQE</td><td><code>GETEVENTS</code>, SQPOLL wakeup, userspace polling</td><td>CQE와 syscall wake가 분리</td></tr><tr><td>futex</td><td>user-space word</td><td>kernel wait queue wake</td><td>값은 user space, park는 kernel</td></tr><tr><td>PIM 후보</td><td>status word / completion ring</td><td>polling, driver thread, optional interrupt</td><td>wakeup 경로가 가장 불확실</td></tr></tbody></table></div>
+<p>따라서 Q4의 스케줄링 정책에는 “어떤 work를 먼저 실행하나”뿐 아니라 다음 질문이 추가된다.</p>
+<pre><code class="language-text">완료를 매번 깨울 것인가?
+N개 완료마다 깨울 것인가?
+latency mode에서는 busy poll할 것인가?
+throughput mode에서는 interrupt/eventfd를 쓸 것인가?
+completion queue overflow 시 어떤 work를 backpressure할 것인가?</code></pre>
+<p>이 축은 Node.js의 event loop phase, Tokio의 Waker, NVMe polling, virtio notification suppression, io_uring SQPOLL을 같은 표에 놓게 해 준다.</p>
+<h2 id="관련-맥락-배경-설명-7">관련 맥락 / 배경 설명</h2>
+<p>Q8 관점에서 queue ownership은 이제 “host vs device”만으로 부족하다. virtio와 io_uring을 넣으면 <strong>producer/consumer 역할과 주소공간 경계</strong>가 분리된다.</p>
+<div class="table-wrap"><table><thead><tr><th>요소</th><th>virtio</th><th>io_uring</th><th>PIM 후보</th></tr></thead><tbody><tr><td>descriptor storage</td><td>guest driver가 guest memory에 배치</td><td>userspace가 SQE 작성</td><td>host runtime이 non-PIM queue 영역 작성</td></tr><tr><td>producer</td><td>guest driver</td><td>userspace app/runtime</td><td>host runtime</td></tr><tr><td>consumer</td><td>virtual device, vhost, QEMU, host kernel</td><td>Linux kernel</td><td>memory controller / PIM driver</td></tr><tr><td>completion writer</td><td>virtual device/host side</td><td>Linux kernel</td><td>MC/PIM driver</td></tr><tr><td>wakeup 전달자</td><td>interrupt, eventfd, vhost kick/call</td><td>syscall wait, SQPOLL thread, poll</td><td>polling thread, optional interrupt</td></tr><tr><td>주소 변환</td><td>guest physical → host virtual/IOMMU</td><td>user virtual → kernel pinned/mapped</td><td>host physical → MC/PIM-visible region</td></tr></tbody></table></div>
+<p>여기서 PIM과 virtio의 유사점은 <strong>실행 주체가 다른 주소공간/도메인에서 링을 소비한다</strong>는 점이다. 차이는 virtio는 guest memory를 host가 해석하고, PIM은 host memory 또는 reserved non-PIM region을 memory controller가 해석한다는 점이다.</p>
+<p>PIM runtime에 바로 적용하면 최소 객체가 하나 늘어난다.</p>
+<pre><code class="language-text">PimQueue
+├── submission_ring
+├── completion_ring / status_area
+├── doorbell_path
+├── wakeup_policy        # busy_poll / adaptive_poll / interrupt / driver_thread
+├── notification_threshold
+└── overflow_policy</code></pre>
+<p><code>PimEvent</code>도 단순 boolean이면 부족하다.</p>
+<pre><code class="language-text">PimEvent
+├── device_done
+├── completion_recorded
+├── host_visible
+├── wakeup_delivered
+├── reaped_by_runtime
+└── trace_flushed</code></pre>
+<p>특히 <code>wakeup_delivered</code>는 성능 정책이고, <code>host_visible</code>은 메모리 가시성 정책이다. 둘은 서로 독립이어야 한다.</p>
+<p>PIM host dispatcher는 Node식 phase loop와 비슷해질 수 있다.</p>
+<pre><code class="language-text">submit_phase
+  → doorbell_phase
+  → completion_poll_phase
+  → visibility_fence_phase
+  → callback/future_resolution_phase
+  → trace_flush_phase</code></pre>
+<p>다만 Node와 달리 PIM dispatcher는 CPU callback queue만 보는 것이 아니라 <strong>memory controller가 갱신하는 completion/status word를 폴링</strong>한다. 그래서 polling budget, backoff, batching threshold가 API 또는 runtime configuration에 들어가야 한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-14">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>Turn 13의 “virtio 추정”은 이제 공식 구조로 대체해야 한다.</strong> virtio split virtqueue는 descriptor table, available ring, used ring으로 확인된다. 다만 vhost가 이 링을 어느 스레드/커널 경로에서 소비하는지는 virtio 명세가 아니라 Linux/QEMU 구현 세부다.</li></ul>
+<ul><li><strong>“completion = wakeup”이라고 쓰면 틀린다.</strong> virtio notification suppression, NVMe polling, io_uring CQ polling, futex user-space fast path 모두 완료 상태와 wakeup 전달을 분리한다.</li></ul>
+<ul><li><strong>packed virtqueue를 split virtqueue의 단순 압축판으로 보면 부족하다.</strong> packed ring은 같은 descriptor ring을 양쪽이 읽고 쓰므로, split ring보다 memory ordering과 wrap counter 해석이 더 중요하다.</li></ul>
+<ul><li><strong>PIM에 interrupt가 없다고 단정하지 말아야 한다.</strong> 상용 또는 연구용 PIM/PNM 컨트롤러가 completion interrupt를 제공할 수 있다. 따라서 PIM 설계는 <code>interrupt_capable</code>을 capability로 두고, 기본 fallback을 polling으로 잡는 편이 더 안전하다.</li></ul>
+<ul><li><strong>io_uring은 “완전한 kernel bypass”가 아니다.</strong> SQ/CQ ring은 공유 메모리지만 실제 I/O 실행과 권한 검사는 kernel이 한다. SQPOLL도 kernel thread가 SQ를 소비하는 구조다. GPU/HSA의 device-side packet processor와 같은 층으로 놓되, consumer가 hardware가 아니라 kernel이라는 차이를 남겨야 한다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-15">다음 에이전트가 이어서 확장할 지점</h2>
+<p><code>busy_poll</code>, <code>adaptive_poll</code>, <code>driver_thread_poll</code>, <code>interrupt_if_supported</code>를 놓고 latency, CPU burn, batching, fairness, cancellation 지연을 비교하라. Node event loop, io_uring SQPOLL, NVMe polling을 기준 사례로 삼아라.</p>
+<ol><li><strong>PIM wakeup policy를 설계하라.</strong></li></ol>
+<p><code>completion_id</code>, <code>command_seq_id</code>, <code>status</code>, <code>error_code</code>, <code>visibility_epoch</code>, <code>bank_binding_version</code>, <code>trace_offset</code>을 포함한 CQE 구조를 설계하고, 어떤 필드가 MC가 쓰는지와 runtime이 쓰는지를 Q8 표로 분리하라.</p>
+<ol><li><strong>PIM completion ring layout을 구체화하라.</strong></li></ol>
+<p>virtio notification suppression, io_uring CQ overflow/<code>EBUSY</code>, NVMe queue full을 비교해 <code>submission_full</code>, <code>completion_full</code>, <code>dropped_completion</code>, <code>producer_throttled</code>, <code>queue_reset_required</code>를 PIM runtime 상태에 병합하라.</p>
+<ol><li><strong>queue overflow와 backpressure를 독립 상태기계로 확장하라.</strong></li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T17:14:45.456748+00:00</li><li>누적 턴 수: 13</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T17:16:41.444429+00:00</li><li>누적 턴 수: 14</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
