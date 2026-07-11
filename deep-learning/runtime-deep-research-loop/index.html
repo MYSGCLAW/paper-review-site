@@ -479,6 +479,17 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-21">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-21">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-21">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-22-codex">Turn 22 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-22">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-22">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-21">더 구체화한 부분</a>
+<a class="toc-level-3" href="#pim_pool_alloc-placement-fallback-정책">`pim_pool_alloc()` placement fallback 정책</a>
+<a class="toc-level-3" href="#donation-admission과-pool-fallback-연결">Donation admission과 pool fallback 연결</a>
+<a class="toc-level-3" href="#runtime-object-ownership-graph">Runtime object ownership graph</a>
+<a class="toc-level-3" href="#pim_runtime-h-통합-보강안">`pim_runtime.h` 통합 보강안</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-22">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-22">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-22">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -498,7 +509,7 @@
 <h2 id="우선-확장-순서">우선 확장 순서</h2>
 <ol><li>Runtime의 일반 모델: init, context, scheduler, allocator, executor, event loop, error/completion.</li><li>OS runtime과 language runtime: Linux process scheduler, JVM, Go runtime, Tokio/Node.js event loop.</li><li>Accelerator runtime: CUDA Runtime/Driver, Level Zero, ROCm/HIP, OpenCL/SYCL.</li><li>ML compiler runtime: PJRT, XLA, StableHLO lowering, buffer/executable/event.</li><li>PIM runtime: UPMEM, HBM-PIM/LPDDR-PIM 후보, memory-side command, host synchronization.</li><li>설계 도출: LPDDR6-PIM runtime object model, state machine, scheduler, allocator, API 후보.</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 누적 자료가 없는 상태에서 5개 축(CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LPDDR6-PIM)에 대한 기초 골격을 구축했다. 각 런타임의 핵심 추상화 계층, 메모리/실행 모델, 상호 비교 지점을 정리하고, 특히 LPDDR6-PIM은 표준화 미완료 상태임을 명시했다. ## 새로</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 런타임을 “컨텍스트 소유권”, “명령 제출 경로”, “동기화/완료 통지”, “PIM용 메모리 속성” 관점으로 확장했다. 특히 이전 턴의 LPDDR6 상태 설명은 2026년 7월 기준 수정이 필요하다. LPDDR6 자체는 이미 JEDEC JESD209-6으로 공개되었다고 보도되어 있으나, “LPDDR6-PIM 런타임 표준”은 여전히 공개 표준으로 확인되</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 없어 이번 턴은 실시간 웹 검증 없이 진행한다. 대신 아직 다루지 않은 두 축 — (1) UPMEM tasklet 동기화 프리미티브의 구체 API, (2) seed의 핵심 질문 5번(ready/running/blocked/waiting/completed/failed/cancelled 상태 전이)을 여러 런타임에 걸쳐 통일된 상태표로 정리하는 작업 — 을 추가하고, 이</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 턴의 확인 필요 항목 중 두 논문을 원문 검색으로 대조했다. <code>UPMEM Unleashed</code>와 <code>PIM-SHERPA</code>는 실제 존재하며, 이전 턴의 큰 방향은 유지 가능하다. 다만 여기서 멈추지 않고, 런타임 상태 모델을 <strong>host thread 상태</strong>, <strong>runtime queue 상태</strong>, <strong>device/PIM 실행 상태</strong>, **memor</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 WebSearch/WebFetch 도구 사용 권한이 요청 시 거부되어, Turn 4가 남긴 원문 대조 과제(PIM-SHERPA의 DDB/OWR 단계, JESD209-6 세부 사양)를 다시 완료하지 못했다. 대신 Turn 4의 세 번째 확장 지점 — &quot;Go/Tokio/Node.js의 ready/wake 모델을 CUDA/Level Zero/PJRT eve</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 5의 “굵은 reset vs 가는 협조적 취소” 구분을 더 밀어붙여, <strong>reset의 blast radius</strong>, <strong>PIM-SHERPA의 DDB/OWR 흐름</strong>, <strong>LPDDR-PIM 런타임 API가 반드시 가져야 할 memory-state transition</strong>을 구체화한다. 핵심은 <code>cancel(task)</code>보다 `quiesce → dra</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번 턴에서도 거부되어, Turn 6이 요청한 Level Zero 원문 대조와 PIM-SHERPA 비용 모델 검증은 이번에도 완료하지 못했습니다. 대신 Turn 6이 명시적으로 요청한 LPDDR-PIM 에러 모델 설계를 완성하고, seed 질문 8(런타임 vs OS kernel/driver/compiler/framework의 상태 소유권 경계)이 지금까지 다뤄지지 않</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 Turn 7의 <code>drm_sched</code>/<code>dma_fence</code> 도입을 더 정밀하게 다룬다. 핵심 수정은 <strong><code>dma_fence</code>를 모든 CUDA/Level Zero/PJRT event의 보편적 하부 구현처럼 말하면 과도한 일반화</strong>라는 점이다. Linux DRM/오픈 GPU 드라이버 계층에서는 강력한 공통 동기화 객체지만, NVIDIA CUDA 독점</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(Turn 3, 5, 7에 이어 4번째), Level Zero 공식 spec 원문 대조와 <code>dma_resv</code> 원문 검증은 여전히 완료하지 못했다. 대신 지금까지 다뤄지지 않은 seed 질문 3번(&quot;task, process, thread, fiber, coroutine, stream, command queue는 런타임 안</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 9가 남긴 세 가지 축 중 두 가지를 실제 문서 기준으로 보강한다. 첫째, Level Zero의 <code>zeCommandListReset</code>, <code>zeCommandQueueSynchronize</code>, <code>zeFenceHostSynchronize</code>를 원문 헤더 기준으로 확인해 “reset은 실행 중 command 취소가 아니다”를 더 강하게 확정한다. 둘째,</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 권한이 이번에도 거부되어 UPMEM SDK 원문 확인은 이번에도 못했다. 다만 주목할 점은 Turn 8과 Turn 10(Codex)에서는 실제로 출처 링크를 인용한 것으로 보인다는 것이다 — 즉 이 세션은 &quot;웹 접근이 전면 차단&quot;된 것이 아니라, 에이전트/도구별로 권한이 비대칭적으로 부여되고 있을 가능성이 높다. 이는 Turn 9의 진단(&quot;세션 자</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 UPMEM 관련 가정을 일부 보정하고, LPDDR6-PIM 런타임 설계에 <strong>topology-aware scheduling</strong>과 <strong>region/sub-region reservation 정책</strong>을 붙인다. 핵심은 PIM 런타임이 GPU 런타임처럼 “큐에 커널을 넣는다”로 끝나지 않고, **rank/channel/bank/topology와</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(5회 연속 — Turn 3, 5, 7, 9, 13) UPMEM SDK 원문(<code>dpu_launch</code>/<code>dpu_sync</code> 시그니처) 검증은 이번에도 완료하지 못했다. 다만 Turn 11의 관찰(Turn 8·10에서는 실제로 출처가 인용됨)을 고려하면 이는 세션 전체 차단이 아니라 턴/에이전트별 권한 비대칭일 가능성이 크다</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 13의 gang scheduling/BSP 관점을 유지하되, 이를 <strong>PIM 런타임 객체 모델의 정책 필드</strong>로 끌어내린다. 핵심 보강은 두 가지다. 1. PIM launch 단위는 단순 <code>task</code>가 아니라 <code>gang</code>, <code>placement</code>, <code>partition</code>이 결합된 제출 단위로 봐야 한다. 2. host-side async runt</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(6회 연속 — Turn 3, 5, 7, 9, 13, 15) UPMEM SDK 원문 확인은 또다시 불발됐다. 대신 Turn 14가 남긴 세 과제 중 두 가지를 정면으로 다룬다. 첫째, <code>pim_future_t</code>를 command-completion/visibility-completion으로 분리하고 Linux의 실제 ex</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 fd/future 설계를 한 단계 더 정리한다. 핵심 보강은 두 가지다. 1. <code>sync_file</code>은 “PIM event fd”의 좋은 선례지만, 정확히는 <strong>dma-buf에 현재 붙어 있는 fence 집합의 snapshot fd</strong>이므로, PIM command 하나당 항상 1:1로 대응한다고 단정하면 안 된다. 2. <code>io_uring</code>식</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 도구 사용을 시도했으나 이번에도 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17), UPMEM SDK 원문 및 io_uring 의존성 체이닝(<code>IORING_OP_LINK_TIMEOUT</code>) 확인 모두 이번에도 불발됐다. 이는 Turn 13/15가 제안한 대로 &quot;확인 시도를 반복하기보다 미확인 상태를 명시한 채 설계를 확정&quot;하</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 두 축을 이어받아 <strong>자원 회수</strong>와 <strong>우선순위 기반 admission control</strong>을 런타임 객체 모델 안으로 더 밀어 넣는다. 보정할 점도 있다. Turn 17은 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>의 stream-ordered free를 일반 지식으로만 설명했지만, NVIDIA CUDA Programmin</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 직전 내용의 <code>Aliased</code>/<code>Donated</code> 모델을 더 정리한다. 핵심 보강은 두 가지다. 1. <code>Aliased</code>는 상태가 아니라 <strong>물리 region을 공유하는 alias group 속성</strong>으로 모델링해야 한다. 2. donation은 단순 플래그가 아니라 <strong>핸들 무효화, alias 해제, conflict policy, completion 진단</strong></td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(UPMEM <code>dpu_launch</code>/<code>dpu_sync</code> 시그니처, CUDA <code>cudaMemPoolTrimTo</code> 세부 동작 확인 재시도가 모두 불발) 미확인 UPMEM 항목은 이번에도 이월된다. 대신 Turn 20이 남긴 세 과제 중 **①<code>pim_region_pool</code> 객체 설계<strong>와 </strong>②alias group tear</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 누적 자료가 없는 상태에서 5개 축(CUDA Runtime/Driver, Intel Level Zero, PJRT/OpenXLA, UPMEM SDK, LPDDR6-PIM)에 대한 기초 골격을 구축했다. 각 런타임의 핵심 추상화 계층, 메모리/실행 모델, 상호 비교 지점을 정리하고, 특히 LPDDR6-PIM은 표준화 미완료 상태임을 명시했다. ## 새로</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 런타임을 “컨텍스트 소유권”, “명령 제출 경로”, “동기화/완료 통지”, “PIM용 메모리 속성” 관점으로 확장했다. 특히 이전 턴의 LPDDR6 상태 설명은 2026년 7월 기준 수정이 필요하다. LPDDR6 자체는 이미 JEDEC JESD209-6으로 공개되었다고 보도되어 있으나, “LPDDR6-PIM 런타임 표준”은 여전히 공개 표준으로 확인되</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 없어 이번 턴은 실시간 웹 검증 없이 진행한다. 대신 아직 다루지 않은 두 축 — (1) UPMEM tasklet 동기화 프리미티브의 구체 API, (2) seed의 핵심 질문 5번(ready/running/blocked/waiting/completed/failed/cancelled 상태 전이)을 여러 런타임에 걸쳐 통일된 상태표로 정리하는 작업 — 을 추가하고, 이</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 턴의 확인 필요 항목 중 두 논문을 원문 검색으로 대조했다. <code>UPMEM Unleashed</code>와 <code>PIM-SHERPA</code>는 실제 존재하며, 이전 턴의 큰 방향은 유지 가능하다. 다만 여기서 멈추지 않고, 런타임 상태 모델을 <strong>host thread 상태</strong>, <strong>runtime queue 상태</strong>, <strong>device/PIM 실행 상태</strong>, **memor</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 WebSearch/WebFetch 도구 사용 권한이 요청 시 거부되어, Turn 4가 남긴 원문 대조 과제(PIM-SHERPA의 DDB/OWR 단계, JESD209-6 세부 사양)를 다시 완료하지 못했다. 대신 Turn 4의 세 번째 확장 지점 — &quot;Go/Tokio/Node.js의 ready/wake 모델을 CUDA/Level Zero/PJRT eve</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 5의 “굵은 reset vs 가는 협조적 취소” 구분을 더 밀어붙여, <strong>reset의 blast radius</strong>, <strong>PIM-SHERPA의 DDB/OWR 흐름</strong>, <strong>LPDDR-PIM 런타임 API가 반드시 가져야 할 memory-state transition</strong>을 구체화한다. 핵심은 <code>cancel(task)</code>보다 `quiesce → dra</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>WebSearch 권한이 이번 턴에서도 거부되어, Turn 6이 요청한 Level Zero 원문 대조와 PIM-SHERPA 비용 모델 검증은 이번에도 완료하지 못했습니다. 대신 Turn 6이 명시적으로 요청한 LPDDR-PIM 에러 모델 설계를 완성하고, seed 질문 8(런타임 vs OS kernel/driver/compiler/framework의 상태 소유권 경계)이 지금까지 다뤄지지 않</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전 Turn 7의 <code>drm_sched</code>/<code>dma_fence</code> 도입을 더 정밀하게 다룬다. 핵심 수정은 <strong><code>dma_fence</code>를 모든 CUDA/Level Zero/PJRT event의 보편적 하부 구현처럼 말하면 과도한 일반화</strong>라는 점이다. Linux DRM/오픈 GPU 드라이버 계층에서는 강력한 공통 동기화 객체지만, NVIDIA CUDA 독점</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(Turn 3, 5, 7에 이어 4번째), Level Zero 공식 spec 원문 대조와 <code>dma_resv</code> 원문 검증은 여전히 완료하지 못했다. 대신 지금까지 다뤄지지 않은 seed 질문 3번(&quot;task, process, thread, fiber, coroutine, stream, command queue는 런타임 안</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 9가 남긴 세 가지 축 중 두 가지를 실제 문서 기준으로 보강한다. 첫째, Level Zero의 <code>zeCommandListReset</code>, <code>zeCommandQueueSynchronize</code>, <code>zeFenceHostSynchronize</code>를 원문 헤더 기준으로 확인해 “reset은 실행 중 command 취소가 아니다”를 더 강하게 확정한다. 둘째,</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 권한이 이번에도 거부되어 UPMEM SDK 원문 확인은 이번에도 못했다. 다만 주목할 점은 Turn 8과 Turn 10(Codex)에서는 실제로 출처 링크를 인용한 것으로 보인다는 것이다 — 즉 이 세션은 &quot;웹 접근이 전면 차단&quot;된 것이 아니라, 에이전트/도구별로 권한이 비대칭적으로 부여되고 있을 가능성이 높다. 이는 Turn 9의 진단(&quot;세션 자</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 UPMEM 관련 가정을 일부 보정하고, LPDDR6-PIM 런타임 설계에 <strong>topology-aware scheduling</strong>과 <strong>region/sub-region reservation 정책</strong>을 붙인다. 핵심은 PIM 런타임이 GPU 런타임처럼 “큐에 커널을 넣는다”로 끝나지 않고, **rank/channel/bank/topology와</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(5회 연속 — Turn 3, 5, 7, 9, 13) UPMEM SDK 원문(<code>dpu_launch</code>/<code>dpu_sync</code> 시그니처) 검증은 이번에도 완료하지 못했다. 다만 Turn 11의 관찰(Turn 8·10에서는 실제로 출처가 인용됨)을 고려하면 이는 세션 전체 차단이 아니라 턴/에이전트별 권한 비대칭일 가능성이 크다</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 Turn 13의 gang scheduling/BSP 관점을 유지하되, 이를 <strong>PIM 런타임 객체 모델의 정책 필드</strong>로 끌어내린다. 핵심 보강은 두 가지다. 1. PIM launch 단위는 단순 <code>task</code>가 아니라 <code>gang</code>, <code>placement</code>, <code>partition</code>이 결합된 제출 단위로 봐야 한다. 2. host-side async runt</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(6회 연속 — Turn 3, 5, 7, 9, 13, 15) UPMEM SDK 원문 확인은 또다시 불발됐다. 대신 Turn 14가 남긴 세 과제 중 두 가지를 정면으로 다룬다. 첫째, <code>pim_future_t</code>를 command-completion/visibility-completion으로 분리하고 Linux의 실제 ex</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 fd/future 설계를 한 단계 더 정리한다. 핵심 보강은 두 가지다. 1. <code>sync_file</code>은 “PIM event fd”의 좋은 선례지만, 정확히는 <strong>dma-buf에 현재 붙어 있는 fence 집합의 snapshot fd</strong>이므로, PIM command 하나당 항상 1:1로 대응한다고 단정하면 안 된다. 2. <code>io_uring</code>식</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 WebSearch 도구 사용을 시도했으나 이번에도 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17), UPMEM SDK 원문 및 io_uring 의존성 체이닝(<code>IORING_OP_LINK_TIMEOUT</code>) 확인 모두 이번에도 불발됐다. 이는 Turn 13/15가 제안한 대로 &quot;확인 시도를 반복하기보다 미확인 상태를 명시한 채 설계를 확정&quot;하</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 두 축을 이어받아 <strong>자원 회수</strong>와 <strong>우선순위 기반 admission control</strong>을 런타임 객체 모델 안으로 더 밀어 넣는다. 보정할 점도 있다. Turn 17은 <code>cudaMallocAsync</code>/<code>cudaFreeAsync</code>의 stream-ordered free를 일반 지식으로만 설명했지만, NVIDIA CUDA Programmin</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(7회 연속 — Turn 3, 5, 7, 9, 13, 15, 17) PJRT/XLA의 buffer donation·aliasing 구조를 원문으로 검증하려는 시도가 또 불발됐다. 다만 Turn 12·14의 관찰(다른 턴/에이전트에서는 검색이 성공한 사례가 실제로 존재)을 고려하면 이는 세션 차단이 아니라 요청 단위 권한</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 직전 내용의 <code>Aliased</code>/<code>Donated</code> 모델을 더 정리한다. 핵심 보강은 두 가지다. 1. <code>Aliased</code>는 상태가 아니라 <strong>물리 region을 공유하는 alias group 속성</strong>으로 모델링해야 한다. 2. donation은 단순 플래그가 아니라 <strong>핸들 무효화, alias 해제, conflict policy, completion 진단</strong></td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서도 WebSearch 권한이 거부되어(UPMEM <code>dpu_launch</code>/<code>dpu_sync</code> 시그니처, CUDA <code>cudaMemPoolTrimTo</code> 세부 동작 확인 재시도가 모두 불발) 미확인 UPMEM 항목은 이번에도 이월된다. 대신 Turn 20이 남긴 세 과제 중 **①<code>pim_region_pool</code> 객체 설계<strong>와 </strong>②alias group tear</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 21의 <code>pim_region_pool</code>과 alias teardown을 이어서, 아직 비어 있던 <strong>placement fallback 정책</strong>과 <strong>runtime object lifetime 그래프</strong>를 구체화한다. 핵심 추가는 세 가지다. 1. <code>pim_pool_alloc()</code>은 단순히 “pool에서 할당 성공/실패”가 아니라, 요청 placem</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -1699,8 +1710,214 @@ void                pim_pool_trim(pim_region_pool_t *pool, size_t target_poolabl
 <ul><li>CUDA IPC(<code>cudaIpcGetMemHandle</code>/<code>cudaIpcOpenMemHandle</code>/<code>cudaIpcCloseMemHandle</code>)의 &quot;close-before-free&quot; 계약은 일반적으로 알려진 CUDA 프로그래밍 지식이며, 이번 세션에서 공식 문서로 재검증하지 못했다. 정확한 미정의 동작의 범위(크래시인지, 조용한 데이터 오염인지)는 확인되지 않았다.</li><li>jemalloc의 <code>dirty_decay_ms</code>/<code>muzzy_decay_ms</code> decay curve의 정확한 수학적 형태(지수 감쇠 여부, half-life 계산식)는 일반 지식 수준으로 서술했으며 원문 대조가 필요하다.</li><li>&quot;PIM 런타임이 CUDA IPC보다 강한 teardown 보장을 자동 강제한다&quot;는 이번 턴의 설계 선택은 구현 비용(전역 refcount/fence 테이블 유지)을 정당화할 만큼 실제 LPDDR6-PIM 워크로드에서 cross-process/cross-context region 공유가 흔한지에 대한 근거 없이 내려진 결정이다 — 만약 PIM에서 IPC급 공유가 드물다면 이 복잡도는 과설계일 수 있다.</li><li><code>pim_pool_alloc</code>의 <code>hint: pim_placement_t</code>가 실제로 요청한 locality를 만족하지 못할 때(pool에 해당 channel/rank의 poolable block이 없을 때)의 fallback 정책(다른 placement에서 할당 후 마이그레이션 vs 실패 반환)은 이번 턴에서 정의하지 않았다.</li></ul>
 <h2 id="다음-에이전트가-이어서-확장할-지점-21">다음 에이전트가 이어서 확장할 지점</h2>
 <ol><li><code>pim_pool_alloc</code>이 요청한 placement를 만족하지 못할 때의 fallback 정책(마이그레이션 vs 즉시 실패 vs 다른 pool에서 차용)을 정의하고, 이를 <code>pim_submit_desc_t</code>의 donation/admission 로직과 연결한다.</li><li><code>pim_runtime.h</code> canonical 초안에 이번 턴의 <code>pim_region_pool_t</code>, alias teardown 상태 머신, decay 정책 enum을 통합하고, Turn 17(재명명된 Turn 19)의 <code>pim_region_state_t</code>/<code>pim_alias_info_t</code>와 필드 중복이 없는지 최종 점검한다.</li><li>지금까지 설계된 8~9개 핵심 객체(context, topology, region, region_pool, reservation, command_buffer, gang, queue, task/event/future, completion)의 소유권 그래프(누가 누구를 생성/파괴하는가)를 다이어그램 하나로 정리해, 지금까지 텍스트로만 흩어진 lifetime 관계를 한눈에 볼 수 있게 한다.</li></ol>
+<h3 id="turn-22-codex">Turn 22 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-22">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 21의 <code>pim_region_pool</code>과 alias teardown을 이어서, 아직 비어 있던 <strong>placement fallback 정책</strong>과 <strong>runtime object lifetime 그래프</strong>를 구체화한다. 핵심 추가는 세 가지다.</p>
+<ol><li><code>pim_pool_alloc()</code>은 단순히 “pool에서 할당 성공/실패”가 아니라, 요청 placement를 얼마나 엄격하게 지킬지 결정하는 정책 API가 필요하다.</li><li><code>pim_region_pool</code>은 allocator 객체인 동시에 topology, exportability, visibility, donation 재사용 가능성을 판정하는 admission-control 객체다.</li><li><code>context -&gt; pool -&gt; region -&gt; alias group -&gt; reservation/event/future</code>로 이어지는 소유권 그래프를 명시하지 않으면 free, donation, IPC teardown 규칙이 계속 중복 정의된다.</li></ol>
+<h2 id="새로-추가한-사실-22">새로 추가한 사실</h2>
+<p><strong>Linux dma-buf heap은 “어느 allocator에서 왔는가”가 UAPI 식별자가 된다</strong></p>
+<p>Linux dma-buf heap 문서는 userspace가 특정 allocation pool에서 dma-buf를 만들거나 framework 간 buffer를 공유하기 위해 heap을 사용한다고 설명한다. 또한 heap 이름은 userspace가 heap을 구분하는 기준이므로 안정적이어야 하고, memory region의 성질을 드러내야 한다. 예를 들어 <code>system</code> heap은 가상적으로 연속된 cacheable buffer를, <code>default_cma_region</code> heap은 물리적으로 연속된 cacheable buffer를 할당한다. 출처: <a href="https://docs.kernel.org/userspace-api/dma-buf-heaps.html" target="_blank" rel="noopener noreferrer">Linux dma-buf heaps documentation</a></p>
+<p>PIM에 적용하면 <code>pim_region_pool</code>의 <code>pool_id</code>만으로는 부족하다. 사용자와 framework가 다음 성질을 구분할 수 있어야 한다.</p>
+<div class="table-wrap"><table><thead><tr><th>pool 성질</th><th>PIM 의미</th></tr></thead><tbody><tr><td>stable name</td><td>graph compiler/runtime가 같은 pool을 반복 선택 가능</td></tr><tr><td>topology locality</td><td>channel/rank/bank 근접성</td></tr><tr><td>contiguity</td><td>bank group 또는 row-granular command 가능 여부</td></tr><tr><td>cacheability/visibility</td><td>host-visible transform 비용</td></tr><tr><td>exportability</td><td>cross-process/imported region 허용 여부</td></tr><tr><td>protected/shared</td><td>confidential VM, secure accelerator, DMA 허용 범위</td></tr></tbody></table></div>
+<p>따라서 <code>pim_pool_create()</code>는 내부 디스크립터만 받기보다, <code>pim_pool_query()</code>로 사용 가능한 pool 목록과 속성을 노출해야 한다.</p>
+<pre><code class="language-c">typedef struct {
+  uint64_t pool_id;
+  const char *stable_name;
+  pim_placement_t locality;
+  bool physically_contiguous;
+  bool host_cacheable;
+  bool exportable;
+  bool protected_memory;
+  size_t min_alignment;
+  size_t max_allocation_size;
+} pim_pool_info_t;
+
+size_t pim_query_pools(
+  pim_context_t *ctx,
+  pim_pool_info_t *out,
+  size_t max_count
+);</code></pre>
+<p><strong>CUDA memory pool은 pool access와 export/import를 별도 API로 둔다</strong></p>
+<p>CUDA Runtime API v13.3.1 문서는 stream-ordered allocator가 allocation/free를 stream ordering에 묶고, <code>cudaMallocFromPoolAsync()</code>가 지정 pool에서 할당하며, memory pool export/import와 access-control API를 별도로 제공한다고 설명한다. <code>cudaMemPoolTrimTo()</code>는 pool 메모리를 OS로 반환하려고 시도하는 API다. 출처: <a href="https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__MEMORY__POOLS.html" target="_blank" rel="noopener noreferrer">CUDA Runtime API, Stream Ordered Memory Allocator</a></p>
+<p>PIM 설계에서 얻을 교훈은 다음이다.</p>
+<div class="table-wrap"><table><thead><tr><th>CUDA pool API 축</th><th>PIM 대응</th></tr></thead><tbody><tr><td>pool 선택</td><td><code>pim_pool_alloc()</code></td></tr><tr><td>stream ordering</td><td>queue/reservation ordering</td></tr><tr><td>pool access control</td><td>context/device/importer별 access mask</td></tr><tr><td>export/import</td><td>alias group의 <code>IMPORTED</code> role</td></tr><tr><td>trim</td><td><code>pim_pool_trim()</code> 또는 pressure-based reclaim</td></tr></tbody></table></div>
+<p>즉 Turn 21의 <code>exportable</code>은 bool 하나로 끝나기 어렵다. 최소한 “누가 import 가능한가”와 “import 후 어떤 access가 가능한가”를 분리해야 한다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_POOL_ACCESS_NONE  = 0,
+  PIM_POOL_ACCESS_READ  = 1 &lt;&lt; 0,
+  PIM_POOL_ACCESS_WRITE = 1 &lt;&lt; 1,
+  PIM_POOL_ACCESS_EXEC  = 1 &lt;&lt; 2,
+  PIM_POOL_ACCESS_EXPORT = 1 &lt;&lt; 3
+} pim_pool_access_flags_t;</code></pre>
+<p><strong>OpenCL의 <code>USE_HOST_PTR</code>는 aliasing을 자동으로 안전하게 만들지 않는다</strong></p>
+<p>OpenCL <code>clCreateBuffer</code> 문서는 <code>CL_MEM_USE_HOST_PTR</code>가 host pointer를 storage로 쓰려는 의도임을 나타내지만, 구현은 그 내용을 device memory에 cache할 수 있다고 설명한다. 또한 같은 host pointer 또는 overlapping host/SVM 영역에서 만들어진 여러 buffer object에 대해 command를 실행한 결과는 undefined라고 명시한다. 출처: [OpenCL <code>clCreateBuffer</code> reference](https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateBuffer.html)</p>
+<p>이는 PIM alias group 설계에 중요하다. “같은 물리 메모리를 가리킨다”는 사실만으로 write ordering이 자동 보장되는 것은 아니다. 따라서 PIM은 OpenCL보다 강한 alias group 규칙을 둬야 한다.</p>
+<pre><code class="language-text">same physical storage
+  does not imply
+safe concurrent read/write
+
+safe aliasing requires
+  alias group tracking
+  reservation conflict detection
+  visibility propagation
+  teardown refcount</code></pre>
+<h2 id="더-구체화한-부분-21">더 구체화한 부분</h2>
+<h3 id="pim_pool_alloc-placement-fallback-정책"><code>pim_pool_alloc()</code> placement fallback 정책</h3>
+<p>Turn 21은 <code>hint: pim_placement_t</code>가 만족되지 않을 때의 fallback을 미정으로 남겼다. 이를 명시 정책으로 분리한다.</p>
+<pre><code class="language-c">typedef enum {
+  PIM_PLACEMENT_STRICT,        // 요청 placement 불만족 시 실패
+  PIM_PLACEMENT_NEARBY,        // 같은 rank/channel 등 비용이 낮은 후보 허용
+  PIM_PLACEMENT_MIGRATE,       // 다른 pool에서 할당 후 migration command 삽입
+  PIM_PLACEMENT_BORROW_POOL,   // 호환 pool에서 임시 차용
+  PIM_PLACEMENT_ANY_WITH_DIAG  // 어디든 할당하되 CQE 진단 남김
+} pim_placement_policy_t;
+
+typedef struct {
+  size_t size;
+  pim_placement_t preferred;
+  pim_placement_policy_t placement_policy;
+  bool require_exportable;
+  bool require_host_visible;
+  bool allow_migration;
+  uint64_t user_data;
+} pim_alloc_desc_t;
+
+typedef struct {
+  pim_region_t *region;
+  pim_region_pool_t *pool;
+  pim_placement_t actual_placement;
+  bool placement_relaxed;
+  bool migration_inserted;
+  int result;
+} pim_alloc_result_t;
+
+pim_alloc_result_t pim_pool_alloc_ex(
+  pim_region_pool_t *preferred_pool,
+  const pim_alloc_desc_t *desc
+);</code></pre>
+<p>정책별 상태 전이는 다음처럼 잡는 편이 안전하다.</p>
+<div class="table-wrap"><table><thead><tr><th>정책</th><th>preferred pool 실패 시</th><th>runtime 상태 전이</th><th>completion/diagnostic</th></tr></thead><tbody><tr><td><code>STRICT</code></td><td>즉시 실패</td><td><code>AllocRequested -&gt; Failed</code></td><td><code>PIM_CQE_REJECTED_NOT_READY</code> 또는 alloc error</td></tr><tr><td><code>NEARBY</code></td><td>locality cost가 threshold 이하인 pool 선택</td><td><code>AllocRequested -&gt; AllocatedRelaxed</code></td><td><code>placement_relaxed=true</code></td></tr><tr><td><code>MIGRATE</code></td><td>다른 pool 할당 후 copy/move command 삽입</td><td><code>AllocatedRemote -&gt; Migrating -&gt; HostVisible/PimDirty</code></td><td>migration event 반환</td></tr><tr><td><code>BORROW_POOL</code></td><td>compatible pool refcount 증가</td><td><code>Borrowed -&gt; Active -&gt; Returned</code></td><td>pool pressure metric 증가</td></tr><tr><td><code>ANY_WITH_DIAG</code></td><td>최후 fallback</td><td><code>AllocatedRelaxed</code></td><td>성능 warning CQE</td></tr></tbody></table></div>
+<p><code>MIGRATE</code>는 correctness 측면에서는 편하지만, PIM에서는 성능상 위험하다. bank-local compute를 기대한 op가 remote placement로 실행되면 PIM의 이점이 사라질 수 있으므로, default는 <code>STRICT</code> 또는 <code>NEARBY</code>가 더 낫다.</p>
+<h3 id="donation-admission과-pool-fallback-연결">Donation admission과 pool fallback 연결</h3>
+<p>Donation은 “재사용할 물리 저장소가 맞는가”를 묻는 연산이므로 pool fallback과 직접 연결된다.</p>
+<div class="table-wrap"><table><thead><tr><th>donation 조건</th><th>검사 위치</th><th>실패 시 기본 동작</th></tr></thead><tbody><tr><td>size 호환</td><td>allocator</td><td>fallback allocation</td></tr><tr><td>layout 호환</td><td>compiler/runtime</td><td>layout transform 또는 donation unused</td></tr><tr><td>placement 호환</td><td>pool scheduler</td><td><code>STRICT</code>이면 reject, <code>NEARBY</code>면 relaxed reuse</td></tr><tr><td>visibility 호환</td><td>visibility manager</td><td>visibility close event 삽입</td></tr><tr><td>exportability 호환</td><td>alias manager</td><td>imported alias가 있으면 donation 보류/거부</td></tr><tr><td>outstanding reservation 없음</td><td>scheduler</td><td>policy에 따라 reject/wait/auto-depend</td></tr></tbody></table></div>
+<p><code>require_reuse=true</code>인 donation은 fallback allocation을 허용하면 안 된다. 이 경우 placement가 맞지 않으면 command 자체를 실패시켜야 한다.</p>
+<pre><code class="language-text">donation + require_reuse
+  -&gt; placement mismatch
+  -&gt; PIM_CQE_REJECTED_NOT_READY or PIM_CQE_REJECTED_ERROR
+
+donation + fallback allowed
+  -&gt; allocate output elsewhere
+  -&gt; original handle remains valid until normal invalidation rule
+  -&gt; emit PIM_CQE_DONATION_UNUSED</code></pre>
+<h3 id="runtime-object-ownership-graph">Runtime object ownership graph</h3>
+<p>지금까지 흩어진 lifetime 관계를 한 번에 정리하면 다음 구조가 된다.</p>
+<pre><code class="language-text">pim_context
+  owns pim_topology snapshot
+  owns scheduler/admission state
+  owns one or more pim_region_pool
+
+pim_region_pool
+  owns poolable physical blocks
+  tracks pressure/decay/export access
+  creates pim_region
+
+pim_region
+  belongs to one pool
+  has region_state
+  points to alias_group
+  has outstanding reservation set
+
+pim_alias_group
+  owns logical handle membership
+  tracks OWNER/VIEW/IMPORTED/DONATION_OUTPUT roles
+  blocks final reclaim while refcount &gt; 0
+
+pim_queue
+  owns submitted task ordering
+  emits completion records
+  exposes eventfd-style readiness hint
+
+pim_task
+  owns one command submission instance
+  references command_buffer, gang, reservations, deps
+  signals pim_event on terminal state
+
+pim_event
+  is low-level completion primitive
+  may be wrapped as pim_future fd
+  may participate in dependency graph
+
+pim_completion_queue
+  does not own tasks
+  reports terminal transitions and diagnostics</code></pre>
+<p>소유권 규칙을 API 관점으로 쓰면 다음과 같다.</p>
+<div class="table-wrap"><table><thead><tr><th>객체</th><th>생성자</th><th>파괴/종료 조건</th><th>주의점</th></tr></thead><tbody><tr><td><code>pim_context</code></td><td><code>pim_context_create</code></td><td>모든 queue/pool/region 닫힘</td><td>global reset owner</td></tr><tr><td><code>pim_region_pool</code></td><td>context 또는 imported handle</td><td>pool 내 active region 0</td><td>imported pool은 exporter lifetime에 종속</td></tr><tr><td><code>pim_region</code></td><td>pool allocation/import/donation output</td><td>alias group refcount 0 + fences drained</td><td>free는 async</td></tr><tr><td><code>pim_alias_group</code></td><td>first region handle</td><td>all handles closed</td><td>poison 전파 단위</td></tr><tr><td><code>pim_queue</code></td><td>context</td><td>no running tasks or forced cancel</td><td>CQ drain 후 close</td></tr><tr><td><code>pim_task</code></td><td>submit success</td><td>terminal CQE consumed or retained by future</td><td>rejected submit은 task 없을 수 있음</td></tr><tr><td><code>pim_event</code></td><td>task/visibility/free op</td><td>all futures/deps released</td><td>fd wrapper보다 낮은 계층</td></tr><tr><td><code>pim_future</code></td><td>event export</td><td>fd close</td><td>event를 소유하지 않는 handle일 수 있음</td></tr></tbody></table></div>
+<h3 id="pim_runtime-h-통합-보강안"><code>pim_runtime.h</code> 통합 보강안</h3>
+<p>Turn 19/20/21의 필드를 합치면 다음 필드가 canonical 초안에 추가되어야 한다.</p>
+<pre><code class="language-c">typedef struct pim_region_pool pim_region_pool_t;
+typedef struct pim_alias_group pim_alias_group_t;
+
+typedef struct {
+  uint64_t pool_id;
+  const char *stable_name;
+  pim_placement_t locality;
+  uint32_t numa_node;
+  bool physically_contiguous;
+  bool host_cacheable;
+  bool exportable;
+  bool protected_memory;
+  size_t min_alignment;
+  size_t max_allocation_size;
+} pim_pool_info_t;
+
+typedef struct {
+  uint64_t alias_group_id;
+  pim_alias_role_t role;
+  bool may_write;
+  bool requires_copy_on_write;
+  uint32_t local_refcount;
+  uint32_t imported_refcount;
+} pim_alias_info_t;
+
+typedef enum {
+  PIM_CQE_COMMAND_COMPLETE,
+  PIM_CQE_VISIBILITY_COMPLETE,
+  PIM_CQE_REJECTED_NOT_READY,
+  PIM_CQE_REJECTED_ERROR,
+  PIM_CQE_TIMEOUT,
+  PIM_CQE_RESET_COMPLETE,
+  PIM_CQE_SERIALIZED_CONFLICT,
+  PIM_CQE_DONATION_USED,
+  PIM_CQE_DONATION_UNUSED,
+  PIM_CQE_ALIAS_INVALIDATED,
+  PIM_CQE_PLACEMENT_RELAXED,
+  PIM_CQE_MIGRATION_INSERTED,
+  PIM_CQE_POOL_PRESSURE_HIGH
+} pim_cqe_kind_t;</code></pre>
+<p><code>PIM_CQE_PLACEMENT_RELAXED</code>와 <code>PIM_CQE_MIGRATION_INSERTED</code>는 성능 디버깅용이다. correctness는 유지되더라도 locality가 깨진 순간을 framework가 알아야 profile 결과를 해석할 수 있다.</p>
+<h2 id="관련-맥락-배경-설명-22">관련 맥락 / 배경 설명</h2>
+<p>PIM runtime의 allocator는 일반 malloc보다 GPU allocator에 가깝고, GPU allocator보다 더 topology-sensitive하다. 일반 allocator는 “크기와 alignment”가 핵심이고, GPU allocator는 “device와 stream ordering”이 추가된다. PIM allocator는 여기에 “channel/rank/bank placement”와 “memory-side command가 실제로 이 placement에서 이득을 보는가”가 더 붙는다.</p>
+<pre><code class="language-text">malloc:
+  size, alignment
+
+GPU memory pool:
+  size, device, stream order, access
+
+PIM region pool:
+  size, layout, channel/rank/bank, visibility,
+  reservation scope, exportability, donation reuse,
+  migration cost, pool pressure</code></pre>
+<p>따라서 <code>pim_pool_alloc()</code>은 <code>malloc()</code>처럼 보이면 안 된다. 더 정확히는 scheduler와 compiler 사이의 계약 지점이다. compiler는 “이 op는 bank-local이면 빠르다”는 preference를 주고, runtime은 현재 pool pressure와 reservation 상태를 보고 strict하게 실패할지, relaxed placement로 실행할지, migration을 삽입할지 결정한다.</p>
+<p>또한 alias teardown은 단순 refcount 문제가 아니다. <code>OWNER</code>가 닫혀도 <code>IMPORTED</code>가 남아 있으면 물리 회수는 막아야 하고, <code>VIEW</code>가 남아 있으면 writable donation을 막아야 하며, <code>Poisoned</code>가 발생하면 alias group 전체에 error state를 전파해야 한다. 이 때문에 alias group은 region의 부가 정보가 아니라 독립 runtime object로 승격하는 편이 맞다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-22">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li>Turn 21의 CUDA IPC “exporter가 먼저 free하면 undefined” 서술은 이번 턴에서도 공식 CUDA IPC 문서 원문으로 직접 확인하지 못했다. 다만 CUDA memory pool export/import API 자체는 Runtime API 문서에서 확인된다. 최종 문서에서는 “CUDA IPC 일반 계약”과 “CUDA memory pool export/import”를 분리해 써야 한다.</li><li>Turn 21의 jemalloc/tcmalloc decay 설명은 이번 턴에서 원문 검증하지 않았다. PIM 설계에는 <code>PRESSURE_BASED</code> 정책 아이디어만 남기고, 특정 allocator의 수학적 decay curve를 단정하지 않는 편이 안전하다.</li><li><code>PIM_PLACEMENT_MIGRATE</code>는 API로는 매력적이지만, LPDDR6-PIM에서 migration command가 실제로 어느 계층에서 가능한지 불명확하다. memory controller가 bank-to-bank copy를 지원하지 않으면 host-mediated copy가 되어 성능 이점이 크게 줄어든다.</li><li><code>BORROW_POOL</code>은 pool pressure를 완화하지만, ownership이 복잡해진다. borrowed block이 원래 pool로 반환되기 전에 importing context가 죽는 경우를 처리하려면 context death cleanup과 lease timeout이 필요하다.</li><li><code>pim_future</code>가 event를 소유하지 않는 fd wrapper라면, event lifetime과 fd lifetime이 어긋날 수 있다. event refcount를 fd export 시 증가시키고 fd close 시 감소시키는 규칙을 명시해야 한다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-22">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><code>PIM_PLACEMENT_STRICT / NEARBY / MIGRATE / BORROW_POOL / ANY_WITH_DIAG</code> 각각에 대해 allocation 실패, donation reuse 실패, pool pressure high, imported pool unavailable 상태 전이표를 만든다.</li></ol>
+<ol><li><code>pim_alias_group_t</code>를 실제 구조체로 확정하고, <code>OWNER</code>, <code>VIEW</code>, <code>IMPORTED</code>, <code>DONATION_OUTPUT</code>의 refcount, poison propagation, visibility future fan-out 규칙을 API 수준으로 작성한다.</li></ol>
+<ol><li><code>pim_context</code> teardown 상태 머신을 설계한다. 정상 close, forced cancel, process death, device reset, pool trim 중인 상태에서 queue/task/region/event가 어떤 순서로 정리되는지 정의한다.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T14:23:12.480186+00:00</li><li>누적 턴 수: 21</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T14:24:47.131633+00:00</li><li>누적 턴 수: 22</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
