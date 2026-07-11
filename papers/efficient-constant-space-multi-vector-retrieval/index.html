@@ -25,6 +25,7 @@
       --question: #9ccfd8;
       --danger: #ff8f8f;
       --max-width: 1100px;
+      --content-width: 1120px;
     }
 
     * {
@@ -50,16 +51,43 @@
     }
 
     .page-shell {
-      width: min(calc(100% - 32px), var(--max-width));
+      width: min(calc(100% - 32px), var(--content-width));
       margin: 0 auto;
     }
 
+    .article-width {
+      max-width: var(--max-width);
+    }
+
     .hero {
-      padding: 72px 0 48px;
+      padding: 18px 0 42px;
       border-bottom: 1px solid var(--border);
-      background:
-        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
-        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
     }
 
     .eyebrow {
@@ -121,6 +149,47 @@
 
     main {
       padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
     }
 
     .summary-card {
@@ -301,6 +370,19 @@
         padding-top: 48px;
       }
 
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
       .report-section,
       .summary-card {
         padding: 20px;
@@ -318,106 +400,16 @@
       }
     }
   </style>
-<!-- verification-style:start -->
-<style>
-.verification-status {
-    margin: 16px auto 22px;
-    padding: 13px 16px;
-    border: 1px solid;
-    border-radius: 10px;
-    line-height: 1.5;
-    box-sizing: border-box;
-}
-
-.verification-status strong {
-    margin-right: 8px;
-}
-
-.verification-status.pending {
-    background: #fff8dc;
-    border-color: #b58900;
-    color: #5f4b00;
-}
-
-.verification-status.verified {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-}
-
-.verification-status.failed {
-    background: #ffebee;
-    border-color: #c62828;
-    color: #7f0000;
-}
-
-.verification-index-badge {
-    display: inline-block;
-    margin-left: 7px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    vertical-align: middle;
-}
-
-.verification-index-badge.pending {
-    background: #fff3cd;
-    color: #6b5200;
-}
-
-.verification-index-badge.verified {
-    background: #dff3e3;
-    color: #176b2c;
-}
-
-.verification-index-badge.failed {
-    background: #fde2e5;
-    color: #941b28;
-}
-</style>
-<!-- verification-style:end -->
 </head>
 
 <body>
-<!-- verification-status:start -->
-<style>
-.verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
-    border: 1px solid;
-    box-sizing: border-box;
-    font-family: inherit;
-}
-.verification-status strong {
-    display: inline-block;
-    margin-right: 8px;
-}
-.verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
-}
-.verification-status.verified {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-}
-.verification-status.failed {
-    background: #ffebee;
-    border-color: #c62828;
-    color: #8e0000;
-}
-</style>
-<div class="verification-status verified">
-    <strong>검증 완료</strong>
-    <span>원문과 분석 결과에 대한 독립 검증이 완료되었습니다.</span>
-</div>
-<!-- verification-status:end -->
   <header class="hero">
     <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
       <p class="eyebrow">Research Paper Report</p>
 
       <h1>Efficient Constant-Space Multi-Vector Retrieval</h1>
@@ -428,21 +420,45 @@
         <span><strong>연도</strong> · 2025</span>
       </div>
 
-      <div class="status-row">
-        <span class="status-badge">Claude 분석 완료</span>
-      </div>
     </div>
   </header>
 
-  <main class="page-shell">
-    <section class="summary-card">
-      <h2>핵심 요약</h2>
-      <p>이 논문은 ColBERT로 대표되는 multi-vector retrieval의 핵심 약점인 저장 공간(storage) 비용 문제를 해결하는 ConstBERT를 제안한다. 기존 ColBERT는 문서의 모든 토큰마다 벡터를 하나씩 저장하기 때문에 문서 길이에 비례해 인덱스가 커지는데, ConstBERT는 학습된 선형 투영 계층(projection layer) W를 도입하여 M개의 토큰 임베딩을 문서 길이와 무관한 고정된 C개(C&lt;M)의 문서 수준 임베딩 δ1,...,δC로 pooling한다. 이렇게 하면 late interaction 점수 계산 방식은 그대로 유지하면서도 문서당 저장 임베딩 수가 M/C 배만큼 줄어들어, 인덱스 크기와 질의 처리 시간이 함께 감소한다. 또한 문서당 벡터 수가 항상 일정하므로 디스크 상에서 고정 크기 표현이 되어 OS 페이징(paging) 정렬과 reranking 통합이 쉬워진다. MSMARCO 및 13개 BEIR 데이터셋 실험에서, 저자들은 원래 효과성의 대부분을 유지하면서도 동등한 효과성 기준에서 ColBERT 대비 인덱스 크기를 50% 이상 줄일 수 있음을 보였다. 특히 제안 설정인 ConstBERT32는 인덱스 크기를 22GB에서 11GB로 절반으로 줄이면서 MRR@10과 NDCG@10에서 ColBERT와 근접한 성능을 유지한다.</p>
-      <span class="source-ref">PDF p. 1, 3, 4, 5, 6, 7</span>
-    </section>
-
+  <main class="page-shell doc-layout">
     
-    <section class="report-section highlight-section">
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 또는 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 ColBERT로 대표되는 multi-vector retrieval의 핵심 약점인 저장 공간(storage) 비용 문제를 해결하는 ConstBERT를 제안한다. 기존 ColBERT는 문서의 모든 토큰마다 벡터를 하나씩 저장하기 때문에 문서 길이에 비례해 인덱스가 커지는데, ConstBERT는 학습된 선형 투영 계층(projection layer) W를 도입하여 M개의 토큰 임베딩을 문서 길이와 무관한 고정된 C개(C&lt;M)의 문서 수준 임베딩 δ1,...,δC로 pooling한다. 이렇게 하면 late interaction 점수 계산 방식은 그대로 유지하면서도 문서당 저장 임베딩 수가 M/C 배만큼 줄어들어, 인덱스 크기와 질의 처리 시간이 함께 감소한다. 또한 문서당 벡터 수가 항상 일정하므로 디스크 상에서 고정 크기 표현이 되어 OS 페이징(paging) 정렬과 reranking 통합이 쉬워진다. MSMARCO 및 13개 BEIR 데이터셋 실험에서, 저자들은 원래 효과성의 대부분을 유지하면서도 동등한 효과성 기준에서 ColBERT 대비 인덱스 크기를 50% 이상 줄일 수 있음을 보였다. 특히 제안 설정인 ConstBERT32는 인덱스 크기를 22GB에서 11GB로 절반으로 줄이면서 MRR@10과 NDCG@10에서 ColBERT와 근접한 성능을 유지한다.</p>
+        <span class="source-ref">PDF p. 1, 3, 4, 5, 6, 7</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
       <h2>핵심 요점</h2>
       <ul class="structured-list">
         
@@ -490,7 +506,7 @@
     </section>
     
 
-    
+      
     <section id="problem" class="report-section">
       <div class="section-heading">
         <h2>해결하려는 문제</h2>
@@ -759,8 +775,8 @@
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="diagrams" class="report-section">
       <h2>구조 및 동작 도식</h2>
       
             <article class="visual-card">
@@ -807,8 +823,8 @@ flowchart LR
     </section>
     
 
-    
-        <section class="report-section">
+      
+        <section id="charts" class="report-section">
           <h2>정량 결과</h2>
           
             <article class="visual-card">
@@ -894,8 +910,8 @@ flowchart LR
         </section>
         
 
-    
-    <section class="report-section">
+      
+    <section id="strengths" class="report-section">
       <h2>논문의 강점</h2>
       <ul class="structured-list">
         
@@ -935,8 +951,8 @@ flowchart LR
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="limitations" class="report-section">
       <h2>한계</h2>
       <ul class="structured-list">
         
@@ -976,8 +992,8 @@ flowchart LR
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="questions" class="report-section">
       <h2>후속 연구 질문</h2>
       
             <article class="question-card">
@@ -1019,8 +1035,8 @@ flowchart LR
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="glossary" class="report-section">
       <h2>핵심 용어</h2>
       <dl class="glossary">
         
@@ -1092,12 +1108,13 @@ flowchart LR
     </section>
     
 
-    
-        <section class="report-section warning-section">
+      
+        <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
           <ul><li>본 논문이 정식 게재될 학회/저널명은 본문에 명시되어 있지 않으며 arXiv:2504.01818v1(2025-04-02 제출) 프리프린트로만 확인됨.</li><li>DeeperImpact 등 다른 learned sparse 1단계 검색기 사용 시 &#x27;유사한 결과&#x27;라고만 언급되고 구체적 수치는 지면 제약으로 미보고됨(page 5).</li><li>Platform 단락에서 BMP가 후보 생성에 사용되었다고 언급되나 Table 3에는 ESPLADE 조합만 제시되고 BMP 조합 수치는 미보고됨(page 5, 7).</li><li>BEIR(Table 2)에는 NDCG@10과 인덱스 크기만 보고되며 Recall이나 MRT 수치는 없음.</li><li>ConstBERT16/64/128을 단독 end-to-end 검색기로 썼을 때의 MRT는 미보고이며, Table 3에는 ConstBERT32+ESPLADE reranking의 MRT만 제시됨.</li><li>투영 계층 W 학습의 구체적 하이퍼파라미터(학습률, epoch, batch size)나 학습 데이터 규모는 본문에 상세히 기술되지 않음.</li><li>C=16, 32, 64, 128 이외 C 값에 대한 실험 결과는 제시되지 않음.</li></ul>
         </section>
         
+    </div>
   </main>
 
   <footer>

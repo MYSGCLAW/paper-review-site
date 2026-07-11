@@ -25,6 +25,7 @@
       --question: #9ccfd8;
       --danger: #ff8f8f;
       --max-width: 1100px;
+      --content-width: 1120px;
     }
 
     * {
@@ -50,16 +51,43 @@
     }
 
     .page-shell {
-      width: min(calc(100% - 32px), var(--max-width));
+      width: min(calc(100% - 32px), var(--content-width));
       margin: 0 auto;
     }
 
+    .article-width {
+      max-width: var(--max-width);
+    }
+
     .hero {
-      padding: 72px 0 48px;
+      padding: 18px 0 42px;
       border-bottom: 1px solid var(--border);
-      background:
-        radial-gradient(circle at top right, #1d3557 0, transparent 38%),
-        linear-gradient(180deg, #101827 0%, var(--bg) 100%);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
     }
 
     .eyebrow {
@@ -121,6 +149,47 @@
 
     main {
       padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
     }
 
     .summary-card {
@@ -301,6 +370,19 @@
         padding-top: 48px;
       }
 
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
       .report-section,
       .summary-card {
         padding: 20px;
@@ -318,106 +400,16 @@
       }
     }
   </style>
-<!-- verification-style:start -->
-<style>
-.verification-status {
-    margin: 16px auto 22px;
-    padding: 13px 16px;
-    border: 1px solid;
-    border-radius: 10px;
-    line-height: 1.5;
-    box-sizing: border-box;
-}
-
-.verification-status strong {
-    margin-right: 8px;
-}
-
-.verification-status.pending {
-    background: #fff8dc;
-    border-color: #b58900;
-    color: #5f4b00;
-}
-
-.verification-status.verified {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-}
-
-.verification-status.failed {
-    background: #ffebee;
-    border-color: #c62828;
-    color: #7f0000;
-}
-
-.verification-index-badge {
-    display: inline-block;
-    margin-left: 7px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    vertical-align: middle;
-}
-
-.verification-index-badge.pending {
-    background: #fff3cd;
-    color: #6b5200;
-}
-
-.verification-index-badge.verified {
-    background: #dff3e3;
-    color: #176b2c;
-}
-
-.verification-index-badge.failed {
-    background: #fde2e5;
-    color: #941b28;
-}
-</style>
-<!-- verification-style:end -->
 </head>
 
 <body>
-<!-- verification-status:start -->
-<style>
-.verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
-    border: 1px solid;
-    box-sizing: border-box;
-    font-family: inherit;
-}
-.verification-status strong {
-    display: inline-block;
-    margin-right: 8px;
-}
-.verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
-}
-.verification-status.verified {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-    color: #1b5e20;
-}
-.verification-status.failed {
-    background: #ffebee;
-    border-color: #c62828;
-    color: #8e0000;
-}
-</style>
-<div class="verification-status verified">
-    <strong>검증 완료</strong>
-    <span>원문과 분석 결과에 대한 독립 검증이 완료되었습니다.</span>
-</div>
-<!-- verification-status:end -->
   <header class="hero">
     <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
       <p class="eyebrow">Research Paper Report</p>
 
       <h1>Nemotron ColEmbed V2: Top-Performing Late Interaction Embedding Models for Visual Document Retrieval</h1>
@@ -428,21 +420,45 @@
         <span><strong>연도</strong> · 2026</span>
       </div>
 
-      <div class="status-row">
-        <span class="status-badge">Claude 분석 완료</span>
-      </div>
     </div>
   </header>
 
-  <main class="page-shell">
-    <section class="summary-card">
-      <h2>핵심 요약</h2>
-      <p>이 논문은 NVIDIA가 공개한 Nemotron ColEmbed V2, 즉 시각 문서 검색(Visual Document Retrieval, VDR)을 위한 late interaction 기반 VLM 임베딩 모델 패밀리(3B/4B/8B)를 소개한다. RAG(Retrieval-Augmented Generation) 파이프라인에서 기업이 보유한 PDF·슬라이드 등 문서를 검색하려면 기존 텍스트 검색 모델은 OCR/텍스트 추출에 의존해 표·차트·인포그래픽 같은 시각 정보를 잃는다. 저자들은 페이지 이미지를 직접 임베딩하는 VLM 백본(3B: NVIDIA Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)을 초기화한 뒤, 디코더의 causal attention을 bidirectional attention으로 교체하고, ColBERT 스타일 late interaction(MaxSim) 유사도로 contrastive learning을 수행한다. 성능을 끌어올리기 위해 cluster-based 데이터 샘플링, positive-aware hard-negative mining, cross-lingual 번역 증강, (3B 전용) two-stage training, model merging(model soup)을 결합한다. 그 결과 nemotron-colembed-vl-8b-v2는 2026년 2월 3일 기준 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성하고, 4B/3B 모델도 동급 크기에서 최고 성능을 보인다. 마지막으로 저자들은 late interaction이 유발하는 저장공간·지연시간 오버헤드를 정량적으로 분석하고, 임베딩 차원 축소(512/128차원) ablation을 통해 정확도-저장공간 트레이드오프를 논의한다.</p>
-      <span class="source-ref">PDF p. 1, 2, 7, 8, 9, 11</span>
-    </section>
-
+  <main class="page-shell doc-layout">
     
-    <section class="report-section highlight-section">
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 및 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 NVIDIA가 공개한 Nemotron ColEmbed V2, 즉 시각 문서 검색(Visual Document Retrieval, VDR)을 위한 late interaction 기반 VLM 임베딩 모델 패밀리(3B/4B/8B)를 소개한다. RAG(Retrieval-Augmented Generation) 파이프라인에서 기업이 보유한 PDF·슬라이드 등 문서를 검색하려면 기존 텍스트 검색 모델은 OCR/텍스트 추출에 의존해 표·차트·인포그래픽 같은 시각 정보를 잃는다. 저자들은 페이지 이미지를 직접 임베딩하는 VLM 백본(3B: NVIDIA Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)을 초기화한 뒤, 디코더의 causal attention을 bidirectional attention으로 교체하고, ColBERT 스타일 late interaction(MaxSim) 유사도로 contrastive learning을 수행한다. 성능을 끌어올리기 위해 cluster-based 데이터 샘플링, positive-aware hard-negative mining, cross-lingual 번역 증강, (3B 전용) two-stage training, model merging(model soup)을 결합한다. 그 결과 nemotron-colembed-vl-8b-v2는 2026년 2월 3일 기준 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성하고, 4B/3B 모델도 동급 크기에서 최고 성능을 보인다. 마지막으로 저자들은 late interaction이 유발하는 저장공간·지연시간 오버헤드를 정량적으로 분석하고, 임베딩 차원 축소(512/128차원) ablation을 통해 정확도-저장공간 트레이드오프를 논의한다.</p>
+        <span class="source-ref">PDF p. 1, 2, 7, 8, 9, 11</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
       <h2>핵심 요점</h2>
       <ul class="structured-list">
         
@@ -490,7 +506,7 @@
     </section>
     
 
-    
+      
     <section id="problem" class="report-section">
       <div class="section-heading">
         <h2>해결하려는 문제</h2>
@@ -829,8 +845,8 @@
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="diagrams" class="report-section">
       <h2>구조 및 동작 도식</h2>
       
             <article class="visual-card">
@@ -880,8 +896,8 @@ flowchart LR
     </section>
     
 
-    
-        <section class="report-section">
+      
+        <section id="charts" class="report-section">
           <h2>정량 결과</h2>
           
             <article class="visual-card">
@@ -927,8 +943,8 @@ flowchart LR
         </section>
         
 
-    
-    <section class="report-section">
+      
+    <section id="strengths" class="report-section">
       <h2>논문의 강점</h2>
       <ul class="structured-list">
         
@@ -968,8 +984,8 @@ flowchart LR
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="limitations" class="report-section">
       <h2>한계</h2>
       <ul class="structured-list">
         
@@ -1025,8 +1041,8 @@ flowchart LR
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="questions" class="report-section">
       <h2>후속 연구 질문</h2>
       
             <article class="question-card">
@@ -1068,8 +1084,8 @@ flowchart LR
     </section>
     
 
-    
-    <section class="report-section">
+      
+    <section id="glossary" class="report-section">
       <h2>핵심 용어</h2>
       <dl class="glossary">
         
@@ -1157,12 +1173,13 @@ flowchart LR
     </section>
     
 
-    
-        <section class="report-section warning-section">
+      
+        <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
           <ul><li>3B 및 4B 모델의 정확한 학습 소요 시간은 본문에 명시되지 않음(8B만 8×A100 80GB로 3시간40분 명시).</li><li>Table 2와 Table 6의 4B 모델 ViDoRe V3 NDCG@10 값이 61.54와 61.42로 다르며 그 원인이 설명되지 않음.</li><li>Table 2와 Table 6의 3B 모델 ViDoRe V3 NDCG@10 값이 59.79와 59.70으로 다르며 그 원인이 설명되지 않음.</li><li>5.3절 본문의 재순위화 파이프라인 NDCG@10(54.40)과 Table 6 값(54.41) 사이 근소한 불일치의 원인이 설명되지 않음.</li><li>3B 초기화에 쓰인 &#x27;internal pre-trained Eagle 2 VLM&#x27;의 사전학습 데이터·규모 세부사항이 공개되지 않음.</li><li>K-Means gap statistics로 최종 14개 클러스터를 선택하는 데 사용한 후보 k 범위 등 구체적 파라미터가 명시되지 않음.</li><li>model merging에 사용된 개별 모델들(3B 8개, 4B/8B 각 4개)의 구체적 데이터 블렌드·시드 목록이 명시되지 않음.</li></ul>
         </section>
         
+    </div>
   </main>
 
   <footer>
