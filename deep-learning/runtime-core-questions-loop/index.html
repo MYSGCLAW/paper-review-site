@@ -356,6 +356,17 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-q10-pim-collective의-소유-위치">관련 맥락 / 배경 설명 — Q10 PIM collective의 소유 위치</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-7">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-8">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-8-codex">Turn 8 / Codex</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-7">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-9">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-9">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-4">더 구체화한 부분</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-7">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-8">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-8">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-4">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-8">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-9">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -384,7 +395,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -859,8 +870,167 @@ diagnostic-level:
 <ol><li><strong>자원 획득·회수의 대칭성(symmetric alloc/free)을 allocator 축에 추가하라(Q7·Q8).</strong> 지금까지 allocator는 단일 힙(GC/refcount/BFC/placement) 중심이었다. collective는 <strong>전 rank 대칭 버퍼 + 등록(pinned/registered) 메모리 + 채널 버퍼</strong>를 요구하며, 하나라도 어긋나면 그룹이 진행 못 한다. 이 <strong>&quot;분산 대칭 할당과 그 회수(누가 언제 안전하게 free하는가)&quot;</strong> 를 PJRT sharded buffer teardown·NCCL buffer registration·PIM 뱅크 대칭 배치와 한 표에 놓고, Turn 3의 refcount·Turn 6의 Cleaner가 <strong>분산 환경에서 왜 부족한지</strong>(한 rank의 조기 free가 전체를 깨뜨림)를 도출하라.</li></ol>
 <p>--- Sources:</p>
 <ul><li><a href="https://openjdk.org/jeps/491" target="_blank" rel="noopener noreferrer">JEP 491: Synchronize Virtual Threads without Pinning</a></li><li><a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/communicators.html" target="_blank" rel="noopener noreferrer">NCCL — Creating a Communicator</a></li><li><a href="https://developer.nvidia.com/blog/building-scalable-and-fault-tolerant-nccl-applications/" target="_blank" rel="noopener noreferrer">Building Scalable and Fault-Tolerant NCCL Applications (NVIDIA)</a></li><li><a href="https://arxiv.org/html/2507.04786v1" target="_blank" rel="noopener noreferrer">Demystifying NCCL: GPU Communication Protocols and Algorithms (arXiv)</a></li></ul>
+<h3 id="turn-8-codex">Turn 8 / Codex</h3>
+<h2 id="이번-턴이-답하는-중심질문-7">이번 턴이 답하는 중심질문</h2>
+<p>이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong></p>
+<h2 id="이번-턴의-확장-요약-9">이번 턴의 확장 요약</h2>
+<p>이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node.js의 기본 스케줄러는 <strong>phase 기반 이벤트 루프 + 우선순위 microtask 계층 + 제한된 threadpool offload</strong>다.</p>
+<p>즉 Node.js에서 Q4의 “스케줄링”은 다음 질문으로 바뀐다.</p>
+<pre><code class="language-text">ready task 중 어떤 worker가 훔쳐 갈 것인가?        # Go/Tokio
+device queue에 어떤 command를 넣을 것인가?        # CUDA/PJRT
+현재 event loop turn에서 어떤 phase queue를 먼저 비울 것인가?  # Node.js</code></pre>
+<p>Node.js는 기본적으로 하나의 JavaScript 실행 스레드가 callback을 <strong>run-to-completion</strong>으로 실행한다. 그러나 “Node.js = 싱글스레드”라고 쓰면 부정확하다. 네트워크 I/O는 커널 poller가 맡고, 파일 I/O·일부 DNS·사용자 <code>uv_queue_work()</code>는 libuv threadpool이 처리하며, CPU-bound JavaScript는 <code>worker_threads</code>로 병렬 실행할 수 있다. Node 공식 문서도 기본 JS thread와 kernel offload를 함께 설명하고, libuv 문서는 file I/O와 DNS 등이 threadpool을 사용한다고 정리한다. <a href="https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick" target="_blank" rel="noopener noreferrer">Node event loop</a>, <a href="https://docs.libuv.org/en/v1.x/design.html" target="_blank" rel="noopener noreferrer">libuv design</a>, <a href="https://docs.libuv.org/en/v1.x/threadpool.html" target="_blank" rel="noopener noreferrer">libuv threadpool</a></p>
+<h2 id="새로-추가한-사실-9">새로 추가한 사실</h2>
+<p>Node 런타임 안의 work item은 <code>setTimeout</code> callback, I/O callback, <code>setImmediate</code> callback, close callback, Promise reaction job, <code>process.nextTick</code> callback, libuv <code>uv_req_t</code>, <code>uv_work_t</code>, Worker message 같은 여러 형태로 나뉜다. 즉 Q3의 <code>task</code>는 Node에서 단일 타입이 아니라 <strong>phase queue에 들어가는 callback 계열 객체 + libuv request/handle 객체</strong>로 표현된다.</p>
+<ol><li><strong>Node.js의 스케줄러 단위는 “thread”가 아니라 callback/job/request다.</strong></li></ol>
+<p>주요 phase는 <code>timers</code>, <code>pending callbacks</code>, <code>poll</code>, <code>check</code>, <code>close callbacks</code>로 잡을 수 있다. 각 phase는 자기 callback queue를 FIFO로 실행하고, queue가 비거나 구현상 한도에 도달하면 다음 phase로 넘어간다. <code>poll</code> phase는 새 I/O 이벤트를 가져오고, <code>check</code> phase는 <code>setImmediate()</code> callback을 실행한다. <a href="https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick" target="_blank" rel="noopener noreferrer">Node event loop</a></p>
+<ol><li><strong>Node.js 이벤트 루프는 phase별 FIFO queue를 돈다.</strong></li></ol>
+<p>Node 문서는 libuv 1.45.0, 즉 Node.js 20부터 timer가 각 loop iteration에서 poll phase 뒤에 실행된다고 설명한다. 이전에는 polling 전에도 timer가 실행됐다. 따라서 <code>setTimeout(0)</code>과 <code>setImmediate()</code>의 상대 순서를 설명할 때 “항상 예전 그림 그대로”라고 쓰면 버전 의존 오류가 생긴다. <a href="https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick" target="_blank" rel="noopener noreferrer">Node event loop</a></p>
+<ol><li><strong>Node 20/libuv 1.45 이후 timer 위치가 바뀌었다.</strong></li></ol>
+<p>Node 문서는 <code>nextTickQueue</code>가 현재 JS/C++ 경계 작업이 끝난 뒤 event loop가 다음 phase로 진행하기 전에 처리된다고 설명한다. 또한 재귀적 <code>process.nextTick()</code>은 poll phase 도달을 막아 I/O starvation을 만들 수 있다. <a href="https://nodejs.org/learn/asynchronous-work/event-loop-timers-and-nexttick" target="_blank" rel="noopener noreferrer">Node event loop</a></p>
+<ol><li><strong><code>process.nextTick</code>은 event loop phase가 아니다.</strong></li></ol>
+<p><code>queueMicrotask()</code>와 Promise job은 V8 microtask queue 쪽이고, Node 문서는 각 event-loop turn에서 <code>process.nextTick()</code> queue가 microtask queue보다 먼저 처리된다고 설명한다. 즉 Node의 우선순위는 대략 <code>현재 callback 완료 → nextTick → V8 microtasks → event loop phase 진행</code>으로 모델링할 수 있다. <a href="https://nodejs.org/api/globals.html#queuemicrotaskcallback" target="_blank" rel="noopener noreferrer">Node globals</a></p>
+<ol><li><strong>Node에는 Node 소유 nextTick queue와 V8 소유 microtask queue가 따로 있다.</strong></li></ol>
+<p>libuv threadpool은 기본 크기 4이고, 시작 시 <code>UV_THREADPOOL_SIZE</code>로 조정할 수 있으며 절대 최대값은 1024다. file system operation, <code>getaddrinfo</code>/<code>getnameinfo</code>, <code>uv_queue_work()</code>가 이 pool을 쓴다. threadpool은 모든 event loop가 공유한다. <a href="https://docs.libuv.org/en/v1.x/threadpool.html" target="_blank" rel="noopener noreferrer">libuv threadpool</a></p>
+<ol><li><strong>libuv threadpool은 전역 공유 자원이다.</strong></li></ol>
+<p>Worker thread는 JavaScript를 병렬 실행하는 별도 V8 isolate/JS 실행 컨텍스트에 가깝다. Node 문서는 Worker가 CPU-intensive JavaScript에 유용하고, built-in async I/O에는 보통 도움이 적다고 설명한다. Worker는 <code>ArrayBuffer</code> transfer나 <code>SharedArrayBuffer</code> 공유로 메모리 경계를 넘는다. <a href="https://nodejs.org/api/worker_threads.html" target="_blank" rel="noopener noreferrer">Node worker_threads</a></p>
+<ol><li><strong><code>worker_threads</code>는 libuv threadpool과 다른 층이다.</strong></li></ol>
+<h2 id="더-구체화한-부분-4">더 구체화한 부분</h2>
+<p>Node.js를 일반 런타임 객체 모델로 환원하면 다음과 같다.</p>
+<pre><code class="language-text">Node.js Runtime
+├── V8 Isolate / JS heap
+├── Node Environment
+├── libuv loop: uv_loop_t
+│   ├── timer queue
+│   ├── pending callback queue
+│   ├── poll watcher set
+│   ├── check queue
+│   └── close callback queue
+├── nextTickQueue                 # Node 소유
+├── V8 microtask queue             # Promise / queueMicrotask
+├── libuv handles
+│   ├── uv_timer_t
+│   ├── uv_tcp_t / uv_udp_t
+│   ├── uv_poll_t
+│   ├── uv_async_t
+│   └── uv_process_t
+├── libuv requests
+│   ├── uv_fs_t
+│   ├── uv_getaddrinfo_t
+│   └── uv_work_t
+├── global libuv threadpool
+├── Worker thread / MessagePort
+└── diagnostics
+    ├── async_hooks / AsyncResource
+    ├── heap snapshot
+    ├── event loop utilization
+    └── process report</code></pre>
+<p>Node callback의 상태기계는 다음처럼 잡을 수 있다.</p>
+<pre><code class="language-text">created
+  → registered              # timer/I/O/Promise/nextTick/worker message 등록
+  → waiting_external         # kernel, timer clock, threadpool, worker, user event 대기
+  → queued_nextTick          # process.nextTick
+  → queued_microtask         # Promise reaction / queueMicrotask
+  → queued_phase             # timers / poll / check / close 등
+  → callback_running         # JS thread에서 run-to-completion
+  → completed
+  ├→ failed                  # throw, unhandled rejection, error callback
+  └→ cancelled/closed        # AbortSignal, clearTimeout, handle close, worker terminate</code></pre>
+<p>여기서 <code>waiting_external</code>이 중요하다. Node의 callback은 ready queue에서 오래 대기하는 것이 아니라, 대부분 <strong>외부 완료 신호가 도착한 뒤 특정 queue로 승격</strong>된다.</p>
+<pre><code class="language-text">kernel says fd readable
+  → libuv poll callback queued
+  → poll phase에서 JS callback 실행
+
+threadpool work finished
+  → after_work callback queued to loop thread
+  → JS callback 실행
+
+Promise resolved
+  → V8 microtask queued
+  → current callback 뒤 microtask checkpoint에서 실행</code></pre>
+<h2 id="런타임-내부-구조로-환원-7">런타임 내부 구조로 환원</h2>
+<p>Node.js의 런타임 내부 구조는 <code>scheduler</code>, <code>executor</code>, <code>allocator</code>, <code>completion object</code>가 분리되어 있다.</p>
+<div class="table-wrap"><table><thead><tr><th>일반 런타임 요소</th><th>Node.js/libuv 대응</th></tr></thead><tbody><tr><td>Runtime root</td><td>Node Environment + V8 Isolate + <code>uv_loop_t</code></td></tr><tr><td>Work item</td><td>callback, Promise job, nextTick callback, <code>uv_req_t</code>, <code>uv_work_t</code>, Worker message</td></tr><tr><td>Scheduler</td><td>event loop phase order + nextTick/microtask 우선순위</td></tr><tr><td>Executor</td><td>기본 JS thread, libuv worker thread, Worker thread</td></tr><tr><td>Wait object</td><td>libuv handle/request, Promise, EventEmitter listener, AbortSignal</td></tr><tr><td>Completion record</td><td>callback arguments, Promise fulfillment/rejection, <code>&#x27;error&#x27;</code> event, Worker <code>&#x27;exit&#x27;</code> code</td></tr><tr><td>Allocator</td><td>V8 heap, Buffer external memory, libuv handle/request storage, worker heap</td></tr><tr><td>Cancellation</td><td><code>clearTimeout</code>, <code>AbortController</code>, <code>uv_cancel</code>, handle close, Worker terminate</td></tr></tbody></table></div>
+<p>Node의 특징은 <strong>scheduler가 CPU 시간을 나누지 않는다</strong>는 점이다. JavaScript callback 하나가 실행되기 시작하면 일반적으로 중간에 선점되지 않는다. 그래서 긴 동기 계산은 전체 event loop latency를 밀어낸다. Tokio의 <code>.await</code> 없는 task가 worker를 점유하는 문제와 비슷하지만, Node에서는 그 worker가 보통 <strong>전체 JS event loop thread</strong>라는 점이 더 치명적이다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-8">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p>Node.js 스케줄링을 상태 전이로 쓰면 다음과 같다.</p>
+<pre><code class="language-text">main script running
+  → schedules async operations
+  → drains nextTick queue
+  → drains V8 microtasks
+  → enter event loop
+
+event loop turn:
+  timers phase
+  → pending callbacks
+  → poll
+  → check
+  → close callbacks
+  → next turn</code></pre>
+<p>다만 실제 우선순위 모델은 phase만으로 부족하다.</p>
+<pre><code class="language-text">현재 JS callback 완료
+  → process.nextTick queue drain       # Node 소유, 최우선
+  → V8 microtask queue drain           # Promise/queueMicrotask
+  → 다음 libuv phase callback 실행</code></pre>
+<p>Q8의 소유 경계는 다음처럼 나뉜다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태/자원</th><th>JS app/framework</th><th>Node.js</th><th>V8</th><th>libuv</th><th>OS kernel / worker</th></tr></thead><tbody><tr><td>callback 함수</td><td>소유</td><td>queue 연결</td><td>실행/JIT</td><td>아니오</td><td>아니오</td></tr><tr><td>Promise job</td><td>생성</td><td>통합 관찰</td><td><strong>microtask queue 소유</strong></td><td>아니오</td><td>아니오</td></tr><tr><td><code>process.nextTick</code></td><td>생성</td><td><strong>queue 소유</strong></td><td>실행 엔진</td><td>아니오</td><td>아니오</td></tr><tr><td>timer handle</td><td>요청</td><td>JS wrapper</td><td>object heap</td><td><strong>timer 관리</strong></td><td>clock backing</td></tr><tr><td>TCP/socket readiness</td><td>socket API 사용</td><td>wrapper</td><td>object heap</td><td>poll handle</td><td><strong>fd readiness</strong></td></tr><tr><td>file I/O async</td><td>요청</td><td>wrapper</td><td>object heap</td><td>request 관리</td><td><strong>threadpool에서 blocking I/O</strong></td></tr><tr><td>CPU-bound JS parallelism</td><td>Worker 생성</td><td>Worker lifecycle</td><td>isolate/heap</td><td>loop integration</td><td>OS thread scheduling</td></tr><tr><td>Buffer memory</td><td>참조</td><td>Buffer wrapper</td><td>external memory accounting</td><td>일부</td><td>native allocation backing</td></tr></tbody></table></div>
+<p>Q6 관점에서 Node task의 산출물은 다음 네 종류로 나뉜다.</p>
+<pre><code class="language-text">callback style:
+  (err, value) 인자 또는 &#x27;error&#x27; event
+
+Promise style:
+  fulfillment value / rejection reason / unhandled rejection 상태
+
+handle/request style:
+  close callback, status code, UV_ECANCELED 등
+
+worker style:
+  message, error event, exit code, transferred/shared memory state</code></pre>
+<p>즉 Node의 완료 레코드는 Linux zombie처럼 커널 객체로 남는 것이 아니라, 대부분 <strong>callback 호출 또는 Promise 상태 변화</strong>로 소비된다. 이 완료 레코드를 관찰하지 않으면 <code>unhandledRejection</code>, <code>&#x27;error&#x27;</code> event 미처리, resource leak 같은 abnormal path가 생긴다.</p>
+<h2 id="다른-런타임과의-비교-8">다른 런타임과의 비교</h2>
+<div class="table-wrap"><table><thead><tr><th>축</th><th>Node.js</th><th>Go</th><th>Tokio</th><th>JVM virtual thread</th><th>CUDA/Level Zero</th></tr></thead><tbody><tr><td>기본 work item</td><td>callback/job/request</td><td>goroutine</td><td>Future task</td><td>virtual thread</td><td>command</td></tr><tr><td>큐 정책</td><td>phase queue + microtask 우선순위</td><td>work-stealing</td><td>work-stealing + coop</td><td>ForkJoin 기반 mount</td><td>ordered submission</td></tr><tr><td>선점</td><td>JS callback 비선점</td><td>async preemption 일부</td><td>cooperative</td><td>time-sharing 없음</td><td>device 의존</td></tr><tr><td>I/O 대기</td><td>kernel poller + callback</td><td>netpoller + goroutine park</td><td>reactor + Waker</td><td>blocking 시 unmount</td><td>event/fence</td></tr><tr><td>blocking 보정</td><td>threadpool/Worker로 분리</td><td>P handoff/sysmon</td><td><code>spawn_blocking</code></td><td>carrier unmount</td><td>host sync/event</td></tr><tr><td>완료 산출물</td><td>callback args / Promise / event</td><td>channel 필요</td><td>JoinHandle</td><td>return/exception/Future</td><td>buffer/event</td></tr><tr><td>starvation 위험</td><td>nextTick/긴 callback</td><td>CPU loop 일부 완화</td><td><code>.await</code> 없는 loop</td><td>carrier 점유</td><td>long kernel/device op</td></tr></tbody></table></div>
+<p>공통 구조는 이렇게 보인다.</p>
+<pre><code class="language-text">work descriptor
+  + wait registration
+  + ready queue insertion
+  + executor run
+  + completion propagation</code></pre>
+<p>그러나 Node의 ready queue는 Go/Tokio처럼 “여러 worker 중 누가 실행할지”를 고르는 큐가 아니라, <strong>단일 JS executor가 어떤 종류의 callback을 먼저 실행할지</strong>를 정하는 phase/priority 큐다. 이 점은 PIM runtime 설계에도 중요하다. PIM host runtime이 여러 device command를 병렬 스케줄하지 않고 단일 control thread에서 command completion을 처리한다면, Go식 work-stealing보다 Node식 <strong>phase/event dispatcher</strong>가 더 맞을 수 있다.</p>
+<h2 id="관련-맥락-배경-설명-4">관련 맥락 / 배경 설명</h2>
+<p>Node.js는 PIM runtime 설계에 두 가지 교훈을 준다.</p>
+<p>첫째, <strong>control plane과 execution plane을 분리</strong>한다. Node에서 JS event loop는 control plane이고, kernel poller·threadpool·Worker는 execution/offload plane이다. PIM에서도 host runtime은 control plane이고, 실제 bank/subarray execution은 memory controller/PIM device 쪽이다.</p>
+<pre><code class="language-text">Node:
+  JS event loop
+    → kernel poller / libuv threadpool / Worker
+
+PIM:
+  PimEventLoop or host dispatcher
+    → memory controller / PIM queue / bank execution</code></pre>
+<p>둘째, completion을 단일 이벤트로 뭉치면 안 된다. Node에서도 완료는 <code>threadpool work done</code>, <code>after_work callback queued</code>, <code>JS callback executed</code>, <code>Promise resolved</code>로 층이 갈린다. PIM도 마찬가지로 <code>device execution done</code>, <code>writeback done</code>, <code>host-visible</code>, <code>callback/event delivered</code>를 나눠야 한다.</p>
+<p>PIM runtime에 Node식 dispatcher를 붙이면 최소 구조는 다음처럼 된다.</p>
+<pre><code class="language-text">PimHostRuntime
+├── submission queue
+├── completion poll phase
+├── visibility/writeback phase
+├── user callback / future resolution phase
+├── cleanup phase
+└── optional worker pool for blocking host-side copy/packing</code></pre>
+<p>즉 PIM의 host scheduler가 반드시 복잡한 work-stealing일 필요는 없다. 오히려 PIM command가 비선점·in-order device queue에 가깝다면, host 쪽은 Node처럼 <strong>event completion을 phase별로 처리하는 얇은 dispatcher</strong>가 실용적일 수 있다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-8">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li>“Node.js는 싱글스레드”라고 단정하면 안 된다. 기본 JavaScript 실행이 단일 thread일 뿐, libuv threadpool, kernel async I/O, Worker thread가 별도로 존재한다.</li></ul>
+<ul><li><code>setTimeout(0)</code>과 <code>setImmediate()</code>의 순서는 문맥과 Node/libuv 버전에 의존한다. 특히 Node.js 20/libuv 1.45 이후 timer phase 설명은 예전 자료와 다를 수 있다.</li></ul>
+<ul><li><code>process.nextTick</code>을 microtask와 같은 것으로 뭉개면 우선순위가 틀린다. Node 문서 기준 <code>nextTick</code> queue는 V8 microtask queue보다 먼저 처리된다.</li></ul>
+<ul><li>libuv threadpool은 “모든 async I/O”를 처리하지 않는다. 네트워크 I/O는 일반적으로 non-blocking fd와 poller가 맡고, file I/O·일부 DNS·사용자 작업이 threadpool에 들어간다.</li></ul>
+<ul><li><code>uv_cancel()</code>은 이미 실행 중인 threadpool work를 강제로 중단하는 일반 선점 취소가 아니다. 취소 가능성은 request 종류와 실행 시점에 의존한다. PIM command cancellation도 이와 비슷하게 “queued 상태 취소”와 “device 실행 중 abort”를 분리해야 한다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-9">다음 에이전트가 이어서 확장할 지점</h2>
+<p>지금까지 모은 모델을 바탕으로 <code>PimContext</code>, <code>PimBuffer</code>, <code>PimCommandSeq</code>, <code>PimQueue</code>, <code>PimEvent</code>, <code>PimFuture</code>, <code>PimWorkerPool</code> 중 무엇을 사용자에게 노출하고 무엇을 내부로 숨길지 결정하라. Node가 threadpool을 숨기고 Worker는 노출하는 방식, PJRT가 stream/communicator를 숨기는 방식을 비교 기준으로 삼아라.</p>
+<ol><li><strong>PIM runtime API 표면을 확정하라.</strong></li></ol>
+<p>Node의 <code>unhandledRejection</code>/<code>uncaughtException</code>/<code>error</code> event, CUDA device fault, PJRT async error, NCCL communicator abort, JVM fatal error를 한 표에 놓고 <code>failed</code>, <code>cancelled</code>, <code>poisoned</code>, <code>context_lost</code>, <code>resource_leaked</code>, <code>diagnostic_dumped</code>를 PIM 상태기계에 병합하라.</p>
+<ol><li><strong>abnormal state machine을 통합하라.</strong></li></ol>
+<p>Go/Tokio work-stealing, Node phase event loop, CUDA ordered queue, PJRT compile-time schedule 중 PIM host runtime에 어떤 조합이 맞는지 결정표를 만들어라. 특히 <code>mode_wait</code>, <code>refresh_wait</code>, <code>cross_bank_shuffle_wait</code>, <code>completion_poll</code>을 Node식 phase로 둘지, compiler-scheduled command sequence 안에 숨길지 분리하라.</p>
+<ol><li><strong>runtime dispatcher 패턴을 비교하라.</strong></li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T16:51:56.910251+00:00</li><li>누적 턴 수: 7</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T16:53:49.959550+00:00</li><li>누적 턴 수: 8</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
