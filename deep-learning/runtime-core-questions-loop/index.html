@@ -533,6 +533,18 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-q10-pim에-zombie-epoch-subreaper-회수-를-이식">관련 맥락 / 배경 설명 — Q10: PIM에 &quot;zombie epoch + subreaper 회수&quot;를 이식</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-25">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-26">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-26-codex">Turn 26 / Codex</a>
+<a class="toc-level-2" href="#이번-턴이-답하는-중심질문-20">이번 턴이 답하는 중심질문</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-27">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-27">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-13">더 구체화한 부분</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-13">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-19">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-20">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-21">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-q10-pim-설계로-환원">관련 맥락 / 배경 설명: Q10 PIM 설계로 환원</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-26">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-27">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -561,7 +573,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q5</strong> 상태 전이 — seed가 명시적으로 나열한 <code>cancelled</code> 상태를 지금까지 14턴이 한 번도 파헤치지 않았다. 이번 턴은 <strong>task가 <code>running</code>에서 <code>cancelled</code>로 가는 경로</strong>를 정식화하고, 그것이 <code>failed</code>와 <strong>다른 종착점</strong>임을 확정한다 - <strong>Q4</strong> 스케줄 정책 — 스케줄러가 task에게서 CPU를 강제로</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 15는 cancellation/preemption을 단일 task 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>structured concurrency</strong>를 런타임 내부 구조로 환원한다. 핵심은 다음이다. <code></code>`text 개별 ta</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 자원 — 지금까지 15턴이 buffer·queue·slot을 자원으로 다뤘지만, <strong>&quot;보내도 되는 권리(credit/demand/window/permit)&quot; 자체가 할당·회수·소유되는 1급 자원</strong>임을 정식화한다. Reactive Streams <code>request(n)</code>, HTTP/2 window, Tokio <code>Permit</code>이 그 실체다. - **</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 16이 남긴 <strong>exception aggregation / partial-result policy</strong>를 런타임 내부 모듈로 격상한다. 지금까지 <code>completed</code>, <code>failed</code>, <code>cancelled</code>는 task 하나의 종착</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q3, Q7</code> — Turn 16·18(Codex)이 structured concurrency/outcome 계열을 다뤘고 Turn 17(Claude)이 backpressure로 빠졌으므로, 규칙에 따라 이번 턴은 <strong>언어 런타임의 더 아래층 — &quot;중단된 계산(suspended computation)은 물리적으로 무엇인가&quot;</strong> 로 복귀한다. 이것은 Turn 16/</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q3, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 19가 “중단된 계산은 stackful 또는 stackless 표현”이라고 정리했다면, 이번 턴은 그 표현이 <strong>checkpoint/restore와 외부 참조 안정성</strong> 앞에서 어떻게 깨지는지를 확장한다. 핵심 결론은 다음이다. <code></code>`text 중단</td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q7, Q8</code> — Turn 19(표현: stackful/stackless)와 Turn 20(checkpoint/rebinding/address-stability)이 <strong>2턴 연속 &quot;중단된 계산을 저장·이동하는&quot; 하위 주제</strong>에 머물렀다. 드리프트 방지 규칙에 따라 이번 턴은 <strong>언어 런타임의 명시적 미답 영역 — 우선순위 3의 &quot;GC/cleanup&quot;</strong> 로 복귀</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q7, Q8, Q9, Q10</strong> Turn 21은 “회수는 누가 결정하는가”를 GC/epoch 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>allocation pressure control</strong>을 런타임 내부 모듈로 세운다. 핵심은 다음이다. <code></code>`text 생산률 &gt; 소비/회수율 stream runtime → p</td></tr><tr><td>23</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 17~22가 &quot;생산이 소비/회수를 앞지를 때 producer를 어떻게 늦추나&quot;(backpressure→GC→allocation pressure)를 CPU/언어 런타임에서 파고들었다. 이번 턴은 이 축을 <strong>accelerator runtime</strong>으로 옮겨, 지금까지 이 루프가 암묵적으로 가정만 하고 정면으로 다루지 않은 두 가지를 정식화한다. 1. **순서(</td></tr><tr><td>24</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴이 답하는 중심질문: <strong>Q4, Q5, Q6, Q8, Q9, Q10</strong> Turn 23이 accelerator runtime을 “프로그램이 순서를 저술하고 런타임이 희소 실행 엔진에 다중화하는 기계”로 정리했다면, 이번 턴은 그 다음 질문인 **context failure / sticky error / device-lost가 런타임 산출물과 소유 경계를 어떻게</td></tr><tr><td>25</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q4, Q6</code> — Turn 23·24가 2턴 연속 <strong>accelerator runtime</strong>(stream→context failure)에 머물렀으므로, 드리프트 방지 규칙에 따라 이번 턴은 이 루프가 25턴 내내 **암묵적 substrate로만 가정하고 정면으로 다룬 적 없는 우선순위 2 — OS runtime(Linux 커널 스케줄러·process 상태기계·s</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q6</strong> 프로그램/task가 남기는 완료 산출물 — PJRT에서 결과는 return value가 아니라 <strong>buffer handle(동기) + buffer contents(비동기) + event + async error</strong>로 갈린다 - <strong>Q8</strong> 런타임/OS/driver/<strong>compiler</strong>/framework 소유 경계 — PJRT는 **compil</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> JVM에서 thread, virtual thread, task는 어떻게 표현되는가 - <strong>Q4</strong> JVM은 platform thread와 virtual thread를 어떻게 스케줄링하는가 - <strong>Q6</strong> Java 프로그램/task는 어떤 종료 산출물과 cleanup 상태를 남기는가 - <strong>Q7</strong> JVM은 heap, native memory,</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q6, Q7, Q8, Q9</strong> (보조로 Q3, Q5, Q10) ## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 여러 실행 자원(device/bank/rank)에 걸친 자원을 어떻게 할당·회수하는가 — <strong>fan-out vs collective</strong> 두 패턴으로 분리 - <strong>Q8</strong> 런타임/driver/memory controller의 소유 경계 — collect</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9</strong> ## 이번 턴의 확장 요약 이번 턴은 언어 런타임 쪽으로 돌아와 <strong>Node.js/libuv 이벤트 루프</strong>를 정식화한다. 핵심은 Node.js가 Go/Tokio식 work-stealing 런타임도, CUDA식 command queue 런타임도 아니라는 점이다. Node</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 — 지금까지 8턴이 모두 가정한 &quot;런타임은 이미 존재한다&quot;를 깨고, <strong>런타임 자신의 탄생(bootstrap)과 죽음(teardown)</strong>으로 Q1을 다시 정의 - <strong>Q6</strong> 프로그램이 남기는 산출물 — 종료를 &quot;회수(reclaim)&quot;가 아니라 <strong>flush/notify/persist</strong>로 재규정, fast-exit이 왜</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: <strong>Q2, Q5, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 9가 남긴 <strong>에러/예외 전파를 독립 런타임 하위시스템으로 정식화</strong>한다. 결론은 다음이다. 런타임의 에러 처리는 단순히 “실패하면 에러 코드를 반환한다”가 아니다. 런타임은 실패를 최소 네 가지 방식 중 하나로 운반한다. <code></code>`text 1. error-as-v</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 9는 런타임의 <strong>탄생(bootstrap)</strong> 을, Turn 10은 <strong>실패(error)</strong> 를 열었다. 이번 턴은 Turn 9·10이 공통으로 남긴 최우선 확장점 — <strong>cold-start / warm-pool을 &quot;부팅 비용의 배치&quot; 스케줄 문제로 정식화</strong> — 를 연다. 언어(JVM), OS(CRIU), accelerator(CUDA)를 모두 관통하므로</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 11의 다음 과제 중 두 축을 결합한다. 1. <strong>ROCm/HIP로 accelerator runtime 공통 구조가 CUDA 특수성인지 검증</strong> 2. **관측 가능성(observability)을 런타임 내부 하위시스템으로</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> command queue/stream이 <strong>런타임 안에서 물리적으로 어떻게 표현되는가</strong> — &quot;stream&quot;이라는 추상 아래의 실체는 <strong>공유메모리 링 버퍼 + doorbell + completion signal</strong>임을 정식화 - <strong>Q4</strong> 스케줄링 — 실제 스케줄러는 소프트웨어가 아니라 **링에서 패킷을 꺼내는 하드웨어 packet proc</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 13의 “하드웨어 큐 ABI”를 <strong>virtio/vhost와 io_uring까지 확장</strong>한다. 핵심은 queue를 단순히 <code>ring + doorbell + completion</code>으로만 보면 아직 부족하다는 점이다. 실제 런타</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q5</strong> 상태 전이 — seed가 명시적으로 나열한 <code>cancelled</code> 상태를 지금까지 14턴이 한 번도 파헤치지 않았다. 이번 턴은 <strong>task가 <code>running</code>에서 <code>cancelled</code>로 가는 경로</strong>를 정식화하고, 그것이 <code>failed</code>와 <strong>다른 종착점</strong>임을 확정한다 - <strong>Q4</strong> 스케줄 정책 — 스케줄러가 task에게서 CPU를 강제로</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q3, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 15는 cancellation/preemption을 단일 task 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>structured concurrency</strong>를 런타임 내부 구조로 환원한다. 핵심은 다음이다. <code></code>`text 개별 ta</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 - <strong>Q7</strong> 자원 — 지금까지 15턴이 buffer·queue·slot을 자원으로 다뤘지만, <strong>&quot;보내도 되는 권리(credit/demand/window/permit)&quot; 자체가 할당·회수·소유되는 1급 자원</strong>임을 정식화한다. Reactive Streams <code>request(n)</code>, HTTP/2 window, Tokio <code>Permit</code>이 그 실체다. - **</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q6, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 이번 턴은 Turn 16이 남긴 <strong>exception aggregation / partial-result policy</strong>를 런타임 내부 모듈로 격상한다. 지금까지 <code>completed</code>, <code>failed</code>, <code>cancelled</code>는 task 하나의 종착</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q3, Q7</code> — Turn 16·18(Codex)이 structured concurrency/outcome 계열을 다뤘고 Turn 17(Claude)이 backpressure로 빠졌으므로, 규칙에 따라 이번 턴은 <strong>언어 런타임의 더 아래층 — &quot;중단된 계산(suspended computation)은 물리적으로 무엇인가&quot;</strong> 로 복귀한다. 이것은 Turn 16/</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q3, Q6, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 19가 “중단된 계산은 stackful 또는 stackless 표현”이라고 정리했다면, 이번 턴은 그 표현이 <strong>checkpoint/restore와 외부 참조 안정성</strong> 앞에서 어떻게 깨지는지를 확장한다. 핵심 결론은 다음이다. <code></code>`text 중단</td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q7, Q8</code> — Turn 19(표현: stackful/stackless)와 Turn 20(checkpoint/rebinding/address-stability)이 <strong>2턴 연속 &quot;중단된 계산을 저장·이동하는&quot; 하위 주제</strong>에 머물렀다. 드리프트 방지 규칙에 따라 이번 턴은 <strong>언어 런타임의 명시적 미답 영역 — 우선순위 3의 &quot;GC/cleanup&quot;</strong> 로 복귀</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴이 답하는 중심질문: <strong>Q2, Q4, Q5, Q7, Q8, Q9, Q10</strong> Turn 21은 “회수는 누가 결정하는가”를 GC/epoch 관점에서 정리했다. 이번 턴은 그 다음 층인 <strong>allocation pressure control</strong>을 런타임 내부 모듈로 세운다. 핵심은 다음이다. <code></code>`text 생산률 &gt; 소비/회수율 stream runtime → p</td></tr><tr><td>23</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 Turn 17~22가 &quot;생산이 소비/회수를 앞지를 때 producer를 어떻게 늦추나&quot;(backpressure→GC→allocation pressure)를 CPU/언어 런타임에서 파고들었다. 이번 턴은 이 축을 <strong>accelerator runtime</strong>으로 옮겨, 지금까지 이 루프가 암묵적으로 가정만 하고 정면으로 다루지 않은 두 가지를 정식화한다. 1. **순서(</td></tr><tr><td>24</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴이 답하는 중심질문: <strong>Q4, Q5, Q6, Q8, Q9, Q10</strong> Turn 23이 accelerator runtime을 “프로그램이 순서를 저술하고 런타임이 희소 실행 엔진에 다중화하는 기계”로 정리했다면, 이번 턴은 그 다음 질문인 **context failure / sticky error / device-lost가 런타임 산출물과 소유 경계를 어떻게</td></tr><tr><td>25</td><td>Claude</td><td>ok</td><td><code>이번 턴이 답하는 중심질문: Q4, Q6</code> — Turn 23·24가 2턴 연속 <strong>accelerator runtime</strong>(stream→context failure)에 머물렀으므로, 드리프트 방지 규칙에 따라 이번 턴은 이 루프가 25턴 내내 **암묵적 substrate로만 가정하고 정면으로 다룬 적 없는 우선순위 2 — OS runtime(Linux 커널 스케줄러·process 상태기계·s</td></tr><tr><td>26</td><td>Codex</td><td>ok</td><td>## 이번 턴이 답하는 중심질문 이번 턴이 답하는 중심질문: <strong>Q4, Q5, Q7, Q8, Q9, Q10</strong> ## 이번 턴의 확장 요약 Turn 25가 Linux scheduler, zombie/reap, pidfd를 “OS runtime의 참조 구현”으로 세웠다면, 이번 턴은 그 위에 <strong>N단 스케줄러의 상호 불투명성</strong>을 얹는다. 핵심 결론은 다음이다. <code></code>`text applicatio</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -2743,8 +2755,205 @@ pressure scheduler:
 <ol><li><strong>exit/reparent/pidfd를 Turn 11 checkpoint·Turn 20 rebinding·Turn 24 context_generation과 병합해 &quot;프로세스 정체성의 생존·재바인딩&quot; 축을 세워라(Q6·Q8).</strong> CRIU가 checkpoint한 프로세스를 restore할 때 PID·부모관계·pidfd·zombie 자식을 어떻게 재구성하는지(PID 충돌 시), subreaper 관계가 checkpoint 이미지에 담기는지, 그리고 이 &quot;정체성 재바인딩&quot;이 Turn 24의 accelerator context 재생성(=새 정체성)과 어떻게 다른지를 상태기계로 그려라 — 핵심 질문: <strong>restore된 프로세스는 &quot;같은 정체성의 부활&quot;인가 &quot;새 정체성으로의 재생성&quot;인가</strong>, 그리고 그 선택이 PIM <code>PimContext</code> reset 후 대기 중이던 host shadow continuation(Turn 20)의 재바인딩 정책을 어떻게 결정하는가.</li></ol>
 <p>--- Sources:</p>
 <ul><li><a href="https://docs.kernel.org/scheduler/sched-eevdf.html" target="_blank" rel="noopener noreferrer">EEVDF Scheduler — Linux Kernel documentation</a></li><li><a href="https://www.phoronix.com/news/Linux-6.6-EEVDF-Merged" target="_blank" rel="noopener noreferrer">EEVDF Scheduler Merged For Linux 6.6 (Phoronix)</a></li><li><a href="https://www.phoronix.com/news/Linux-6.12-Lands-sched-ext" target="_blank" rel="noopener noreferrer">sched_ext Merged For Linux 6.12 — Scheduling Policies As BPF Programs (Phoronix)</a></li><li><a href="https://www.heise.de/en/news/Linux-6-12-Scheduler-now-expandable-and-EEVDF-conversion-complete-9949941.html" target="_blank" rel="noopener noreferrer">Linux 6.12: Scheduler now expandable and EEVDF conversion complete (heise)</a></li><li><a href="https://man7.org/linux/man-pages/man2/futex.2.html" target="_blank" rel="noopener noreferrer">futex(2) — robust futex, FUTEX_OWNER_DIED, futex_waitv (man7)</a></li><li><a href="https://www.baeldung.com/linux/process-states" target="_blank" rel="noopener noreferrer">Linux Process States: R, S, D, T, Z / TASK_KILLABLE (Baeldung)</a></li><li><a href="https://man7.org/linux/man-pages/man2/pidfd_open.2.html" target="_blank" rel="noopener noreferrer">pidfd_open(2) / CLONE_PIDFD — stable process handles (man7)</a></li></ul>
+<h3 id="turn-26-codex">Turn 26 / Codex</h3>
+<h2 id="이번-턴이-답하는-중심질문-20">이번 턴이 답하는 중심질문</h2>
+<p>이번 턴이 답하는 중심질문: <strong>Q4, Q5, Q7, Q8, Q9, Q10</strong></p>
+<h2 id="이번-턴의-확장-요약-27">이번 턴의 확장 요약</h2>
+<p>Turn 25가 Linux scheduler, zombie/reap, pidfd를 “OS runtime의 참조 구현”으로 세웠다면, 이번 턴은 그 위에 <strong>N단 스케줄러의 상호 불투명성</strong>을 얹는다.</p>
+<p>핵심 결론은 다음이다.</p>
+<pre><code class="language-text">application task priority / deadline
+  → language runtime scheduler
+  → OS scheduler class
+  → cgroup / quota / cpuset
+  → device / accelerator queue</code></pre>
+<p>각 층은 자기 scheduling unit만 본다. 커널은 goroutine, fiber, Java virtual thread의 논리 우선순위를 직접 모른다. 언어 런타임은 EEVDF의 virtual deadline, cgroup throttling, CPU affinity를 완전히 통제하지 못한다. 그래서 Q4의 답은 단순히 “런타임이 task를 스케줄한다”가 아니라, <strong>여러 런타임이 서로 불완전한 힌트와 handle을 주고받으며 스케줄링한다</strong>로 바뀐다.</p>
+<p>이번 턴의 추가 축은 다음이다.</p>
+<pre><code class="language-text">스케줄링 정책의 세 수준
+1. hint        : nice, timeslice request, stream priority
+2. reservation : SCHED_DEADLINE runtime/period/deadline, cgroup quota
+3. dependency boost / propagation : futex PI, priority inheritance, owner-died</code></pre>
+<h2 id="새로-추가한-사실-27">새로 추가한 사실</h2>
+<p>Linux EEVDF 문서는 lag가 0 이상인 eligible task 중 virtual deadline이 이른 task를 고른다고 설명한다. latency-sensitive task가 더 짧은 slice를 요청해 responsiveness를 얻을 수는 있지만, 이것은 “이 요청을 실제 시간 D 안에 끝내라”는 hard deadline 계약이 아니다. <a href="https://docs.kernel.org/scheduler/sched-eevdf.html" target="_blank" rel="noopener noreferrer">Linux EEVDF 문서</a></p>
+<ol><li><strong>EEVDF의 “deadline”은 애플리케이션 deadline 보장이 아니라 fair scheduler 내부의 virtual deadline이다.</strong></li></ol>
+<p><code>SCHED_DEADLINE</code>은 <code>runtime</code>, <code>period</code>, <code>deadline</code> 세 파라미터를 사용하고, CBS(Constant Bandwidth Server)와 EDF로 task를 스케줄한다. runtime을 다 쓰면 task는 throttled 상태가 되어 replenishment까지 실행될 수 없다. 즉 이것은 “힌트”가 아니라 <strong>CPU bandwidth reservation + admission control</strong>에 가까운 정책이다. <a href="https://docs.kernel.org/scheduler/sched-deadline.html" target="_blank" rel="noopener noreferrer">Linux SCHED_DEADLINE 문서</a></p>
+<ol><li><strong><code>SCHED_DEADLINE</code>은 EEVDF와 다른 층의 계약이다.</strong></li></ol>
+<p>sched_ext 문서는 BPF scheduler가 CPU grouping과 dispatch queue를 정의할 수 있다고 설명한다. 동시에 BPF scheduler 오류, runnable task stall, SysRq 등에서는 기본 fair-class scheduler로 되돌아간다. 즉 sched_ext는 “커널 밖에서 정책을 저술”하게 하지만, <strong>system integrity와 fallback은 여전히 커널 scheduler core가 소유</strong>한다. <a href="https://docs.kernel.org/scheduler/sched-ext.html" target="_blank" rel="noopener noreferrer">Linux sched_ext 문서</a></p>
+<ol><li><strong>sched_ext는 policy injection이지만, 커널 mechanism을 없애지는 않는다.</strong></li></ol>
+<p>futex PI 규약에서는 futex word가 owner TID와 waiter bit를 담고, kernel은 필요한 경우 RT-mutex를 통해 priority inheritance를 수행한다. owner가 죽으면 <code>FUTEX_OWNER_DIED</code>가 설정되고, 다음 owner가 stale state를 복구해야 한다. <a href="https://man7.org/linux/man-pages/man2/futex.2.html" target="_blank" rel="noopener noreferrer">futex(2)</a></p>
+<ol><li><strong>futex PI는 우선순위 역전을 해결하려면 ‘대기 대상의 소유자’를 커널이 알아야 함을 보여준다.</strong></li></ol>
+<p>Linux 5.16의 <code>futex_waitv</code>는 여러 futex word를 동시에 기다리고, 그중 하나가 wake되면 해당 index를 반환한다. 이것은 Turn 14의 “N개 completion 중 하나를 기다림”을 커널이 주소-키 대기소 형태로 제공한 사례다. <a href="https://man7.org/linux/man-pages/man2/futex_waitv.2.html" target="_blank" rel="noopener noreferrer">futex_waitv(2)</a></p>
+<ol><li><strong><code>futex_waitv</code>는 OS 수준의 any-of wait다.</strong></li></ol>
+<p><code>pidfd_open()</code>은 task를 가리키는 fd를 만들고, 이 fd는 <code>poll</code>/<code>epoll</code>로 감시할 수 있다. task가 종료되어 zombie가 되면 readable, reap되면 hangup으로 관측된다. 즉 pidfd는 Turn 14의 <code>completed → reaped</code>를 fd readiness로 노출한다. <a href="https://man7.org/linux/man-pages/man2/pidfd_open.2.html" target="_blank" rel="noopener noreferrer">pidfd_open(2)</a></p>
+<ol><li><strong>pidfd는 process identity뿐 아니라 completion 관측 객체다.</strong></li></ol>
+<h2 id="더-구체화한-부분-13">더 구체화한 부분</h2>
+<p>Turn 25의 “2단 스케줄러”는 실제로는 최소 4단이다.</p>
+<pre><code class="language-text">ApplicationRuntime
+  ├── logical task scheduler
+  │   └── goroutine / virtual thread / fiber / async task
+
+LanguageRuntime
+  ├── carrier scheduler
+  │   └── OS thread pool, work stealing, event loop
+
+KernelRuntime
+  ├── scheduler class
+  │   └── EEVDF / RT / DEADLINE / sched_ext
+
+ResourceController
+  ├── cgroup / quota / cpuset / NUMA policy
+  └── memory and IO pressure
+
+DeviceRuntime
+  ├── stream / command queue / completion ring
+  └── accelerator context</code></pre>
+<p>이 구조에서 deadline은 층마다 의미가 다르다.</p>
+<div class="table-wrap"><table><thead><tr><th>층</th><th>deadline/priority 의미</th><th>강도</th></tr></thead><tbody><tr><td>async runtime</td><td>timer 만료 시 cancellation</td><td>논리적 deadline</td></tr><tr><td>Go/JVM scheduler</td><td>work stealing 순서, carrier 배치</td><td>내부 정책</td></tr><tr><td>EEVDF</td><td>virtual deadline로 responsiveness 조절</td><td>fairness 내부 값</td></tr><tr><td><code>SCHED_DEADLINE</code></td><td>runtime/period/deadline 예약</td><td>kernel-level reservation</td></tr><tr><td>cgroup quota</td><td>CPU 사용량 상한</td><td>외부 throttle</td></tr><tr><td>GPU/PIM queue</td><td>stream priority 또는 admission</td><td>device-local hint</td></tr></tbody></table></div>
+<p>따라서 <code>deadline_failed</code>는 단일 원인이 아니다.</p>
+<pre><code class="language-text">deadline_failed
+├── task_not_polled_in_time
+├── carrier_not_scheduled
+├── OS_thread_throttled
+├── cgroup_quota_exhausted
+├── lock_owner_not_boosted
+├── device_queue_backlogged
+└── completion_not_observed</code></pre>
+<p>이 분해가 없으면 Q6의 outcome ledger가 “timeout” 하나로 너무 많은 원인을 숨긴다.</p>
+<h2 id="관련-맥락-배경-설명-13">관련 맥락 / 배경 설명</h2>
+<p>futex는 Turn 20의 address-stability 문제를 OS 대기소로 끌어내린다.</p>
+<p>futex wait는 “객체”를 기다리지 않는다. <strong>특정 주소의 32-bit futex word 값</strong>을 비교하고, 그 주소를 key로 kernel wait queue에 들어간다. 공유 futex는 서로 다른 process의 virtual address가 달라도 같은 shared memory 위치를 가리킬 수 있고, private futex는 같은 address space 안의 주소 안정성에 의존한다.</p>
+<p>이 의미는 크다.</p>
+<pre><code class="language-text">movable runtime object 안에 futex word를 두면
+  GC / stack relocation / arena compaction이 그 object를 옮기는 순간
+  kernel wait key와 runtime object identity가 갈라질 수 있다.</code></pre>
+<p>그래서 runtime은 세 선택지 중 하나를 골라야 한다.</p>
+<div class="table-wrap"><table><thead><tr><th>선택</th><th>의미</th><th>예</th></tr></thead><tbody><tr><td>stable native cell</td><td>futex word를 움직이지 않는 native memory에 둠</td><td>pthread mutex, parking lot</td></tr><tr><td>pin lease</td><td>wait 중 객체 이동 금지</td><td>GC pinning, pinned wait cell</td></tr><tr><td>indirection</td><td>movable object는 stable wait cell handle만 가짐</td><td>runtime-managed parker</td></tr></tbody></table></div>
+<p>이것은 Turn 20의 <code>address-stability lease</code>를 더 정확히 만든다. 주소 안정성은 FFI/DMA만의 문제가 아니라, <strong>kernel wait queue와 연결되는 순간에도 필요한 자원</strong>이다.</p>
+<p>또 하나의 새 연결은 priority inheritance다. futex PI가 작동하려면 kernel이 owner TID를 알아야 한다. 하지만 Go mutex나 Java monitor의 논리 owner가 goroutine/virtual thread라면 kernel은 그 owner를 직접 모른다. 결국 priority inheritance는 다음 조건이 맞아야 한다.</p>
+<pre><code class="language-text">waiter priority
+  → kernel-visible owner thread
+  → owner가 실제로 lock을 풀 수 있는 runtime task를 실행 중</code></pre>
+<p>M:N 런타임에서는 이 사슬이 자주 끊긴다. 높은 우선순위 goroutine이 낮은 우선순위 OS thread 뒤에서 기다리거나, lock owner goroutine이 runnable이지만 carrier를 못 얻는 상황은 kernel PI만으로 해결되지 않는다.</p>
+<p>따라서 일반 runtime에는 다음 모듈이 필요해진다.</p>
+<pre><code class="language-text">PriorityPropagationManager
+├── logical_task_priority
+├── carrier_thread_priority
+├── wait_dependency_graph
+├── owner_mapping
+├── boost_policy
+├── boost_expiry
+└── cross_layer_diagnostics</code></pre>
+<h2 id="런타임-내부-구조로-환원-19">런타임 내부 구조로 환원</h2>
+<p>Q2/Q4 관점에서 런타임 scheduler는 이제 단일 모듈이 아니다.</p>
+<pre><code class="language-text">Runtime
+├── task scheduler
+│   ├── runnable set
+│   ├── work stealing / FIFO / priority queue
+│   └── logical deadline timers
+├── carrier manager
+│   ├── OS thread pool
+│   ├── blocking syscall compensation
+│   └── priority / affinity hints
+├── wait manager
+│   ├── futex / epoll / io_uring / eventfd
+│   ├── address-stable wait cells
+│   └── any-of wait set
+├── pressure manager
+│   ├── CPU quota
+│   ├── memory pressure
+│   └── queue depth
+└── priority propagation manager
+    ├── dependency owner map
+    ├── boost handoff
+    └── inversion detection</code></pre>
+<p>Q5 상태기계도 보강된다.</p>
+<pre><code class="language-text">ready
+  → runnable_but_no_carrier
+  → carrier_runnable_but_os_not_scheduled
+  → running_on_cpu
+  → blocked_on_wait_cell
+  → owner_boost_requested
+  ├→ owner_boosted
+  ├→ boost_not_possible_owner_hidden
+  ├→ timeout_deadline_failed
+  └→ woken_requeued</code></pre>
+<p>새 상태는 <code>boost_not_possible_owner_hidden</code>이다. 이것이 N단 스케줄러의 핵심 병리다. dependency는 runtime 안에 있지만, boost를 수행할 권한은 kernel이나 cgroup에 있을 수 있다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-20">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p>Q8의 소유 경계는 다음처럼 정리된다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태/결정</th><th>소유자</th><th>문제</th></tr></thead><tbody><tr><td>logical task priority</td><td>language/framework runtime</td><td>kernel에 직접 보이지 않음</td></tr><tr><td>carrier thread priority</td><td>OS/kernel</td><td>logical task와 1:1 아님</td></tr><tr><td>lock owner</td><td>user-space runtime</td><td>futex PI는 TID owner만 이해</td></tr><tr><td>CPU bandwidth</td><td>scheduler class / cgroup</td><td>runtime이 넘어서 실행 불가</td></tr><tr><td>deadline timer</td><td>async runtime</td><td>CPU reservation이 아닐 수 있음</td></tr><tr><td>device queue priority</td><td>driver/device runtime</td><td>OS scheduler와 별도</td></tr><tr><td>completion observation</td><td>host runtime</td><td>device 완료와 host wakeup 사이 지연</td></tr></tbody></table></div>
+<p>따라서 scheduler policy는 다음 세 가지를 구분해야 한다.</p>
+<pre><code class="language-text">hint:
+  &quot;가능하면 빨리 실행해 달라&quot;
+  nice, EEVDF slice, stream priority
+
+reservation:
+  &quot;이 주기마다 이만큼 CPU를 보장해 달라&quot;
+  SCHED_DEADLINE, cgroup quota
+
+dependency propagation:
+  &quot;내가 기다리는 owner를 먼저 실행시켜 달라&quot;
+  futex PI, runtime-level priority inheritance</code></pre>
+<p>많은 language runtime은 hint와 timer는 갖지만, reservation과 dependency propagation은 약하다. 그 결과 timeout은 cancellation API로 표현되지만, 실제 원인은 carrier starvation, cgroup throttle, hidden owner inversion일 수 있다.</p>
+<h2 id="다른-런타임과의-비교-21">다른 런타임과의 비교</h2>
+<div class="table-wrap"><table><thead><tr><th>런타임</th><th>scheduler가 보는 단위</th><th>아래층에 보이는 단위</th><th>priority/deadline 전파</th></tr></thead><tbody><tr><td>Linux EEVDF</td><td><code>task_struct</code></td><td>CPU</td><td>virtual deadline 내부 정책</td></tr><tr><td>Linux <code>SCHED_DEADLINE</code></td><td><code>task_struct</code></td><td>CPU</td><td>runtime/period/deadline 예약</td></tr><tr><td>sched_ext</td><td>BPF scheduler custody의 task</td><td>kernel dispatch queue</td><td>policy 주입 가능, fallback 있음</td></tr><tr><td>Go</td><td>goroutine</td><td>OS thread M</td><td>goroutine priority 거의 없음</td></tr><tr><td>JVM virtual thread</td><td>virtual thread</td><td>carrier platform thread</td><td>carrier pool 경유</td></tr><tr><td>Tokio/Node</td><td>future/callback</td><td>event loop thread</td><td>timer/cancel 중심</td></tr><tr><td>CUDA</td><td>stream command</td><td>device queue</td><td>stream priority hint</td></tr><tr><td>PIM 제안</td><td><code>PimCommand</code>/epoch</td><td>host ring / memory controller</td><td>admission과 polling 중심</td></tr></tbody></table></div>
+<p>공통 구조는 다음이다.</p>
+<pre><code class="language-text">logical urgency != physical scheduling authority</code></pre>
+<p>논리적으로 급한 work가 있더라도, 그것을 실행할 carrier, CPU quota, lock owner, device queue slot이 없으면 deadline은 깨진다. 따라서 runtime observability는 <code>task_wait_time</code>만 보면 부족하고, 다음을 함께 기록해야 한다.</p>
+<pre><code class="language-text">scheduler_delay_breakdown
+├── logical_queue_delay
+├── carrier_wait
+├── kernel_runqueue_wait
+├── cgroup_throttle_time
+├── futex_wait_time
+├── owner_boost_attempted
+├── device_queue_wait
+└── completion_reap_delay</code></pre>
+<h2 id="관련-맥락-배경-설명-q10-pim-설계로-환원">관련 맥락 / 배경 설명: Q10 PIM 설계로 환원</h2>
+<p>PIM runtime에는 kernel futex PI 같은 강한 owner boost가 없다. PIM command가 in-flight에 들어가면 Turn 24/25처럼 D-state에 가깝고, device 내부 owner를 host scheduler가 preempt하거나 boost할 수 없다.</p>
+<p>따라서 PIM은 priority inheritance보다 <strong>admission-time ordering</strong>으로 문제를 줄여야 한다.</p>
+<pre><code class="language-text">PimScheduler
+├── host-visible priority
+├── epoch dependency graph
+├── buffer owner map
+├── admission queue
+├── non-preemptible executing set
+├── completion poller
+└── zombie epoch reaper</code></pre>
+<p>PIM에서 가능한 정책은 세 가지다.</p>
+<p>아직 <code>pim_host_enqueued</code> 전이면 priority/deadline으로 admission queue를 재정렬할 수 있다.</p>
+<ol><li><strong>제출 전 재정렬</strong></li></ol>
+<p><code>pim_executing</code>에 들어간 command는 boost가 아니라 짧은 command granularity, epoch fence, reset policy로만 제어한다.</p>
+<ol><li><strong>제출 후 격리</strong></li></ol>
+<p>어떤 <code>PimFuture</code>가 어떤 buffer epoch, queue slot, command id를 기다리는지 host-side wait graph에 남겨야 한다. 그래야 timeout이 났을 때 <code>device_slow</code>인지 <code>poller_starved</code>인지 <code>buffer_owner_dead</code>인지 구분할 수 있다.</p>
+<ol><li><strong>대기 owner 명시화</strong></li></ol>
+<p>PIM 상태기계는 다음처럼 보강된다.</p>
+<pre><code class="language-text">pim_waiting_for_buffer
+  → owner_epoch_identified
+  ├→ owner_not_submitted_boost_admission
+  ├→ owner_inflight_cannot_boost
+  ├→ owner_completed_zombie_needs_reap
+  ├→ owner_context_dead_invalidate
+  └→ deadline_failed_with_wait_cause</code></pre>
+<p>설계 원칙 갱신:</p>
+<pre><code class="language-text">PIM runtime은 kernel PI처럼 in-flight owner를 boost할 수 없으므로,
+priority/deadline 정책은 admission 이전에 강하게 적용하고,
+제출 이후에는 wait graph + completion polling + zombie reaping으로
+원인 분해 가능한 outcome을 남겨야 한다.</code></pre>
+<h2 id="잠재적-오류-또는-확인-필요-지점-26">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li><strong>EEVDF의 virtual deadline을 application deadline으로 해석하면 안 된다.</strong> EEVDF는 fairness와 responsiveness를 위한 내부 deadline을 계산한다. 실제 시간 보장이 필요하면 <code>SCHED_DEADLINE</code> 같은 reservation 계층을 봐야 한다.</li></ul>
+<ul><li><strong>sched_ext는 “유저공간 scheduler가 커널을 대체한다”가 아니다.</strong> BPF scheduler는 kernel scheduler core의 hook과 dispatch queue 위에서 동작하고, 오류나 stall 시 fallback된다. policy injection이지 kernel mechanism 제거가 아니다.</li></ul>
+<ul><li><strong>futex PI는 모든 mutex에 자동 적용되지 않는다.</strong> PI futex operation과 futex word 값 규약을 써야 하며, user-space가 stale state를 복구해야 한다. 일반 futex wait/wake는 owner boost를 제공하지 않는다.</li></ul>
+<ul><li><strong>M:N 런타임에서 kernel priority inheritance는 논리 task owner를 모를 수 있다.</strong> owner가 OS thread가 아니라 goroutine/fiber라면, kernel은 실제 의존 그래프를 볼 수 없다. 이 문제는 runtime 내부 wait graph 없이는 진단도 어렵다.</li></ul>
+<ul><li><strong><code>futex_waitv</code>는 completion queue가 아니다.</strong> 여러 주소 중 하나의 wake를 기다릴 수는 있지만, device completion의 semantic validity나 buffer epoch commit을 증명하지 않는다. PIM/GPU completion에는 별도 outcome ledger가 필요하다.</li></ul>
+<ul><li><strong>pidfd readable과 reap은 다르다.</strong> pidfd는 zombie가 되면 readable해질 수 있고, reap 후 hangup으로 바뀐다. 따라서 “종료 관측”과 “종료 상태 회수”는 여전히 분리해야 한다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-27">다음 에이전트가 이어서 확장할 지점</h2>
+<p>Go mutex, Java monitor, Tokio task wait, futex PI를 비교해 <code>logical_owner → carrier_thread → kernel_sched_entity</code> 매핑이 언제 유지되고 언제 깨지는지 Q4/Q8 상태표로 내려라. 핵심은 “boost 대상이 OS thread인가 logical task인가”다.</p>
+<ol><li><strong>runtime-level priority inheritance를 구체화하라.</strong></li></ol>
+<p><code>timer_expired</code>, <code>carrier_starved</code>, <code>kernel_throttled</code>, <code>lock_owner_hidden</code>, <code>device_queue_backlogged</code>, <code>completion_reap_late</code>를 Q6의 산출물로 분리하고, 각 원인을 어떤 metric으로 증명할 수 있는지 Turn 22의 <code>PressureManager</code>와 연결하라.</p>
+<ol><li><strong><code>deadline_failed</code> outcome을 원인별 tagged union으로 설계하라.</strong></li></ol>
+<p><code>PimCommand</code>에 <code>deadline</code>, <code>priority</code>, <code>buffer_epoch_deps</code>, <code>estimated_duration</code>, <code>reset_cost</code>를 넣고, 제출 전에는 재정렬 가능하지만 <code>pim_executing</code> 후에는 boost 불가라는 제약 아래 EDF/priority/FIFO 중 어떤 정책을 쓸지 Q10의 최소 runtime API로 확장하라.</p>
+<ol><li><strong>PIM admission scheduler를 priority/deadline-aware하게 설계하라.</strong></li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T18:01:15.815107+00:00</li><li>누적 턴 수: 25</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T18:03:21.226555+00:00</li><li>누적 턴 수: 26</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
