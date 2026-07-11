@@ -316,6 +316,16 @@
 <a class="toc-level-2" href="#다른-런타임과의-비교-3">다른 런타임과의 비교</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-4-codex">Turn 4 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-5">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-5">새로 추가한 사실</a>
+<a class="toc-level-2" href="#더-구체화한-부분-2">더 구체화한 부분</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-2">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#런타임-내부-구조로-환원-4">런타임 내부 구조로 환원</a>
+<a class="toc-level-2" href="#상태-전이-스케줄링-자원-소유-관점-4">상태 전이 / 스케줄링 / 자원 소유 관점</a>
+<a class="toc-level-2" href="#다른-런타임과의-비교-4">다른 런타임과의 비교</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-5">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -344,7 +354,7 @@
 <h2 id="확인-필요-지점">확인 필요 지점</h2>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 중심질문 재시작 루프</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시) ## 이번 턴이 답하는 중심질문 - <strong>Q1</strong> 런타임이란 무엇인가 - <strong>Q2</strong> 런타임 내부는 어떤 모듈로 구성되는가 - <strong>Q7</strong> 자원(CPU/GPU/memory/queue/event/handle) 할당·회수 - (보조) Q3 실행 단위 표현, Q9 런타임 간 공통 구조 — 이후 턴의 비교 기준선만 세팅</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q6, Q8 ## 이번 턴의 확장 요약 이번 턴은 일반 런타임 모델을 <strong>Linux OS runtime</strong>에 맞춰 구체화한다. 핵심은 “Linux가 스케줄하는 최소 단위는 프로세스가 아니라 <code>task_struct</code>로 표현되는 task/thread”라는 점이다. 따라서 Q3의 <code>process</code>와 <code>thread</code>는 커널 내부에서 완전히 별개 객체</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q9 (보조로 Q5, Q6, Q8) ## 이번 턴이 답하는 중심질문 - <strong>Q3</strong> task/goroutine/future가 런타임 안에서 어떻게 표현되는가 — <strong>stackful vs stackless coroutine</strong> 축 추가 - <strong>Q4</strong> 어떤 정책으로 스케줄링하는가 — **preemptive M:N(Go) vs cooperative M:</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9 ## 이번 턴의 확장 요약 이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다. Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 **</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <p>이번 턴이 답하는 중심질문: Q1, Q2, Q7 (보조로 Q3, Q9 골격 제시)</p>
@@ -462,8 +472,111 @@
 <ol><li><strong>Accelerator runtime으로 이동(Q3·Q4·Q7).</strong> 이번 턴의 &quot;정규 work-stealing 스케줄러(로컬큐+전역큐+훔치기+우선슬롯)&quot;를 CUDA stream / Level Zero command list↔command queue / OpenCL·SYCL queue와 대조하라. 핵심 질문: 이들 큐는 <strong>순서 채널</strong>(work-steal 불가, in-order)이지 Go/Tokio식 <strong>스케줄 큐</strong>(재배치 가능)가 아니다 — 이 두 큐 개념이 하드웨어 스케줄러(SM 배정) 위에서 어떻게 분리되는지 상태기계 간선으로 그려라.</li></ol>
 <ol><li><strong>PJRT/OpenXLA로 Q6 산출물 정식화(Q6·Q8).</strong> Tokio <code>JoinHandle</code>(완료 결과 회수)과 Linux zombie(waitable 레코드)를 PJRT의 <code>PJRT_Event</code>/<code>PJRT_Buffer</code>(executable 실행의 완료 신호와 결과 버퍼)와 한 축에 놓고, &quot;완료 산출물을 누가 소유·회수하는가&quot;를 상위 런타임 vs driver로 나눠라.</li></ol>
 <ol><li><strong>Q10 초안 갱신(Q4·Q5·Q10).</strong> 이번 턴의 두 설계 분기 — (a) work item이 <strong>선점 가능한가</strong>(Go형) vs <strong>협조 양보만</strong>(Tokio형), (b) work item이 <strong>stackful</strong>인가 <strong>stackless</strong>인가 — 를 PIM runtime 상태기계(<code>created→submitted→ready→dispatched→waiting_device→completed/failed/cancelled</code>)의 각 상태에 매핑하라. 특히 PIM 오프로드는 대개 <strong>비선점·in-order 디바이스 큐</strong>에 가까우므로 CUDA stream형 &quot;순서 채널 + coop budget식 host 양보&quot; 조합이 유력함을 검토하라.</li></ol>
+<h3 id="turn-4-codex">Turn 4 / Codex</h3>
+<p>이번 턴이 답하는 중심질문: Q3, Q4, Q5, Q7, Q8, Q9</p>
+<h2 id="이번-턴의-확장-요약-5">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Go/Tokio의 <strong>스케줄 큐</strong>에서 벗어나, accelerator runtime의 <strong>명령 순서 큐</strong>로 돌아온다. 핵심 결론은 다음이다.</p>
+<p>Accelerator runtime에서 <code>stream</code>, <code>command queue</code>, <code>command list</code>, <code>event</code>는 대부분 <strong>작업을 재배치하는 스케줄러 큐</strong>가 아니라, <strong>host가 device에 제출하는 순서·의존성·완료 추적 객체</strong>다. 실제 SM/CU/EU/accelerator core 배정은 CUDA runtime, Level Zero, OpenCL/SYCL runtime이 아니라 driver와 device firmware/hardware scheduler가 더 많이 소유한다.</p>
+<p>즉 Q4의 “스케줄링”은 accelerator에서 두 층으로 갈라진다.</p>
+<pre><code class="language-text">host runtime scheduling:
+  어떤 command를 어떤 queue/stream에 넣고, 어떤 event 의존성을 붙일지 결정
+
+device scheduling:
+  제출된 command를 실제 compute unit, memory engine, DMA engine에 배정</code></pre>
+<h2 id="새로-추가한-사실-5">새로 추가한 사실</h2>
+<p>CUDA stream은 같은 stream 안의 작업 순서를 보장하는 <strong>ordered submission channel</strong>이다. 서로 다른 stream 사이에서는 event, dependency, priority, resource contention에 따라 병렬 실행 가능성이 생기지만, runtime이 Go처럼 work item을 훔쳐 다른 stream으로 옮기는 모델은 아니다.</p>
+<ol><li><strong>CUDA stream은 Go/Tokio의 runqueue가 아니다.</strong></li></ol>
+<p>CUDA Runtime API는 device별 primary context를 암묵적으로 사용하지만, Driver API는 <code>CUcontext</code>, <code>CUstream</code>, <code>CUevent</code>, <code>CUmodule</code>, <code>CUfunction</code> 같은 객체를 더 직접 노출한다. 따라서 Q8에서 “context가 있느냐”보다 중요한 질문은 <strong>context가 API 표면에 보이는가, 아니면 runtime 내부로 숨겨졌는가</strong>다.</p>
+<ol><li><strong>CUDA에는 runtime API와 driver API의 context 노출 차이가 있다.</strong></li></ol>
+<p>Level Zero에서 command list는 명령을 기록하는 객체이고, command queue는 기록된 command list를 device에 제출하는 통로다. 이 구조는 Vulkan/Direct3D 스타일에 가깝다. CUDA stream처럼 “바로 stream에 kernel launch를 넣는” 모델보다, <code>record → close → submit</code> 단계가 더 명시적이다.</p>
+<ol><li><strong>Level Zero는 command list와 command queue를 분리한다.</strong></li></ol>
+<p>in-order queue에서는 앞 명령 완료가 뒤 명령 실행 조건이 된다. out-of-order queue에서는 event wait list가 명령 간 의존성을 만든다. 이 점은 accelerator runtime의 핵심 상태 전이가 단순 FIFO가 아니라 <strong>event dependency graph</strong>일 수 있음을 보여준다.</p>
+<ol><li><strong>OpenCL command queue는 in-order와 out-of-order가 모두 가능하다.</strong></li></ol>
+<p>SYCL <code>queue</code>, <code>buffer</code>, <code>accessor</code>, <code>event</code>는 CUDA, Level Zero, OpenCL 같은 backend 객체 위에 매핑된다. 따라서 SYCL의 task 상태를 분석할 때는 “SYCL runtime 소유 상태”와 “backend runtime/driver 소유 상태”를 나눠야 한다.</p>
+<ol><li><strong>SYCL queue는 자체 runtime이라기보다 backend runtime의 추상화 계층이다.</strong></li></ol>
+<h2 id="더-구체화한-부분-2">더 구체화한 부분</h2>
+<p>Accelerator runtime의 공통 객체 모델은 다음처럼 잡을 수 있다.</p>
+<pre><code class="language-text">Runtime / Driver binding
+├── Platform / Adapter
+├── Device
+├── Context
+├── Program / Module / Executable
+├── Kernel / Function
+├── Queue / Stream
+├── Command / CommandList / Graph node
+├── Event / Fence / Signal
+├── Buffer / Image / USM allocation
+└── Error / Completion record</code></pre>
+<p>Go/Tokio와의 가장 큰 차이는 <code>WorkItem</code>의 성격이다.</p>
+<div class="table-wrap"><table><thead><tr><th>일반 런타임 개념</th><th>Go/Tokio</th><th>Accelerator runtime</th></tr></thead><tbody><tr><td>실행 단위</td><td>goroutine, Future task</td><td>kernel launch, memcpy, barrier, command</td></tr><tr><td>큐</td><td>ready task 재배치 가능</td><td>순서·의존성 보존 채널</td></tr><tr><td>실행자</td><td>OS worker thread</td><td>device engine, SM/CU/EU, DMA engine</td></tr><tr><td>선점</td><td>일부 가능 또는 협조형</td><td>보통 coarse-grained, device 의존</td></tr><tr><td>완료 객체</td><td>JoinHandle, channel, Waker</td><td>event, fence, callback, status query</td></tr><tr><td>결과 산출물</td><td>return value, channel value</td><td>output buffer, event status, error code</td></tr></tbody></table></div>
+<p>Accelerator command의 일반 상태기계는 다음처럼 정리된다.</p>
+<pre><code class="language-text">created
+  -&gt; recorded              # command list/graph에 기록됨
+  -&gt; submitted             # queue/stream에 제출됨
+  -&gt; dependency_wait       # event/barrier/resource wait
+  -&gt; device_pending        # driver/device queue에 있음
+  -&gt; executing             # device engine에서 실행 중
+  -&gt; completed             # event signaled, output visible
+  -&gt; failed                # launch error, illegal access, device fault
+  -&gt; cancelled/aborted     # context reset, queue/device failure 등 제한적</code></pre>
+<p>중요한 점은 <code>submitted</code> 이후의 상당 부분이 host runtime이 아니라 <strong>driver/device 소유 상태</strong>라는 것이다. Host runtime은 event polling, synchronization, error propagation을 통해 그 상태를 관찰한다.</p>
+<h2 id="관련-맥락-배경-설명-2">관련 맥락 / 배경 설명</h2>
+<p>Accelerator runtime의 <code>event</code>는 단순 알림 객체가 아니다. 대개 세 가지 역할을 동시에 한다.</p>
+<div class="table-wrap"><table><thead><tr><th>역할</th><th>설명</th></tr></thead><tbody><tr><td>ordering edge</td><td>“B는 A 완료 후 실행” 같은 의존성 간선</td></tr><tr><td>completion record</td><td>host가 완료 여부를 query/sync할 수 있는 상태</td></tr><tr><td>visibility boundary</td><td>memory copy, kernel write, host read 사이의 가시성 경계</td></tr></tbody></table></div>
+<p>이 때문에 accelerator runtime에서는 Q5의 상태 전이가 <code>blocked → ready</code> 하나로 끝나지 않는다. 더 정확히는 다음 간선들이 있다.</p>
+<pre><code class="language-text">host task waiting_on_event
+  -&gt; event signaled by device
+  -&gt; host thread wake/sync returns
+  -&gt; output buffer becomes readable under runtime&#x27;s memory rules</code></pre>
+<p>즉 “완료”는 세 층이다.</p>
+<pre><code class="language-text">device execution completed
+driver observed completion
+host runtime/API returned completion to user</code></pre>
+<p>이 세 층이 어긋날 수 있기 때문에 CUDA의 asynchronous error, OpenCL/SYCL event status, Level Zero fence/event query 같은 API가 필요하다.</p>
+<h2 id="런타임-내부-구조로-환원-4">런타임 내부 구조로 환원</h2>
+<p>Accelerator runtime을 Turn 1의 5요소 모델로 환원하면 다음과 같다.</p>
+<div class="table-wrap"><table><thead><tr><th>5요소</th><th>Accelerator runtime에서의 형태</th></tr></thead><tbody><tr><td>object model</td><td>device, context, queue/stream, command, event, buffer, module</td></tr><tr><td>state machine</td><td>command lifecycle + event status + memory visibility</td></tr><tr><td>scheduler</td><td>host submission policy + driver/device scheduling</td></tr><tr><td>allocator</td><td>device memory, unified/shared memory, pinned host memory, buffer pool</td></tr><tr><td>API/ABI surface</td><td>opaque handle, launch API, sync/query API, error return</td></tr></tbody></table></div>
+<p>여기서 allocator는 단순 <code>malloc/free</code>가 아니다. Accelerator runtime은 최소한 다음 자원을 관리한다.</p>
+<pre><code class="language-text">device memory
+host pinned memory
+shared/unified memory
+command buffer/list storage
+event/fence object
+module/kernel metadata
+queue/stream handle
+temporary workspace</code></pre>
+<p>Q7 관점에서 보면 buffer는 “메모리 덩어리”이면서 동시에 “device 접근 권한과 visibility rule을 가진 runtime object”다. 그래서 PIM runtime 설계에서도 단순 주소 포인터보다 <code>buffer handle + placement + coherence state + owner</code>가 필요하다.</p>
+<h2 id="상태-전이-스케줄링-자원-소유-관점-4">상태 전이 / 스케줄링 / 자원 소유 관점</h2>
+<p>Q8의 소유 경계는 accelerator에서 특히 중요하다.</p>
+<div class="table-wrap"><table><thead><tr><th>상태/자원</th><th>App/framework 소유</th><th>Runtime 소유</th><th>Driver/device 소유</th></tr></thead><tbody><tr><td>high-level op graph</td><td>예</td><td>일부</td><td>아니오</td></tr><tr><td>queue/stream handle</td><td>관찰</td><td>예</td><td>일부</td></tr><tr><td>command dependency</td><td>일부</td><td>예</td><td>일부</td></tr><tr><td>physical dispatch</td><td>아니오</td><td>제한적</td><td>예</td></tr><tr><td>device memory allocation</td><td>요청</td><td>handle 관리</td><td>실제 backing</td></tr><tr><td>event object</td><td>관찰/query</td><td>예</td><td>signal 처리</td></tr><tr><td>hardware fault</td><td>아니오</td><td>전파</td><td>예</td></tr><tr><td>output tensor/buffer 의미</td><td>예</td><td>storage 관리</td><td>bytes 생산</td></tr></tbody></table></div>
+<p>스케줄링 정책도 Go/Tokio와 다르게 표현해야 한다.</p>
+<pre><code class="language-text">Go/Tokio:
+  ready task 중 무엇을 worker가 poll/run할 것인가?
+
+CUDA/Level Zero/OpenCL:
+  어떤 queue에 어떤 순서와 event dependency로 command를 제출할 것인가?
+  제출 후 device가 실제 engine에 어떻게 배정할 것인가는 별도 층이다.</code></pre>
+<p>따라서 accelerator runtime에서 Q4의 정책 후보는 다음처럼 바뀐다.</p>
+<ul><li>stream/queue priority</li><li>in-order vs out-of-order queue</li><li>event dependency graph</li><li>batching 또는 command list recording</li><li>host-side submission throttling</li><li>memory transfer와 compute overlap</li><li>device별 placement</li><li>context/queue별 isolation</li><li>fault 발생 시 queue/context reset 범위</li></ul>
+<h2 id="다른-런타임과의-비교-4">다른 런타임과의 비교</h2>
+<div class="table-wrap"><table><thead><tr><th>축</th><th>Go/Tokio</th><th>Linux scheduler</th><th>CUDA/Level Zero/OpenCL</th></tr></thead><tbody><tr><td>큐 의미</td><td>ready work 재배치</td><td>CPU runqueue</td><td>ordered/dependency submission</td></tr><tr><td>work stealing</td><td>핵심 정책</td><td>부하분산과 유사</td><td>일반적으로 없음</td></tr><tr><td>선점 주체</td><td>runtime 또는 cooperative</td><td>kernel</td><td>device/firmware 의존</td></tr><tr><td>block/wakeup</td><td>Waker, netpoller, sysmon</td><td>wait queue, signal</td><td>event/fence/sync</td></tr><tr><td>완료 산출물</td><td>JoinHandle/channel</td><td>exit status/zombie</td><td>event status + output buffer</td></tr><tr><td>자원 소유</td><td>runtime heap/task</td><td>kernel task/page</td><td>runtime handle + driver backing</td></tr></tbody></table></div>
+<p>공통 구조도 있다. 세 계층 모두 결국 다음 네 가지를 가진다.</p>
+<pre><code class="language-text">work descriptor
+queue
+state transition
+completion object</code></pre>
+<p>다만 의미가 다르다. Go의 queue는 “누가 실행할지 고르는 큐”이고, CUDA stream은 “이미 선택된 device로 보낼 순서 큐”다. 이 차이를 구분하지 않으면 PIM runtime 설계에서 host scheduler와 device command queue를 잘못 합치게 된다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</h2>
+<ul><li>CUDA stream을 “GPU scheduler”라고 부르는 표현은 피해야 한다. stream은 host-visible ordering abstraction이고, 실제 SM 배정은 더 낮은 층이다.</li><li>Level Zero command queue도 완전한 hardware scheduler가 아니다. queue는 제출 인터페이스이고, device 내부 엔진 선택·실행 순서는 driver와 hardware 정책을 탄다.</li><li>OpenCL out-of-order queue는 “아무 순서나 실행”이 아니다. event wait list, memory dependency, command type 제약을 만족해야 한다.</li><li>SYCL의 <code>queue</code> 동작은 backend에 따라 달라진다. 같은 SYCL 코드라도 CUDA backend, Level Zero backend, OpenCL backend에서 event, memory, error propagation의 세부가 달라질 수 있다.</li><li>Accelerator command의 cancellation은 언어 runtime task cancellation보다 약하다. 이미 device에 dispatch된 kernel을 개별 task 단위로 취소하지 못하고 context reset이나 device fault 처리로 커지는 경우가 많다.</li></ul>
+<h2 id="다음-에이전트가-이어서-확장할-지점-5">다음 에이전트가 이어서 확장할 지점</h2>
+<p><code>PJRT_Client</code>, <code>PJRT_Device</code>, <code>PJRT_Buffer</code>, <code>PJRT_Executable</code>, <code>PJRT_Event</code>를 이번 턴의 <code>context/device/buffer/executable/event</code> 모델에 매핑하고, “실행 결과가 return value가 아니라 buffer와 event로 남는다”는 점을 정식화한다.</p>
+<ol><li><strong>PJRT/OpenXLA로 이동해 Q6·Q8을 확장하라.</strong></li></ol>
+<p>PIM용 최소 객체를 <code>PimContext</code>, <code>PimDevice</code>, <code>PimBuffer</code>, <code>PimKernel</code>, <code>PimCommand</code>, <code>PimQueue</code>, <code>PimEvent</code>로 잡고, queue는 Go식 work-stealing queue가 아니라 CUDA/OpenCL식 순서·의존성 큐에 가깝다는 가정을 검토한다.</p>
+<ol><li><strong>PIM runtime Q10 초안을 시작하라.</strong></li></ol>
+<p><code>created → recorded → submitted → dependency_wait → device_pending → executing → writeback/visibility → completed/failed</code>로 두고, 각 상태가 host runtime, driver, PIM device 중 누구 소유인지 표로 분해한다.</p>
+<ol><li><strong>상태기계를 PIM에 맞게 좁혀라.</strong></li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-11T16:40:14.733255+00:00</li><li>누적 턴 수: 3</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-11T16:41:22.441803+00:00</li><li>누적 턴 수: 4</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
