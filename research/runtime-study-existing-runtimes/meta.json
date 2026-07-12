@@ -1,0 +1,212 @@
+{
+  "title": "기존 가속기 Runtime 구조 정보 수집",
+  "summary": "CHAMP SIM이나 제안서 설계 연결을 제외하고 CUDA, Level Zero, PJRT, UPMEM 같은 기존 런타임 시스템의 객체, 프로토콜 흐름, 메모리/실행/동기화 모델을 공식 문서와 공개 코드 중심으로 스터디한다.",
+  "type": "정보 수집",
+  "topic": "기존 가속기 Runtime 구조와 Interface 분석",
+  "scope": "references/research/runtime-study의 runtime-study-plan.md와 feedback.md를 함께 참고하되, feedback.md를 최우선 지시로 따른다. CHAMP SIM, CHAMP-PIM, LP6-PIM 제안서/설계 연결은 제외하고 기존 런타임 자체의 구조와 동작만 조사한다. 단순 계획이 아니라 공식 문서/공개 코드/예제 검색을 통해 실제 스터디를 수행한다.",
+  "parent_slug": null,
+  "generated_from_plan": null,
+  "project": {},
+  "tags": [
+    "runtime",
+    "accelerator",
+    "CUDA",
+    "Level Zero",
+    "PJRT",
+    "UPMEM",
+    "existing systems"
+  ],
+  "updated": "2026-07-11",
+  "source": {
+    "repo_url": null,
+    "local_path": null,
+    "branch": null,
+    "paths": [],
+    "reference_dir": "references/research/runtime-study",
+    "docs": [
+      {
+        "title": "NVIDIA CUDA Runtime API",
+        "url": "https://docs.nvidia.com/cuda/cuda-runtime-api/"
+      },
+      {
+        "title": "NVIDIA CUDA Driver API",
+        "url": "https://docs.nvidia.com/cuda/cuda-driver-api/"
+      },
+      {
+        "title": "NVIDIA CUDA C++ Programming Guide",
+        "url": "https://docs.nvidia.com/cuda/cuda-c-programming-guide/"
+      },
+      {
+        "title": "Intel oneAPI Level Zero Specification",
+        "url": "https://oneapi-src.github.io/level-zero-spec/"
+      },
+      {
+        "title": "OpenXLA PJRT overview",
+        "url": "https://openxla.org/xla/pjrt"
+      },
+      {
+        "title": "OpenXLA PJRT C++ API overview",
+        "url": "https://openxla.org/xla/pjrt/cpp_api_overview"
+      },
+      {
+        "title": "OpenXLA XLA PJRT source tree",
+        "url": "https://github.com/openxla/xla/tree/main/xla/pjrt"
+      },
+      {
+        "title": "UPMEM SDK documentation",
+        "url": "https://sdk.upmem.com/"
+      }
+    ]
+  },
+  "analysis": {
+    "model": "claude-fable-5",
+    "effort": "max",
+    "max_turns": 200,
+    "analysis_style": "기존 시스템 공부 노트처럼 작성한다. 제안 시스템으로 연결하지 말고, 런타임별 독립 분석 후 공통점과 차이점만 비교한다. CHAMP SIM, CHAMP-PIM, LP6-PIM 설계 연결은 제외한다. 토큰 예산을 아끼지 말고 각 런타임의 프로토콜 흐름, 객체 전달, 내부 상태 변화, 메모리/실행/동기화 상호작용을 자세히 설명한다.",
+    "sections": [
+      {
+        "title": "조사 범위와 제외 범위",
+        "prompt": "이번 정보 수집이 기존 런타임 자체를 조사하는 작업이며 CHAMP SIM/CHAMP-PIM/LP6-PIM 제안서 연결은 제외한다는 점을 명확히 선언한다.",
+        "required": [
+          "포함 범위",
+          "제외 범위",
+          "feedback.md 우선 적용"
+        ]
+      },
+      {
+        "title": "CUDA Runtime / Driver 구조",
+        "prompt": "CUDA Runtime API와 Driver API의 계층 차이, Context/Stream/Event/Memory/Module/Kernel 객체 관계, 실행 흐름과 동기화 모델을 공식 문서와 예제 기준으로 정리한다. cudaMalloc/cudaMemcpyAsync/cudaLaunchKernel/cudaEventRecord 계열 호출이 어떤 핸들과 상태를 주고받는지 프로토콜 흐름으로 설명한다.",
+        "required": [
+          "Runtime API",
+          "Driver API",
+          "Context",
+          "Stream",
+          "Event",
+          "Memory",
+          "Kernel launch",
+          "API call sequence",
+          "runtime-driver boundary"
+        ]
+      },
+      {
+        "title": "Intel Level Zero 구조",
+        "prompt": "Driver/Device/Context/Command List/Command Queue/Event/Fence의 역할과 명령 기록-제출-완료 흐름을 specification 기준으로 정리한다. command list에 명령을 기록하고 command queue에 제출한 뒤 event/fence로 완료를 회수하는 프로토콜을 설명한다.",
+        "required": [
+          "Driver",
+          "Device",
+          "Context",
+          "Command List",
+          "Command Queue",
+          "Event",
+          "Fence",
+          "command recording protocol",
+          "submission protocol"
+        ]
+      },
+      {
+        "title": "OpenXLA PJRT 구조",
+        "prompt": "PJRT의 Client/Device/Buffer/Executable/LoadedExecutable/Future가 어떤 추상화 경계를 만들고 framework와 backend 사이를 어떻게 연결하는지 공식 문서와 공개 XLA 코드 기준으로 정리한다. buffer 생성, compile/load, execute, future/ready event 반환의 프로토콜 흐름을 설명한다.",
+        "required": [
+          "PjRtClient",
+          "PjRtDevice",
+          "PjRtBuffer",
+          "PjRtExecutable",
+          "PjRtLoadedExecutable",
+          "Future",
+          "buffer protocol",
+          "execute protocol"
+        ]
+      },
+      {
+        "title": "UPMEM SDK Runtime 구조",
+        "prompt": "DPU Set 할당, binary load, host-DPU memory transfer, launch, synchronization 흐름과 사용자가 보는 API 객체를 SDK 문서/예제 기준으로 정리한다. dpu_alloc/dpu_load/dpu_copy_to/from/dpu_launch/dpu_sync 또는 동등 호출이 어떤 순서로 상태를 바꾸는지 프로토콜 흐름으로 설명한다.",
+        "required": [
+          "DPU Set",
+          "Binary loading",
+          "Memory transfer",
+          "Launch",
+          "Synchronization",
+          "host-DPU protocol",
+          "transfer protocol"
+        ]
+      },
+      {
+        "title": "런타임 프로토콜 흐름 다이어그램",
+        "prompt": "각 런타임별로 host/framework, runtime, driver/backend, device 사이에 객체와 요청이 오가는 순서를 Mermaid sequenceDiagram 또는 flowchart로 그린다. API 호출 나열이 아니라 handle/object/state가 전달되는 흐름을 표현한다.",
+        "required": [
+          "CUDA protocol diagram",
+          "Level Zero protocol diagram",
+          "PJRT protocol diagram",
+          "UPMEM protocol diagram",
+          "메모리 관리와 실행 제출의 연결"
+        ]
+      },
+      {
+        "title": "기존 런타임 비교표",
+        "prompt": "제안 시스템으로 연결하지 말고, 기존 런타임들의 공통점과 차이점만 비교한다.",
+        "required": [
+          "사용자 노출 객체",
+          "숨겨지는 내부 책임",
+          "명령 기록/제출 분리 여부",
+          "메모리 할당/전송 모델",
+          "동기화/완료 확인 방식",
+          "runtime-driver/backend boundary",
+          "request/handle/protocol chain",
+          "처음 읽을 자료 순서"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/research/runtime-study/feedback.md",
+      "raw": "references/raw/runtime-study/feedback.md",
+      "text": "references/text/runtime-study__feedback.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/runtime-study/runtime-study-plan.md",
+      "raw": "references/raw/runtime-study/runtime-study-plan.md",
+      "text": "references/text/runtime-study__runtime-study-plan.txt"
+    },
+    {
+      "title": "NVIDIA CUDA Runtime API",
+      "url": "https://docs.nvidia.com/cuda/cuda-runtime-api/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "NVIDIA CUDA Driver API",
+      "url": "https://docs.nvidia.com/cuda/cuda-driver-api/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "NVIDIA CUDA C++ Programming Guide",
+      "url": "https://docs.nvidia.com/cuda/cuda-c-programming-guide/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "Intel oneAPI Level Zero Specification",
+      "url": "https://oneapi-src.github.io/level-zero-spec/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "OpenXLA PJRT overview",
+      "url": "https://openxla.org/xla/pjrt",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "OpenXLA PJRT C++ API overview",
+      "url": "https://openxla.org/xla/pjrt/cpp_api_overview",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "OpenXLA XLA PJRT source tree",
+      "url": "https://github.com/openxla/xla/tree/main/xla/pjrt",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "UPMEM SDK documentation",
+      "url": "https://sdk.upmem.com/",
+      "note": "URL only; content was not fetched automatically."
+    }
+  ]
+}

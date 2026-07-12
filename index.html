@@ -498,164 +498,6 @@
 
     }
   </style>
-
-<!-- PENDING_QUEUE_STYLE_START -->
-<style>
-  .pending-queue-section {
-    margin: 0 0 36px;
-    padding: 26px;
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    background: var(--surface);
-  }
-
-  .pending-queue-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .pending-queue-heading-text {
-    min-width: 0;
-  }
-
-  .pending-queue-label {
-    margin: 0 0 5px;
-    color: var(--accent);
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .pending-queue-heading h2 {
-    margin: 0;
-  }
-
-  .pending-queue-description {
-    margin: 7px 0 0;
-    color: var(--muted);
-    font-size: 0.92rem;
-  }
-
-  .pending-queue-count {
-    flex: 0 0 auto;
-    padding: 6px 11px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    color: var(--muted);
-    font-size: 0.82rem;
-    white-space: nowrap;
-  }
-
-  .pending-queue-list {
-    display: grid;
-    gap: 10px;
-  }
-
-  .pending-queue-item {
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) 84px 84px;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--bg);
-  }
-
-  .pending-queue-order {
-    display: flex;
-    width: 32px;
-    height: 32px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(118, 169, 250, 0.12);
-    color: var(--accent);
-    font-size: 0.82rem;
-    font-weight: 700;
-  }
-
-  .pending-queue-paper {
-    min-width: 0;
-  }
-
-  .pending-queue-paper strong {
-    display: block;
-    overflow: hidden;
-    color: var(--text);
-    font-size: 0.92rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .pending-queue-paper span {
-    display: block;
-    margin-top: 3px;
-    color: var(--muted);
-    font-size: 0.78rem;
-  }
-
-  .pending-queue-size {
-    color: var(--muted);
-    font-size: 0.8rem;
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  .pending-queue-status {
-    display: inline-flex;
-    justify-content: center;
-    min-width: 74px;
-    padding: 5px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .pending-queue-status.queue-next {
-    background: rgba(118, 169, 250, 0.15);
-    color: var(--accent);
-  }
-
-  .pending-queue-status.queue-waiting {
-    background: rgba(174, 184, 198, 0.12);
-    color: var(--unverified);
-  }
-
-  .pending-queue-empty {
-    padding: 26px 16px;
-    border: 1px dashed var(--border);
-    border-radius: 12px;
-    color: var(--muted);
-    text-align: center;
-  }
-
-  @media (max-width: 720px) {
-    .pending-queue-heading {
-      flex-direction: column;
-    }
-
-    .pending-queue-item {
-      grid-template-columns: 36px minmax(0, 1fr) auto;
-    }
-
-    .pending-queue-size {
-      display: none;
-    }
-
-    .pending-queue-paper strong {
-      white-space: normal;
-      word-break: break-word;
-    }
-  }
-</style>
-<!-- PENDING_QUEUE_STYLE_END -->
-
 </head>
 
 <body>
@@ -679,7 +521,7 @@
 
         <a class="tab-link" href="#research">
           <span>정보 수집</span>
-          <small>1</small>
+          <small>2</small>
         </a>
         
 
@@ -710,7 +552,7 @@
 
       <div class="statistics">
         <span class="stat">논문 12편</span>
-        <span class="stat">전체 항목 22개</span>
+        <span class="stat">전체 항목 23개</span>
       </div>
     </div>
   </header>
@@ -735,7 +577,7 @@
     <a href="#research" class="category-card">
       <h2>Research &amp; Analysis <span>정보 수집</span></h2>
       <p>특정 주제에 대한 문서, 링크, 메모를 모아 쟁점과 조사 로드맵으로 정리합니다.</p>
-      <small>1개 문서</small>
+      <small>2개 문서</small>
     </a>
     
 
@@ -770,7 +612,7 @@
 
         <a class="tab-link" href="#research">
           <span>정보 수집</span>
-          <small>1</small>
+          <small>2</small>
         </a>
         
 
@@ -1306,7 +1148,7 @@
           <h2>Research Collections</h2>
           <p>특정 주제에 대한 문서, 링크, 메모를 모아 쟁점과 조사 로드맵으로 정리합니다.</p>
         </div>
-        <span class="section-count">1개</span>
+        <span class="section-count">2개</span>
       </div>
 
       <div class="library-grid">
@@ -1332,6 +1174,32 @@
       </p>
 
       <a class="open-link" href="research/runtime-study/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="research/runtime-study-existing-runtimes/">
+            기존 가속기 Runtime 구조 정보 수집
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          Codex 검증 전
+        </span>
+      </div>
+
+      <p class="metadata">정보 수집 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">runtime</span><span class="tag">accelerator</span><span class="tag">CUDA</span><span class="tag">Level Zero</span><span class="tag">PJRT</span><span class="tag">UPMEM</span><span class="tag">existing systems</span></div>
+
+      <p class="summary">
+        CHAMP SIM이나 제안서 설계 연결을 제외하고 CUDA, Level Zero, PJRT, UPMEM 같은 기존 런타임 시스템의 객체, 프로토콜 흐름, 메모리/실행/동기화 모델을 공식 문서와 공개 코드 중심으로 스터디한다.
+      </p>
+
+      <a class="open-link" href="research/runtime-study-existing-runtimes/">
         열기 →
       </a>
     </article>
@@ -1451,38 +1319,7 @@
       </div>
     </section>
     
-  
-<!-- PENDING_QUEUE_SECTION_START -->
-<section
-  class="pending-queue-section"
-  aria-labelledby="pending-queue-title"
->
-  <div class="pending-queue-heading">
-    <div class="pending-queue-heading-text">
-      <p class="pending-queue-label">Analysis Queue</p>
-      <h2 id="pending-queue-title">분석 대기열</h2>
-      <p class="pending-queue-description">
-        서버의 pending 디렉터리에 등록된 논문입니다.
-        위에서부터 순서대로 분석됩니다.
-      </p>
-    </div>
-
-    <span class="pending-queue-count">
-      0편 대기 중
-    </span>
-  </div>
-
-  <div class="pending-queue-list">
-    
-      <div class="pending-queue-empty">
-        현재 분석을 기다리는 논문이 없습니다.
-      </div>
-    
-  </div>
-</section>
-<!-- PENDING_QUEUE_SECTION_END -->
-
-</main>
+  </main>
 
   <footer>
     <div class="page-shell">

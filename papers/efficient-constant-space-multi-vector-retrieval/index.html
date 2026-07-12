@@ -161,10 +161,12 @@
     .doc-index {
       position: sticky;
       top: 18px;
+      max-height: calc(100vh - 36px);
       padding: 18px;
       border: 1px solid var(--border);
       border-radius: 12px;
       background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
     }
 
     .doc-index p {
@@ -179,6 +181,10 @@
     .doc-index nav {
       display: grid;
       gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
     }
 
     .doc-index a {
