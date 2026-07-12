@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Visual RAG Toolkit: Scaling Multi-Vector Visual Retrieval with Training-Free Pooling and Multi-Stage Search</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Visual RAG Toolkit: Scaling Multi-Vector Visual Retrieval with Training-Free Pooling and Multi-Stage Search</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Ara Yeroyan</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2602.12510v1 [cs.IR], 2026-02-13) — 동료심사(peer-review) 게재 여부는 논문에 명시되지 않음</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정과 주요 구성요소</a>
+<a href="#algorithms">핵심 알고리즘과 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 ColPali 계열의 multi-vector visual retriever(late interaction 기반 시각 문서 검색기)가 페이지당 수백~수천 개의 patch 벡터를 만들어 내면서 검색 및 색인 비용이 급격히 커지는 확장성 문제를 다룬다. 저자는 추가 학습 없이(training-free) 모델 아키텍처에 맞춘 정적 공간 풀링(static spatial pooling)을 적용해 페이지당 벡터 수를 약 1024개에서 약 32개(ColSmol은 약 832개에서 약 13개)로 줄이고, 이 압축된 표현으로 후보를 빠르게 뽑은 뒤(candidate generation) 원본 full patch embedding으로 정확한 MaxSim reranking을 수행하는 multi-stage retrieval을 제안한다. 모든 표현은 Qdrant의 named vector로 동일 collection에 저장되어 prefetch+query API를 통해 서버 사이드 단일 호출로 실행된다. 여기에 non-visual token(special/prompt/padding token)을 색인 시점에 제거하는 token hygiene과 여백 영역을 잘라내는 empty-region cropping 같은 전처리가 결합된다. ViDoRe v2의 세 데이터셋(총 3006페이지) 실험에서 3B급 모델(ColPali v1.3, ColQwen2.5)의 2-stage retrieval은 union scope 기준 QPS를 3.8~4.5배 높이면서 N@5, N@10, R@5, R@10을 1-stage baseline 대비 ±0.01 이내로 유지했고, 품질 저하는 주로 R@100(-0.02~-0.09)에 집중되었다. 반면 sub-1B 모델인 ColSmol-500M은 R@100에서 최대 -0.30까지 큰 저하를 보여, 공격적인 풀링이 손실 없이 동작하려면 일정 수준 이상의 representational capacity가 필요함을 시사한다. 논문은 시스템/툴킷 성격이 강하며(pip 패키지, CLI, SDK, Streamlit 데모), 학습이나 distillation 없이 소비자용 하드웨어에서 visual RAG를 실용화하는 것을 목표로 한다.</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>핵심 아이디어는 &#x27;벡터 수 D를 줄이면 Cost_search = Q×D×N×d가 그대로 줄어든다&#x27;는 단순한 비용식에서 출발하며, quantization처럼 비교 1회의 비용이 아니라 비교 대상 벡터의 개수 자체를 공략한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>풀링은 완전히 training-free하다. post-training, adapter, distillation 없이 인코더 출력에 정적 공간 연산(행 평균, 타일 평균, 가중 smoothing)만 적용한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정확도 보존의 열쇠는 rerank 단계다. pooled 벡터는 후보 생성에만 쓰이고 최종 점수는 full patch embedding에 대한 exact MaxSim으로 매겨지므로, k≤10에서 품질이 거의 유지된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>3B 모델(ColPali v1.3, ColQwen2.5)에서 2-stage는 union scope 기준 QPS 3.8~4.5배 향상, N@5/N@10/R@5/R@10은 ±0.01 이내 유지, 저하는 R@100(-0.02~-0.09)에 집중된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ColSmol-500M은 R@100 최대 -0.30까지 무너져, 공격적 풀링이 무손실로 작동하려면 넘어야 할 representational capacity 임계치가 존재함을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>&#x27;올바른 풀링&#x27;은 backbone 의존적이다. 학습된 국소 mixing이 없는 ColPali에는 균일 conv1d가 잘 맞지만, PatchMerger로 이미 2×2 이웃을 섞은 ColQwen2.5에는 double-smoothing이 되어 오히려 해가 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Token hygiene만으로도 품질이 오를 수 있다. FP16 저장에 token hygiene과 cropping을 적용한 1-stage baseline이 전처리 없는 FP32 공식 리더보드 점수를 이따금 초과했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>속도 이득은 QPS와 인덱스 구축 비용에 한정된다. rerank용 full patch embedding을 계속 저장해야 하므로 저장 공간은 오히려 늘어난다(pooled/global 벡터 추가).</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Late interaction의 정확도는 가파른 계산 비용을 대가로 한다</h3>
+      <p>ColPali 계열의 multi-vector visual retriever는 페이지 이미지를 VLM으로 직접 임베딩하고 query token과 page patch token 사이의 MaxSim으로 관련도를 계산한다. 이 방식은 ViDoRe 벤치마크에서 텍스트 전용 파이프라인을 크게 능가하는 state-of-the-art 성능을 보였지만, 페이지 한 장이 수천 개의 벡터로 표현된다는 점에서 근본적인 확장성 문제가 있다. ColPali(v1.3)는 페이지당 D=1024개(차원 d=128)의 벡터를 만들고, ColQwen2.5-v0.2는 동적 해상도를 받아 최대 약 768개의 visual token(실제 관측치 D≈700~750)을 만든다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색 비용의 정량적 구조 (Eq. 1)</h3>
+      <p>질의 하나와 문서 하나를 채점하려면 Q×D개의 inner product가 필요하고, 각 inner product는 차원 d의 연산이다. N개 페이지를 스캔하면 전체 검색 비용은 Cost_search = Q × D × N × d (multiply-adds)가 된다. 논문의 예시에서 N=10,000, D=1024, Q=10, d=128이면 쿼리당 1.31×10^10회의 multiply-add가 필요하다. D를 1024에서 32(row-mean pooling)로 줄이면 4.10×10^8로 줄어 32배가 절감된다. d는 비율에서 상쇄되므로 절감 효과는 압축비 D/D&#x27;에 따라 커진다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색뿐 아니라 인덱스 구축 비용도 문제다</h3>
+      <p>HNSW 인덱스를 쓰는 시스템에서 그래프 구축은 O(N · ef_c · log N · M)회의 pairwise 비교를 요구하며(전형적으로 M=16, ef_c=128), multi-vector 점 두 개의 비교 한 번이 O(D^2 · d) 비용이다. N=10,000, D=1024, d=128이면 이는 조 단위(trillions)의 부동소수점 연산에 해당한다. 따라서 D를 줄이는 것은 검색과 인덱스 구축 비용을 동시에 완화한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동기: 하드웨어 장벽 낮추기</h3>
+      <p>저자는 이 비용을 낮추어 연구자·학생·실무자가 데이터센터 자원 없이 단일 consumer GPU 또는 Apple Silicon Mac에서 state-of-the-art visual retrieval을 쓸 수 있게 하는 것을 목표로 삼는다. 즉 문제 정의가 &#x27;더 높은 정확도&#x27;가 아니라 &#x27;동일 정확도의 실용적 접근성&#x27;에 맞춰져 있다.</p>
+      <span class="source-ref">PDF p. 1, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>OCR·layout 기반 텍스트 파이프라인은 시각 구조를 버린다</h3>
+      <p>전통적인 문서 검색은 OCR, layout 분석, 텍스트 기반 인덱싱에 의존해 왔고, 이 과정에서 차트, 표, 인포그래픽, 컬러 제목, 복잡한 레이아웃 같은 실제 문서의 풍부한 시각 구조가 버려진다. VLM 기반 visual document retrieval은 이 문제를 우회했지만 대신 비용 문제를 떠안았다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>기존 효율화 기법은 &#x27;비교 1회당 비용&#x27;만 줄인다</h3>
+      <p>기존의 효율화 연구는 quantization(예: binary vector)이나 PLAID의 centroid pruning 같은 engine-level 최적화에 집중한다. 논문은 이들이 cost per comparison(비교 한 번의 비용)은 낮추지만 number of comparisons(비교 횟수) 자체는 줄이지 않는다고 지적하며, 자신들은 &#x27;페이지당 저장 벡터 수를 줄인다&#x27;는 직교적(orthogonal) 축을 공략한다고 주장한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>벤치마크 제출물조차 non-visual token을 걸러내지 않는다</h3>
+      <p>필터링이 간단해 보임에도, 원시 ViDoRe 벤치마크 제출물들은 padding token을 포함한 모든 token으로 모델을 평가한다. 표준 MaxSim은 모든 token을 동일하게 취급하므로 non-visual token이 점수를 부풀리는 spurious high-similarity attractor로 작동할 수 있다는 것이 논문의 지적이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>(1) Training-free, model-aware spatial pooling</h3>
+      <p>Matryoshka Representation Learning의 아이디어(추가 학습 없이 하나의 embedding에서 여러 granularity의 유용한 표현을 뽑을 수 있다)에서 영감을 받아, 각 모델 아키텍처에 맞춘 정적(static) 공간 연산으로 patch embedding 전체 집합을 압축된 multi-vector summary(예: 페이지당 약 1024개에서 약 32개)로 변환한다. post-training, adapter, distillation이 전혀 필요 없다는 점이 핵심 주장이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(2) Qdrant named vector 기반 multi-stage retrieval</h3>
+      <p>압축된 pooled representation으로 빠른 candidate generation을 수행하고, full patch embedding으로 정확한 MaxSim reranking을 수행한다. 두 표현이 같은 collection의 named vector로 저장되어 있어 전 과정이 서버 사이드에서 단일 API 호출로 실행되며 round-trip이 최소화된다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(3) 견고한 전처리와 재현 가능한 평가</h3>
+      <p>PDF-to-image 변환, 선택적 empty-region cropping, token hygiene, 그리고 모델·pooling 전략·retrieval 구성을 체계적으로 ablation할 수 있는 benchmark script를 함께 제공한다. 결과물은 pip 패키지(visual-rag-toolkit), CLI, modular SDK, Streamlit 데모로 공개된다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>End-to-end 파이프라인으로서의 Visual RAG Toolkit</h3>
+      <p>Visual RAG Toolkit은 PDF ingestion부터 색인된 multi-stage search까지 전체 파이프라인을 포괄하는 end-to-end 오픈소스 시스템이다. 흐름은 PDF → 고해상도 이미지 변환 → (선택) empty-region cropping → VLM 인코딩 → token hygiene → model-aware spatial pooling → Qdrant named vector 색인 → multi-stage search로 이어진다. 새로운 모델 학습이나 손실 함수 설계는 전혀 등장하지 않으며, 모든 개선은 &#x27;인코더 출력 이후&#x27;의 후처리와 색인/검색 설계에서 나온다는 점이 구조적 특징이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>하나의 collection에 4종류의 named vector</h3>
+      <p>각 페이지는 같은 Qdrant collection 안에 (a) initial: full multi-vector(약 700~1024개), (b) mean_pooling: row/tile 단위 풀링 벡터(약 13~32개), (c) 실험적 smoothed variant, (d) global_pooling: 단일 벡터로 저장된다. 서로 다른 granularity를 한 점(point)에 붙여 두었기 때문에 stage 간 이동에 추가 조회가 필요 없다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>저장·실행 환경 설정</h3>
+      <p>모든 벡터는 FP16으로 저장되고, Qdrant collection은 HNSW 인덱스 없이 완전히 in-RAM으로 유지된다. 모델은 소비자용 하드웨어에서 실행 가능한 500M~3B 범위(ColSmol-500M, ColPali-v1.3, ColQwen2.5-v0.2)로 의도적으로 선택되었다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정과 주요 구성요소</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Step 1. 고해상도 PDF-to-image 변환</h3>
+      <p>문서 페이지를 고해상도 이미지로 렌더링한다. OCR이나 layout 분석을 거치지 않고 페이지를 이미지 그대로 인코더에 넣는 것이 visual retrieval의 전제다.</p>
+      <span class="source-ref">PDF p. 1, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 2. Empty-Region Cropping (선택)</h3>
+      <p>문서 페이지에는 빈 여백, 헤더, 페이지 번호가 흔하다. row/column 표준편차 임계값으로 low-variance 경계 영역을 탐지해 제거하며 페이지 번호 strip 제거도 설정할 수 있다. 고정 입력 해상도 모델(ColPali)에서는 encoder 용량을 콘텐츠에 집중시키는 효과가 있고, 동적 해상도 모델(ColSmol, ColQwen2.5)에서는 이미지 자체가 작아져 patch/tile 수가 줄어들므로 저장 벡터 수와 검색 시 inner-product 수까지 함께 줄어드는 이중 이득이 있다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 3. Token Hygiene</h3>
+      <p>VLM은 visual patch token과 함께 (i) CLS/BOS/EOS 같은 special token, (ii) ColPali가 앞에 붙이는 &#x27;⟨bos⟩Describe the image&#x27; 같은 prompt/instruction token, (iii) 배치 처리에서 서로 다른 크기의 이미지를 동일 길이로 맞추며 생기는 padding token(뒤쪽의 zero vector)을 내보낸다. 표준 MaxSim은 이들을 동등하게 취급하므로 점수를 부풀리는 spurious attractor가 된다. 툴킷은 색인 시점에 이들을 탐지·제거하며, 실제로 ColPali(v1.3)는 1030개 중 1024개를, ColQwen2.5는 720~768개(평균 743개)를 시각 토큰으로 유지한다. 이는 Eq. 1의 inner product 수를 줄일 뿐 아니라 이후 풀링의 신뢰도도 높인다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 4. 모델별 Spatial Pooling</h3>
+      <p>핵심 통찰은 patch embedding의 공간 구조를 이용하면 학습 없이도 압축 요약을 만들 수 있다는 것이다. 다만 backbone마다 필요한 방식이 다르다. ColSmol은 tile-level mean pooling(Eq. 2), ColPali는 row-wise mean pooling(Eq. 3)과 실험적 conv1d(Eq. 4), ColQwen2.5는 weighted same-length smoothing(Eq. 5)과 adaptive row-mean pooling을 사용한다. 자세한 수식은 algorithms 섹션에서 다룬다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 5. Qdrant named vector 색인</h3>
+      <p>full multi-vector(initial), pooled vector(mean_pooling), smoothed variant, global vector(global_pooling)를 하나의 Qdrant collection에 named vector로 색인한다. FP16 저장, HNSW 미사용, 완전 in-RAM 구성이다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 6. Multi-stage retrieval (retrieve-then-rerank)</h3>
+      <p>다단계 retrieve-then-rerank는 IR에서 잘 확립된 패턴(값싼 1단계로 넓은 후보를 뽑고 비싼 모델이 재정렬)인데, 논문은 이 원리를 multi-vector 패러다임 &#x27;내부&#x27;에 적용한다. 2-stage retrieval은 compact pooled named vector에 대한 MaxSim으로 top-K 후보(prefetch K=256)를 가져온 뒤, initial(full patch embedding)으로 정확한 MaxSim reranking을 수행하고 최종 top-k(실험에서는 top-100)를 반환한다. 이 두 단계는 Qdrant의 prefetch+query API로 서버 사이드에서 단일 호출로 실행된다. 3-stage cascade는 pooled-vector 단계 앞에 global_pooling(단일 벡터) prefetch 단계를 추가한다. prefetch-K, stage-1 벡터 선택, top-k, cascade depth 등 모든 하이퍼파라미터가 노출되어 accuracy–latency trade-off를 탐색할 수 있다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 7. 데모/CLI/SDK</h3>
+      <p>Streamlit 데모에서 사용자가 PDF를 업로드해 무료 Qdrant Cloud 계정에 색인하고 질의할 수 있으며(PDF→images→cropping→pooling→indexing→multi-stage search→results), 오픈소스 패키지는 CLI, modular SDK, 모든 실험을 재현하는 benchmark script를 제공한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>비용 모형 (Eq. 1)</h3>
+      <p>Cost_search = Q × D × N × d (multiply-adds). Q는 쿼리 토큰 수, D는 페이지당 벡터 수, N은 페이지 수, d는 벡터 차원이다. 이 식이 논문 전체 설계의 근거이며, &#x27;가장 줄이기 쉬운 인자는 D&#x27;라는 것이 논문의 출발점이다. 논문은 압축비 D/D&#x27;에 대해 절감이 quadratic하게 커진다고 서술한다(검색 비용 감소와 HNSW 구축 비용 O(D^2·d) 감소가 함께 작동).</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColSmol-500M: Tile-level mean pooling (Eq. 2)</h3>
+      <p>ColSmol의 processor는 페이지를 512×512로 리사이즈하고 n_rows×n_cols 격자의 타일로 나누며(각 타일이 P=64개 patch token 생성), 여기에 원본 전체 이미지를 압축한 global tile 하나를 덧붙여 n_rows·n_cols+1개 타일 그룹(전형적으로 12+1=13)과 총 약 832개 patch token을 만든다. 각 타일 그룹 내부에서 평균을 취해 타일당 벡터 하나를 얻는다: t_i = (1/P) Σ_{p=1..P} x_(i,p) ∈ R^d. 결과적으로 약 832 → 약 13 벡터, 즉 64배 압축이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColPali(v1.3): Row-wise mean pooling (Eq. 3)과 conv1d (Eq. 4)</h3>
+      <p>ColPali는 고정된 32×32 patch grid(1024개 visual token, d=128)를 쓴다. 토큰을 2D 격자로 reshape한 뒤 열(column) 방향으로 평균을 취해 행 벡터를 만든다: r_h = (1/W) Σ_{w=1..W} grid[h, w] ∈ R^d. 결과는 1024 → 32 row vector, 즉 32배 축소다. 그 위에 크기 k=3의 균일 sliding window를 boundary extension과 함께 적용하는 실험적 conv1d pooling(Eq. 4)을 얹으면 N개 입력 행에서 N+2개 출력 벡터가 나오며, 행 간 문맥(inter-row context)을 거의 무시할 수 있는 비용으로 더한다. ColPali의 backbone에는 학습된 국소 mixing이 없기 때문에 균일 평균이 잘 작동한다는 것이 저자의 설명이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColQwen2.5(v0.2): conv1d가 실패한 이유와 weighted same-length smoothing (Eq. 5)</h3>
+      <p>ColQwen2.5는 Qwen2-VL 기반으로 가변 종횡비 이미지를 받고, 학습된 PatchMerger(2×2 patch token 블록을 LayerNorm → concatenation → MLP로 융합)로 격자를 H×W에서 H_eff×W_eff(H_eff ≈ ⌈H/2⌉)로 줄인다. 즉 각 출력 토큰이 이미 자신의 2×2 이웃을 인코딩하고 있다. 여기에 ColPali용 conv1d를 그대로 적용했더니 검색 품질이 떨어졌는데, 원인은 이미 섞인 표현 위에 균일 평균을 다시 씌우면서 공간 정보가 이중으로 뭉개져 변별력 있는 특징이 씻겨나가고, N+2 boundary extension이 backbone이 기대하지 않는 artifact를 만들기 때문이다. 대신 길이를 보존하는(N → N) 비균일 가중 smoothing을 설계했다: y_i = (1/Z_i) Σ_{j=i-r..i+r} w_{|j-i|} r_j, Z_i = Σ w_{|j-i|}. k=3(r=1)에서 Gaussian은 w_δ = exp(−δ²/2σ²), σ = max(0.5, r/2)로 가중치가 약 [0.61, 1.0, 0.61]이고, Triangular는 w_δ = (r+1) − δ로 [1, 2, 1]이다. 경계 밖 인덱스는 건너뛰고 가중치를 재정규화한다. PatchMerger가 이미 학습된 국소 문맥을 제공하므로 부드러운 smoothing만 필요하며, 중심 행의 정체성을 보존하는 빠른 감쇠 덕분에 Gaussian(σ≈0.5)이 가장 잘 작동한다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColQwen2.5: Adaptive row-mean pooling (동적 해상도 대응)</h3>
+      <p>ColQwen2.5의 격자 H_eff×W_eff는 이미지마다 달라지므로, 먼저 열 방향으로 평균을 취해 세로/읽기 순서 구조를 보존한 뒤, 균등 간격 bin을 사용해 행을 최대 T개(기본 T=32) 벡터로 적응적으로 downsample한다. H_eff &lt; T인 페이지는 upsample하지 않는다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조: named vector 기반 다단계 검색</h3>
+      <p>인덱스는 ANN 그래프가 아니라 &#x27;동일 point에 여러 granularity의 named vector를 붙인 in-RAM collection&#x27;이다. HNSW를 쓰지 않으므로 각 stage는 해당 named vector에 대한 exact MaxSim 스캔이며, 비용 절감은 순전히 D(벡터 수)의 감소와 rerank 대상 수의 상한(K=256)에서 나온다. 이 때문에 1-stage 비용은 N에 선형 비례하지만 2-stage의 rerank 비용은 K에서 상한이 걸린다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>ViDoRe v2(현실적이고 비추출적인 질의와 차트·표·인포그래픽·다국어 문서를 강조하는 page-level visual document retrieval 벤치마크)에서 주제가 서로 다른 3개 영어 데이터셋을 선택했다: ESG Reports(1538 multilingual pages, 227 queries), Biomedical Lectures(1016 pages, 639 queries), Economics Reports(452 pages, 231 queries), 총 3006페이지. 4번째 데이터셋은 같은 ESG 도메인의 영어 전용본이라 주제 중복을 피하고 distractor 분석을 깔끔히 하기 위해 제외했다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>두 가지 평가 범위(scope)</h3>
+      <p>(i) Per-dataset: 각 질의가 자기 코퍼스 안에서만 검색하며 공식 ViDoRe 리더보드와 비교 가능하다. (ii) Union(distractor): 3006페이지 전체를 하나의 Qdrant collection에 합쳐 질의가 교차 도메인 distractor 사이에서 정답을 찾아야 한다. 1-stage 비용은 N에 선형으로 늘지만 2-stage의 rerank는 K개 후보로 상한이 걸리므로, union scope는 &#x27;코퍼스가 커질수록 속도 이점이 커지는가&#x27;를 직접 시험한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>모델과 하드웨어</h3>
+      <p>소비자용 하드웨어에서 실용적인 모델을 의도적으로 선택했다: ColSmol-500M(500M 파라미터, tile grid, 약 832 patch), ColPali-v1.3(3B, 고정 32×32 grid, 1024 patch), ColQwen2.5-v0.2(3B, 동적 해상도, PatchMerger). 모든 벡터는 FP16으로 저장하고 Qdrant collection은 HNSW 없이 완전 in-RAM이다. 저자는 이 범위의 모델이 &#x27;단일 consumer GPU 또는 Apple Silicon Mac&#x27;에서 무리 없이 돌아간다고 서술한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>베이스라인</h3>
+      <p>두 가지 기준선이 있다. 첫째는 공식 ViDoRe v2 리더보드 점수(Table 1)로, 전처리 없이 padding·special token을 포함한 원시 모델 출력(FP32)을 쓴다. 둘째이자 논문의 주된 비교 대상은 1-stage full로, token hygiene과 선택적 cropping을 적용한 뒤 저장된 전체 patch embedding에 대해 exact MaxSim을 수행한 결과(FP16)다. 흥미롭게도 FP16이라는 낮은 정밀도에도 이 &#x27;clean&#x27; 1-stage baseline이 공식 점수를 이따금 초과하는데, 저자는 이를 token hygiene과 cropping이 수치 정밀도보다 더 중요할 수 있다는 근거로 제시한다. 모든 2-stage 결과는 prefetch K=256, top-100 조건에서 이 더 강한 baseline과 비교된다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표와 탐색 축</h3>
+      <p>NDCG@{5,10}, Recall@{5,10,100}, 그리고 throughput(QPS)을 보고한다. 툴킷은 retrieval stage 수, prefetch-K, stage-1 벡터 선택, pooling kernel, cropping threshold 등 수십 개의 설정을 노출하지만, 논문은 pooling과 multi-stage retrieval의 효과를 분리해서 보여주는 대표 구성만 보고한다(Table 2는 모델별 대표 subset).</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>3B 모델: 약 4배 빠르면서 거의 무손실</h3>
+      <p>ColPali v1.3와 ColQwen2.5 모두에서 2-stage retrieval은 union scope 기준 QPS를 3.8~4.5배 향상시키면서 N@5, N@10, R@5, R@10을 1-stage baseline 대비 ±0.01 이내로 보존했다. 품질 저하는 오직 R@100에서만 나타났으며 범위는 -0.02~-0.09였다. 저자는 이 저하가 256개 후보 prefetch window가 커버리지를 제한하기 때문이며, RAG 애플리케이션은 보통 k≤10을 쓰므로 실무적으로 수용 가능하다고 주장한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Sub-1B 모델: 작은 모델은 더 많이 무너진다</h3>
+      <p>ColSmol-500M은 훨씬 큰 하락을 보였고 R@100 기준 최대 -0.30(ESG, 2stage tiles)에 달했다. 저자는 sub-1B 모델이 풀링을 무손실로 견딜 만한 representational capacity가 부족함을 시사한다고 해석한다. 3-stage cascade는 recall을 일부 회복시키지만 QPS는 더 낮아진다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>속도 이점은 코퍼스가 커질수록 커진다</h3>
+      <p>per-dataset 평가(452~1538페이지)에서 2-stage는 약 2배의 QPS를, union 설정(3006페이지)에서는 약 4배를 보였다. N이 3배 늘었을 때 속도 이점이 2배→4배로 커진 것은 §1의 비용 분석(1-stage는 N에 선형, 2-stage rerank는 K=256에서 상한)과 일치하며, 저자는 더 큰 실제 컬렉션에서는 이득이 더 커질 것이라고 주장한다. 다만 저자 스스로 코퍼스가 modest하다고 인정한다.</p>
+      <span class="source-ref">PDF p. 1, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Pooling kernel 선택</h3>
+      <p>ColQwen2.5에서는 conv1d가 품질을 떨어뜨렸고(PatchMerger의 학습된 국소 mixing 위에 균일 평균을 다시 씌운 double-smoothing 때문), Gaussian이 Triangular보다 근소하게 더 좋았다. ColPali에서는 conv1d와 tile 기반 pooling의 성능이 비슷했다. 즉 &#x27;어떤 풀링이 옳은가&#x27;는 backbone의 공간 처리 방식에 종속된다는 것이 실험적 메시지다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>해석: 무엇이 실제로 절약되는가</h3>
+      <p>이 방법이 줄이는 것은 &#x27;검색 시 계산량&#x27;이지 &#x27;저장 공간&#x27;이 아니다. full patch embedding은 reranking을 위해 여전히 저장되어야 하며, pooled/global 벡터는 오히려 추가로 저장된다. 따라서 이 논문의 이득은 QPS와 인덱스 구축 비용 측면에 국한되고, 저장 공간 절감은 저자가 미래 과제로 남긴 항목이다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>Visual RAG Toolkit은 multi-vector visual document retrieval을 소비자용 하드웨어에서 실용화하는 end-to-end 오픈소스 시스템이다. 중심 기여는 페이지당 저장 벡터 수를 약 1024개에서 약 32개로 줄이는 training-free, model-aware spatial pooling이며, 이는 Eq. 1의 inner-product 연산을 크게 줄인다. pooled 벡터에 대한 값싼 prefetch와 full embedding에 대한 exact MaxSim rerank를 결합한 multi-stage retrieval을 통해, 실무적 cutoff(k≤10)에서 거의 무시할 수 있는 품질 손실로 최대 약 4배의 throughput 향상을 달성한다. 품질 저하는 프로덕션 RAG/챗봇에서 거의 필요하지 않은 Recall@100 영역에 집중된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자 관점의 위치 짓기</h3>
+      <p>이 논문은 새로운 모델이나 학습 기법이 아니라 &#x27;기존 모델을 값싸게 서빙하는 엔지니어링 레시피&#x27;를 제시하는 system/toolkit 논문에 가깝다. 방법 자체는 단순한 평균·가중 평균 연산의 조합이지만, backbone의 내부 공간 처리(고정 grid / PatchMerger / tile)에 따라 어떤 연산이 적합한지를 실험적으로 정리했다는 점이 실질적인 기여다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름 (색인 파이프라인 + 다단계 검색)</h3>
+                <span class="source-ref">PDF p. 2, 3, 4</span>
+              </div>
+              <p>PDF 수집부터 Qdrant named vector 색인, 그리고 2-stage(및 3-stage cascade) 검색까지의 전체 흐름. 색인 경로에서는 cropping → VLM 인코딩 → token hygiene → 모델별 spatial pooling을 거쳐 full/pooled/global 표현이 동일 collection의 named vector로 저장되고, 질의 경로에서는 compact 벡터로 top-K 후보를 prefetch한 뒤 full 벡터로 exact MaxSim reranking을 수행한다(논문 §2.1~§2.4, 페이지 2~4).</p>
+              <div class="mermaid">
+flowchart TB
+    subgraph INDEX[색인 파이프라인]
+        A[PDF 문서] --&gt; B[고해상도 이미지 변환]
+        B --&gt; C[Empty-Region Cropping&lt;br/&gt;여백/헤더/페이지번호 제거&lt;br/&gt;선택 사항]
+        C --&gt; D[VLM 인코딩&lt;br/&gt;ColPali / ColQwen2.5 / ColSmol]
+        D --&gt; E[Token Hygiene&lt;br/&gt;special/prompt/padding token 제거]
+        E --&gt; F[Model-aware Spatial Pooling&lt;br/&gt;row-mean / tile-mean / smoothing]
+        E --&gt; G[initial&lt;br/&gt;full multi-vector 700~1024개]
+        F --&gt; H[mean_pooling&lt;br/&gt;pooled 13~32개]
+        F --&gt; I[global_pooling&lt;br/&gt;단일 벡터]
+    end
+    G --&gt; J[(Qdrant collection&lt;br/&gt;named vectors, FP16, in-RAM)]
+    H --&gt; J
+    I --&gt; J
+    subgraph SEARCH[다단계 검색 - 서버 사이드 단일 API 호출]
+        Q[Query 텍스트] --&gt; QE[Query 토큰 임베딩]
+        QE --&gt; S0[선택: global_pooling prefetch&lt;br/&gt;3-stage cascade 전용]
+        S0 --&gt; S1[Stage 1: pooled 벡터 MaxSim&lt;br/&gt;top-K prefetch, K=256]
+        S1 --&gt; S2[Stage 2: initial 벡터로&lt;br/&gt;exact MaxSim reranking]
+        S2 --&gt; R[최종 top-k 결과]
+    end
+    J -.-&gt; S0
+    J -.-&gt; S1
+    J -.-&gt; S2
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 1-stage full 검색과 제안된 2-stage 검색의 비교</h3>
+                <span class="source-ref">PDF p. 1, 3, 4</span>
+              </div>
+              <p>1-stage baseline은 전체 N개 페이지의 full patch embedding(D≈1024)에 대해 exact MaxSim을 수행하므로 비용이 N에 선형 비례한다. 제안 방식은 압축된 D&#x27;≈32 벡터로 N개를 훑어 K=256개 후보만 남긴 뒤, 그 K개에 대해서만 full embedding rerank를 수행하므로 비싼 연산의 대상이 K로 상한이 걸린다(논문 §1, §2.4, §3, 페이지 1·3·4).</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph BASE[1-stage full baseline]
+        B1[Query] --&gt; B2[N개 페이지 전체&lt;br/&gt;full multi-vector D≈1024]
+        B2 --&gt; B3[Exact MaxSim&lt;br/&gt;비용 ∝ Q×1024×N×d]
+        B3 --&gt; B4[top-k 결과&lt;br/&gt;QPS 낮음]
+    end
+    subgraph PROP[제안: 2-stage retrieval]
+        P1[Query] --&gt; P2[N개 페이지 전체&lt;br/&gt;pooled vector D&#x27;≈32]
+        P2 --&gt; P3[Stage 1 MaxSim&lt;br/&gt;비용 ∝ Q×32×N×d]
+        P3 --&gt; P4[후보 K=256개]
+        P4 --&gt; P5[Stage 2: K개만&lt;br/&gt;full embedding exact MaxSim]
+        P5 --&gt; P6[top-k 결과&lt;br/&gt;QPS 3.8~4.5배]
+    end
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>Backbone별 pooling 전략 선택</h3>
+                <span class="source-ref">PDF p. 2, 3</span>
+              </div>
+              <p>동일한 풀링이 모든 모델에 통하지 않는다는 논문의 핵심 관찰을 도식화했다. 고정 grid 모델에는 균일 평균/conv1d가, PatchMerger로 이미 국소 mixing이 이루어진 모델에는 가벼운 가중 smoothing이, 타일 기반 모델에는 타일 평균이 필요하다(논문 §2.3, 페이지 2~3).</p>
+              <div class="mermaid">
+flowchart TB
+    M{Backbone의 공간 처리 방식} --&gt; F1[고정 32x32 grid&lt;br/&gt;ColPali v1.3]
+    M --&gt; F2[학습된 PatchMerger&lt;br/&gt;ColQwen2.5]
+    M --&gt; F3[타일 분할 + global tile&lt;br/&gt;ColSmol-500M]
+    F1 --&gt; P1[Row-wise mean pooling&lt;br/&gt;1024 → 32 벡터]
+    P1 --&gt; P1b[실험적 conv1d k=3&lt;br/&gt;행 간 문맥 추가]
+    F2 --&gt; P2[Weighted same-length smoothing&lt;br/&gt;Gaussian / Triangular, k=3]
+    P2 --&gt; P2b[Adaptive row-mean&lt;br/&gt;최대 T=32 행]
+    F2 --&gt; X[conv1d 적용 시 품질 저하&lt;br/&gt;double-smoothing 문제]
+    F3 --&gt; P3[Tile-level mean pooling&lt;br/&gt;832 → 13 벡터, 64배 압축]
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>Spatial pooling에 의한 페이지당 벡터 수 감소</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 2 · §2.3.1 Eq. 2 결과 서술(∼832 → ∼13, 64× 압축), §2.3.2 Eq. 3 결과 서술(1024 → 32, 32× 축소) · training-free static spatial pooling 적용 후 페이지당 저장 벡터 수. ColSmol 수치는 논문이 &#x27;∼832&#x27;, &#x27;∼13&#x27;으로 근사 표기한 값.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>이론적 쿼리당 multiply-add 연산 수 (Eq. 1 예시)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 1 · Eq. 1 예시 계산 (§1 Introduction) · N=10,000 pages, Q=10 query tokens, d=128. 논문이 명시한 1.31×10^10 및 4.10×10^8 값(32× 절감).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Union scope(3006페이지)에서의 QPS 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4 · Table 2 (union scope, 3006 pages, with token hygiene) · union scope(3006페이지 단일 collection), prefetch K=256, top-100, FP16 저장, HNSW 미사용 in-RAM Qdrant. 논문 §5는 이 구간의 speedup을 3.8~4.5×로 요약한다.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>2-stage retrieval의 Recall@100 저하폭 (1-stage baseline 대비)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4 · Table 2 (union scope) R@100 열의 델타 표기 · union scope, prefetch K=256, top-100. 각 모델의 1-stage base 대비 절대 차이이며, 값이 음수일수록 저하가 크다.
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>비용 모형(Eq. 1)에서 출발해 &#x27;무엇을 줄일 것인가&#x27;를 명확히 정의하고, 줄이는 대상(D, 페이지당 벡터 수)이 quantization·centroid pruning 같은 기존 축과 직교한다는 점을 논리적으로 제시한다. 따라서 기존 최적화와 곱셈적으로 결합될 여지가 남는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>학습이 전혀 필요 없어 도입 장벽이 매우 낮다. adapter 학습이나 distillation 없이 이미 배포된 ColPali 계열 체크포인트에 그대로 얹을 수 있고, 인코더 출력 이후의 후처리이므로 모델 교체 시에도 pooling 함수만 바꾸면 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정확도 보존 메커니즘이 원리적으로 견고하다. 최종 순위는 항상 full patch embedding의 exact MaxSim으로 결정되므로, pooled 표현의 오차는 &#x27;후보 집합에 정답이 들어왔는가&#x27;에만 영향을 준다. 실제로 저하가 R@100에만 나타나고 k≤10에서는 ±0.01 이내인 결과가 이 구조와 정확히 부합한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>conv1d가 ColQwen2.5에서 실패한 사례를 숨기지 않고 원인(PatchMerger의 학습된 국소 mixing 위에 균일 평균을 덧씌우는 double-smoothing, 그리고 N+2 boundary extension artifact)까지 설명한 뒤 대안(가중 same-length smoothing)을 유도한다. 네거티브 결과를 설계 근거로 전환한 서술이라 재현·확장에 유용하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Token hygiene이라는 단순한 전처리가 실제로 품질에 영향을 준다는 점을 짚고, FP16 baseline이 전처리 없는 FP32 공식 리더보드 점수를 이따금 초과한다는 관찰을 제시했다. 벤치마크 관행 자체에 대한 실무적 지적으로서 가치가 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>코퍼스가 3배(1538 이하 → 3006페이지) 커질 때 speedup이 2배에서 4배로 커진다는 union/per-dataset 대조 실험이 비용 모형의 예측(1-stage는 N에 선형, rerank는 K에 상한)을 직접 검증하도록 설계되어 있다. 단순한 성능 보고를 넘어 가설-검증 구조를 갖췄다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>재현성 인프라가 실제로 배포되어 있다. pip 패키지(visual-rag-toolkit), CLI, modular SDK, benchmark script, Streamlit 데모까지 제공되어 논문의 주장이 코드 수준에서 검증 가능하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>풀링 전략이 model-specific이다. fixed-grid 모델(ColPali)은 conv1d sliding-window pooling, PatchMerger 모델(ColQwen)은 weighted same-length smoothing(Gaussian/Triangular), tile 기반 모델(ColSmol)은 tile-level mean pooling을 각각 써야 하며, backbone의 tokenisation과 공간 처리에 맞춘 별도 접근이 필요하다. 저자는 현재 대부분의 visual retrieval 모델이 이 세 패턴 중 하나에 속하므로 커버리지가 충분하다고 반론하지만, 완전히 새로운 아키텍처에는 새 pooling 함수를 구현해야 한다는 점은 인정한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Sub-1B 모델(ColSmol-500M)은 R@100 기준 최대 -0.30까지 큰 품질 저하를 보이며, 저자는 공격적 풀링이 손실을 유발하는 representational capacity 임계치가 존재한다고 해석한다. 즉 이 방법은 작은 모델일수록 덜 안전하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>관찰된 품질 저하는 R@100에 집중되며, 이는 256개 후보 prefetch window가 커버리지를 제한하기 때문이다. 저자는 k≤10이 표준인 프로덕션 RAG에서는 문제되지 않는 영역이라고 주장한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>저장 공간 절감은 아직 달성하지 못했다. pooled embedding만으로 1-stage retrieval을 수행할 수 있을 만큼 풀링 품질이 충분하지 않아 full patch vector를 계속 저장해야 하며, 저자는 이를 향후 과제(i)로 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>작은 모델의 품질 격차를 줄일 수 있는 learned pooling(경량 adapter 등)은 아직 탐구하지 않았다(향후 과제 ii).</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>제안한 벡터 수 축소를 quantization이나 HNSW pruning 같은 직교적 효율화 기법과 결합하는 실험은 아직 수행하지 않았다(향후 과제 iii). 논문의 실험은 HNSW 없이 완전 in-RAM 구성에서만 이루어졌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>평가 코퍼스가 작다. ViDoRe v2의 3개 데이터셋 총 3006페이지에 불과하며 저자 스스로 &#x27;limited (size)&#x27;, &#x27;modest&#x27;라고 표현한다. 확장성 주장(더 큰 컬렉션에서 이득이 더 클 것)은 2배→4배 추세에 기반한 외삽이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>핵심 성능 지표인 QPS의 측정 환경이 특정되지 않았다. GPU/CPU 모델명, RAM 용량 등 하드웨어 사양이 명시되지 않고 &#x27;단일 consumer GPU 또는 Apple Silicon Mac&#x27;이라는 일반적 서술만 있어, 절대 QPS 값(0.27~1.54)의 재현과 타 시스템과의 비교가 어렵다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>베이스라인이 exact brute-force MaxSim(HNSW 미사용, 전체 페이지 스캔)이라는 점을 감안해야 한다. 실제 프로덕션 multi-vector 시스템은 PLAID/HNSW 같은 ANN 인덱스나 quantization을 이미 쓰는 경우가 많으므로, 3.8~4.5배 speedup이 그런 최적화된 baseline 대비 얼마나 남을지는 이 논문의 실험만으로는 알 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Table 2가 union scope 결과만 담고 있어, &#x27;2배 → 4배&#x27; 주장 중 per-dataset 쪽 수치(약 2배)는 본문 서술로만 제시되고 표로 확인되지 않는다. 또한 cropping이 Table 2의 각 행에 실제 적용되었는지도 &#x27;optional cropping&#x27;이라고만 언급되어 구분되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Pooled 벡터와 global 벡터를 추가로 저장하므로 인덱스의 총 저장량은 오히려 늘어난다. QPS 이득이 저장 오버헤드(및 색인 시 풀링 연산 비용)와 어떻게 교환되는지는 정량화되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>row-wise / column-mean 계열 풀링은 페이지의 세로(읽기 순서) 구조는 보존하지만 가로 방향 정보를 평균으로 없앤다. 좌우 2단 편집, 나란히 놓인 표/차트처럼 가로 위치가 변별력을 갖는 레이아웃에서 후보 생성이 취약해질 수 있다는 것은 구조상 예상되는 위험이나, 논문에는 이를 검증한 실험이 없어 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>prefetch K를 256보다 키우면 R@100 저하를 어디까지 회복할 수 있으며, 그때 QPS 이득은 얼마나 남는가?</h3>
+              </div>
+              <p>저자는 R@100 저하의 원인을 &#x27;256-candidate prefetch window가 커버리지를 제한하기 때문&#x27;이라고 명시했다. K는 툴킷이 노출하는 하이퍼파라미터이므로 accuracy–latency 곡선을 그릴 수 있으나, 논문은 K=256 단일 설정 결과만 보고한다.</p>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>3006페이지를 넘어 수십만~수백만 페이지 규모에서도 speedup이 계속 커지는가, 아니면 stage-1의 전체 스캔 비용(여전히 N에 선형)이 새로운 병목이 되는가?</h3>
+              </div>
+              <p>2배→4배 추세는 N이 3배 늘어난 관측 두 점에서 나온 외삽이다. 2-stage에서도 stage-1은 여전히 N개 페이지를 pooled 벡터로 스캔하므로, 충분히 큰 N에서는 stage-1 자체가 지배적이 되어 speedup이 D/D&#x27; 비율(약 32배)로 수렴하며 포화할 것으로 예상된다.</p>
+              <span class="source-ref">PDF p. 1, 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>이 pooling 기반 벡터 수 축소를 HNSW/quantization과 결합하면 실제로 곱셈적(multiplicative) 이득이 나오는가?</h3>
+              </div>
+              <p>저자가 향후 과제로 명시한 항목이며, 특히 HNSW 구축 비용이 O(D^2·d)에 비례한다는 §1의 분석에 따르면 D 축소는 인덱스 구축에서 검색보다 더 큰 이득을 줄 수 있다. 그러나 현재 실험은 HNSW 없이 in-RAM brute-force로만 수행되어 이 주장은 검증되지 않았다.</p>
+              <span class="source-ref">PDF p. 1, 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>learned pooling(경량 adapter)이 ColSmol-500M 같은 sub-1B 모델의 -0.30 R@100 격차를 메울 수 있는가? 그렇다면 &#x27;training-free&#x27;라는 논문의 핵심 강점을 포기할 만한 가치가 있는가?</h3>
+              </div>
+              <p>저자가 향후 과제(ii)로 명시했다. 다만 이는 논문이 내세운 &#x27;post-training/adapter/distillation 불필요&#x27;라는 셀링 포인트와 정면으로 상충하므로, 트레이드오프를 명시적으로 평가할 필요가 있다.</p>
+              <span class="source-ref">PDF p. 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>pooled 표현만으로 1-stage retrieval이 가능해지려면 무엇이 더 필요한가? 그때 저장 공간은 얼마나 줄어드는가?</h3>
+              </div>
+              <p>저자가 향후 과제(i)로 명시한 방향이며, 이것이 달성되어야 비로소 속도뿐 아니라 저장 공간 절감까지 얻는다. 현재는 rerank용 full patch vector를 반드시 저장해야 한다.</p>
+              <span class="source-ref">PDF p. 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>가로 방향 정보를 평균으로 없애는 row-mean 계열 풀링이 다단 편집이나 좌우 병치 레이아웃에서 후보 생성 recall을 떨어뜨리는가?</h3>
+              </div>
+              <p>Eq. 3과 adaptive row-mean은 열 방향으로 평균을 취해 &#x27;세로/읽기 순서 구조&#x27;를 보존한다고 명시하지만, 가로 위치 정보의 손실이 어떤 문서 유형에서 문제가 되는지에 대한 레이아웃별 분석은 논문에 없다. 확인되지 않음.</p>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>3-stage cascade는 언제 쓸 가치가 있는가? ColSmol에서 recall을 일부 회복하지만 QPS가 오히려 2-stage보다 낮아진다면, 그 지점은 1-stage와 비교해 어떤 이점을 갖는가?</h3>
+              </div>
+              <p>논문은 &#x27;3-stage cascade가 일부 recall을 회복하지만 QPS는 더 낮다&#x27;고만 서술하고, 어떤 조건에서 3-stage가 지배적 선택이 되는지에 대한 결정 기준을 제시하지 않는다.</p>
+              <span class="source-ref">PDF p. 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Token hygiene과 cropping이 각각 얼마만큼 품질에 기여하는가?</h3>
+              </div>
+              <p>&#x27;clean&#x27; 1-stage baseline이 공식 리더보드를 이따금 초과한다는 관찰은 두 전처리가 함께 적용된 결과이며, 둘을 분리한 ablation은 보고되지 않는다. 또한 Table 2의 각 행에 cropping이 실제 적용되었는지 여부도 명시되지 않는다.</p>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Late interaction / MaxSim</dt>
+              <dd>
+                질의와 문서를 각각 여러 개의 토큰 벡터로 표현한 뒤, 질의 토큰마다 문서 토큰들과의 최대 유사도(max similarity)를 구해 합산하여 관련도를 계산하는 방식. ColBERT에서 시작해 ColPali가 시각 도메인으로 확장했다. 정확도가 높지만 질의-문서 쌍마다 Q×D회의 inner product가 필요하다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-vector retriever</dt>
+              <dd>
+                문서 하나를 단일 벡터가 아니라 여러 개(수백~수천)의 벡터 집합으로 표현하는 검색기. 표현력은 크지만 저장·검색 비용이 벡터 수 D에 비례해 커진다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Patch embedding / visual token</dt>
+              <dd>
+                VLM이 입력 이미지의 각 공간 영역(patch)에 대응시켜 출력하는 벡터. ColPali는 고정 32×32 grid로 1024개, ColQwen2.5는 동적 해상도로 약 700~750개, ColSmol은 타일 분할로 약 832개를 만든다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Token hygiene</dt>
+              <dd>
+                이 논문의 용어로, VLM 출력에서 CLS/BOS/EOS 같은 special token, 프롬프트/instruction token, 배치 padding으로 생긴 zero vector 등 non-visual token을 색인 시점에 탐지·제거하는 전처리. 이들이 MaxSim에서 점수를 부풀리는 spurious high-similarity attractor로 작동하는 것을 막는다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Empty-region cropping</dt>
+              <dd>
+                row/column 표준편차 임계값으로 low-variance한 여백·헤더·페이지 번호 영역을 탐지해 잘라내는 전처리. 고정 해상도 모델에서는 encoder 용량을 콘텐츠에 집중시키고, 동적 해상도 모델에서는 patch/tile 수 자체를 줄인다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Spatial pooling (training-free)</dt>
+              <dd>
+                patch embedding의 2D 공간 구조를 이용해 학습 없이 벡터 수를 줄이는 정적 연산. 이 논문에서는 tile-level mean pooling(Eq. 2), row-wise mean pooling(Eq. 3), conv1d sliding-window(Eq. 4), weighted same-length smoothing(Eq. 5), adaptive row-mean pooling이 사용된다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Matryoshka Representation Learning</dt>
+              <dd>
+                하나의 임베딩에서 추가 학습 없이 여러 granularity(해상도)의 유용한 표현을 뽑아낼 수 있다는 아이디어. 이 논문은 여기서 영감을 받아 &#x27;하나의 patch embedding 집합에서 압축된 multi-vector summary를 뽑는다&#x27;는 발상을 세웠다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PatchMerger</dt>
+              <dd>
+                Qwen2-VL(따라서 ColQwen2.5)이 사용하는 학습된 공간 융합 모듈. 2×2 patch token 블록을 LayerNorm → concatenation → MLP로 합쳐 격자를 H×W에서 H_eff×W_eff(H_eff ≈ ⌈H/2⌉)로 줄인다. 각 출력 토큰이 이미 자신의 2×2 이웃을 인코딩하고 있기 때문에, 그 위에 균일 평균(conv1d)을 다시 씌우면 double-smoothing으로 변별력이 사라진다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Weighted same-length smoothing (Gaussian / Triangular)</dt>
+              <dd>
+                길이를 바꾸지 않는(N → N) 비균일 가중 평균 smoothing. k=3(r=1)에서 Gaussian은 가중치가 약 [0.61, 1.0, 0.61], Triangular는 [1, 2, 1]이며 경계 밖 인덱스는 건너뛰고 가중치를 재정규화한다. 중심 행의 정체성을 보존하는 빠른 감쇠 덕분에 Gaussian(σ≈0.5)이 가장 잘 작동한다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Named vector (Qdrant)</dt>
+              <dd>
+                Qdrant에서 하나의 point(페이지)에 이름을 붙인 여러 벡터 표현을 함께 저장하는 기능. 이 논문은 initial(full multi-vector), mean_pooling(pooled), smoothed variant, global_pooling(단일 벡터)을 같은 collection에 저장하여 stage 간 이동에 추가 조회가 필요 없게 만든다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Prefetch + query API / multi-stage retrieval</dt>
+              <dd>
+                값싼 표현으로 top-K 후보를 먼저 뽑고(prefetch) 비싼 표현으로 그 후보만 재정렬(rerank)하는 retrieve-then-rerank 패턴. Qdrant의 prefetch+query API를 쓰면 이 두 단계가 서버 사이드에서 단일 API 호출로 실행되어 round-trip이 최소화된다. 실험은 prefetch K=256, top-100 설정을 쓴다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Union (distractor) scope</dt>
+              <dd>
+                3개 데이터셋 3006페이지를 하나의 collection으로 합쳐 각 질의가 교차 도메인 distractor 사이에서 정답을 찾게 하는 평가 범위. 코퍼스 크기 N이 커질 때 2-stage의 속도 이점이 실제로 커지는지를 직접 시험하기 위한 설계다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ViDoRe v2</dt>
+              <dd>
+                현실적이고 비추출적(non-extractive)인 질의와 차트·표·인포그래픽·다국어 문서를 강조하는 page-level visual document retrieval 벤치마크. 이 논문은 ESG Reports(1538페이지/227질의), Biomedical Lectures(1016/639), Economics Reports(452/231) 3개를 사용한다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>QPS (queries per second)</dt>
+              <dd>
+                초당 처리 질의 수로 측정하는 throughput 지표. 이 논문의 핵심 효율 지표이며 union scope에서 2-stage가 1-stage 대비 3.8~4.5배 향상된다고 보고한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>QPS 측정에 사용된 정확한 하드웨어 사양(GPU/CPU 모델명, RAM 용량 등)이 논문에 명시되지 않음 — &#x27;단일 consumer GPU 또는 Apple Silicon Mac&#x27;이라는 일반적 서술만 존재. 절대 QPS 값(0.27~1.54)의 해석과 재현이 제한된다.</li><li>Table 2의 각 행에 empty-region cropping(§2.2)이 실제로 적용되었는지 여부가 구분되어 있지 않음 — 1-stage baseline 설명에서 &#x27;optional cropping&#x27;이라고만 언급되어, token hygiene과 cropping의 기여도를 분리할 수 없다.</li><li>per-dataset scope의 상세 결과 표가 제공되지 않음. &#x27;2-stage가 약 2× QPS&#x27;라는 서술은 본문에만 있고 Table 2는 union scope만 담고 있어 2×→4× 추세를 표 수준에서 확인할 수 없다.</li><li>본문이 언급한 &#x27;더 많은 실험(many more experiments — 다양한 pooling kernel, prefetch-K, cascade depth, cropping)&#x27;의 개수와 전체 결과가 제공되지 않음 — Table 2는 모델별 대표 subset만 보고한다.</li><li>Pooling kernel 비교(ColQwen2.5에서 Gaussian이 Triangular보다 근소 우위, ColPali에서 conv1d와 tile 기반이 비슷)는 서술만 있고 뒷받침하는 수치 표가 없음.</li><li>ColSmol의 tile grid에 대한 정확한 n_rows×n_cols 값이 명시되지 않고 &#x27;typically 12+1=13&#x27;이라는 결과값만 제공됨.</li><li>ColQwen2.5의 실제 H_eff×W_eff 격자 크기의 구체적 수치가 제공되지 않음(근사식 H_eff ≈ ⌈H/2⌉만 제공).</li><li>index 구축 시간(pooling 연산 비용 포함)과 저장 공간 오버헤드(pooled/global named vector 추가분)에 대한 정량 측정이 없음.</li><li>3-stage cascade는 ColSmol에 대해서만 Table 2에 보고되고, 3B 모델에 대한 3-stage 결과는 제시되지 않음.</li><li>공식 동료심사(peer-review) 학회/저널 게재 여부가 명시되지 않음 — arXiv preprint(arXiv:2602.12510v1, cs.IR, 2026-02-13)로만 확인됨.</li><li>ColSmol-500M에 대한 공식 ViDoRe v2 리더보드 점수가 Table 1에 포함되어 있지 않아(ColPali v1.3와 ColQwen2.5만 수록), ColSmol의 1-stage baseline이 공식 점수 대비 어떤 위치인지 확인할 수 없음.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "Spatial pooling에 의한 페이지당 벡터 수 감소", "labels": ["ColPali v1.3 (full patch)", "ColPali v1.3 (row-mean pooled)", "ColSmol-500M (full patch, 근사)", "ColSmol-500M (tile-mean pooled, 근사)"], "values": [1024, 32, 832, 13], "unit": "vectors/page", "xLabel": "모델 및 표현 방식", "yLabel": "페이지당 벡터 수"}, {"canvasId": "chart-1", "type": "bar", "title": "이론적 쿼리당 multiply-add 연산 수 (Eq. 1 예시)", "labels": ["D=1024 (full patch)", "D=32 (row-mean pooled)"], "values": [13100000000, 410000000], "unit": "multiply-adds per query", "xLabel": "페이지당 벡터 수 D", "yLabel": "쿼리당 multiply-adds"}, {"canvasId": "chart-2", "type": "bar", "title": "Union scope(3006페이지)에서의 QPS 비교", "labels": ["ColPali 1stage base (ESG)", "ColPali 2stage Conv1d (ESG)", "ColPali 1stage base (Bio)", "ColPali 2stage Conv1d (Bio)", "ColPali 1stage base (Econ)", "ColPali 2stage Conv1d (Econ)", "ColQwen2.5 1stage base (ESG)", "ColQwen2.5 2stage Gauss. (ESG)", "ColQwen2.5 1stage base (Bio)", "ColQwen2.5 2stage Gauss. (Bio)", "ColQwen2.5 1stage base (Econ)", "ColQwen2.5 2stage Gauss. (Econ)"], "values": [0.28, 1.27, 0.27, 1.37, 0.31, 1.39, 0.31, 1.15, 0.32, 1.28, 0.33, 1.25], "unit": "queries per second", "xLabel": "모델 / 검색 구성 / 데이터셋", "yLabel": "QPS"}, {"canvasId": "chart-3", "type": "bar", "title": "2-stage retrieval의 Recall@100 저하폭 (1-stage baseline 대비)", "labels": ["ColPali 2stage Conv1d (ESG)", "ColPali 2stage Conv1d (Bio)", "ColPali 2stage Conv1d (Econ)", "ColQwen2.5 2stage Gauss. (ESG)", "ColQwen2.5 2stage Gauss. (Bio)", "ColQwen2.5 2stage Gauss. (Econ)", "ColSmol 2stage tiles (ESG)", "ColSmol 2stage tiles (Bio)", "ColSmol 2stage tiles (Econ)"], "values": [-0.09, -0.01, -0.02, -0.07, -0.02, -0.05, -0.3, -0.1, -0.06], "unit": "ΔRecall@100 (절대값)", "xLabel": "모델 / 데이터셋", "yLabel": "Recall@100 절대 변화량"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
