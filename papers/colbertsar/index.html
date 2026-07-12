@@ -315,6 +315,101 @@
       background: #f8fafc;
     }
 
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
     .chart-container {
       position: relative;
       min-height: 360px;
@@ -1308,10 +1403,103 @@ flowchart TB
 
   <script>
     mermaid.initialize({
-      startOnLoad: true,
+      startOnLoad: false,
       theme: "neutral",
       securityLevel: "strict"
     });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
 
     const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "NeuCLIRBench index 크기: PLAID 1bit vs ColBERTSaR", "labels": ["zho · PLAID 1bit", "zho · ColBERTSaR", "fas · PLAID 1bit", "fas · ColBERTSaR", "rus · PLAID 1bit", "rus · ColBERTSaR", "MLIR · PLAID 1bit", "MLIR · ColBERTSaR"], "values": [64.53, 14.52, 46.5, 11.43, 80.39, 37.12, 189.12, 89.71], "unit": "GB", "xLabel": "컬렉션 · 엔진", "yLabel": "Index Size"}, {"canvasId": "chart-1", "type": "bar", "title": "NeuCLIRBench MLIR index 크기 (엔진별 전체 비교)", "labels": ["BM25 w/ DT", "MILCO", "PLAID 1bit", "ColBERTSaR"], "values": [10.14, 19.32, 189.12, 89.71], "unit": "GB", "xLabel": "엔진", "yLabel": "Index Size"}, {"canvasId": "chart-2", "type": "bar", "title": "BEIR nDCG@10 평균 (backbone colbert-small-v1)", "labels": ["BM25", "SPLADEv3", "PLAID 1bit", "PLAID 0bit", "ColBERTSaR", "ColBERTSaR + BM25 (RRF)", "ColBERTSaR w/ MSMARCO"], "values": [0.45, 0.511, 0.548, 0.424, 0.49, 0.505, 0.495], "unit": "", "xLabel": "방법", "yLabel": "nDCG@10 (평균)"}, {"canvasId": "chart-3", "type": "bar", "title": "NeuCLIRBench/NeuCLIRTech nDCG@20 (설정 · 방법)", "labels": ["CLIR · PLAID 1bit", "CLIR · ColBERTSaR", "CLIR · MILCO", "MLIR · PLAID 1bit", "MLIR · ColBERTSaR", "MLIR · MILCO", "Tech CLIR · PLAID 1bit", "Tech CLIR · ColBERTSaR", "Tech CLIR · MILCO"], "values": [0.495, 0.492, 0.467, 0.396, 0.385, 0.395, 0.362, 0.348, 0.264], "unit": "", "xLabel": "설정 · 방법", "yLabel": "nDCG@20"}, {"canvasId": "chart-4", "type": "bar", "title": "NeuCLIRBench 언어별 nDCG@20: PLAID 1bit vs ColBERTSaR", "labels": ["zho · PLAID 1bit", "zho · ColBERTSaR", "fas · PLAID 1bit", "fas · ColBERTSaR", "rus · PLAID 1bit", "rus · ColBERTSaR"], "values": [0.495, 0.471, 0.529, 0.529, 0.463, 0.475], "unit": "", "xLabel": "언어 · 방법", "yLabel": "nDCG@20"}];
 
