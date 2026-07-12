@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>OPSD-V: On-Policy Self-Distillation for Post-Training Few-Step Autoregressive Video Generators</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>OPSD-V: On-Policy Self-Distillation for Post-Training Few-Step Autoregressive Video Generators</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Hongyu Liu, Chun Wang, Feng Gao, Xuanhua He, Yue Ma, Ziyu Wan, Yong Zhang, Xiaoming Wei, Qifeng Chen</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2607.08766v1 [cs.CV], 9 Jul 2026) — 학회/저널 게재 정보는 논문 내에 명시되지 않음</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">주요 구성요소와 단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘과 cache 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">정리와 시사점</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>OPSD-V는 이미 distillation으로 만들어진 few-step causal autoregressive(AR) video generator를 &#x27;실제 long-video 데이터&#x27;로 post-training하는 cache-aware on-policy self-distillation 프레임워크이다.\n\n문제의식은 다음과 같다. Self-Forcing, LongLive 같은 few-step AR 생성기는 4-step 샘플러와 KV cache 재사용 덕분에 낮은 지연시간으로 긴 영상을 스트리밍 생성할 수 있지만, rollout이 길어질수록 자기 자신이 만든 chunk가 KV cache에 계속 누적되면서 오차가 쌓이고 motion dynamics가 약해지는 long-horizon degradation이 발생한다. 기존 DMD 계열 supervision은 bidirectional short-clip teacher에서 오기 때문에, 진짜로 긴 AR trajectory를 직접 supervise하지 못한다는 근본적 한계가 있다(p.2).\n\n저자들은 학습 없이 LongLive의 KV cache 중 &#x27;오래된 history&#x27; 부분만 실제 영상에서 계산한 특징으로 교체하는 test-time 개입만으로도 long-horizon rollout 안정성이 눈에 띄게 좋아진다는 진단 실험(Fig. 2 하단)을 통해, 생성된 cache의 누적 열화가 핵심 병목임을 보인다(p.3-4). 이 관찰을 학습 신호로 바꾼 것이 OPSD-V이다.\n\n핵심 설계는 student와 teacher가 &#x27;같은 상태, 다른 cache&#x27;를 보게 하는 것이다. student는 추론 때와 완전히 동일한 rollout을 수행하여 자기가 생성한 chunk를 자신의 KV cache에 기록하고(on-policy), teacher(student LoRA의 EMA 사본)는 student가 방문한 바로 그 noisy latent와 denoising timestep에서 평가되지만, 오래된 history는 실제 영상 chunk로 교체하고 가장 최근 chunk만 student가 만든 것을 유지한 teacher cache를 조건으로 velocity를 예측한다. 최근 chunk를 real로 바꾸지 않는 이유는 teacher가 완전한 teacher-forced oracle이 되어 AR continuation과 어긋나는 것을 막기 위함이다(p.3-4, p.7-8). 두 velocity 예측 간 MSE(dense velocity matching)를 4개 denoising step 전부에 적용하며, 처음 M=7 chunk는 warm-up으로 loss에서 제외한다(p.8).\n\n학습은 rollout 전체 그래프를 유지하지 않고 chunk-step pair마다 즉시 backward 후 activation graph를 해제하는 truncated backpropagation(Algorithm 1)으로 수행되어, activation memory가 rollout 길이나 denoising step 수에 비례해 늘지 않는다(p.8-9). 추론 시에는 teacher branch와 real-video cache가 완전히 제거되므로 원래의 few-step AR 샘플링 경로·step 수·cache 메커니즘이 그대로 유지된다(p.9).\n\n실험은 Wan2.1-T2V-1.3B 백본 위의 Self-Forcing과 LongLive에 LoRA continued training(3,800개 약 1분 길이 480p 영상, 24×H800, 200 iteration)으로 적용했고, 1분·16FPS 영상 240개(MovieGenBench 120 + MeiBench 120 prompt)에 대해 VBenchLong으로 평가했다. LongLive는 Quality 0.8138→0.8242, Dynamic Degree 0.5012→0.5890, Self-Forcing은 Quality 0.8259→0.8389, Dynamic Degree 0.6218→0.6570으로 개선되었으나 Semantic Score는 두 백본 모두 소폭 하락했다(0.4911→0.4904, 0.4897→0.4864)(p.11). 사용자 연구(10명, 20 pair)에서는 overall preference 66.0%(tie 제외 82.5%)가 OPSD-V를 선호했다(p.1, p.12).</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 7, 8, 9, 11, 12</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>long-horizon degradation의 핵심 병목은 파라미터가 아니라 &#x27;자기가 생성한 chunk로 채워진 KV cache의 누적 열화&#x27;이다 — 학습 없이 오래된 cache history만 실제 영상 특징으로 교체해도 rollout 안정성이 향상되는 진단 실험이 근거다(Fig. 2 하단).</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>OPSD-V의 teacher는 student와 &#x27;동일한 noisy latent·동일한 timestep&#x27;에서 평가되지만 &#x27;다른 cache&#x27;(오래된 history = real video, 최신 chunk = student 생성물)를 본다. 이 비대칭성만으로 corrective supervision이 생성된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>가장 최근 chunk를 real로 바꾸지 않는 이유는 teacher가 완전한 teacher-forced oracle이 되어 student의 AR 상황과 괴리되는 것을 막기 위함이다(AR-consistent teacher cache).</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>supervision은 4-step 샘플러의 모든 denoising step에 걸친 dense velocity matching이며, 처음 M=7 chunk는 warm-up으로 loss에서 제외된다(Wan 기반 AR 모델의 원래 로컬 학습 윈도우가 7 chunk = 21 latent frame이기 때문).</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>추론 시 teacher branch와 real-video cache는 완전히 제거되므로, 원래의 few-step 샘플링 경로·step 수·cache 메커니즘이 그대로 보존된다. 즉 지연시간 특성을 희생하지 않는 post-training이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>chunk-step pair마다 즉시 backward 후 activation graph를 해제하는 truncated backpropagation(Algorithm 1) 덕분에 activation memory가 rollout 길이나 denoising step 수에 비례해 증가하지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>VBenchLong에서 Quality와 Dynamic Degree는 두 백본 모두 일관되게 향상되지만(LongLive Dynamic 0.5012→0.5890, Self-Forcing 0.6218→0.6570), Semantic Score는 두 백본 모두 소폭 하락한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Ablation은 두 설계 선택이 모두 필수임을 정성적으로 보인다: x0 공간 매칭은 과도한 smoothing과 geometric degradation을, teacher trajectory 기반(off-policy) 샘플링은 student rollout에서의 심한 blur를 유발한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>3,800개 영상·200 iteration·24×H800이라는 매우 작은 post-training 예산으로 개선이 나타났다는 점은, 이 방법이 base 모델 능력의 &#x27;재활성화&#x27;에 가깝고 새로운 능력의 학습이 아닐 가능성을 시사한다(추가 스케일링 시 개선 여지도 저자가 언급).</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 13</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>실시간 스트리밍 영상 생성이 요구하는 조건</h3>
+      <p>실시간(real-time) 영상 생성은 콘텐츠를 순차적으로 내보내면서 시청 지연시간(latency)을 낮게 유지해야 하므로, bidirectional full-sequence diffusion이 아니라 autoregressive(AR) 모델과 transformer KV cache 재사용을 요구한다. 이러한 구조는 streaming avatar, interactive media, world-model 응용, embodied intelligence 등으로 이어진다. 이 요구를 만족시키기 위해 최근 연구들은 few-step distillation으로 denoising step 수를 4단계 수준까지 줄인 causal AR 생성기를 만들어 왔다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>long-horizon degradation: 핵심 문제</h3>
+      <p>DMD 스타일 distillation으로 얻어진 기존 few-step AR video generator는 짧은 구간에서는 잘 동작하지만, autoregressive rollout이 길어지면 오차가 누적되고 motion dynamics가 약해지는 long-horizon degradation을 겪는다. 즉 낮은 지연시간과 긴 영상 길이를 동시에 얻을 수는 있으나, 그 긴 영상의 후반부 품질이 유지되지 않는다는 것이 문제이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>논문이 던지는 중심 질문</h3>
+      <p>논문은 &#x27;실제 long-video 데이터가, 원래의 few-step AR 생성 능력(샘플링 경로·step 수·cache 메커니즘)을 보존하면서도 더 강력한 학습 supervision으로 쓰일 수 있는가?&#x27;라는 질문을 중심에 놓는다. 이는 few-step 능력을 희생하지 않고(즉 다시 many-step으로 되돌리지 않고) long-horizon 안정성만 보강하겠다는 제약 조건을 함께 포함한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>진단 실험이 지목한 병목: 생성된 KV cache의 누적 열화</h3>
+      <p>저자들은 OPSD-V를 설계하기 전에 진단(diagnostic) 실험을 수행했다. 모델 파라미터를 전혀 바꾸지 않은 원본 LongLive에서, KV cache 중 &#x27;오래된 history&#x27; 부분만 실제 영상으로부터 계산한 특징으로 교체하자 long-horizon rollout 안정성이 시각적으로 뚜렷하게 향상되었다. 이는 파라미터 자체보다 &#x27;자기가 생성한 chunk로 채워진 cache&#x27;의 누적 열화가 long-horizon 성능 저하의 핵심 병목임을 시사하며, 실제 long-video를 teacher context로 쓰는 OPSD-V 설계의 직접적 동기가 되었다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>clip-level teacher의 시간 범위 한계</h3>
+      <p>DMD 스타일 학습에서 target distribution은 보통 bidirectional short-clip video teacher가 제공한다. 이 teacher는 짧은 클립 분포만 알고 있으므로, 진짜로 긴 autoregressive trajectory 전체를 직접 supervise할 수 없다는 근본적 한계가 있다. supervision의 시간 범위가 teacher의 시간 범위에 갇혀 있는 셈이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>rollout 연장·attention sink 계열의 부분적 완화</h3>
+      <p>LongLive, Self-Forcing++, Reward-Forcing, Rolling Sink 등 최근 방법들은 rollout 길이를 늘리거나 attention-sink 메커니즘을 도입해 오차 누적을 완화하려 했다. 그러나 이들의 supervision 역시 여전히 clip-level teacher의 능력과 시간 범위에 의해 제한된다. 즉 rollout을 길게 하더라도 그 rollout을 가르치는 신호의 원천은 바뀌지 않는다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>DMD supervision 자체의 거칠기와 부작용</h3>
+      <p>DMD는 motion dynamics 약화나 color drift 같은 부작용을 유발할 수 있고, 그 supervision은 전체 denoising trajectory를 따라가는 dense corrective target이 아니라 chunk 또는 clip distribution 수준에서 정의된다. 따라서 student가 실제로 방문하는 각 denoising step의 상태를 하나씩 교정해 주지 못한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실제 long-video를 쓰는 선행 연구와의 차이</h3>
+      <p>Cai et al. (2026)도 실제 long-video 데이터를 supervision으로 활용하는 two-head DiT 설계를 탐구했다. 그러나 이는 non-causal long-video 학습 패러다임을 대상으로 하며, causal few-step AR video generation을 위한 cache-aware post-training이 아니라는 점에서 OPSD-V와 목적과 설정이 다르다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1. cache-aware on-policy self-distillation 프레임워크 제안</h3>
+      <p>기존의 few-step causal AR video diffusion 생성기를 post-training하기 위한 cache-aware on-policy self-distillation framework인 OPSD-V를 제안한다. 처음부터 새로 학습하는 것이 아니라, 이미 존재하는 few-step 생성기를 &#x27;그대로 둔 채&#x27; 보강하는 post-training 레시피라는 점이 핵심이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2. student/teacher의 비대칭 cache 설계</h3>
+      <p>student는 원래의 inference-time rollout을 그대로 따르며 자신이 생성한 chunk를 KV cache에 기록한다. teacher는 동일한 student-visited noisy latent와 denoising timestep에서 평가되지만, 오래된 history는 실제 영상 chunk로 교체하고 가장 최근 chunk만 student가 생성한 것을 유지하는 cache를 사용한다(두 branch는 동일한 초기 real-video prefix를 공유). 가장 최근 chunk를 real로 바꾸지 않는 설계가 teacher를 완전한 teacher-forced oracle이 되지 않게 막는다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3. cache 열화가 병목임을 보이는 진단 실험</h3>
+      <p>학습을 전혀 하지 않은 상태에서, LongLive의 KV cache 중 오래된 history만 실제 영상 특징으로 교체하는 test-time 개입만으로 long-horizon rollout 안정성이 향상됨을 보이는 진단 실험(Fig. 2 하단)을 제시하여, 생성된 cache의 누적 열화가 핵심 병목임을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4. 두 대표 모델에 대한 일반성 검증</h3>
+      <p>약 1분 길이 영상 3,800개로 구성된 소규모 커스텀 long-video 데이터셋을 구축하고, LoRA 기반 continued training을 통해 Self-Forcing과 LongLive라는 두 대표적 few-step AR video generator에 OPSD-V를 적용하여 프레임워크의 일반성을 검증한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5. memory-efficient truncated backpropagation</h3>
+      <p>activation memory가 rollout 길이나 denoising step 수에 비례해 증가하지 않도록, supervised chunk-step pair마다 손실을 즉시 backpropagate하고 activation graph를 해제하는 학습 절차(Algorithm 1)를 제시한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6. 실험적 개선 확인</h3>
+      <p>Self-Forcing과 LongLive 두 모델 모두에서 시각적 품질, motion dynamics, VBenchLong 점수의 일관된 향상을 보였고, 10명 참가자·20개 video pair 사용자 연구에서 OPSD-V가 overall-preference 판단의 66.0%(tie 제외 시 82.5%)에서 선호되었다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 그림: 같은 상태, 다른 cache</h3>
+      <p>OPSD-V는 긴 학습 영상을 latent chunk 시퀀스 x_1:N^data로 나눈 뒤, 첫 chunk x_1^data를 student와 teacher가 공유하는 real-video prefix로 사용해 KV cache를 초기화한다(이 prefix는 장면을 anchor할 뿐 생성이나 loss 계산에는 참여하지 않는다). chunk i=2부터 student는 원래의 inference-time rollout을 그대로 수행하며(고정된 few-step sampler로 denoise, 생성 chunk를 KV cache에 기록) 이것이 supervision의 대상이 되는 on-policy 상태를 정의한다. 각 생성 chunk에 대해 teacher는 student가 방문한 것과 동일한 noisy latent와 동일한 denoising timestep에서 평가되지만, 서로 다른 temporal cache를 조건으로 삼는다. 두 branch의 velocity 예측 간 dense matching이 corrective supervision이 된다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>teacher cache의 구체적 구성 (예시)</h3>
+      <p>teacher cache에서는 오래된 history가 실제 영상 chunk로 대체되고, 가장 최근 chunk만 student가 생성한 것을 유지해 autoregressive continuation을 보존한다. 논문이 든 예를 그대로 옮기면, chunk i=7을 처리할 때 student는 real chunk 1과 자신이 생성한 chunk 2~6을 조건으로 하고, teacher는 real chunk 1~5와 student가 생성한 chunk 6을 조건으로 한다. 즉 teacher는 student보다 &#x27;깨끗한 과거&#x27;를 보되, 바로 직전 chunk만큼은 student와 동일한 생성 결과를 본다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>추론 경로를 건드리지 않는다는 제약</h3>
+      <p>OPSD-V는 원래의 few-step 샘플링 경로, denoising step 수(K=4), inference-time cache 메커니즘(attention-sink cache, rolling relative RoPE)을 변경하지 않는다. student와 teacher는 동일한 cache 메커니즘을 사용하며, 추론 시에는 teacher branch와 real-video cache가 통째로 제거된다. 따라서 배포되는 모델의 지연시간 특성은 base 모델과 동일하게 유지된다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>주요 구성요소와 단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>구성요소 1 — Student On-Policy Rollout (4.2절)</h3>
+      <p>student는 학습 중에도 원본 inference 절차와 동일하게 동작한다. 각 chunk를 few-step sampler로 denoise하고(solver transition에는 stop-gradient 적용), 완성된 chunk를 자신의 KV cache에 기록하며 self-generated cache 상태에서 rollout을 이어간다. 이 rollout이 supervision 대상이 되는 on-policy 상태(noisy latent, timestep, KV cache)를 정의한다. 즉 학습 분포와 배포 분포가 어긋나지 않는다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2 — AR-Consistent Real-Video Teacher Cache (4.3절)</h3>
+      <p>teacher는 student가 방문한 것과 동일한 noisy latent와 timestep에서 평가되지만, 오래된 cache 기록이 실제 영상 chunk로 대체되고 가장 최근 chunk만 student 생성물을 유지하는 별도 cache h_i^t를 쓴다. 이 비대칭성이 (a) 더 깨끗한 teacher target을 제공하면서 (b) teacher가 완전한 teacher-forced oracle이 되어 student의 AR 상황과 동떨어지는 것을 동시에 방지한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3 — Dense Denoising-Level Objective (4.4절)</h3>
+      <p>4-step 샘플러의 모든 K=4 denoising step에서 student와 teacher의 velocity 예측 간 MSE를 계산한다(Eq. 14, velocity matching). 처음 M=7개 chunk는 rollout warm-up으로 loss 계산에서 제외한다(Eq. 15). 이 chunk들도 생성되고 student cache에 기록되지만 loss에는 기여하지 않는다. M=7인 이유는 실험에 쓰인 Wan 기반 AR 모델들이 원래 7 chunk(=3×7=21 latent frame) 로컬 윈도우 안에서 학습되었기 때문이며, 이 로컬 horizon을 넘어선 뒤부터 loss를 시작해 long-rollout cache 상태에서 distillation이 이루어지도록 한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4 — EMA Teacher (LoRA)</h3>
+      <p>LoRA post-training 설정에서 base video generator는 frozen이고, student LoRA만 학습되며, teacher LoRA는 student LoRA의 EMA 사본(decay=0.9999)으로 유지되어 stop-gradient target만 생성한다. 즉 외부의 더 큰 teacher가 아니라 &#x27;자기 자신의 안정화된 사본&#x27;이 teacher이므로 self-distillation이다. teacher는 학습 시에만 사용되고 추론 시 제거된다.</p>
+      <span class="source-ref">PDF p. 7, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 5 — Memory-Efficient Truncated Backpropagation (4.5절, Algorithm 1)</h3>
+      <p>긴 rollout 전체의 계산 그래프를 유지하지 않는다. 각 supervised chunk-step pair의 정규화된 손실 항 ℓ_{i,k}/|S|을 student forward 직후 즉시 backpropagate하여 parameter gradient만 누적하고, 현재 activation graph는 해제한 뒤 다음 denoising step으로 넘어간다. teacher 예측, warm-up student 예측, denoising transition은 모두 gradient 없이 처리된다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단계별 동작 과정 (8단계)</h3>
+      <p>① 긴 학습 영상의 첫 chunk x_1^data를 causal DiT에 통과시켜 얻은 KV entry로 student·teacher 공유 cache를 초기화한다(생성/loss 미참여).\n② chunk i=2..N에 대해 student는 Gaussian noise에서 시작해 고정된 few-step sampler로, 현재 student cache h_i^s를 조건으로 매 step k에서 velocity를 예측하고 solver로 latent를 갱신한다(transition에 stop-gradient). denoising이 끝나면 clean chunk를 student cache에 append한다.\n③ i &gt; M(=7)이면 teacher cache h_i^t를 구성한다: 오래된 history는 real-video chunk로 채우고, 가장 최근 chunk만 student 생성 chunk를 쓴다.\n④ teacher는 student가 방문한 동일한 noisy latent z_{i,k}^s와 timestep t_k에서, h_i^t를 조건으로 gradient 없이 velocity를 예측해 stop-gradient target을 만든다.\n⑤ supervised된 각 (i,k) 쌍에 대해 student velocity와 teacher velocity 간 MSE(velocity matching)를 계산한다.\n⑥ 손실을 즉시 backpropagate해 gradient를 누적하고 activation graph를 해제하며 cache tensor를 detach한다.\n⑦ 전체 rollout(i=2..N)이 끝나면 누적 gradient를 clip하고 student LoRA를 한 번 업데이트한 뒤, teacher LoRA를 EMA로 갱신한다.\n⑧ 추론 시에는 teacher branch와 real-video cache를 제거하고 원래의 few-step AR 샘플링 경로만 사용한다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 cache 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Algorithm 1: OPSD-V의 memory-efficient 학습 절차</h3>
+      <p>Algorithm 1은 (긴 long-video 데이터셋 D, student f_θ, EMA teacher f_θ̄, denoising step 수 K, warm-up chunk 수 M)을 입력으로 받는다. 매 iteration마다 연속된 long video와 condition (x_1:N^data, c)를 샘플링하고, 두 branch가 같은 real first chunk에서 출발해 cache를 초기화한다. 이후 chunk 단위 self-rollout으로 on-policy denoising 상태를 정의하고, warm-up 이후의 supervised chunk에 대해 real-video 오래된 history + 최신 student chunk로 teacher cache를 구성(Eq. 12)한 뒤, EMA teacher를 student가 방문한 동일 noisy latent에서 평가해 dense velocity matching으로 student를 최적화한다. rollout이 끝난 뒤(알고리즘 25~26행) 누적 gradient g를 clip하여 student LoRA θ를 한 번 업데이트하고 teacher LoRA θ̄를 EMA로 갱신한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>손실 함수: velocity matching (Eq. 14, 15)</h3>
+      <p>손실은 supervised chunk-step 집합 S에 대해 student velocity 예측과 sg(·)로 gradient가 차단된 teacher velocity 예측 간의 MSE로 정의된다(Eq. 14). S = {(i,k) | i &gt; M, k = 1,...,K}, M = 7, K = 4 (Eq. 15)이므로 4-step 샘플러의 네 denoising step 모두가 supervise된다. 추가적인 DMD, reward, adversarial loss는 전혀 사용하지 않는다.</p>
+      <span class="source-ref">PDF p. 8, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>메모리 특성: 왜 activation이 폭발하지 않는가</h3>
+      <p>일반적으로 긴 AR rollout×K denoising step 전체를 하나의 그래프로 유지하면 activation memory가 rollout 길이와 step 수에 비례해 증가한다. OPSD-V는 각 항 ℓ_{i,k}/|S|를 즉시 backward하고 그래프를 즉시 해제하므로(Eq. 16), 네 denoising step의 activation graph도 한 번에 하나씩만 살아 있다. cache tensor는 rollout 전체에 걸쳐 persist하지만 detach되어 그래프에 묶이지 않는다. 실제 학습에는 BF16 mixed precision, activation checkpointing, fully sharded data parallelism이 함께 사용된다.</p>
+      <span class="source-ref">PDF p. 8, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>cache 구조: attention sink + rolling relative RoPE</h3>
+      <p>student와 teacher는 동일한 attention-sink cache 메커니즘과 rolling relative RoPE를 공유한다. 즉 OPSD-V는 새로운 인덱스/캐시 자료구조를 도입하는 것이 아니라, 기존 AR 생성기의 KV cache &#x27;내용물&#x27;을 학습 시점에 teacher 쪽에서만 real-video 특징으로 바꿔치기하는 방식이다. 이 때문에 추론 시 cache 구조와 비용은 base 모델과 동일하게 유지된다.</p>
+      <span class="source-ref">PDF p. 7, 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>학습 데이터</h3>
+      <p>OPSD-V post-training용으로 3,800개 영상(각 약 1분 길이, 480p)으로 구성된 소규모 커스텀 long-video 데이터셋을 구축했다. 자연 풍경, 큰 카메라 이동, 인물 중심 장면 등 다양한 콘텐츠를 포함하며, optical flow 기반의 가벼운 필터링으로 저모션·불안정·저품질 샘플을 제거했다.</p>
+      <span class="source-ref">PDF p. 4, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>백본과 baseline</h3>
+      <p>두 개의 대표적 few-step AR video generator를 대상으로 한다. (1) Self-Forcing: 공식 base checkpoint에서 시작해 LoRA adapter를 학습하며, 공정 비교를 위해 attention-sink 메커니즘을 추가 적용했다. (2) LongLive: 공식 base model과 공개된 LoRA checkpoint에서 시작해 LoRA adapter를 OPSD-V로 continued post-training했다. 두 모델 모두 Wan2.1-T2V-1.3B 백본 기반이다. 비교 대상은 각각의 원본 base 모델이다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습 설정</h3>
+      <p>student branch는 학습 가능한 LoRA adapter를, teacher branch는 그 EMA 사본(decay 0.9999)을 사용한다. base AR 모델의 원래 4-step 샘플러를 그대로 쓰고 4개 denoising step 전부를 velocity matching loss로 supervise하며, 추가 DMD/reward/adversarial loss는 사용하지 않는다. 각 모델을 24개 H800 GPU에서 200 iteration, per-GPU batch size 1로 학습했고 BF16 mixed precision, activation checkpointing, FSDP를 사용했다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 프로토콜과 지표</h3>
+      <p>평가 prompt는 MovieGenBench 기반 120개와 내부 제작 MeiBench 120개, 총 240개이다. 각 방법이 prompt당 1개씩 1분 길이·16 FPS 영상을 생성하여 총 240개 영상을 만든다. 지표는 VBenchLong의 Quality Score, Dynamic Degree, Semantic Score이며, Table 1은 두 벤치마크의 평균값을 보고한다. 추가로 10명 참가자가 20개 video pair(LongLive 10 + Self-Forcing 10)에 대해 Overall / Motion Quality / Visual Quality 세 기준으로 Model A / Model B / Same 중 하나를 고르는 사용자 연구를 수행했다.</p>
+      <span class="source-ref">PDF p. 10, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation 설계</h3>
+      <p>두 가지 ablation을 수행한다. (1) 매칭 공간: 기본 velocity matching(Eq. 14) 대신 x0(clean-latent) 공간 MSE(Eq. 17)로 매칭. (2) distillation 상태를 샘플링하는 trajectory: student 자신의 noisy latent z_{i,k}^s 대신 teacher 자신의 denoising trajectory에서 나온 z_{i,k}^t를 사용(off-policy). 두 ablation 모두 학습 영상, 4-step sampler, rollout 길이, cache 구성, LoRA 설정을 본 방법과 동일하게 유지한다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>VBenchLong: Quality와 Dynamic Degree의 일관된 향상 (Table 1)</h3>
+      <p>LongLive는 Quality Score 0.8138 → 0.8242, Dynamic Degree 0.5012 → 0.5890으로 개선되었고, Self-Forcing은 Quality Score 0.8259 → 0.8389, Dynamic Degree 0.6218 → 0.6570으로 개선되었다. 특히 Dynamic Degree의 상승폭이 크다는 점(LongLive +0.0878, Self-Forcing +0.0352)은 DMD 계열 distillation의 알려진 부작용인 motion dynamics 약화가 실제 long-video supervision으로 상당 부분 되돌려짐을 뒷받침한다. 서로 다른 두 base 모델에서 같은 방향의 개선이 나타난 것은 OPSD-V가 특정 모델에 종속된 트릭이 아님을 시사한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Semantic Score의 소폭 하락</h3>
+      <p>반면 Semantic Score는 LongLive 0.4911 → 0.4904, Self-Forcing 0.4897 → 0.4864로 두 백본 모두에서 소폭 하락했다(Table 1에서 base 값이 각 모델 행 중 최고값으로 표시됨). 저자들은 이를 더 활발한 motion 생성과 보수적인 semantic 매칭 지표 사이의 완만한 trade-off로 설명한다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>사용자 연구 (Figure 5)</h3>
+      <p>두 백본 합산 기준 OPSD-V는 Overall 66.0%(tie 제외 82.5%), Motion Quality 57.5%(tie 제외 82.7%), Visual Quality 60.5%(tie 제외 78.1%)에서 선호되었다. 백본별로 보면 Self-Forcing에서의 우세가 훨씬 뚜렷하다(Overall: OPSD-V 78% / Same 12% / Base 10%; Visual 79/12/9; Motion 66/25/9). LongLive에서는 Overall 54/28/18, Motion 49/36/15로 우세하지만, Visual Quality는 42/33/25로 base 선호 비율이 상대적으로 높다.</p>
+      <span class="source-ref">PDF p. 1, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation 1 — 왜 velocity 공간인가 (Figure 6)</h3>
+      <p>x0(clean-latent) 공간에서 매칭하면 긴 rollout 동안 다리 트러스(bridge truss)나 나뭇잎 경계 같은 세부 구조가 점진적으로 과도하게 매끄러워지고 geometric degradation이 발생한다. velocity 공간 매칭이 denoising trajectory를 따라가는 dense corrective target으로서 더 적절하다는 근거다. 다만 이 비교는 정성적 이미지 비교로만 제시되며 정량 수치는 없다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation 2 — 왜 on-policy여야 하는가 (Figure 7)</h3>
+      <p>distillation 상태를 teacher 자신의 denoising trajectory에서 샘플링하도록 바꾸면(off-policy), teacher rollout 자체는 선명하게 유지되지만 student는 정작 자신의 autoregressive rollout에서 심하게 blur된다. 즉 teacher가 잘 보는 상태를 가르쳐 봐야 student가 실제로 방문하는 상태에는 도움이 되지 않는 off-policy state mismatch가 발생한다. 이는 OPSD-V의 &#x27;on-policy&#x27; 설계가 장식이 아니라 필수 조건임을 보여준다. 역시 정성적 비교만 제공된다.</p>
+      <span class="source-ref">PDF p. 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>정리와 시사점</h2>
+        <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>OPSD-V는 few-step AR video generator의 long-horizon degradation을 &#x27;cache 열화&#x27; 문제로 재정의하고, 실제 long-video를 teacher의 cache context로 주입하는 on-policy self-distillation으로 이를 post-training 단계에서 교정한다. 추론 경로를 전혀 바꾸지 않으면서 두 대표 모델의 품질과 motion dynamics를 개선했고, 저자들은 현재 구현이 이 아이디어의 하나의 instantiation일 뿐이며 더 나은 teacher-cache 정책·adaptive supervision·강한 context-enhanced teacher 여지가 있다고 밝힌다.</p>
+      <span class="source-ref">PDF p. 13, 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자의 해석: 이 논문의 위치</h3>
+      <p>(analyst_inference) 이 논문의 개념적 기여는 &#x27;teacher를 더 크게/더 똑똑하게 만드는&#x27; 대신 &#x27;teacher에게 더 좋은 과거(context)를 준다&#x27;는 축을 연 데 있다고 볼 수 있다. teacher와 student가 파라미터상 거의 동일(EMA 사본)한데도 유효한 학습 신호가 생기는 이유는 오로지 cache의 비대칭성에서 나온다. 이는 KV cache를 단순한 성능 최적화 장치가 아니라 supervision을 설계할 수 있는 1급 대상으로 다룬다는 점에서, streaming/AR 시스템 전반(예: 긴 컨텍스트 LLM의 cache 열화)에도 옮겨볼 만한 관점이다. 다만 이 해석은 논문이 명시적으로 주장한 범위를 넘어선 확장이다.</p>
+      <span class="source-ref">PDF p. 3, 4, 7</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>OPSD-V 전체 학습 동작 흐름</h3>
+                <span class="source-ref">PDF p. 7, 8, 9</span>
+              </div>
+              <p>긴 학습 영상의 첫 chunk로 공유 cache를 초기화한 뒤, student가 on-policy rollout으로 상태를 정의하고, warm-up(M=7)을 넘긴 chunk에 대해 real-video 기반 teacher cache로 target을 만들어 dense velocity matching으로 학습하는 흐름. 추론 시 teacher branch는 제거된다. (p.7-9)</p>
+              <div class="mermaid">
+flowchart TD
+    A[&quot;긴 학습 영상 x_1:N^data&quot;] --&gt; B[&quot;첫 chunk x_1^data로&lt;br/&gt;공유 KV cache 초기화&lt;br/&gt;(loss 미참여)&quot;]
+    B --&gt; C{&quot;chunk i = 2..N&quot;}
+    C --&gt; D[&quot;Student on-policy rollout&lt;br/&gt;4-step sampler로 denoise&lt;br/&gt;(solver transition: stop-grad)&quot;]
+    D --&gt; E[&quot;생성 chunk를&lt;br/&gt;student cache에 append&quot;]
+    E --&gt; F{&quot;i &gt; M (=7)?&quot;}
+    F -- &quot;아니오 (warm-up)&quot; --&gt; C
+    F -- &quot;예&quot; --&gt; G[&quot;Teacher cache 구성&lt;br/&gt;오래된 history = real chunk&lt;br/&gt;최신 chunk = student 생성물&quot;]
+    G --&gt; H[&quot;EMA Teacher 평가&lt;br/&gt;동일 noisy latent z_i,k^s&lt;br/&gt;동일 timestep t_k, no grad&quot;]
+    D --&gt; I[&quot;Student velocity 예측&quot;]
+    H --&gt; J[&quot;Teacher velocity 예측&lt;br/&gt;(stop-gradient target)&quot;]
+    I --&gt; K[&quot;Velocity matching MSE&lt;br/&gt;(K=4 step 전부)&quot;]
+    J --&gt; K
+    K --&gt; L[&quot;즉시 backward + gradient 누적&lt;br/&gt;activation graph 해제&quot;]
+    L --&gt; C
+    C -- &quot;rollout 종료&quot; --&gt; M[&quot;gradient clip&lt;br/&gt;Student LoRA 1회 업데이트&quot;]
+    M --&gt; N[&quot;Teacher LoRA EMA 갱신&lt;br/&gt;(decay 0.9999)&quot;]
+    N --&gt; O[&quot;추론: teacher branch와&lt;br/&gt;real-video cache 제거&lt;br/&gt;원래 few-step AR 경로만 사용&quot;]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식 vs OPSD-V: supervision 원천과 cache 구성의 차이</h3>
+                <span class="source-ref">PDF p. 2, 6, 7, 8</span>
+              </div>
+              <p>위: 기존 DMD 계열은 bidirectional short-clip teacher에서 chunk/clip 분포 수준 supervision을 받아 긴 AR trajectory를 직접 가르치지 못한다. 아래: OPSD-V는 student와 teacher가 동일한 noisy latent·timestep을 공유하되 cache만 비대칭으로 구성한다(chunk i=7 예시). (p.2, p.6-8)</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph PRIOR [&quot;기존 방식 (DMD 계열)&quot;]
+        P1[&quot;Bidirectional&lt;br/&gt;short-clip teacher&quot;] --&gt; P2[&quot;chunk/clip 분포 수준&lt;br/&gt;supervision&quot;]
+        P2 --&gt; P3[&quot;few-step AR student&quot;]
+        P3 --&gt; P4[&quot;긴 rollout에서&lt;br/&gt;오차 누적 · motion 약화&quot;]
+    end
+    subgraph OPSD [&quot;OPSD-V (chunk i=7 예시)&quot;]
+        S1[&quot;Student cache&lt;br/&gt;real 1 + student 2~6&quot;] --&gt; S3[&quot;Student velocity&lt;br/&gt;(gradient 있음)&quot;]
+        T1[&quot;Teacher cache&lt;br/&gt;real 1~5 + student 6&quot;] --&gt; T3[&quot;Teacher velocity&lt;br/&gt;(stop-gradient)&quot;]
+        Z[&quot;동일 noisy latent z_i,k^s&lt;br/&gt;동일 timestep t_k&quot;] --&gt; S3
+        Z --&gt; T3
+        S3 --&gt; L1[&quot;Dense velocity&lt;br/&gt;matching loss&quot;]
+        T3 --&gt; L1
+        L1 --&gt; U[&quot;Student LoRA 업데이트&quot;]
+    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>VBenchLong Quality Score: base vs OPSD-V</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Table 1 · Wan2.1-T2V-1.3B backbone, 4-step AR inference, attention-sink cache, MovieGenBench(120)+MeiBench(120) 240개 prompt로 생성한 1분·16FPS 영상 평균. Self-Forcing base에는 공정 비교를 위해 attention-sink를 추가 적용.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>VBenchLong Dynamic Degree: base vs OPSD-V</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Table 1 · 동일 조건. motion dynamics 지표로, OPSD-V가 두 백본 모두에서 가장 큰 상대적 개선을 보인 항목.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>VBenchLong Semantic Score: base vs OPSD-V (소폭 하락)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Table 1 · 동일 조건. 두 백본 모두 base가 최고값이며, 저자들은 활발한 motion 생성과 보수적 semantic 매칭 지표 간 trade-off로 설명.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>사용자 연구: OPSD-V 선호 비율 (두 백본 합산)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 1, 12 · 10명 참가자, LongLive 10쌍 + Self-Forcing 10쌍 총 20개 video pair, 두 backbone 합산. &#x27;tie 제외&#x27;는 Same 응답을 제거한 뒤의 비율.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>사용자 연구 응답 분포 — LongLive backbone (Figure 5)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Figure 5 · LongLive backbone, 기준당 100개 판정(참가자 10명 × video pair 10개).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>사용자 연구 응답 분포 — Self-Forcing backbone (Figure 5)</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Figure 5 · Self-Forcing backbone, 기준당 100개 판정(참가자 10명 × video pair 10개).
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>설계가 진단 실험에서 출발한다. &#x27;cache의 오래된 history만 real로 바꿔도 좋아진다&#x27;는 학습 없는 test-time 관찰(Fig. 2 하단)을 먼저 확립하고, 그 관찰을 그대로 학습 신호로 번역했다. 가설-검증의 순서가 명확해 방법의 동기가 임의적이지 않다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>추론 경로를 전혀 건드리지 않는다는 제약을 끝까지 지킨다. 샘플링 step 수(4), sampler, attention-sink cache, rolling RoPE가 모두 보존되고 teacher/real-video cache는 학습에만 존재하므로, 배포 시 지연시간·메모리 특성이 base 모델과 동일하다. few-step 생성기의 존재 이유(저지연)를 훼손하지 않고 개선한다는 점이 실용적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>on-policy 설계가 ablation으로 방어된다. teacher trajectory에서 상태를 샘플링하면 teacher는 선명해도 student rollout은 심하게 blur된다는 Figure 7의 결과는, &#x27;student가 실제로 방문하는 상태&#x27;를 supervise해야 한다는 이 논문의 핵심 전제를 직접 지지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>teacher를 완전한 oracle로 만들지 않는 절제가 돋보인다. 최신 chunk를 student 생성물로 유지함으로써 teacher가 AR continuation과 정합적인 상태에 머물게 하는 설계는, teacher-forcing과 자유 rollout 사이의 exposure bias 문제를 정면으로 다룬다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>확장성 있는 학습 절차를 함께 제시한다. chunk-step 단위 즉시 backward + graph 해제(Algorithm 1)로 activation memory가 rollout 길이·denoising step 수와 무관해지므로, 분(minute) 단위 rollout에 대한 post-training이 현실적인 자원 안에서 가능해진다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>일반성 근거가 있다. 학습 방식이 다른 두 base 모델(Self-Forcing: base checkpoint에서 새 LoRA / LongLive: 기존 LoRA를 continued training)에 동일하게 적용해 같은 방향의 개선을 얻었고, 추가 DMD·reward·adversarial loss 없이 velocity matching 단일 손실만 쓴다는 점에서 레시피가 단순하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>OPSD-V 적용 후 Semantic Score가 LongLive와 Self-Forcing 두 백본 모두에서 base 대비 소폭 감소했다. 저자들은 이를 더 활발한 motion 생성과 보수적인 semantic 매칭 지표 사이의 완만한 trade-off로 설명한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>LongLive backbone 사용자 연구에서 overall/motion-quality는 OPSD-V가 우세했으나, visual quality 항목에서는 tie 비율과 base 모델 선호 비율이 상대적으로 더 크게 나타났다(42% / 33% / 25%).</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>저자들은 현재의 teacher-cache 구성 방식과 loss 설계가 on-policy self-distillation 아이디어의 하나의 가능한 instantiation일 뿐이며, 더 효과적인 teacher-cache 정책, adaptive supervision 스케줄, 더 강력한 context-enhanced teacher를 통해 추가 개선의 여지가 있다고 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13, 14</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>OPSD-V는 실제 long-video 데이터에 명시적으로 의존한다. 저자들은 학습 영상의 양·다양성·품질을 확장하고 training compute를 늘리면 성능이 더 향상될 여지가 있다고 언급한다(현재 3,800개 영상, 200 iteration 규모).</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>메모리 효율성은 설계 논증(chunk-step 단위 즉시 backward로 activation graph가 한 번에 하나만 유지됨)으로 제시될 뿐, activation memory 사용량이나 학습 시간에 대한 정량적 측정·비교 실험은 논문에 보고되지 않는다. Algorithm 1의 실제 이득 크기는 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>두 ablation(Figure 6의 velocity vs x0 매칭, Figure 7의 student vs teacher trajectory)이 모두 정성적 이미지 비교로만 제시되어, 설계 선택의 기여도를 정량적으로 분리할 수 없다. 특히 velocity matching과 x0 matching의 성능 격차 크기는 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>평가가 1분 길이 영상에 한정된다. 학습 데이터도 약 1분 영상이고 평가도 1분 영상이므로, 학습 horizon을 크게 넘는 길이(예: 수 분 이상)에서 OPSD-V의 개선이 유지되는지, 아니면 열화가 다시 나타나는지는 확인되지 않음. long-horizon degradation을 다루는 논문으로서 이 외삽(extrapolation) 검증의 부재는 구조적 공백이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>teacher의 우위가 real-video cache라는 &#x27;학습 시에만 존재하는 정보&#x27;에서 나오므로, teacher가 student보다 나을 수 있는 여지는 student가 real chunk 분포에서 벗어난 만큼으로 제한된다. student가 EMA teacher를 따라잡을수록 gradient 신호가 약해지는 self-distillation 특유의 수렴 한계가 예상되며, 200 iteration이라는 짧은 학습 예산이 이 특성과 관련될 가능성이 있다(논문은 이를 논의하지 않음).</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>사용자 연구 규모가 작다(참가자 10명, video pair 20개, 기준당 100개 판정). 통계적 유의성 검정이나 참가자 배경 정보가 제시되지 않아, 백본별 차이(Self-Forcing에서 훨씬 큰 우세)가 실제 효과인지 표본 변동인지 구분하기 어렵다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>학습 horizon(약 1분)을 크게 넘어서는 길이, 예컨대 5분 또는 10분 rollout에서도 OPSD-V의 개선이 유지되는가, 아니면 새로운 열화 체제가 나타나는가?</h3>
+              </div>
+              <p>학습 데이터와 평가 영상이 모두 약 1분 길이이며, 논문은 이보다 긴 horizon에 대한 결과를 보고하지 않는다. long-horizon degradation을 표적으로 하는 방법인 만큼 학습 범위 밖 외삽 성능이 핵심 질문이 된다.</p>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>teacher cache에서 real-video로 대체하는 history의 &#x27;깊이&#x27;(얼마나 오래된 것까지 real로 바꿀지)와 student 생성물로 유지하는 최신 chunk 수는 성능에 어떤 영향을 주는가? 최신 1개 chunk라는 선택은 최적인가?</h3>
+              </div>
+              <p>저자들은 현재 teacher-cache 구성이 하나의 가능한 instantiation일 뿐이며 더 효과적인 teacher-cache 정책의 여지가 있다고 명시했으나, 이 하이퍼파라미터(최신 chunk 수)에 대한 ablation은 제시되지 않았다.</p>
+              <span class="source-ref">PDF p. 7, 8, 13, 14</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Semantic Score의 소폭 하락은 저자들 설명대로 motion-semantic trade-off인가, 아니면 real-video teacher cache가 텍스트 조건(prompt)보다 시각적 연속성을 과도하게 우선시하게 만드는 부작용인가?</h3>
+              </div>
+              <p>두 백본 모두에서 일관되게 Semantic이 하락(0.4911→0.4904, 0.4897→0.4864)했다는 사실은 우연이 아닌 체계적 편향을 시사한다. 논문은 trade-off로 해석하지만 이를 분리 검증하는 실험은 없다.</p>
+              <span class="source-ref">PDF p. 11, 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>warm-up 길이 M=7은 Wan 기반 모델의 로컬 학습 윈도우에서 유도된 값인데, 다른 로컬 윈도우를 가진 AR 백본에 옮길 때 M을 어떻게 정해야 하며 성능이 M에 얼마나 민감한가?</h3>
+              </div>
+              <p>논문은 M=7을 &#x27;3×7=21 latent frame이라는 원 학습 로컬 윈도우&#x27;로 정당화하지만(p.8), M에 대한 민감도 실험은 없다. 이 값이 프레임워크 이식의 실질적 장벽이 될 수 있다.</p>
+              <span class="source-ref">PDF p. 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>OPSD-V의 개선은 base 모델이 이미 가진 능력의 &#x27;재활성화&#x27;인가, 아니면 새로운 long-horizon 능력의 학습인가? 3,800개 영상·200 iteration이라는 매우 작은 예산에서 개선이 나타난 사실이 이 질문을 유발한다.</h3>
+              </div>
+              <p>학습 예산이 극히 작고(p.10), 학습 없이 cache만 교체하는 test-time 개입만으로도 개선이 관찰되었다는 진단 실험(p.3-4)은, 필요한 능력이 이미 백본에 존재하고 cache 열화가 그것을 가리고 있었을 가능성을 시사한다. 저자들은 데이터/compute 확장 여지를 언급할 뿐 이 구분을 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 3, 4, 10, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>cache 자체를 supervision 대상으로 삼는다는 아이디어를 video 이외 영역(예: 긴 컨텍스트 LLM의 KV cache 열화, world model의 long rollout)으로 옮길 수 있는가?</h3>
+              </div>
+              <p>OPSD-V의 유효 신호는 오직 student/teacher 간 cache 비대칭에서 나오며 모델 구조에 특화된 요소가 적다. 다만 논문은 video 도메인만 다루므로 이 일반화는 검증되지 않은 확장 방향이다.</p>
+              <span class="source-ref">PDF p. 3, 4, 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>velocity matching이 x0 matching보다 우월한 정확한 이유는 무엇이며(예: x0 공간의 MSE가 고주파 성분을 평균화하는 문제), 그 격차는 얼마나 큰가?</h3>
+              </div>
+              <p>Figure 6은 x0 매칭 시 다리 트러스·나뭇잎 경계의 과도한 smoothing과 geometric degradation을 정성적으로만 보여줄 뿐, 정량 지표(PSNR, LPIPS 등)나 메커니즘 분석을 제공하지 않는다.</p>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Few-step AR video generator (few-step 자기회귀 영상 생성기)</dt>
+              <dd>
+                distillation을 통해 denoising step 수를 소수(이 논문에서는 K=4)로 줄인 causal autoregressive 영상 생성 모델. chunk 단위로 순차 생성하며 KV cache를 재사용해 낮은 지연시간으로 스트리밍 생성이 가능하다. 본 논문의 대상은 Self-Forcing과 LongLive이다.
+                <span class="source-ref">PDF p. 1, 2, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Long-horizon degradation</dt>
+              <dd>
+                autoregressive rollout이 길어질수록 오차가 누적되고 motion dynamics가 약화되어 영상 후반부 품질이 무너지는 현상. 이 논문이 해결하려는 핵심 문제이며, 저자들은 그 병목을 &#x27;생성된 chunk로 채워진 KV cache의 누적 열화&#x27;로 지목한다.
+                <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>On-policy self-distillation</dt>
+              <dd>
+                student가 실제 추론 시와 동일한 rollout으로 방문하는 상태(on-policy state)에서, student 자신의 EMA 사본(self)을 teacher로 삼아 distillation하는 학습 방식. off-policy(teacher trajectory 기반) 대안은 student rollout에서 심한 blur를 유발함이 Figure 7에서 확인된다.
+                <span class="source-ref">PDF p. 3, 7, 13</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cache-aware</dt>
+              <dd>
+                KV cache의 &#x27;내용물&#x27;을 supervision 설계의 핵심 대상으로 다룬다는 뜻. OPSD-V는 student와 teacher가 동일한 noisy latent·timestep을 보되 서로 다른 cache를 조건으로 삼게 함으로써 학습 신호를 만든다.
+                <span class="source-ref">PDF p. 3, 6, 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>AR-consistent teacher cache</dt>
+              <dd>
+                teacher cache 구성 규칙. 오래된 history는 real-video chunk로 교체하되, 가장 최근 chunk만은 student가 생성한 것을 유지한다. 후자가 teacher를 완전한 teacher-forced oracle로 만들지 않고 student의 autoregressive continuation과 정합적인 상태에 머물게 한다.
+                <span class="source-ref">PDF p. 3, 4, 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Velocity matching (Eq. 14)</dt>
+              <dd>
+                student와 teacher의 velocity(속도장) 예측값 사이의 MSE를 최소화하는 손실. 4-step 샘플러의 모든 denoising step에 적용되는 dense corrective target이다. x0(clean latent) 공간 매칭 대안은 과도한 smoothing과 geometric degradation을 유발한다(Figure 6).
+                <span class="source-ref">PDF p. 8, 12, 13</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Rollout warm-up (M=7)</dt>
+              <dd>
+                rollout 초반 M=7개 chunk를 loss 계산에서 제외하는 설계. 이 chunk들은 여전히 생성되어 student cache에 기록되지만 distillation loss에는 기여하지 않는다. M=7은 Wan 기반 AR 모델의 원래 로컬 학습 윈도우(7 chunk = 3×7 = 21 latent frame)에서 유도되었으며, student가 진짜 long-rollout cache 상태에 진입한 뒤 distillation이 시작되도록 한다.
+                <span class="source-ref">PDF p. 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>EMA teacher</dt>
+              <dd>
+                student LoRA의 exponential moving average 사본(decay 0.9999)으로 유지되는 teacher. base 생성기는 frozen이고 student LoRA만 학습되며, teacher는 stop-gradient target 생성에만 쓰이고 추론 시 제거된다.
+                <span class="source-ref">PDF p. 7, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Memory-efficient truncated backpropagation (Algorithm 1)</dt>
+              <dd>
+                긴 rollout 전체의 계산 그래프를 유지하지 않고, 각 supervised chunk-step pair의 정규화 손실 ℓ_{i,k}/|S|을 즉시 backward해 gradient만 누적한 뒤 activation graph를 해제하는 학습 절차. activation memory가 rollout 길이나 denoising step 수에 비례해 증가하지 않게 한다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Attention sink</dt>
+              <dd>
+                streaming/장문 생성에서 초기 토큰(또는 chunk)의 KV entry를 cache에 계속 유지해 attention 분포를 안정화하는 메커니즘. OPSD-V의 student와 teacher는 동일한 attention-sink cache와 rolling relative RoPE를 사용하며, Self-Forcing baseline에도 공정 비교를 위해 추가 적용되었다.
+                <span class="source-ref">PDF p. 2, 7, 8, 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>DMD (Distribution Matching Distillation)</dt>
+              <dd>
+                diffusion 모델을 few-step 생성기로 압축하는 대표적 distillation 계열. 기존 few-step AR 생성기의 학습 방식이지만, supervision이 bidirectional short-clip teacher에서 오고 chunk/clip 분포 수준에서 정의되어 긴 AR trajectory를 직접 가르치지 못하며, motion dynamics 약화나 color drift를 유발할 수 있다. OPSD-V는 추가 DMD loss를 전혀 쓰지 않는다.
+                <span class="source-ref">PDF p. 2, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>VBenchLong</dt>
+              <dd>
+                긴 영상 생성 평가 벤치마크. 이 논문은 Quality Score, Dynamic Degree, Semantic Score 세 지표를 사용하며, MovieGenBench 120개 + MeiBench 120개 prompt로 생성한 1분·16FPS 영상 240개에 대한 두 벤치마크 평균값을 Table 1에 보고한다.
+                <span class="source-ref">PDF p. 10, 11</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문이 정식 학회나 저널에 게재되었는지 여부는 확인되지 않음(arXiv preprint로만 확인됨).</li><li>Figure 6(velocity vs x0 matching)과 Figure 7(student vs teacher trajectory) ablation에 대한 정량 지표(PSNR, LPIPS 등) 수치는 논문에 제시되지 않고 정성적 이미지 비교만 제공됨.</li><li>VBenchLong 결과에서 MovieGenBench와 MeiBench 각각의 개별(비평균) 점수는 별도로 보고되지 않고 두 데이터셋 평균값만 Table 1에 제시됨.</li><li>사용자 연구 참가자 10명의 인구통계학적 정보(전문가 여부, 배경 등)와 통계적 유의성 검정 결과는 논문에 명시되지 않음.</li><li>정확한 학습 wall-clock 시간이나 총 연산량(FLOPs)은 명시되지 않음(24개 H800 GPU, 200 iteration, per-GPU batch size 1, BF16 + activation checkpointing + FSDP라는 정보만 제공됨).</li><li>Algorithm 1의 memory-efficient truncated backpropagation이 실제로 절감한 activation memory 양이나 그로 인한 학습 속도 영향은 정량적으로 측정·보고되지 않음.</li><li>3,800개 학습 영상의 정확한 출처(수집 경로, 라이선스)는 논문에 명시되지 않음.</li><li>LoRA rank, learning rate, optimizer 등 세부 하이퍼파라미터는 본문에서 확인되지 않음(EMA decay 0.9999, K=4, M=7만 명시됨).</li><li>학습 horizon(약 1분)을 넘어서는 더 긴 rollout에서의 성능은 평가되지 않음.</li><li>teacher cache에서 student 생성물로 유지하는 최신 chunk 수(현재 1개)와 warm-up 길이 M에 대한 민감도 분석은 제공되지 않음.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "VBenchLong Quality Score: base vs OPSD-V", "labels": ["LongLive (base)", "LongLive + OPSD-V", "Self-Forcing (base)", "Self-Forcing + OPSD-V"], "values": [0.8138, 0.8242, 0.8259, 0.8389], "unit": "score (0-1)", "xLabel": "모델", "yLabel": "Quality Score"}, {"canvasId": "chart-1", "type": "bar", "title": "VBenchLong Dynamic Degree: base vs OPSD-V", "labels": ["LongLive (base)", "LongLive + OPSD-V", "Self-Forcing (base)", "Self-Forcing + OPSD-V"], "values": [0.5012, 0.589, 0.6218, 0.657], "unit": "score (0-1)", "xLabel": "모델", "yLabel": "Dynamic Degree"}, {"canvasId": "chart-2", "type": "bar", "title": "VBenchLong Semantic Score: base vs OPSD-V (소폭 하락)", "labels": ["LongLive (base)", "LongLive + OPSD-V", "Self-Forcing (base)", "Self-Forcing + OPSD-V"], "values": [0.4911, 0.4904, 0.4897, 0.4864], "unit": "score (0-1)", "xLabel": "모델", "yLabel": "Semantic Score"}, {"canvasId": "chart-3", "type": "bar", "title": "사용자 연구: OPSD-V 선호 비율 (두 백본 합산)", "labels": ["Overall (tie 포함)", "Overall (tie 제외)", "Motion Quality (tie 포함)", "Motion Quality (tie 제외)", "Visual Quality (tie 포함)", "Visual Quality (tie 제외)"], "values": [66.0, 82.5, 57.5, 82.7, 60.5, 78.1], "unit": "%", "xLabel": "평가 기준 (tie 포함 / tie 제외)", "yLabel": "OPSD-V 선호 비율"}, {"canvasId": "chart-4", "type": "bar", "title": "사용자 연구 응답 분포 — LongLive backbone (Figure 5)", "labels": ["Motion / OPSD-V", "Motion / Same", "Motion / Base", "Visual / OPSD-V", "Visual / Same", "Visual / Base", "Overall / OPSD-V", "Overall / Same", "Overall / Base"], "values": [49, 36, 15, 42, 33, 25, 54, 28, 18], "unit": "%", "xLabel": "평가 기준 × 선택지", "yLabel": "응답 비율"}, {"canvasId": "chart-5", "type": "bar", "title": "사용자 연구 응답 분포 — Self-Forcing backbone (Figure 5)", "labels": ["Motion / OPSD-V", "Motion / Same", "Motion / Base", "Visual / OPSD-V", "Visual / Same", "Visual / Base", "Overall / OPSD-V", "Overall / Same", "Overall / Base"], "values": [66, 25, 9, 79, 12, 9, 78, 12, 10], "unit": "%", "xLabel": "평가 기준 × 선택지", "yLabel": "응답 비율"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
