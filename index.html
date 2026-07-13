@@ -667,7 +667,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>15</small>
+          <small>16</small>
         </a>
         
 
@@ -704,7 +704,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>6</small>
+          <small>5</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -722,8 +722,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 15편</span>
-        <span class="stat">전체 항목 23개</span>
+        <span class="stat">논문 16편</span>
+        <span class="stat">전체 항목 24개</span>
       </div>
     </div>
   </header>
@@ -734,7 +734,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>15개 문서</small>
+      <small>16개 문서</small>
     </a>
     
 
@@ -778,7 +778,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>15</small>
+          <small>16</small>
         </a>
         
 
@@ -815,7 +815,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>6</small>
+          <small>5</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -836,7 +836,7 @@
     </div>
 
     <span class="pending-queue-count">
-      6편 대기 중
+      5편 대기 중
     </span>
   </div>
 
@@ -848,12 +848,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>A Voronoi Cell Formulation for Principled Token Pruning in Late-Interaction Retrieval Models.pdf</strong>
+            <strong>Quantifying and Expanding the Theoretical Capacity of Late-Interaction Retrieval Models.pdf</strong>
             <span>등록 시각 · 2026-07-12 23:26</span>
           </div>
 
           <div class="pending-queue-size">
-            1.1 MB
+            449.2 KB
           </div>
 
           <div>
@@ -867,28 +867,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>Quantifying and Expanding the Theoretical Capacity of Late-Interaction Retrieval Models.pdf</strong>
-            <span>등록 시각 · 2026-07-12 23:26</span>
-          </div>
-
-          <div class="pending-queue-size">
-            449.2 KB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -910,7 +888,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -932,7 +910,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            5
+            4
           </div>
 
           <div class="pending-queue-paper">
@@ -954,7 +932,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            6
+            5
           </div>
 
           <div class="pending-queue-paper">
@@ -987,11 +965,37 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">15개</span>
+        <span class="section-count">16개</span>
       </div>
 
       <div class="library-grid">
         
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/a-voronoi-cell-formulation-for-principled-token-pruning-in-late-interaction-retrieval-models/">
+            A Voronoi Cell Formulation for Principled Token Pruning in Late-Interaction Retrieval Models
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Yash Kankanampati, Yuxuan Zong, Nadi Tomeh, Benjamin Piwowarski, Joseph Le Roux</p>
+      <p class="metadata">2026 · Proceedings of the 49th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR &#x27;26), Melbourne, VIC, Australia</p>
+
+      <p class="summary">
+        이 논문은 ColBERT 계열 late-interaction retrieval 모델의 index storage 문제를 해결하기 위한 token pruning을 기하학(geometry) 문제로 재정의한다. 핵심 아이디어는 문서 토큰 벡터 d_i에 대해 &#x27;d_i가 최대 내적(max inner product)을 얻는 쿼리 벡터들의 집합&#x27;을 Voronoi cell V_i로 정의하는 것이다(Eq. 5, p.3). 어떤 토큰을 제거했을 때 발생하는 손실은, 그 토큰의 Voronoi cell 안에 있는 쿼리에 대해서만 MaxSim 점수가 떨어지므로, 해당 cell 내부에서 &#x27;first-best 매치와 second-best 매치의 차이&#x27;의 기댓값으로 정확히 표현된다(Eq. 6-7, p.3). 즉 pruning error가 임의의 휴리스틱이 아니라 닫힌 형태의 기대값으로 정식화되며, error가 정확히 0인 토큰만 제거하도록 제한하면 기존 lossless pruning 문제로 환원된다(p.3). 이 적분은 계산 불가능하므로 저자들은 unit sphere에서 균일하게 샘플링한 N개의 가상 쿼리 벡터로 Monte Carlo 추정을 수행하고(Eq. 8, p.4), 매 iteration마다 error가 가장 작은 토큰 하나를 제거한 뒤 남은 토큰의 error를 재계산하는 greedy iterative 알고리즘(Algorithm 1, p.5)을 사용한다. 이 연산은 대규모 행렬 곱과 argmax로만 구성되어 GPU에서 병렬화가 쉽다는 점이 실용적 이점이다. 결과적으로 MS MARCO dev set에서 토큰의 50%만 남기고도 MRR@10 38.9를 기록해 unpruned ColBERTv2-e2e(39.7)의 98.0%를 보존했고(Table 1, p.7), 같은 조건의 learning-free 방법(First-p 37.7, Att. Score 36.0, IDF 32.6)을 모두 앞섰다. 속도 면에서는 10,000개 문서 pruning에 12.0초(H200 GPU)가 걸려 LP-Pruning의 1,474.3초(CPU) 대비 극적으로 빠르며, 8.8M 전체 컬렉션 기준 약 3시간 대 약 15일로 추정된다(p.7). 또한 6%만 남기는 aggressive pruning에서 LP-Pruning의 nDCG@10이 0.46으로 붕괴하는 동안 제안 방법은 0.67을 유지했고(Figure 4, p.8), 추정된 mean error(ME)와 실제 nDCG@10 사이에 R²=0.99(TREC-DL 평균)의 선형 관계가 성립해 pruning 예산 결정을 사전에 안내할 수 있는 진단 도구로도 쓰일 수 있음을 보였다(Figure 7, p.9-10).
+      </p>
+
+      <a class="open-link" href="papers/a-voronoi-cell-formulation-for-principled-token-pruning-in-late-interaction-retrieval-models/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>

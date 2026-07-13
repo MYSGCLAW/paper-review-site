@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>A Voronoi Cell Formulation for Principled Token Pruning in Late-Interaction Retrieval Models</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>A Voronoi Cell Formulation for Principled Token Pruning in Late-Interaction Retrieval Models</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Yash Kankanampati, Yuxuan Zong, Nadi Tomeh, Benjamin Piwowarski, Joseph Le Roux</span>
+        <span><strong>출처</strong> · Proceedings of the 49th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR &#x27;26), Melbourne, VIC, Australia</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">주요 구성요소와 단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 또는 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 시사점</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 ColBERT 계열 late-interaction retrieval 모델의 index storage 문제를 해결하기 위한 token pruning을 기하학(geometry) 문제로 재정의한다. 핵심 아이디어는 문서 토큰 벡터 d_i에 대해 &#x27;d_i가 최대 내적(max inner product)을 얻는 쿼리 벡터들의 집합&#x27;을 Voronoi cell V_i로 정의하는 것이다(Eq. 5, p.3). 어떤 토큰을 제거했을 때 발생하는 손실은, 그 토큰의 Voronoi cell 안에 있는 쿼리에 대해서만 MaxSim 점수가 떨어지므로, 해당 cell 내부에서 &#x27;first-best 매치와 second-best 매치의 차이&#x27;의 기댓값으로 정확히 표현된다(Eq. 6-7, p.3). 즉 pruning error가 임의의 휴리스틱이 아니라 닫힌 형태의 기대값으로 정식화되며, error가 정확히 0인 토큰만 제거하도록 제한하면 기존 lossless pruning 문제로 환원된다(p.3). 이 적분은 계산 불가능하므로 저자들은 unit sphere에서 균일하게 샘플링한 N개의 가상 쿼리 벡터로 Monte Carlo 추정을 수행하고(Eq. 8, p.4), 매 iteration마다 error가 가장 작은 토큰 하나를 제거한 뒤 남은 토큰의 error를 재계산하는 greedy iterative 알고리즘(Algorithm 1, p.5)을 사용한다. 이 연산은 대규모 행렬 곱과 argmax로만 구성되어 GPU에서 병렬화가 쉽다는 점이 실용적 이점이다. 결과적으로 MS MARCO dev set에서 토큰의 50%만 남기고도 MRR@10 38.9를 기록해 unpruned ColBERTv2-e2e(39.7)의 98.0%를 보존했고(Table 1, p.7), 같은 조건의 learning-free 방법(First-p 37.7, Att. Score 36.0, IDF 32.6)을 모두 앞섰다. 속도 면에서는 10,000개 문서 pruning에 12.0초(H200 GPU)가 걸려 LP-Pruning의 1,474.3초(CPU) 대비 극적으로 빠르며, 8.8M 전체 컬렉션 기준 약 3시간 대 약 15일로 추정된다(p.7). 또한 6%만 남기는 aggressive pruning에서 LP-Pruning의 nDCG@10이 0.46으로 붕괴하는 동안 제안 방법은 0.67을 유지했고(Figure 4, p.8), 추정된 mean error(ME)와 실제 nDCG@10 사이에 R²=0.99(TREC-DL 평균)의 선형 관계가 성립해 pruning 예산 결정을 사전에 안내할 수 있는 진단 도구로도 쓰일 수 있음을 보였다(Figure 7, p.9-10).</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 7, 8, 9, 10</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Token pruning error를 &#x27;Voronoi cell 내부에서 first-best와 second-best 매치의 차이의 기댓값&#x27;으로 정식화함으로써, pruning 기준을 휴리스틱이 아닌 MaxSim의 정의로부터 직접 유도했다(Eq. 5-7).</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>error가 정확히 0인 토큰만 제거하도록 제한하면 기존 lossless pruning 문제로 환원되므로, 제안 formulation은 lossless pruning을 특수 케이스로 포함하는 일반화다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MS MARCO dev set에서 토큰 50%만 유지하고 MRR@10 38.9를 기록해 unpruned ColBERTv2-e2e(39.7)의 98.0%를 보존했고, 동일 예산의 learning-free 방법(First-p 37.7, Att. Score 36.0, IDF 32.6)을 모두 앞섰다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>10,000개 문서 pruning에 Voronoi Pruning은 H200 GPU에서 12.0초, LP-Pruning은 CPU에서 1,474.3초가 걸렸고, 8.8M 컬렉션 전체로는 각각 약 3시간 대 약 15일로 추정된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>토큰을 6%만 남기는 aggressive pruning에서 LP-Pruning의 평균 nDCG@10은 0.46으로 붕괴하지만 Voronoi Pruning은 0.67을 유지한다(Figure 4).</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>성능을 지탱하는 핵심 설계는 매 토큰 제거 후 error를 재계산하는 iterative 갱신이다. 이를 생략하면 MRR@10이 38.9에서 33.2로 급락하는 반면, beam search는 성능 이득 없이 runtime만 약 5배 늘린다(Table 2).</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>추정된 mean error(ME)와 nDCG@10 사이에 R²=0.99(TREC-DL 평균), 0.91(TREC-COVID)의 선형 관계가 성립하여, 실제 평가 없이 pruning 예산의 영향을 예측하는 진단 도구로 활용될 수 있다(Figure 7).</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>알고리즘이 행렬 곱과 top-2 선택만으로 구성되어 GPU 병렬화가 자연스럽다는 점이, LP solver에 묶인 LP-Pruning과의 속도 격차를 만든 구조적 원인으로 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Late-interaction 모델의 index storage 병목</h3>
+      <p>ColBERT와 같은 late-interaction retrieval 모델은 쿼리와 문서를 각각 여러 개의 토큰 수준 벡터로 표현하고, 검색 시 MaxSim 방식으로 상호작용을 계산한다. 이 구조 덕분에 DPR 같은 single-vector encoder가 놓치는 lexical/semantic match를 포착하여 강한 retrieval 효과성과 경쟁력 있는 latency를 얻는다. 그러나 문서의 &#x27;모든 토큰마다&#x27; dense embedding을 저장해야 하므로, sparse retriever나 single-vector dense retriever에 비해 index가 훨씬 커진다. 논문은 이 storage overhead를 대규모 retrieval의 근본적 병목(fundamental bottleneck)으로 규정하며, 이것이 배포 가능성을 제한하고 메모리·연산 비용을 함께 증가시킨다고 주장한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 token pruning이 가능한가</h3>
+      <p>논문은 문서 토큰 중 상당수가 소수의 쿼리에만 관련되거나 다른 토큰과 중복된 정보를 encode한다고 본다. 예를 들어 &#x27;The capital of France is Paris&#x27;에서 &#x27;The&#x27;를 제거해도 정보 손실이 거의 없다. 따라서 uninformative한 토큰을 제거(pruning)하면 retrieval 성능 저하를 최소화하면서 저장 공간을 줄일 수 있다는 것이 token pruning의 기본 전제다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>핵심 연구 질문: pruning objective의 형식화 부재</h3>
+      <p>기존 pruning 방법 대부분은 통계적(statistical) 혹은 경험적(empirical) 기준에 의존하며, &#x27;어떤 토큰을 지워야 하는가&#x27;라는 문제 자체를 수학적으로 정의하지 않는다. 논문이 겨냥하는 문제는 단순히 &#x27;더 잘 지우는 방법&#x27;이 아니라 &#x27;무엇을 최소화해야 pruning이 원리적(principled)인가&#x27;를 정의하고, 그 정의를 대규모 컬렉션에 실제로 적용 가능한 알고리즘으로 만드는 것이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Learning-free 방법: 임베딩 공간의 상호작용을 무시</h3>
+      <p>stopword 목록, IDF 점수, 문서 내 토큰 위치(first-p) 등에 기반한 learning-free 방법은 단순하고 model-agnostic하지만, embedding space에서 토큰과 쿼리가 실제로 어떻게 상호작용하는지를 전혀 고려하지 않는다. 그 결과 통계적으로는 unimportant해 보이는 토큰이라도 특정 쿼리에서는 relevant 문서와 non-relevant 문서를 가르는 결정적 역할을 할 수 있는데, 이런 경우를 놓치게 된다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Learning-based 방법: proxy signal에 의존하고 이론적 근거가 약함</h3>
+      <p>AligneR의 entropy-regularized/relaxed top-k 최적화, ColBERTer의 trainable gate vector 등 학습 기반 접근은 neural module이 pruning 여부를 결정하도록 학습시킨다. 그러나 이들은 proxy signal에 기반하며 이론적 근거가 제한적이고, pruning objective 자체를 형식적으로 정의한 연구는 거의 없었다는 것이 논문의 지적이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>LP-Pruning: 최초의 형식화, 그러나 lossy 영역에서 붕괴</h3>
+      <p>Lossless Pruning(LP-Pruning, [25])은 formally defined lossless token pruning objective를 최초로 제시한 연구다. 하지만 저자들 스스로 완전한 lossless pruning 달성이 매우 어렵다는 것을 실험으로 보였고, &#x27;고정된 크기의 subset만 유지해야 하는&#x27; 실제 lossy setting에 이 objective를 그대로 적용하면 특히 매우 높은 pruning ratio에서 retrieval 성능이 크게 저하될 수 있다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>LP-Pruning의 실용적 제약: 벡터 norm 가정, dimensionality reduction, 계산 비용</h3>
+      <p>LP-Pruning의 formulation은 문서 벡터가 non-unit norm이어야 한다는 요구조건을 가지므로 적용 범위가 제한된다. 또한 경쟁력 있는 pruning ratio에 도달하려면 destructive한 dimensionality reduction이 필요하고, linear programming 기반이라 계산 비용이 매우 커서 대규모 문서 컬렉션에는 사실상 적용 불가능(inapplicable for large document collections)하다고 논문은 서술한다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>C1. Token pruning의 Voronoi cell 재정식화와 GPU 친화적 알고리즘</h3>
+      <p>ColBERT의 token pruning을 Voronoi cell estimation 문제로 재구성(reframe)하고, 이에 기반한 GPU-friendly pruning 전략을 제안한다. 논문은 이 전략이 매우 효과적이고 versatile하며, 근사된 LP-pruning[25] 대비 최대 120배(up to 120 times) 빠르다고 주장한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C2. 다양한 조건에서 state-of-the-art pruning 효과성</h3>
+      <p>여러 pruning ratio, regularization 강도, 도메인(in-domain 및 zero-shot BEIR)에 걸쳐 pruning 알고리즘들을 평가하여, Voronoi Pruning이 pruning 방법들 가운데 state-of-the-art 효과성을 달성함을 보인다. 특히 기존 방법들이 급격히 무너지는 aggressive pruning ratio에서 성능 차이가 뚜렷하다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C3. 분석 도구로서의 formalism과 ME–nDCG 선형 관계</h3>
+      <p>제안한 formalism이 first-p token pruning 같은 경험적 접근법을 분석하는 데도 쓰일 수 있음을 강조하며, mean error(ME)와 retrieval impact(nDCG@10) 사이에 선형 관계가 성립함을 입증한다. 이 관계는 실제 평가를 돌리지 않고도 pruning 결정을 안내하는 데 사용될 수 있다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Voronoi cell의 정의</h3>
+      <p>문서의 토큰 벡터 집합을 D={d_1,...,d_m}이라 할 때, 토큰 d_i의 Voronoi cell은 &#x27;d_i가 top-scoring match가 되는 쿼리 벡터들의 집합&#x27;, 즉 V_i = {q ∈ B^n : d_i = argmax_{d∈D} q·d}로 정의된다(Eq. 5). MaxSim 연산이 각 쿼리 토큰에 대해 최대 내적을 갖는 문서 토큰 하나만 선택한다는 사실을 그대로 기하학적 분할(partition)로 옮긴 것이다. 즉 쿼리 공간 전체가 문서 토큰 수만큼의 cell로 나뉘고, 각 cell은 &#x27;그 토큰이 책임지는 쿼리 영역&#x27;을 의미한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Pruning error = first-best와 second-best의 차이의 기댓값</h3>
+      <p>토큰 d_i를 제거했을 때의 error를 &#x27;모든 쿼리에 대한 최대 유사도의 기대 감소량&#x27;으로 정의한다(Eq. 6). 여기서 핵심 관찰은, d_i를 지워도 V_i 바깥의 쿼리들은 어차피 다른 토큰이 최대값을 주므로 점수가 전혀 변하지 않는다는 점이다. 따라서 적분 영역이 V_i 하나로 축소된다. 나아가 쿼리를 q = α·q̂ (크기 × 방향)로 분해하면 radial 성분 α가 적분에서 소거되어, error는 결국 &#x27;V_i 안에서 first-best 매치(=d_i)와 second-best 매치의 점수 차이&#x27;의 기댓값으로 귀결된다(Eq. 7). 직관적으로, 어떤 토큰이 담당하는 영역이 좁고 그 영역에서 2등 토큰이 거의 비슷한 점수를 낸다면 그 토큰은 지워도 손해가 거의 없다는 뜻이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Lossy 최적화 문제로의 relaxation</h3>
+      <p>pruning을 &#x27;사전에 정해진 크기 k의 부분집합을 선택하여 pruning으로 인한 총 error를 최소화하는 문제&#x27;(Eq. 3)로 relax하여 정식화한다. 만약 error가 정확히 0인 토큰만 제거하도록 제한하면 이 정식화는 기존의 lossless pruning 문제로 환원된다. 즉 제안 formulation은 lossless pruning을 특수 케이스로 포함하는 일반화(generalization)이며, 저장 예산이 고정된 실제 배포 상황(lossy setting)을 직접 다룬다는 점이 차별점이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>주요 구성요소와 단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>구성요소 1: Monte Carlo Estimation of Expected Error</h3>
+      <p>unit sphere 전체에 대한 적분은 계산 불가능(intractable)하므로, 균일분포 U(S^n)에서 N개의 쿼리 벡터를 샘플링해 Eq. 8로 각 토큰의 기대 pruning error를 근사한다. 어떤 샘플이 특정 Voronoi cell에 속할 확률 p는 Bernoulli 변수로 볼 수 있어 신뢰구간을 계산할 수 있는데, 10^4개 샘플이면 p̂=0.5에서 95% 신뢰구간이 [0.4902, 0.5098]로 절대 불확실성이 1% 미만이 되어 추정이 안정적임을 확인했다. 실험에서는 full ColBERTv2 index 작업 시 10^5개, two-stage retrieval 실험 시 10^4개의 샘플 포인트를 사용했다.</p>
+      <span class="source-ref">PDF p. 4, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2: Iterative token removal with error updates</h3>
+      <p>토큰 하나를 제거하면 그 토큰이 담당하던 Voronoi cell이 이웃 토큰들에게 재분배되므로 주변 cell 구조 자체가 바뀐다. 따라서 모든 토큰의 error를 한 번만 계산해 하위 k개를 한꺼번에 지우는 방식은 부정확하다. 논문은 매 iteration마다 현재 error가 가장 작은 토큰 하나를 제거하고, 갱신된 Voronoi diagram 하에서 남은 토큰들의 error를 재계산하는 반복적(iterative) pruning을 채택한다. 이 iterative 갱신의 중요성은 ablation에서 확인되는데, 갱신을 생략한 non-iterative 버전은 MRR@10이 38.9에서 33.2로 급락한다(Table 2, p.8).</p>
+      <span class="source-ref">PDF p. 4, 5, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3: Global Pruning (collection-level 적용)</h3>
+      <p>문서마다 독립적으로 같은 비율을 지우는 대신, 전체 컬렉션 수준에서 토큰들을 error contribution 기준으로 전역 순위화하여 목표 budget에 도달할 때까지 영향이 가장 적은 토큰부터 제거한다. 구현상으로는 문서별 pruning order를 병렬로 사전 계산한 뒤 이를 병합해 global ranking을 구성한다. 이렇게 하면 정보가 밀집된 문서는 토큰을 더 많이 남기고 중복이 많은 문서는 더 많이 지우는 적응적 배분이 가능하다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4: Beam Search (탐색했으나 최종 채택하지 않음)</h3>
+      <p>greedy iterative 절차는 local optimum만 보장하므로, 언어모델 디코딩에서 착안해 여러 후보 subset을 동시에 유지하고 total pruning error가 낮은 top-k beam만 남기는 beam search를 검토했다. 그러나 beam size=3에서도 MRR@10 개선이 없고(38.9로 동일) 계산 비용만 약 5배 증가하여, 최종 알고리즘 Voronoi Pruning에서는 제외되고 ablation에서만 평가된다.</p>
+      <span class="source-ref">PDF p. 5, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 과정 1단계: 초기 error 계산</h3>
+      <p>문서 토큰 벡터 집합 D의 각 토큰 d에 대해, unit sphere에서 균일 샘플링한 N개의 쿼리 벡터 Q_N을 이용해 Eq. 8에 따라 초기 pruning error ε_d를 계산한다. 실제 연산은 (샘플 쿼리 × 문서 토큰) 행렬 곱과 행별 top-2(argmax 및 second-best) 추출로 구성되며, 이 형태 때문에 GPU 병렬화가 자연스럽다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 과정 2단계: 최소 error 토큰 제거</h3>
+      <p>|D|가 목표 크기 t보다 큰 동안, 현재 error가 가장 작은 토큰 d_min = argmin_{d∈D} ε_d를 D에서 제거한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 과정 3단계: 남은 토큰의 error 재계산</h3>
+      <p>토큰 제거로 변화된 Voronoi diagram 하에서 남은 모든 토큰에 대해 ε_d를 Eq. 8로 재계산한다. 제거된 토큰의 cell을 물려받은 이웃 토큰들은 담당 영역이 넓어지므로 error가 커지고, 결과적으로 나중에 제거될 가능성이 낮아진다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 과정 4단계: 목표 크기까지 반복</h3>
+      <p>목표 크기 t에 도달할 때까지 2-3단계를 반복하고, 최종적으로 |D&#x27;| = t인 pruned token set D&#x27;을 반환한다(Algorithm 1).</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 과정 5단계: 컬렉션 전역 병합</h3>
+      <p>Global 적용 시에는 문서 수준 pruning order를 병렬로 사전 계산한 뒤, 각 pruning 단계에서 발생하는 error 크기에 따라 이들을 병합해 컬렉션 전체의 global ranking을 만들고, 이 순위를 따라 목표 storage budget에 도달할 때까지 가장 영향이 적은 토큰부터 제거한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Algorithm 1: Simplified Single-Document Voronoi Pruning</h3>
+      <p>단일 문서에 대한 Voronoi Pruning의 단순화된 pseudocode는 다음 흐름을 따른다. (1) 입력은 문서 토큰 집합 D, 샘플 쿼리 집합 Q_N, 목표 크기 t이다. (2) 모든 토큰 d ∈ D에 대해 Eq. 8로 초기 error ε_d를 계산한다. (3) |D| &gt; t인 동안: 최소 error 토큰을 D에서 제거하고, 남은 토큰들의 ε_d를 재계산한다. (4) |D| = t가 되면 D를 반환한다. Beam search는 이 단순화된 알고리즘에 포함되지 않는다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 GPU-friendly인가 (분석자 해석)</h3>
+      <p>알고리즘의 각 iteration이 요구하는 연산은 본질적으로 N×|D| 크기의 내적 행렬에 대한 행별 top-2 선택이다. 이는 dense matmul과 reduction으로 표현되므로 GPU에서 문서 단위·배치 단위 병렬 실행이 용이하다. 반면 LP-Pruning은 문서마다 linear program을 풀어야 하므로 CPU 기반 solver에 묶인다. 논문이 보고한 실행 시간 격차(10,000개 문서 기준 12.0초 대 1,474.3초, p.7)는 이 계산 구조 차이의 직접적 귀결로 해석된다.</p>
+      <span class="source-ref">PDF p. 5, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 관점에서의 위치</h3>
+      <p>Voronoi Pruning은 색인 구조 자체를 새로 설계하는 것이 아니라, ColBERTv2 인덱스에 저장될 문서 토큰 벡터의 부분집합을 선택하는 전처리 단계로 작동한다. 따라서 실험에서도 pruned 임베딩을 PLAID 기반 ColBERTv2-e2e 색인에 넣거나, SPLADEv2 top-100 후보에 대한 rerank 방식으로 평가된다.</p>
+      <span class="source-ref">PDF p. 5, 6, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋 및 워크로드</h3>
+      <p>in-domain 평가로는 MS MARCO v1 passage retrieval task(dev set 6,980 쿼리, 8.8M passage 코퍼스), TREC Deep Learning Track 2019(43 assessed topics), TREC DL 2020(54 assessed topics)을 사용한다. zero-shot 평가로는 BEIR 벤치마크 중 10개 데이터셋(표기: CF, DB, FQ, NF, NQ, QU, SD, SF, TC, TO)을 사용하며, HotpotQA·FEVER·ArguAna는 LP-Pruning과의 비교 시 계산 비용이 과도하여 제외했다. 이 밖에 uniform prior 가정 검증을 위해 100,000개 MS MARCO training 쿼리(Figure 1)와 2,590개 NFCorpus training 쿼리(Figure 2)의 embedding 분포를 분석하고, ablation은 100,000개 MS MARCO passage 샘플과 단일 V100 GPU에서, pruning 실행 시간 비교는 10,000개 MS MARCO 문서 샘플에서 수행한다.</p>
+      <span class="source-ref">PDF p. 4, 6, 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상(baselines)</h3>
+      <p>unpruned 기준선으로 BM25, SPLADEv2(1단계 retriever로도 사용), ColBERTv2-e2e(PLAID 기반 end-to-end), ColBERTv2-rerank(SPLADEv2 top-100 재순위화)를 둔다. learning-free pruning으로는 First-p(위치 기반), low-IDF, Stopword removal, Attention score 기반 pruning을 비교한다. learned pruning으로는 AligneR(AligneR_base), ConstBERT, Norm-Pruning(NP, θ=0.5), LP-Pruning(LPP, θ=0.7)을 비교한다. 일부 설정은 ColBERTv2-sim(α=0.8)이나 αL(L1)(α=0.01) 같은 regularized 체크포인트 위에서 pruning을 적용해, pruning 방법과 embedding regularization의 조합 효과를 함께 본다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표</h3>
+      <p>MS MARCO dev set은 MRR@10, TREC-DL19/DL20 및 BEIR은 nDCG@10으로 평가한다. 저장 효율은 Remain %(pruning 후 유지된 토큰 비율)로 표기하고, 효율성은 pruning order 생성 시간 및 문서당 처리 시간(초)으로 측정한다. 추가로 mean error(ME)와 nDCG@10 사이의 선형관계 적합도를 R²로 보고한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이론 가정 검증 실험</h3>
+      <p>Monte Carlo 추정이 전제하는 &#x27;쿼리에 대한 uniform prior&#x27; 가정을 정량 검증한다. 실제 쿼리 임베딩 분포와 이론적 균일 marginal p(x)=(1-x²)^62.5 사이의 worst-case per-dimension KL divergence는 MS MARCO 0.13, SciFact 0.19, FiQA 0.20, NFCorpus 0.30이었고, 차원 간 pairwise 절대 공분산은 대부분 [0, 0.15] 범위에 있어 강한 의존성을 보이는 차원 쌍은 없었다(Figure 1, Figure 2).</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>in-domain: 토큰 50%로 unpruned 성능의 98% 보존</h3>
+      <p>Table 1(p.7) 기준 unpruned 성능은 BM25 18.7/50.6/47.5, SPLADEv2 35.8/70.6/68.7, ColBERTv2-e2e 39.7/74.5/-(DL20 미보고), ColBERTv2-rerank 40.0/74.4/75.6(Dev MRR@10 / DL19 nDCG@10 / DL20 nDCG@10)이다. Voronoi Pruning은 토큰 50% 유지에서 38.9/72.2/73.1을 달성해 ColBERTv2-e2e 대비 MRR@10의 98.0%를 보존한다. 같은 50% 예산의 learning-free 경쟁자들과 비교하면 First-p 37.7(DL19 72.3), Att. Score 36.0(DL19 72.0), IDF 32.6(DL19 70.2), Stopwords는 67% 유지에서도 30.9(DL19 70.9 / DL20 67.8)에 그쳐, Voronoi Pruning이 learning-free 계열에서 가장 높은 효과성을 보인다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>learned 방법과의 비교: 학습 없이 동등한 수준</h3>
+      <p>ColBERTv2-sim(α=0.8) 체크포인트 위에 적용하면 αL(sim)+VP는 32% 유지에서 39.5/73.7/73.0으로, 동일 32% 유지의 αL(sim)+LP-Pruning(39.7/73.8/73.3)과 사실상 동등하다. 참고로 AligneR_base는 40% 유지에서 Dev 38.1, ConstBERT는 47% 유지에서 39.0/73.1/73.3, αL(L1)(α=0.01)+Norm-Pruning은 31% 유지에서 39.2/73.6/72.1이다. 즉 제안 방법은 별도의 학습이나 gate 모듈 없이도 학습 기반 pruning과 대등한 효과성에 도달한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성: LP-Pruning 대비 두 자릿수 배 이상의 속도 격차</h3>
+      <p>10,000개 MS MARCO 문서 샘플에서 Voronoi Pruning(10^4 쿼리 샘플)은 단일 H200 GPU에서 12.0초(문서당 약 1.2ms)가 걸린 반면, LP-Pruning은 CPU에서 1,474.3초(문서당 약 147ms)가 걸렸다. 이 격차를 8.8M 규모의 MS MARCO 전체 컬렉션으로 외삽하면 Voronoi Pruning은 약 3시간, LP-Pruning은 약 15일이 소요될 것으로 추정된다. 서론에서는 근사된 LP-pruning 대비 최대 120배 빠르다고 명시한다.</p>
+      <span class="source-ref">PDF p. 2, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>aggressive pruning 영역에서의 결정적 우위</h3>
+      <p>Figure 4(p.8, TREC-DL19/20 평균, ColBERTv2-sim α=0.8)에 따르면, 약 30% 토큰이 남는 moderate budget 구간에서는 평가된 pruning 방법들의 효과성이 대체로 비슷하다. 그러나 토큰을 6%만 남기는 극단적 예산에서는 LP-Pruning의 평균 nDCG@10이 0.46으로 급락하는 반면 Voronoi Pruning은 0.67을 유지한다. 서론은 문서 내 토큰의 최대 90%까지 제거하는 상황에서도 retrieval 저하가 최소화된다고 서술한다. 이는 lossless objective를 lossy 영역에 억지로 적용할 때 생기는 붕괴를, 기대 error 최소화라는 정식화가 완화한다는 논문의 주장을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 2, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation: iterative 갱신이 성능의 핵심, beam search는 무의미</h3>
+      <p>Table 2(p.8, 100k MS MARCO passages, 50% pruning, 단일 V100)에서 기본 설정은 MRR@10 38.9, pruning order 생성 시간 602.55초다. beam size=3은 MRR@10 38.9로 개선이 없는데 runtime만 3,088.88초로 약 5배 증가한다. global pruning(38.9)이 local(document-level) pruning(38.4)보다 근소하게 우수하며 실행시간 차이는 없다(둘 다 602.55초). step size=3(한 번에 여러 토큰 제거)은 38.0으로 성능이 떨어지지만 runtime을 217.28초로 약 3배 단축한다. iterative 갱신을 아예 생략한 non-iterative 버전은 28.97초로 가장 빠르지만 MRR@10이 33.2로 급락한다. 요컨대 성능을 지탱하는 핵심 요소는 매 제거 후 error를 다시 계산하는 iterative 갱신이며, 정확도-속도 트레이드오프를 원하면 step size가 실용적인 조절 손잡이다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>zero-shot(BEIR) 일반화</h3>
+      <p>Table 3(p.9)에서 10개 BEIR 데이터셋 평균 nDCG@10은 unpruned 기준 BM25 40.5, SPLADEv2 43.0, ColBERTv2-e2e 45.8, ColBERTv2-rerank 47.0이다. Voronoi Pruning은 75% 유지에서 평균 45.6, 50% 유지에서 44.4를 기록하여, 동일 75% 예산의 First-p(43.1), IDF(44.7), Att. Score(44.2)를 모두 앞선다. αL(sim)(α=0.8)+LP-Pruning과 αL(sim)(α=0.8)+VP는 둘 다 약 37% 유지에서 평균 45.7로 동일하다. 개별 데이터셋에서도 VP(75% 유지)는 FiQA 35.6, NFCorpus 33.9, TREC-COVID 73.0을 기록해 일부 learned 방법과 대등하거나 더 높다(예: FiQA에서 αL(sim)+LPP(α=0.8)의 35.0보다 높음). 다만 저자들은 각주에서 재현 실험 시 ColBERTv2-e2e의 CF=17.6(기존 보고 18.0), NQ=56.2(55.9), TO=26.3(25.4)로 기존 보고값과 차이가 있었음을 밝힌다.</p>
+      <span class="source-ref">PDF p. 7, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석 도구로서의 mean error: R²=0.99의 선형 관계</h3>
+      <p>Figure 7(p.9-10)은 추정된 mean error(ME)와 실제 nDCG@10 사이의 선형관계 결정계수가 TREC-DL19/DL20 평균에서 R²=0.99, TREC-COVID에서 R²=0.91임을 보인다. 이는 실제 retrieval 평가를 수행하지 않고도 ME만으로 특정 pruning 예산의 성능 저하를 예측할 수 있음을 시사하며, 논문이 강조하는 formalism의 실용적 부가가치다. 한편 Figure 5(토큰 위치별 max-dot-product 기여 빈도 및 집계된 mean error)와 Figure 6(토큰 위치 백분위별 pruning 순위 candlestick chart)은 초반 토큰이 상대적으로 늦게 pruning되는 경향과 첫 구간이 조기 pruning되기 쉬운 경향을 정성적으로 보여주며, 이는 first-p 휴리스틱이 왜 부분적으로 작동하는지를 제안 formalism으로 설명하는 사례다. 다만 이들 그래프의 정확한 수치는 본문에서 확인되지 않는다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 시사점</h2>
+        <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>논문은 late-interaction 모델의 token pruning을 Voronoi cell 기반 기대 error 최소화 문제로 정식화하고, Monte Carlo 추정과 iterative greedy 제거로 이를 대규모에서 실행 가능하게 만들었다. 그 결과 learning-free임에도 learned pruning과 대등한 효과성, LP-Pruning 대비 압도적인 실행 속도, 그리고 aggressive pruning 영역에서의 견고함을 동시에 달성했다고 주장한다.</p>
+      <span class="source-ref">PDF p. 2, 7, 8, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자 관점의 시사점</h3>
+      <p>이 연구의 가치는 성능 수치 자체보다 &#x27;무엇을 최소화할 것인가&#x27;를 MaxSim의 정의로부터 직접 유도했다는 점에 있다고 해석된다. 기존 휴리스틱들이 서로 다른 대리 신호(빈도, 위치, attention)를 쓰느라 비교가 어려웠던 반면, 이 formalism은 first-p 같은 경험적 방법까지 동일한 척도(mean error)로 설명·비교할 수 있는 공통 언어를 제공한다. 또한 ME–nDCG의 강한 선형성은 실무에서 &#x27;저장 예산을 얼마까지 줄여도 되는가&#x27;를 평가 루프 없이 사전에 가늠하는 도구로 이어질 수 있다. 다만 이 모든 결론은 쿼리가 unit sphere 위에 균일 분포한다는 prior 위에 서 있으며, 이 가정의 위반 정도(KL divergence)가 도메인에 따라 최대 0.30까지 커진다는 점은 결과 해석 시 함께 고려되어야 한다.</p>
+      <span class="source-ref">PDF p. 2, 4, 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>Voronoi Pruning 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 4, 5, 6</span>
+              </div>
+              <p>문서 토큰 벡터에서 시작해 Monte Carlo로 기대 pruning error를 추정하고, 최소 error 토큰을 하나씩 제거하며 error를 재계산하는 iterative 루프를 거쳐, 문서별 pruning order를 컬렉션 수준 global ranking으로 병합한 뒤 ColBERTv2 인덱스를 구축하는 흐름을 나타낸다(pp.4-6).</p>
+              <div class="mermaid">
+flowchart TD
+    A[문서 토큰 벡터 집합 D] --&gt; B[unit sphere에서 쿼리 벡터 N개 균일 샘플링]
+    B --&gt; C[각 토큰의 Voronoi cell 추정]
+    C --&gt; D[Eq.8 Monte Carlo로 기대 pruning error 계산]
+    D --&gt; E{현재 토큰 수 &gt; 목표 크기 t?}
+    E -- 예 --&gt; F[최소 error 토큰 제거]
+    F --&gt; G[Voronoi diagram 변경, 남은 토큰 error 재계산]
+    G --&gt; E
+    E -- 아니오 --&gt; H[문서별 pruning order 확정]
+    H --&gt; I[컬렉션 전역 error 기준 global ranking 병합]
+    I --&gt; J[storage budget까지 토큰 제거]
+    J --&gt; K[Pruned ColBERTv2 인덱스 구축]
+    K --&gt; L[검색: e2e PLAID 또는 SPLADEv2 top-100 rerank]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>Pruning error의 기하학적 정의</h3>
+                <span class="source-ref">PDF p. 3</span>
+              </div>
+              <p>토큰 d_i를 제거해도 V_i 바깥 쿼리의 MaxSim 점수는 변하지 않으므로, 적분 영역이 V_i로 축소되고 error는 cell 내부의 first-best와 second-best 차이의 기댓값이 된다는 유도 과정을 나타낸다(Eq. 5-7, p.3).</p>
+              <div class="mermaid">
+flowchart TD
+    A[토큰 d_i 제거를 가정] --&gt; B{쿼리 q가 V_i 안에 있는가?}
+    B -- 아니오 --&gt; C[다른 토큰이 이미 최대값 제공]
+    C --&gt; D[MaxSim 점수 변화 없음]
+    B -- 예 --&gt; E[d_i가 담당하던 최대값 소멸]
+    E --&gt; F[second-best 토큰이 대체]
+    F --&gt; G[점수 감소 = first-best - second-best]
+    G --&gt; H[적분 영역이 V_i로 축소]
+    H --&gt; I[q = alpha x q_hat 분해로 radial 성분 소거]
+    I --&gt; J[error = V_i 내 first-best와 second-best 차이의 기댓값]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 제안 방식의 차이</h3>
+                <span class="source-ref">PDF p. 1, 2, 3, 7, 8</span>
+              </div>
+              <p>learning-free 휴리스틱, learned gate, LP-Pruning, Voronoi Pruning이 각각 어떤 기준과 계산 자원에 의존하는지를 비교한다(pp.1-3, 7).</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph P[기존 방식]
+    A1[Learning-free: stopword / IDF / 위치] --&gt; A2[임베딩 공간 상호작용 무시]
+    B1[Learned: AligneR, ColBERTer gate] --&gt; B2[proxy signal 의존, 이론 근거 제한]
+    C1[LP-Pruning: lossless objective] --&gt; C2[CPU LP solver, 대규모 컬렉션 적용 곤란]
+    C2 --&gt; C3[높은 pruning ratio에서 성능 붕괴]
+    end
+    subgraph Q[제안 방식]
+    D1[Voronoi cell 기반 기대 error 정식화] --&gt; D2[Monte Carlo 추정 + iterative greedy 제거]
+    D2 --&gt; D3[행렬 곱 기반 GPU 병렬 실행]
+    D3 --&gt; D4[aggressive pruning에서도 견고]
+    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>MS MARCO dev set MRR@10 비교 (pruning 방법별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 1 · MS MARCO v1 passage dev set(6,980 쿼리), ColBERTv2 기반, 괄호 안은 pruning 후 유지된 토큰 비율(Remain %)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>TREC-DL19 nDCG@10 비교 (pruning 방법별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 1 · TREC Deep Learning Track 2019(43 assessed topics), MS MARCO 8.8M passage 코퍼스
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>10,000개 MS MARCO 문서 pruning 실행 시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · 10,000개 MS MARCO 문서 샘플 기준 pruning 소요 시간(문서당 약 1.2ms 대 약 147ms)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>극단적 pruning(토큰 6% 유지) 시 평균 nDCG@10</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Figure 4 · TREC-DL19/DL20 평균, ColBERTv2-sim(α=0.8) 임베딩, 토큰 6% 유지
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Ablation: 설정별 MRR@10 (MS MARCO 100k passages, 50% pruning)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 2 · 100,000개 MS MARCO passage 샘플, 단일 V100 GPU, 50% pruning
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Ablation: 설정별 pruning order 생성 시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 2 · 100,000개 MS MARCO passage 샘플, 단일 V100 GPU, pruning order 생성 시간
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>BEIR 10개 데이터셋 평균 nDCG@10</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · BEIR 10개 데이터셋(CF, DB, FQ, NF, NQ, QU, SD, SF, TC, TO) zero-shot 평균, HotpotQA/FEVER/ArguAna 제외
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Mean Error와 nDCG@10의 선형관계 결정계수(R²)</h3>
+              <div class="chart-container">
+                <canvas id="chart-7"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9, 10 · Figure 7 · ColBERTv2-sim(α=0.8) 임베딩에 Voronoi Pruning 적용, mean error(ME) 대 nDCG@10의 선형 회귀
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>쿼리 임베딩 분포와 이론적 uniform marginal 간 worst-case per-dimension KL divergence</h3>
+              <div class="chart-container">
+                <canvas id="chart-8"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 4 · Figure 1a, Figure 2a · ColBERT로 인코딩한 훈련 쿼리 임베딩과 이론적 균일 marginal p(x)=(1-x²)^62.5 사이의 worst-case per-dimension KL divergence
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>pruning objective를 MaxSim 연산의 정의로부터 직접 유도했다는 점에서 원리적(principled)이다. &#x27;Voronoi cell 내 first-best와 second-best의 차이&#x27;라는 형태는 직관적으로도 해석 가능하며(대체 가능한 토큰은 지워도 된다), 기존 휴리스틱들이 왜 부분적으로만 작동하는지도 같은 척도로 설명할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>제안 formulation이 lossless pruning을 error=0인 특수 케이스로 포함하므로, 기존 LP-Pruning 계열 연구와 이론적으로 단절되지 않고 이를 lossy 영역으로 확장하는 형태를 취한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>학습이나 추가 파라미터 없이(learning-free) 학습 기반 pruning(ConstBERT 39.0, Norm-Pruning 39.2, LP-Pruning 39.7)과 대등한 MRR@10을 달성하므로, 새로운 체크포인트나 재학습 없이 기존 ColBERTv2 인덱스에 곧바로 적용 가능하다는 실무적 이점이 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>알고리즘이 행렬 곱과 top-2 선택으로만 구성되어 GPU에서 병렬화되며, 그 결과 8.8M 컬렉션 pruning을 약 3시간으로 줄여(LP-Pruning 추정 약 15일) 이론적 정식화를 실제 웹 규모 컬렉션에 적용 가능하게 만들었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Monte Carlo 추정의 신뢰구간(10^4 샘플에서 95% CI 폭 약 1% 미만)과 uniform prior 가정의 위반 정도(KL divergence, pairwise covariance)를 정량적으로 검증하여, 근사 기법의 타당성을 스스로 점검한 점이 방법론적으로 성실하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>ablation에서 beam search가 효과 없음을 밝히고 최종 알고리즘에서 제외한 점, 그리고 재현 실험에서 기존 보고값과 다른 BEIR 점수(CF/NQ/TO)를 각주로 명시한 점은 결과 보고의 투명성 측면에서 긍정적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>mean error와 nDCG@10의 강한 선형 관계(R²=0.99)는 단순한 성능 지표를 넘어, 평가 루프 없이 pruning 예산을 사전 결정할 수 있는 실용적 진단 도구를 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Pruning 기준이 mean error(최대 내적 유사도의 평균 저하)에 의존하므로 쿼리 공간 전반의 이질적인(heterogeneous) error 분포를 반영하지 못한다. 국소적으로 큰 error를 갖는 작은 영역이 낮은 기대 error에 가려질 수 있으며, 그 영역이 특정 쿼리에는 결정적일 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>목적함수가 최대 내적 점수(maximum inner-product score)의 보존을 최적화하는데, 이는 retrieval 성능과 밀접히 연관되지만 어디까지나 downstream information retrieval loss에 대한 proxy일 뿐이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>제안 방법은 순수하게 selection 기반(purely selection-based)이다. 고정된 embedding space 안에서 최적의 토큰 부분집합을 고를 뿐, embedding space 자체를 더 prunable하도록 수정하거나 최적화하지는 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>쿼리에 대한 uniform prior 가정과 관련해, 실제 관측된 쿼리 임베딩 분포와 이론적 uniform marginal 사이에 편차가 존재하며(특히 NFCorpus 같은 out-of-domain 환경에서 KL divergence 0.30), 이것이 Monte Carlo 추정치에 다소의 부정확성(imprecision)을 도입한다고 저자들이 명시한다. 다만 실용적으로 관리 가능한 수준이라고 서술한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>속도 비교가 서로 다른 하드웨어(Voronoi Pruning은 H200 GPU, LP-Pruning은 CPU)에서 이루어졌으므로, 보고된 배수는 알고리즘 자체의 복잡도 차이와 하드웨어 차이가 섞인 값으로 보인다. 논문이 주장하는 &#x27;GPU-friendly&#x27;는 사실이지만, 동일 하드웨어 기준의 순수 알고리즘 비용 비교는 제시되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>greedy iterative 제거는 문서 하나에서 목표 크기까지 토큰 수만큼 반복하며 매번 error를 재계산하므로, 문서 길이에 대해 비용이 빠르게 증가하는 구조로 보인다. MS MARCO passage(짧은 텍스트)에서는 문제되지 않았으나, 긴 문서나 ColPali류의 대량 patch 임베딩에 적용할 때의 확장성은 논문에서 다뤄지지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>iterative 갱신을 빼면 MRR@10이 38.9에서 33.2로 급락한다는 사실은, 성능이 formulation 자체보다 &#x27;순차적 재계산&#x27;이라는 절차에 크게 의존함을 시사한다. 즉 초기 error 점수만으로는 좋은 토큰 부분집합을 고를 수 없으며, 이는 저비용 근사 변형을 설계할 여지를 제약한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>제안 방법은 pruning으로 저장 공간을 줄이지만, 논문이 보고한 효율 지표는 pruning 자체의 실행 시간에 집중되어 있다. pruning 이후 실제 인덱스 크기 감소량(바이트 단위)이나 검색 latency 변화는 extraction된 근거에서 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>mean error 대신 error 분포의 tail(예: 상위 분위수 error 또는 worst-case error)을 최소화하는 목적함수를 쓰면, 특정 쿼리에만 결정적인 토큰의 손실을 막을 수 있는가?</h3>
+              </div>
+              <p>저자들이 직접 언급한 첫 번째 한계(mean error가 이질적 error 분포를 가리며, 국소적으로 큰 error 영역이 낮은 기대값에 묻힐 수 있음)를 그대로 확장한 질문이다.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>실제 쿼리 분포(예: 로그에서 수집한 쿼리 임베딩)를 uniform prior 대신 사용해 Monte Carlo 샘플링을 수행하면, 특히 KL divergence가 큰 out-of-domain(NFCorpus 0.30) 환경에서 효과성이 개선되는가?</h3>
+              </div>
+              <p>논문은 uniform prior와 실제 분포의 편차를 KL divergence로 정량화하고 이를 부정확성의 원인으로 인정했으나, 비균일 prior를 사용한 실험은 제시하지 않았다.</p>
+              <span class="source-ref">PDF p. 4, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>selection 기반 pruning을 embedding space 학습과 결합하여(예: Voronoi error를 학습 목표에 포함) &#x27;prunable한 표현&#x27;을 처음부터 학습시키면 얼마나 더 높은 pruning ratio가 가능한가?</h3>
+              </div>
+              <p>저자들이 명시한 세 번째 한계(purely selection-based이며 embedding space 자체를 최적화하지 않음)에서 직접 도출된다. 실험에서 αL(sim) 같은 regularized 체크포인트와 결합했을 때 더 낮은 유지 비율(32~37%)에서도 성능이 유지된 점이 이 방향의 잠재력을 시사한다.</p>
+              <span class="source-ref">PDF p. 7, 9, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>iterative 재계산 비용을 낮추면서 성능 저하를 피하는 중간 지점이 존재하는가? step size=3은 runtime을 약 3배 줄이되 MRR@10을 0.9포인트 희생했고 non-iterative는 붕괴했는데, 적응적 step size나 부분 갱신(영향받은 이웃 토큰만 갱신) 전략의 효과는 확인되지 않았다.</h3>
+              </div>
+              <p>Table 2 ablation은 step size와 non-iterative의 양 극단만 보고하며, 그 사이의 설계 공간은 평가되지 않았다.</p>
+              <span class="source-ref">PDF p. 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>ME–nDCG@10의 선형 관계(R²=0.99, 0.91)가 두 데이터셋을 넘어 일반적으로 성립하는가? 성립한다면 데이터셋별로 회귀 계수를 미리 추정해 &#x27;허용 가능한 성능 저하&#x27;로부터 storage budget을 역산하는 자동 튜닝이 가능한가?</h3>
+              </div>
+              <p>논문은 TREC-DL 평균과 TREC-COVID 두 경우에서만 R²를 보고했으며, 이 관계의 도메인 일반성이나 회귀 계수의 이식 가능성은 검증하지 않았다.</p>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>짧은 passage가 아닌 긴 문서, 혹은 ColPali 같은 vision-language late-interaction 모델의 대량 patch 임베딩에 Voronoi Pruning을 적용해도 동일한 효과성과 실행 시간 이점이 유지되는가?</h3>
+              </div>
+              <p>실험은 MS MARCO passage와 BEIR 텍스트 데이터셋에 한정되며, 문서 길이가 크게 늘어날 때 iterative 절차의 확장성은 다뤄지지 않았다.</p>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>pruning으로 실제 절감되는 인덱스 크기와 검색 latency는 얼마인가? 또한 product quantization 같은 기존 ColBERTv2 압축 기법과 결합했을 때 절감 효과가 가산적인가, 아니면 중복되는가?</h3>
+              </div>
+              <p>논문은 Remain %(토큰 유지 비율)와 pruning 실행 시간을 보고하지만, 최종 인덱스 바이트 크기나 질의 latency, 다른 압축 기법과의 상호작용은 근거에서 확인되지 않는다.</p>
+              <span class="source-ref">PDF p. 6, 7, 8</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Late-interaction retrieval</dt>
+              <dd>
+                쿼리와 문서를 각각 여러 토큰 벡터로 인코딩한 뒤, 검색 시점에 토큰 수준 상호작용(MaxSim)을 계산해 점수를 매기는 방식. ColBERT가 대표적이며, single-vector dense retriever보다 정밀하지만 인덱스가 훨씬 크다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                각 쿼리 토큰에 대해 문서 토큰들과의 내적 중 최대값을 취하고 이를 합산해 문서 점수를 계산하는 late-interaction의 핵심 연산. 이 논문의 Voronoi 정식화는 바로 이 &#x27;argmax&#x27; 구조에서 출발한다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Voronoi cell (V_i)</dt>
+              <dd>
+                문서 토큰 d_i가 최대 내적을 얻는 쿼리 벡터들의 집합, 즉 V_i = {q ∈ B^n : d_i = argmax_{d∈D} q·d}(Eq. 5). 쿼리 공간에서 해당 토큰이 &#x27;책임지는 영역&#x27;을 뜻한다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Pruning error</dt>
+              <dd>
+                토큰 하나를 제거했을 때 발생하는 최대 유사도의 기대 감소량(Eq. 6). 유도 결과 해당 토큰의 Voronoi cell 내부에서 first-best 매치와 second-best 매치 점수 차이의 기댓값과 같다(Eq. 7).
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Mean Error (ME)</dt>
+              <dd>
+                pruning으로 발생한 error를 집계한 값. 이 논문은 ME와 실제 nDCG@10 사이에 강한 선형 관계(R²=0.99, 0.91)가 있음을 보이고, 이를 pruning 예산 결정의 진단 지표로 제안한다.
+                <span class="source-ref">PDF p. 9, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Monte Carlo estimation</dt>
+              <dd>
+                unit sphere 전체에 대한 적분이 계산 불가능하므로, 균일분포 U(S^n)에서 N개의 쿼리 벡터를 샘플링해 기대 pruning error를 근사하는 기법(Eq. 8). 실험에서는 10^4~10^5개 샘플을 사용했다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Iterative pruning</dt>
+              <dd>
+                토큰 하나를 제거할 때마다 Voronoi diagram이 바뀌므로, 매 iteration마다 최소 error 토큰을 제거하고 남은 토큰의 error를 재계산하는 절차. 이를 생략하면 MRR@10이 38.9에서 33.2로 급락한다.
+                <span class="source-ref">PDF p. 4, 5, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Global pruning</dt>
+              <dd>
+                문서마다 동일 비율을 지우는 대신, 컬렉션 전체 토큰을 error contribution으로 전역 순위화해 storage budget까지 영향이 적은 토큰부터 제거하는 방식. local(document-level) pruning보다 근소하게 우수하다(38.9 대 38.4).
+                <span class="source-ref">PDF p. 5, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>LP-Pruning (LPP)</dt>
+              <dd>
+                linear programming을 이용해 lossless token pruning objective를 최초로 정식화한 선행 연구[25]. 이론적으로는 엄밀하나 CPU solver에 의존해 대규모 컬렉션에 적용이 어렵고, 매우 높은 pruning ratio에서 성능이 붕괴한다.
+                <span class="source-ref">PDF p. 2, 3, 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Lossless pruning</dt>
+              <dd>
+                MaxSim 점수를 전혀 손상시키지 않는 토큰만 제거하는 pruning. 제안 formulation에서 &#x27;error가 정확히 0인 토큰만 제거&#x27;하는 제약을 걸면 이 문제로 환원된다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>First-p pruning</dt>
+              <dd>
+                문서의 앞쪽 p개 토큰만 남기는 위치 기반 learning-free 휴리스틱. 논문은 Voronoi formalism으로 이 휴리스틱이 부분적으로 작동하는 이유(앞쪽 토큰이 상대적으로 늦게 pruning되는 경향)를 설명한다(Figure 5, 6).
+                <span class="source-ref">PDF p. 6, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Remain %</dt>
+              <dd>
+                pruning 후 유지된 토큰의 비율. 저장 예산을 나타내는 이 논문의 핵심 축으로, 값이 낮을수록 aggressive pruning이다.
+                <span class="source-ref">PDF p. 7, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ColBERTv2-e2e / ColBERTv2-rerank</dt>
+              <dd>
+                각각 PLAID를 이용한 end-to-end 색인·검색 방식과, SPLADEv2가 뽑은 top-100 후보를 ColBERTv2로 재순위화하는 two-stage 방식. 논문의 unpruned 상한 기준선으로 쓰인다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Uniform prior 가정</dt>
+              <dd>
+                Monte Carlo 추정 시 쿼리 벡터가 unit sphere 위에 균일 분포한다고 가정하는 것. 논문은 실제 쿼리 임베딩과의 worst-case per-dimension KL divergence(MS MARCO 0.13 ~ NFCorpus 0.30)로 이 가정의 타당성과 한계를 함께 검증한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Beam search (pruning 문맥)</dt>
+              <dd>
+                greedy 제거의 local optimum 문제를 완화하기 위해 여러 후보 subset을 동시 유지하는 전략. beam size=3에서 MRR@10 개선이 없고 runtime만 약 5배 증가해 최종 알고리즘에서는 제외되었다.
+                <span class="source-ref">PDF p. 5, 8</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>ColBERTer[12]는 5.3절에서 learned pruning 베이스라인으로 소개되지만, Table 1이나 Table 3에 구체적 수치 결과가 제시되어 있지 않아 비교 결과를 확인할 수 없음.</li><li>BEIR 데이터셋 약어 중 CF, DB, NQ, QU, SD, TO의 전체 명칭이 본문에 명시적으로 기재되어 있지 않음(FQ=FiQA, NF=NFCorpus, TC=TREC-COVID만 본문에서 확인됨).</li><li>Table 1에서 ColBERTv2-e2e의 DL20 값과 AligneR(base가 아닌 전체 모델)의 DL19/DL20/BEIR 결과가 &#x27;-&#x27;로 표기되어 보고되지 않음.</li><li>Figure 5(토큰 위치별 max-dot-product 기여 빈도 및 집계 mean error)와 Figure 6(토큰 위치 백분위별 pruning 순위 candlestick chart)의 정확한 수치는 그래프로만 제시되어 본문에서 확인할 수 없으므로, 해당 경향은 정성적 서술로만 기록함.</li><li>Figure 4의 곡선 전체 수치(각 유지 비율별 nDCG@10)는 그래프로만 제시되어, 본문에 명시된 6% 유지 시점의 두 값(0.67 대 0.46)과 &#x27;약 30% 구간에서 방법 간 차이가 작다&#x27;는 서술 외에는 수치를 확인할 수 없음.</li><li>pruning 이후 실제 인덱스 저장 용량 감소량(바이트/GB 단위)과 질의 처리 latency 변화는 extraction된 근거에서 확인되지 않음.</li><li>서론의 &#x27;최대 120배 빠르다&#x27;는 수치와 본문의 실측치(12.0초 대 1,474.3초, 약 123배에 해당)가 어떤 조건에서 정확히 대응되는지는 명시적으로 연결되어 있지 않으며, &#x27;근사된(approximated) LP-pruning&#x27;의 구체적 설정도 확인되지 않음.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "MS MARCO dev set MRR@10 비교 (pruning 방법별)", "labels": ["ColBERTv2-e2e (unpruned, 100%)", "Voronoi Pruning (50%)", "First-p (50%)", "Att. Score (50%)", "IDF (50%)", "Stopwords (67%)"], "values": [39.7, 38.9, 37.7, 36.0, 32.6, 30.9], "unit": "MRR@10", "xLabel": "방법 (토큰 유지 비율)", "yLabel": "MRR@10"}, {"canvasId": "chart-1", "type": "bar", "title": "TREC-DL19 nDCG@10 비교 (pruning 방법별)", "labels": ["ColBERTv2-e2e (unpruned, 100%)", "First-p (50%)", "Voronoi Pruning (50%)", "Att. Score (50%)", "Stopwords (67%)", "IDF (50%)"], "values": [74.5, 72.3, 72.2, 72.0, 70.9, 70.2], "unit": "nDCG@10", "xLabel": "방법 (토큰 유지 비율)", "yLabel": "nDCG@10"}, {"canvasId": "chart-2", "type": "bar", "title": "10,000개 MS MARCO 문서 pruning 실행 시간", "labels": ["Voronoi Pruning (H200 GPU, 10^4 쿼리 샘플)", "LP-Pruning (CPU)"], "values": [12.0, 1474.3], "unit": "seconds", "xLabel": "방법", "yLabel": "실행 시간"}, {"canvasId": "chart-3", "type": "bar", "title": "극단적 pruning(토큰 6% 유지) 시 평균 nDCG@10", "labels": ["Voronoi Pruning", "LP-Pruning"], "values": [0.67, 0.46], "unit": "nDCG@10", "xLabel": "방법", "yLabel": "평균 nDCG@10"}, {"canvasId": "chart-4", "type": "bar", "title": "Ablation: 설정별 MRR@10 (MS MARCO 100k passages, 50% pruning)", "labels": ["기본 (global, iterative)", "Beam size = 3", "Local (document-level)", "Step size = 3", "Non-iterative"], "values": [38.9, 38.9, 38.4, 38.0, 33.2], "unit": "MRR@10", "xLabel": "설정", "yLabel": "MRR@10"}, {"canvasId": "chart-5", "type": "bar", "title": "Ablation: 설정별 pruning order 생성 시간", "labels": ["Beam size = 3", "기본 (global, iterative)", "Local (document-level)", "Step size = 3", "Non-iterative"], "values": [3088.88, 602.55, 602.55, 217.28, 28.97], "unit": "seconds", "xLabel": "설정", "yLabel": "실행 시간"}, {"canvasId": "chart-6", "type": "bar", "title": "BEIR 10개 데이터셋 평균 nDCG@10", "labels": ["ColBERTv2-rerank (unpruned)", "ColBERTv2-e2e (unpruned)", "αL(sim)+VP / αL(sim)+LPP (약 37%)", "Voronoi Pruning (75%)", "IDF (75%)", "Voronoi Pruning (50%)", "Att. Score (75%)", "First-p (75%)", "SPLADEv2 (unpruned)", "BM25 (unpruned)"], "values": [47.0, 45.8, 45.7, 45.6, 44.7, 44.4, 44.2, 43.1, 43.0, 40.5], "unit": "nDCG@10(Avg.)", "xLabel": "방법 (토큰 유지 비율)", "yLabel": "평균 nDCG@10"}, {"canvasId": "chart-7", "type": "bar", "title": "Mean Error와 nDCG@10의 선형관계 결정계수(R²)", "labels": ["TREC-DL19/DL20 평균", "TREC-COVID"], "values": [0.99, 0.91], "unit": "R²", "xLabel": "평가 대상", "yLabel": "R²"}, {"canvasId": "chart-8", "type": "bar", "title": "쿼리 임베딩 분포와 이론적 uniform marginal 간 worst-case per-dimension KL divergence", "labels": ["MS MARCO (100k train queries)", "SciFact", "FiQA", "NFCorpus"], "values": [0.13, 0.19, 0.2, 0.3], "unit": "KL divergence", "xLabel": "데이터셋", "yLabel": "KL divergence"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
