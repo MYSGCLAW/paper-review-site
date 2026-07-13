@@ -667,7 +667,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>17</small>
+          <small>18</small>
         </a>
         
 
@@ -704,7 +704,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>4</small>
+          <small>3</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -722,8 +722,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 17편</span>
-        <span class="stat">전체 항목 25개</span>
+        <span class="stat">논문 18편</span>
+        <span class="stat">전체 항목 26개</span>
       </div>
     </div>
   </header>
@@ -734,7 +734,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>17개 문서</small>
+      <small>18개 문서</small>
     </a>
     
 
@@ -778,7 +778,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>17</small>
+          <small>18</small>
         </a>
         
 
@@ -815,7 +815,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>4</small>
+          <small>3</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -836,7 +836,7 @@
     </div>
 
     <span class="pending-queue-count">
-      4편 대기 중
+      3편 대기 중
     </span>
   </div>
 
@@ -848,12 +848,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>LEMUR_Learned Multi-Vector Retrieval.pdf</strong>
+            <strong>GEM_A Native Graph-based Index for Multi-Vector Retrieval.pdf</strong>
             <span>등록 시각 · 2026-07-12 23:26</span>
           </div>
 
           <div class="pending-queue-size">
-            4.4 MB
+            1.6 MB
           </div>
 
           <div>
@@ -867,28 +867,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>GEM_A Native Graph-based Index for Multi-Vector Retrieval.pdf</strong>
-            <span>등록 시각 · 2026-07-12 23:26</span>
-          </div>
-
-          <div class="pending-queue-size">
-            1.6 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -910,7 +888,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -943,7 +921,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">17개</span>
+        <span class="section-count">18개</span>
       </div>
 
       <div class="library-grid">
@@ -1073,6 +1051,32 @@
       </p>
 
       <a class="open-link" href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/lemur-learned-multi-vector-retrieval/">
+            LEMUR: Learned Multi-Vector Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Elias Jääsaari, Ville Hyvönen, Teemu Roos</p>
+      <p class="metadata">2026 · Proceedings of the 43rd International Conference on Machine Learning (ICML 2026), PMLR 306, Seoul, South Korea</p>
+
+      <p class="summary">
+        LEMUR는 ColBERT 계열 late interaction 모델의 multi-vector 유사도 검색(MaxSim search)을 supervised learning 문제로 재정식화하여, 결과적으로 single-vector 유사도 검색(MIPS)으로 환원하는 corpus-specific search reduction 프레임워크이다.\n\n핵심 착안점은 두 가지 관찰이다. 첫째, 질의 X와 문서 C_l의 MaxSim 유사도 f_l(X)=MaxSim(X,C_l)은 질의 토큰별 기여의 합 f(X)=Σ_{x∈X} g(x)로 분해되므로, 문서 수 m개의 출력을 갖는 multi-output regression 문제로 볼 수 있다. 둘째, 이 회귀 함수를 hidden layer가 하나뿐인 2-layer MLP ϕ(x)=Wψ(x)로 근사하면 출력층이 bias 없는 선형 계층이므로, 최종 추정치가 f(X)≈WΨ(X)=(⟨w_1,Ψ(X)⟩,...,⟨w_m,Ψ(X)⟩) 형태가 된다. 즉 출력층 가중치 행렬 W의 각 행 w_j가 문서 j의 single-vector latent 표현이 되고, pooled query 표현 Ψ(X)=Σψ(x)를 질의 벡터로 쓰는 d&#x27;차원 latent space 상의 MIPS 문제로 정확히 환원된다(pages 3-4).\n\n따라서 LEMUR는 기존의 고도로 최적화된 single-vector ANNS 라이브러리(본 논문에서는 HNSW 기반 Glass)를 그대로 재사용할 수 있다. 질의 시에는 ANNS로 top-k&#x27; 후보를 뽑고, 그 후보에 대해서만 exact MaxSim을 계산해 최종 top-k로 rerank한다(Algorithm 1, page 4). 대규모 corpus 확장을 위해 m&#x27;=8192개 문서를 auxiliary target으로 삼아 feature encoder ψ를 먼저 pretrain한 뒤, ψ를 고정하고 각 문서의 w_j를 closed-form OLS로 계산한다(Algorithm 2, page 5). 이로 인해 모든 토큰 임베딩을 클러스터링할 필요가 없어 CPU만으로도 8.8M 문서 corpus를 4.8시간에 인덱싱할 수 있다(page 5).\n\n실험적으로, 5개 multi-vector 텍스트 모델로 임베딩한 8개 BEIR 데이터셋과 2개 visual 모델로 임베딩한 ViDoRe V3에서, recall≥80%, k=100 기준 LEMUR는 최고 성능 baseline 대비 5~16배 높은 QPS를 달성했고(MSMARCO 799 vs MUVERA 150), d&#x27;=1024의 LEMUR 임베딩이 MUVERA의 10240차원 FDE보다 8개 중 7개 데이터셋에서 더 높은 Recall100@k&#x27;를 보였다(pages 7-9).
+      </p>
+
+      <a class="open-link" href="papers/lemur-learned-multi-vector-retrieval/">
         보고서 열기 →
       </a>
     </article>

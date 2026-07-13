@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>LEMUR: Learned Multi-Vector Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>LEMUR: Learned Multi-Vector Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Elias Jääsaari, Ville Hyvönen, Teemu Roos</span>
+        <span><strong>출처</strong> · Proceedings of the 43rd International Conference on Machine Learning (ICML 2026), PMLR 306, Seoul, South Korea</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">주요 구성요소와 단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 및 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론 및 해석</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>LEMUR는 ColBERT 계열 late interaction 모델의 multi-vector 유사도 검색(MaxSim search)을 supervised learning 문제로 재정식화하여, 결과적으로 single-vector 유사도 검색(MIPS)으로 환원하는 corpus-specific search reduction 프레임워크이다.\n\n핵심 착안점은 두 가지 관찰이다. 첫째, 질의 X와 문서 C_l의 MaxSim 유사도 f_l(X)=MaxSim(X,C_l)은 질의 토큰별 기여의 합 f(X)=Σ_{x∈X} g(x)로 분해되므로, 문서 수 m개의 출력을 갖는 multi-output regression 문제로 볼 수 있다. 둘째, 이 회귀 함수를 hidden layer가 하나뿐인 2-layer MLP ϕ(x)=Wψ(x)로 근사하면 출력층이 bias 없는 선형 계층이므로, 최종 추정치가 f(X)≈WΨ(X)=(⟨w_1,Ψ(X)⟩,...,⟨w_m,Ψ(X)⟩) 형태가 된다. 즉 출력층 가중치 행렬 W의 각 행 w_j가 문서 j의 single-vector latent 표현이 되고, pooled query 표현 Ψ(X)=Σψ(x)를 질의 벡터로 쓰는 d&#x27;차원 latent space 상의 MIPS 문제로 정확히 환원된다(pages 3-4).\n\n따라서 LEMUR는 기존의 고도로 최적화된 single-vector ANNS 라이브러리(본 논문에서는 HNSW 기반 Glass)를 그대로 재사용할 수 있다. 질의 시에는 ANNS로 top-k&#x27; 후보를 뽑고, 그 후보에 대해서만 exact MaxSim을 계산해 최종 top-k로 rerank한다(Algorithm 1, page 4). 대규모 corpus 확장을 위해 m&#x27;=8192개 문서를 auxiliary target으로 삼아 feature encoder ψ를 먼저 pretrain한 뒤, ψ를 고정하고 각 문서의 w_j를 closed-form OLS로 계산한다(Algorithm 2, page 5). 이로 인해 모든 토큰 임베딩을 클러스터링할 필요가 없어 CPU만으로도 8.8M 문서 corpus를 4.8시간에 인덱싱할 수 있다(page 5).\n\n실험적으로, 5개 multi-vector 텍스트 모델로 임베딩한 8개 BEIR 데이터셋과 2개 visual 모델로 임베딩한 ViDoRe V3에서, recall≥80%, k=100 기준 LEMUR는 최고 성능 baseline 대비 5~16배 높은 QPS를 달성했고(MSMARCO 799 vs MUVERA 150), d&#x27;=1024의 LEMUR 임베딩이 MUVERA의 10240차원 FDE보다 8개 중 7개 데이터셋에서 더 높은 Recall100@k&#x27;를 보였다(pages 7-9).</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 7, 8, 9</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MaxSim은 질의 토큰별 기여의 합 f(X)=Σ_{x∈X} g(x)로 분해되므로, MaxSim 근사는 문서 수만큼의 출력을 갖는 multi-output regression 문제가 된다. 이것이 LEMUR의 출발점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>출력층이 bias 없는 선형 계층이면 f(X)≈WΨ(X)이므로, MLP 추론이 그대로 d&#x27;차원 latent space 상의 single-vector MIPS가 된다. 문서 표현 w_j는 출력층 가중치의 행이고, 질의 표현 Ψ(X)는 feature encoder 출력의 합이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>질의 파이프라인은 pooled query 계산 → ANNS로 top-k&#x27; 후보 검색 → 후보에 대해서만 exact MaxSim rerank의 3단계이다(Algorithm 1).</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>feature encoder ψ를 m&#x27;=8192개 auxiliary 문서로 pretrain한 뒤 고정하고, 각 문서 가중치 w_j는 closed-form OLS(w_j = Z^+ y_j)로 계산한다. 덕분에 8.8M 문서 corpus를 GPU 없이 4.8시간에 인덱싱할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>recall≥80%, k=100 기준 LEMUR는 8개 BEIR 데이터셋에서 최고 성능 baseline 대비 5~16배 높은 QPS를 달성한다(예: MSMARCO 799 vs MUVERA 150).</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>1024차원 LEMUR 임베딩이 10240차원 MUVERA FDE보다 8개 중 7개 데이터셋에서 더 높은 Recall100@k&#x27;를 보인다. 즉 supervised 학습이 10배 낮은 차원에서 더 정확한 single-vector 환원을 가능하게 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>토큰 임베딩 전체를 클러스터링할 필요가 없다는 점이 확장성의 핵심이며, 인덱스 엔트리 수가 토큰 수가 아닌 문서 수와 같아진다는 것이 latency 이득의 구조적 원인으로 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Theorem B.1의 근사 오차 상한 |MaxSim(X,C_l) − ⟨w_l,Ψ(X)⟩| ≤ |X|ε가 질의 토큰 수 |X|에 비례하므로, 질의가 길수록 이론적 오차 상한이 선형으로 커진다. ArguAna(질의당 300 벡터)에서 근사 품질이 유지된 것은 이 상한이 느슨할 수 있음을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 8, 13, 14</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Multi-vector 검색의 품질-지연 트레이드오프</h3>
+      <p>ColBERT류 late interaction 모델은 문서와 질의를 토큰 단위 임베딩 집합으로 표현하여 single-vector 모델보다 우수한 검색 품질을 얻는다. 그러나 유사도 계산에 쓰이는 MaxSim similarity(Chamfer similarity)는 MaxSim(X,C)=Σ_{x∈X} max_{c∈C} ⟨x,c⟩로 정의되어, 질의 토큰과 문서 토큰의 모든 쌍에 대한 inner product를 평가해야 한다. 이 비용 때문에 검색 latency가 크게 증가하며, 논문은 이 multi-vector similarity search를 효율적으로 근사·가속화하는 문제를 다룬다.</p>
+      <span class="source-ref">PDF p. 1, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 지금 중요한가 (motivation)</h3>
+      <p>세밀한 token-level representation 덕분에 multi-vector 모델은 IR 응용에서 정확도 우위를 보이며, ColBERT/ColBERTv2 이후 더 성능이 좋고 메모리 효율적인 텍스트 모델들과 ColPali 같은 visual document retrieval 모델의 개발이 빠르게 이어졌다. 논문은 multi-vector 검색 엔진의 높은 latency가 바로 이러한 모델들의 폭넓은 채택(wider adoption)을 저해해 온 요인이라고 주장한다.</p>
+      <span class="source-ref">PDF p. 1, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>문제의 형식적 정의</h3>
+      <p>질의 X⊂R^d와 문서 집합 {C_j}_{j=1}^m이 주어졌을 때, MaxSim 기준 상위 k개 문서 NN_k(X)를 근사하는 집합 S를 찾는 것이 목표이다. 근사 품질은 recall = |S ∩ NN_k(X)| / k로, 효율은 query latency 또는 QPS(queries per second)로 측정한다. 이는 single-vector ANNS의 정식화와 같되, 질의와 문서가 벡터가 아니라 집합이고 유사도가 집합 간 MaxSim이라는 점이 다르다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Token-level pruning 계열: 부정확한 proxy</h3>
+      <p>PLAID, DESSERT, EMVB, IGP 등은 ColBERT의 기본 구조인 문서의 token-level pruning에 의존한다. 즉 질의 토큰마다 전체 문서 토큰 집합에서 가장 유사한 토큰들을 먼저 검색하고, 그 토큰을 포함한 문서로 검색 범위를 좁힌 뒤 MaxSim으로 rerank한다. 논문은 질의 토큰과 문서 토큰 간의 token-level 유사도가 해당 질의-문서 쌍의 MaxSim 유사도에 대한 부정확한 proxy이며, 따라서 정확한 결과를 얻으려면 큰 후보 집합을 rerank해야 한다고 지적한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MUVERA(FDE): data-oblivious하고 고차원</h3>
+      <p>MUVERA는 질의·문서마다 fixed-dimensional encoding(FDE)을 생성해 single-vector 검색으로 환원한다는 점에서 LEMUR와 목표가 같다. 그러나 정확한 검색을 위해 예컨대 10240차원과 같은 고차원 FDE가 필요하며 이는 큰 메모리 소비와 높은 latency를 초래한다. 또한 MUVERA의 표현은 data-oblivious한 반면, LEMUR의 표현은 특정 corpus/task에 맞춰 supervised로 학습된다는 것이 논문이 강조하는 차이이다.</p>
+      <span class="source-ref">PDF p. 2, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>클러스터링 기반 인덱싱의 확장성</h3>
+      <p>기존 클러스터링 기반 인덱싱은 corpus의 모든 토큰 임베딩을 클러스터링해야 한다. 논문은 가장 큰 데이터셋에서 약 6억 개 임베딩을 2^18개 클러스터로 클러스터링해야 하며, 이는 GPU 없이는 사실상 infeasible하다고 밝힌다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColBERTv2 임베딩에 대한 과적합된 평가</h3>
+      <p>기존 multi-vector 유사도 검색 방법들의 성능은 거의 전적으로 ColBERTv2 임베딩에서만 평가되어 왔다. LFM2-ColBERT-350M, answerai-colbert-small-v1 등 다른 multi-vector 모델에서는 대부분의 기존 방법이 허용 가능한 recall에 도달하지 못하거나 매우 높은 latency를 보인다(예: Quora에서 MUVERA는 세 모델의 임베딩에서 60% recall을 넘지 못함).</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Distillation 계열과의 차이</h3>
+      <p>TCT-ColBERT, BGE-M3와 같은 distillation 기반 방법은 ColBERT의 MaxSim 점수를 증류하여 단일 벡터 dense retriever를 학습한다. 그러나 이들은 corpus-specific search reduction이 아니라 범용(generic) 텍스트 인코더를 학습하는 것이므로 비용이 큰 dense-retriever 훈련을 필요로 한다. LEMUR는 인코더 자체를 바꾸지 않고, 주어진 임베딩 위에서 corpus에 특화된 경량 search reduction만 학습한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1) Supervised learning으로 재정식화한 search reduction</h3>
+      <p>multi-vector 유사도 검색을 supervised learning task(multi-output regression)로 재정식화함으로써, corpus 전체에 대한 multi-vector 유사도 검색을 single-vector 유사도 검색으로 환원하는 빠른 corpus-specific search reduction인 LEMUR를 제안한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2) 폭넓은 임베딩 모델·모달리티 평가</h3>
+      <p>5개의 서로 다른 multi-vector 텍스트 모델(ColBERTv2, answerai-colbert-small-v1, GTE-ModernColBERT-v1, LFM2-ColBERT-350M, jina-colbert-v2)로 임베딩한 8개 BEIR 데이터셋과, 2개의 visual document retrieval 모델(ColModernVBERT, ColQwen2-v1.0)로 임베딩한 ViDoRe V3 데이터셋에서 multi-vector 검색 방법들을 평가한다.</p>
+      <span class="source-ref">PDF p. 2, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3) 전 데이터셋 SOTA 및 latency 격차 축소</h3>
+      <p>평가된 모든 데이터셋에서 LEMUR가 state-of-the-art multi-vector 유사도 검색 방법들보다 우수함을 보이며, single-vector 검색과 multi-vector 검색 간의 latency 격차를 줄이는 데 기여한다고 주장한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4) 이론적 뒷받침</h3>
+      <p>MLP의 universal approximation theorem(Cybenko 1989; Hornik 1991)을 이용해, 임의의 ε&gt;0에 대해 적절한 hidden dimension d&#x27;가 존재하여 모든 문서 l에 대해 |MaxSim(X,C_l) − ⟨w_l,Ψ(X)⟩| ≤ |X|ε가 성립함을 보인다(Theorem B.1).</p>
+      <span class="source-ref">PDF p. 4, 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>두 번의 문제 환원(problem reduction)</h3>
+      <p>LEMUR는 연속된 두 번의 환원으로 구성된다. (1) MaxSim 근사 문제를 문서 수 m만큼의 출력을 갖는 multi-output regression 문제로 환원하고 이를 hidden layer가 하나인 MLP로 학습한다. (2) 이 MLP의 출력층이 bias 없는 선형 계층이라는 점을 이용해, 모델 추론 자체를 d&#x27;차원 latent space 상의 single-vector MIPS로 환원한다. 결과적으로 기존의 고도로 최적화된 single-vector ANNS 인덱스/라이브러리를 그대로 활용할 수 있고, 빠른 인덱싱이 가능하며, CPU와 GPU 기반 검색 시스템 모두에 적용 가능하다.</p>
+      <span class="source-ref">PDF p. 1, 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>환원이 성립하는 이유(핵심 수식)</h3>
+      <p>target function을 f(X)=(f_1(X),...,f_m(X)), f_l(X)=MaxSim(X,C_l)로 두면, 정의상 f(X)=Σ_{x∈X} g(x)이고 g_l(x)=max_{c∈C_l}⟨x,c⟩이다(g_l은 집합 C_l의 support function으로, 항상 convex piecewise-linear이다). g를 MLP ϕ(x)=Wψ(x)로 근사하면 선형성 덕분에 f(X) ≈ Σ_{x∈X} Wψ(x) = W Σ_{x∈X} ψ(x) = WΨ(X)가 된다. 즉 f(X) ≈ (⟨w_1,Ψ(X)⟩,...,⟨w_m,Ψ(X)⟩)이며, 여기서 w_j는 W의 j번째 행이다. 모든 m개 문서의 추정치가 아니라 상위 k&#x27;개만 필요하므로, 이는 정확히 d&#x27;차원 MIPS 문제이다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습된 표현의 역할 분담</h3>
+      <p>이 구조에서 문서 임베딩 {w_j}는 출력층의 가중치로 학습되고, 질의 임베딩 Ψ(X)는 feature encoder 출력을 pooling(합산)하여 얻는다. 즉 문서 표현과 질의 표현이 동일한 d&#x27;차원 latent space에 놓이며, 인덱스는 {w_j}를 corpus로 하여 구축된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 얕은 네트워크로 충분한가</h3>
+      <p>저자들은 네트워크 깊이를 2-layer 이상으로 늘려도 유의미한 성능 향상을 관찰하지 못했으며, 그 이유로 각 g_l이 convex piecewise-linear 함수라는 점을 든다. Ablation 결과를 근거로 모든 본 실험에서 hidden layer 크기를 d&#x27;=2048로 고정한다. d&#x27;를 키우면 MaxSim 추정 정확도는 올라가지만 검색 비용도 함께 증가해 end-to-end 성능에는 영향이 작다.</p>
+      <span class="source-ref">PDF p. 4, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>주요 구성요소와 단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>구성요소 1: Feature encoder ψ</h3>
+      <p>토큰 수준 임베딩 x∈R^d를 d&#x27;차원 latent space로 사상하는 함수로, ψ(x)=LN(GELU(W&#x27;x+b))로 정의된다. LN은 layer normalization, GELU는 활성화 함수이며 W&#x27;∈R^{d&#x27;×d}, b∈R^{d&#x27;}이다. 2-layer MLP의 첫 부분에 해당한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2: 선형 출력층 W</h3>
+      <p>bias가 없는 선형 계층으로, 각 문서 j에 대응하는 행 w_j∈R^{d&#x27;}가 그 문서의 single-vector latent 표현 역할을 한다. 최종 MaxSim 추정치는 f(X)≈WΨ(X)로 계산된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3: Pooled query representation Ψ(X)</h3>
+      <p>질의 토큰 임베딩 x∈X 각각에 대해 ψ(x)를 계산하고 이를 합산(sum pooling)하여 얻는 단일 질의 벡터이다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4: ANNS 인덱스 및 reranking 모듈</h3>
+      <p>문서 가중치 벡터 {w_j}를 corpus로 하여 HNSW 기반 Glass 라이브러리(scalar quantization 사용, graph degree R=64, insertion-time beam width L=800)로 single-vector ANNS 인덱스를 구축한다. 질의 시 Ψ(X)의 top-k&#x27; 최근접 이웃을 후보로 뽑고, C++로 구현된 reranking 모듈이 그 후보에 대해서만 exact MaxSim을 계산한다.</p>
+      <span class="source-ref">PDF p. 4, 7, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 단계 (Algorithm 2)</h3>
+      <p>Step 1. m&#x27;≪m개 문서를 표본추출해 auxiliary target function g&#x27;=g_{I&#x27;}를 정의한다(m&#x27;=8192). Step 2. 보조 모델 ϕ&#x27;(x)=W&#x27;&#x27;ψ(x)를 MSE loss로 학습하여 feature encoder ψ를 pretrain한다(학습 토큰 임베딩 n=100,000). Step 3. ψ의 가중치를 고정하고, 표본추출한 n&#x27;=16,384개 토큰 임베딩으로 Z=[ψ(x_1),...,ψ(x_{n&#x27;})]^T를 만든 뒤, 각 문서 j에 대해 y_j=[g_j(x_1),...,g_j(x_{n&#x27;})]^T를 목표로 하는 선형회귀의 closed-form OLS 해 w_j = Z^+ y_j를 계산한다. Step 4. 모든 {w_j}_{j=1}^m로 ANNS 인덱스를 구축한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의 단계 (Algorithm 1)</h3>
+      <p>Step 1. 질의 토큰 임베딩 집합 X의 각 x에 대해 ψ(x)를 계산하고 합산하여 Ψ(X)를 만든다. Step 2. Ψ(X)로 ANNS 인덱스에서 top-k&#x27; 후보 문서 집합 I를 검색한다(single-vector MIPS). Step 3. j∈I인 후보에 대해서만 s_j = MaxSim(X,C_j)를 정확히 계산한다. Step 4. {s_j}가 가장 큰 상위 k개 문서를 반환한다. 본 논문의 end-to-end 실험은 k=100을 사용한다.</p>
+      <span class="source-ref">PDF p. 4, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>훈련 데이터 선택 및 인덱스 갱신</h3>
+      <p>일부 데이터셋만 별도 훈련 질의를 갖기 때문에, 일관성을 위해 모든 실험에서는 corpus 문서를 query encoder Q로 인코딩해 훈련 토큰을 샘플링하는 방식을 사용한다. 실제 질의가 있으면 성능이 더 높아지고(Appendix H.2), corpus만으로 학습해도 baseline을 여전히 크게 능가한다(Appendix H.1). 또한 feature encoder가 고정되므로 새 문서는 선형회귀로 w_j만 계산해 HNSW 인덱스에 online insert할 수 있다.</p>
+      <span class="source-ref">PDF p. 5, 20</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Algorithm 1 (Query Process)</h3>
+      <p>입력: 질의 임베딩 X, feature encoder ψ, {w_j}로 구축된 ANNS 인덱스, 문서 임베딩 {C_j}, reranking 후보 수 k&#x27;, 출력 크기 k. 절차: (1) Ψ(X) ← Σ_{x∈X} ψ(x); (2) I ← ANN-TOPK(Ψ(X), k&#x27;); (3-5) 모든 j∈I에 대해 s_j ← MaxSim(X,C_j); (6) I 중 s_j가 가장 큰 k개 문서를 반환.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Algorithm 2 (Indexing Process)</h3>
+      <p>입력: corpus 임베딩 집합 {C_j}, 훈련 토큰 임베딩 {x_i}_{i=1}^n, auxiliary target 수 m&#x27;, OLS 표본 크기 n&#x27;. 절차: (1) |I&#x27;|=m&#x27;인 I&#x27;⊂[m] 표본추출; (2) auxiliary target g&#x27;=g_{I&#x27;} 정의; (3) MLP ϕ&#x27;(x)=W&#x27;&#x27;ψ(x)를 학습해 g&#x27;(x) 추정; (4) Z ← [ψ(x_1),...,ψ(x_{n&#x27;})]^T ∈ R^{n&#x27;×d&#x27;}; (5-8) 각 j∈[m]에 대해 y_j ← [g_j(x_1),...,g_j(x_{n&#x27;})]^T, w_j ← Z^+ y_j; (9) J ← BUILD-ANNS-INDEX({w_j}); (10) ψ와 J를 반환.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조: 학습된 문서 벡터 위의 HNSW 그래프</h3>
+      <p>전통적 multi-vector 인덱스처럼 토큰 임베딩을 클러스터링해 posting list를 만드는 대신, LEMUR의 인덱스는 문서당 하나의 학습된 d&#x27;차원 벡터 w_j 위에 구축된 HNSW 그래프(Glass 라이브러리, scalar quantization)이다. 따라서 인덱스 엔트리 수는 토큰 수가 아니라 문서 수 m과 같다.</p>
+      <span class="source-ref">PDF p. 4, 5, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이론적 보장 (Theorem B.1)</h3>
+      <p>표준 universal approximation theorem을 적용하면, 임의의 ε&gt;0에 대해 어떤 hidden dimension d&#x27;가 존재하여 모든 질의 X에 대해 ||f(X) − WΨ(X)||_∞ ≤ |X|ε가 성립한다. 즉 모든 문서 l에 대해 |MaxSim(X,C_l) − ⟨w_l,Ψ(X)⟩| ≤ |X|ε이다. 오차 상한이 질의 토큰 수 |X|에 비례한다는 점에 유의해야 한다.</p>
+      <span class="source-ref">PDF p. 4, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 비용과 확장성</h3>
+      <p>MSMARCO(8.8M 문서, CPU만 사용) 기준 feature encoder 학습 20분, 최종 투영층 가중치 행렬 W 계산 70분, ANN 그래프 구축 198분으로 총 4.8시간이 소요된다. W 계산은 문서 수에 선형으로 확장되고, graph index 구축은 대체로 O(n log n)에 가깝다. 저자들은 인덱스 구축 시간을 기준으로 하이퍼파라미터를 튜닝하지 않았으며, 성능의 소폭 저하만 감수하면 인덱싱을 크게 가속할 수 있다고 언급한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>하드웨어 및 실행 환경</h3>
+      <p>각 실험은 20-core Intel Xeon Gold 6230(Cascade Lake) CPU 2개를 장착한 compute node에서 수행된다. CPU는 AVX-512를 지원하며, 질의 단위 병렬화를 통해 40개 코어 전부를 사용한다. 본 논문은 CPU-only 결과만 보고한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>데이터셋 (Table 1)</h3>
+      <p>텍스트: BEIR 8개 데이터셋 — MSMARCO(dev set, corpus 8,841,823 / queries 6,980 / 문서당 평균 embedding 67.5), HotpotQA(5,233,329 / 7,405 / 58.6), NQ(2,681,468 / 3,452 / 85.2), Quora(522,931 / 10,000 / 15.6), Touche-2020(382,545 / 49 / 104.6), TREC-Covid(171,332 / 50 / 118.6), FiQA-2018(57,638 / 648 / 105.0), SCIDOCS(25,657 / 1,000 / 147.0). 시각 문서: ViDoRe V3(영어 5개 데이터셋 통합; corpus 12,969 / queries 100 / ColQwen2 기준 평균 embedding 1073.3). 추가로 Appendix E에서 long-query 설정을 위해 ArguAna(질의당 300 벡터)를 사용한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>임베딩 모델</h3>
+      <p>텍스트 모델 5종: ColBERTv2(주 비교), answerai-colbert-small-v1, GTE-ModernColBERT-v1, LFM2-ColBERT-350M, jina-colbert-v2. Visual document retrieval 모델 2종: ColModernVBERT, ColQwen2-v1.0.</p>
+      <span class="source-ref">PDF p. 7, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Baseline 및 측정 지표</h3>
+      <p>Baseline은 MUVERA(2024), DESSERT(2023), IGP(2025), PLAID(2022a; fast-plaid Rust 구현)이다. 지표는 recall(Recall@k 및 ablation의 Recall100@k&#x27;), QPS, query latency, nDCG@10, 그리고 MaxSim 근사 품질 측정을 위한 Pearson r과 Spearman ρ이다.</p>
+      <span class="source-ref">PDF p. 7, 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>탐색 프로토콜</h3>
+      <p>end-to-end 비교에서는 k=100을 사용한다. LEMUR는 ANNS 라이브러리의 탐색 파라미터와 rerank 문서 수 k&#x27;를, 다른 방법들은 probe하는 클러스터 수와 rerank 문서 수를 변화시킨다. 질의 하이퍼파라미터에 대해 grid search를 수행하고 Pareto-optimal 조합의 결과를 보고한다. Ablation에서는 d&#x27;∈{1024, 2048, 4096}을 비교하며 MUVERA는 10240차원 FDE를 사용한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ColBERTv2 임베딩에서의 end-to-end 성능 (Table 2)</h3>
+      <p>recall≥80%, k=100 기준 최고 QPS는 다음과 같다(LEMUR / MUVERA / IGP / DESSERT / PLAID). MSMARCO 799/150/62/–/13, HotpotQA 426/22/37/–/10, NQ 869/79/107/38/16, Quora 4068/787/679/284/89, Touche-2020 1996/371/47/147/29, TREC-Covid 1753/57/34/109/23, FiQA-2018 2416/239/310/242/51, SCIDOCS 2591/391/320/285/85. 대시(–)는 해당 recall에 도달하지 못했음을 뜻한다. 종합하면 LEMUR는 최고 성능 baseline 대비 5~16배 빠르다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>표현의 효율성: 1024차원 LEMUR vs 10240차원 FDE</h3>
+      <p>Ablation(Figure 2 left)에서 LEMUR의 가장 작은 latent dimension인 d&#x27;=1024조차 8개 BEIR 데이터셋 중 7개에서 MUVERA의 10240차원 FDE보다 높은 Recall100@k&#x27;를 달성한다. 이는 supervised로 학습된 표현이 data-oblivious한 FDE보다 10배 낮은 차원에서 더 정확함을 뜻하며, 메모리와 ANNS 탐색 비용을 함께 줄인다. 다만 d&#x27;를 2048, 4096으로 키우면 추정 정확도는 개선되나 ANNS 복잡도도 함께 증가해 end-to-end 이득은 체감(diminishing returns)하며, 저자들은 메모리 절감을 위해 d&#x27;=2048을 채택한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MaxSim 근사 품질 (Appendix D, Table 4)</h3>
+      <p>LEMUR 추정치와 exact MaxSim 간 상관은 7개 데이터셋(HotpotQA, NQ, Quora, Touche-2020, TREC-COVID, FiQA, SCIDOCS)에서 Pearson r=0.952~0.994, Spearman ρ=0.942~0.990으로 모두 0.94를 상회한다(예: TREC-COVID r=0.994/ρ=0.990, NQ r=0.952/ρ=0.942). ArguAna long-query 설정(질의당 300 벡터)에서도 r=0.987 / ρ=0.983으로 근사 품질과 검색 성능이 유지된다.</p>
+      <span class="source-ref">PDF p. 8, 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색 품질(nDCG@10) 보존</h3>
+      <p>Appendix C의 표에 따르면 LEMUR는 지정된 오차범위 내에서 exact MaxSim search의 nDCG@10을 유지하면서 높은 QPS를 낸다. 예를 들어 Quora는 nDCG@10=0.857을 ε&lt;0.01에서 QPS=4068로, HotpotQA는 nDCG@10=0.678을 ε&lt;0.01에서 QPS=108로 유지한다. 즉 속도 향상이 최종 랭킹 품질의 희생으로 얻어진 것이 아님을 보인다.</p>
+      <span class="source-ref">PDF p. 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>다른 임베딩 모델에 대한 강건성 (Figure 4)</h3>
+      <p>Quora와 SCIDOCS를 answerai-colbert-small-v1, GTE-ModernColBERT-v1, LFM2-ColBERT-350M, jina-colbert-v2로 임베딩했을 때도 LEMUR가 baseline을 크게 앞선다. 반면 일부 baseline은 이들 임베딩에서 크게 고전하며, 특히 MUVERA는 Quora에서 answerai-colbert-small-v1, GTE-ModernColBERT, LFM2-ColBERT 임베딩에 대해 60% recall을 넘지 못한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Visual document retrieval (Figure 5)</h3>
+      <p>ViDoRe 데이터셋을 ColModernVBERT 및 ColQwen2-v1.0으로 임베딩한 경우에도 LEMUR가 baseline을 능가한다. 다만 이미지 기반의 큰 문서 표현(평균 1073.3 embeddings) 때문에 reranking 단계의 상대적 비용이 커져, 텍스트 데이터셋보다 성능 격차가 좁게 나타난다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론 및 해석</h2>
+        <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론 (paper_claim)</h3>
+      <p>저자들은 LEMUR가 기존 multi-vector 유사도 검색 방법보다 빠르며, 질의와 문서 모두에 대해 single-vector 표현을 생성해 문제를 single-vector 유사도 검색으로 환원하기 때문에 최신 single-vector ANNS 라이브러리와 쉽게 통합된다고 결론짓는다. 또한 supervised 학습된 표현이 FDE보다 훨씬 낮은 차원에서 더 정확하다는 점(1024차원 LEMUR &gt; 10240차원 FDE)을 핵심 근거로 제시한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자 해석: 무엇이 실제로 이득을 만드는가 (analyst_inference)</h3>
+      <p>성능 이득의 원천은 두 층위로 분리해 볼 수 있다. 첫째, 표현 정확도 층위에서 학습된 w_j는 MaxSim이라는 목표 함수에 직접 회귀되므로, token-level 유사도라는 간접 proxy나 data-oblivious한 FDE보다 MaxSim 순위를 잘 보존한다. 이는 같은 recall을 얻기 위한 후보 집합 k&#x27;를 줄여 준다. 둘째, 시스템 층위에서 인덱스 엔트리가 토큰 수가 아니라 문서 수와 같아지고 차원도 낮아져 ANNS 탐색 자체가 저렴해진다. Table 2의 5~16배 QPS 향상은 이 두 효과의 곱으로 이해하는 것이 타당하다.</p>
+      <span class="source-ref">PDF p. 4, 5, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자 해석: &#x27;corpus-specific&#x27;이라는 설계 선택의 의미 (analyst_inference)</h3>
+      <p>LEMUR는 임베딩 모델을 재학습하지 않고, 주어진 corpus에 대해서만 경량 MLP와 문서별 OLS 해를 학습한다. 이 선택이 distillation 계열과의 결정적 차이이며, 새로운 multi-vector 모델이 등장할 때마다 값비싼 재학습 없이 적용 가능하게 만든다. 실험에서 5개 텍스트 모델과 2개 visual 모델에 걸쳐 일관된 우위가 관찰된 것은 이 설계의 직접적 귀결로 해석된다. 반대급부는 corpus가 바뀌거나 문서가 대량으로 유입될 때 W를 다시 맞춰야 한다는 운영상의 부담이며, 저자들도 이를 한계로 언급한다.</p>
+      <span class="source-ref">PDF p. 5, 6, 9</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>LEMUR 전체 동작 흐름 (인덱싱 + 질의)</h3>
+                <span class="source-ref">PDF p. 4, 5</span>
+              </div>
+              <p>Algorithm 2(인덱싱)와 Algorithm 1(질의)을 결합한 전체 파이프라인. 인덱싱 단계에서 feature encoder를 pretrain한 뒤 고정하고 문서별 가중치 w_j를 OLS로 계산하여 single-vector ANNS 인덱스를 만든다. 질의 단계에서는 pooled query 벡터로 top-k&#x27; 후보를 검색하고 exact MaxSim으로 rerank한다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph IDX[&quot;인덱싱 Algorithm 2 - page 5&quot;]
+    D1[&quot;Corpus 문서 임베딩 집합 Cj&quot;] --&gt; D2[&quot;m&#x27;=8192 문서 표본추출\n보조 target g&#x27; 정의&quot;]
+    D2 --&gt; D3[&quot;MLP phi&#x27;(x)=W&#x27;&#x27;psi(x) 학습\nMSE loss, feature encoder psi 사전학습&quot;]
+    D3 --&gt; D4[&quot;psi 가중치 고정&quot;]
+    D4 --&gt; D5[&quot;n&#x27;=16384 토큰으로 Z 구성\n문서별 OLS 해 wj = Z+ yj&quot;]
+    D5 --&gt; D6[&quot;문서 벡터 wj 집합\nd&#x27;=2048 latent space&quot;]
+    D6 --&gt; D7[&quot;HNSW 기반 ANNS 인덱스 구축\nGlass, scalar quantization&quot;]
+  end
+  subgraph QRY[&quot;질의 Algorithm 1 - page 4&quot;]
+    Q1[&quot;질의 토큰 임베딩 집합 X&quot;] --&gt; Q2[&quot;각 토큰에 psi(x) 적용&quot;]
+    Q2 --&gt; Q3[&quot;합산 pooling\nPsi(X) = sum psi(x)&quot;]
+    Q3 --&gt; Q4[&quot;ANNS top-k&#x27; 검색\nsingle-vector MIPS&quot;]
+    Q4 --&gt; Q5[&quot;후보 집합 I, 크기 k&#x27;&quot;]
+    Q5 --&gt; Q6[&quot;후보에 대해서만\nexact MaxSim(X,Cj) 계산&quot;]
+    Q6 --&gt; Q7[&quot;상위 k개 문서 반환\nk=100&quot;]
+  end
+  D7 -.인덱스 J 제공.-&gt; Q4
+  D4 -.고정된 psi 제공.-&gt; Q2
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 LEMUR의 구조적 차이</h3>
+                <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6</span>
+              </div>
+              <p>기존 token-level pruning 계열(PLAID, DESSERT, EMVB, IGP)은 모든 토큰 임베딩을 클러스터링/인덱싱하고 token 유사도를 proxy로 후보를 좁힌다. MUVERA는 data-oblivious한 고차원 FDE로 single-vector 환원을 한다. LEMUR는 MaxSim 자체를 supervised로 회귀 학습하여 문서당 1개의 저차원 학습 벡터를 인덱싱한다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph A[&quot;기존 1: token-level pruning - pages 1,2,5&quot;]
+    A1[&quot;모든 문서 토큰 임베딩\n예: 6억 개&quot;] --&gt; A2[&quot;토큰 임베딩 클러스터링\n예: 2^18 클러스터, GPU 필요&quot;]
+    A2 --&gt; A3[&quot;질의 토큰별 유사 토큰 검색\ntoken 유사도 = 부정확한 proxy&quot;]
+    A3 --&gt; A4[&quot;큰 후보 집합 rerank 필요&quot;]
+  end
+  subgraph B[&quot;기존 2: MUVERA FDE - pages 2,6&quot;]
+    B1[&quot;질의/문서&quot;] --&gt; B2[&quot;data-oblivious 고정차원 인코딩\n10240차원 FDE&quot;]
+    B2 --&gt; B3[&quot;single-vector ANNS\n높은 메모리와 latency&quot;]
+  end
+  subgraph C[&quot;제안: LEMUR - pages 3,4,5&quot;]
+    C1[&quot;MaxSim을 회귀 target으로 정의\nf(X) = sum g(x)&quot;] --&gt; C2[&quot;2-layer MLP 지도학습\nphi(x) = W psi(x)&quot;]
+    C2 --&gt; C3[&quot;문서당 학습된 벡터 wj\nd&#x27;=1024~2048, 클러스터링 불필요&quot;]
+    C3 --&gt; C4[&quot;single-vector ANNS + exact MaxSim rerank&quot;]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>MSMARCO: recall≥80% 기준 방법별 최고 QPS</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · ColBERTv2 embeddings, k=100, recall≥80%. DESSERT는 80% recall에 도달하지 못해(대시) 제외함.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Quora: recall≥80% 기준 방법별 최고 QPS</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · ColBERTv2 embeddings, k=100, recall≥80%
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>LEMUR의 데이터셋별 최고 QPS (recall≥80%, k=100)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · ColBERTv2 embeddings, k=100, recall≥80%, 40-core CPU(2x Intel Xeon Gold 6230)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>데이터셋별 최고 성능 baseline의 QPS (비교용)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · ColBERTv2 embeddings, k=100, recall≥80%. 각 데이터셋에서 Table 2의 baseline 중 최댓값을 취한 값이며, 괄호 안은 해당 baseline 이름.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MSMARCO(8.8M 문서) 인덱싱 시간 분해 (CPU-only)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · MSMARCO 8.8M 문서, CPU-only, 총 4.8시간. 인덱스 구축 시간 기준 하이퍼파라미터 튜닝은 수행하지 않음.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>LEMUR 추정치와 exact MaxSim 간 상관계수 (일부 데이터셋)</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8, 14 · Table 4 (Appendix D), Appendix E · ColBERTv2 embeddings, 질의에 대해 평균. 본문에 개별 수치가 명시된 항목만 표시함(7개 데이터셋 전체 범위는 Pearson 0.952~0.994, Spearman 0.942~0.990). ArguAna는 질의당 300 벡터의 long-query 설정.
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>문제 재정식화가 단순하면서도 강력하다. MaxSim의 합 분해 구조와 선형 출력층이라는 두 가지 사실만으로 multi-vector 검색이 정확히 single-vector MIPS로 환원되며, 근사는 오직 MLP의 회귀 오차에만 국한된다. 이 덕분에 후보 선택 단계에서만 근사가 일어나고 최종 순위는 exact MaxSim rerank로 확정된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>표현 효율이 정량적으로 입증되었다. d&#x27;=1024의 학습된 임베딩이 10240차원 FDE보다 8개 중 7개 데이터셋에서 더 높은 Recall100@k&#x27;를 달성한다는 것은, 같은 recall을 훨씬 적은 메모리와 낮은 탐색 비용으로 얻을 수 있음을 뜻한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>기존 single-vector ANNS 생태계를 그대로 재사용할 수 있다는 점이 실무적으로 큰 강점이다. HNSW, scalar quantization, GPU용 CAGRA 등 이미 성숙한 라이브러리와 최적화 기법을 별도 수정 없이 얹을 수 있고, 향후 ANNS 발전이 자동으로 이득으로 이어진다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>확장성 설계가 구체적이다. auxiliary target으로 feature encoder를 pretrain한 뒤 문서별 가중치를 closed-form OLS로 푸는 구조 덕분에 문서 수에 선형으로 확장되고, GPU 없이도 8.8M 문서를 4.8시간에 인덱싱한다. feature encoder가 고정되므로 새 문서는 회귀 한 번으로 HNSW에 online insert할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>평가 범위가 기존 연구보다 넓다. 대부분의 선행 연구가 ColBERTv2 임베딩에만 의존해 평가된 반면, 이 논문은 텍스트 모델 5종과 visual 모델 2종에 걸쳐 평가하여 baseline들이 특정 임베딩에 취약하다는 사실(예: MUVERA가 Quora에서 60% recall 미달)까지 드러낸다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>훈련 데이터에 대한 강건성을 여러 각도로 검증했다. 실제 질의, corpus 문서를 query encoder로 인코딩한 데이터, 심지어 hidden layer를 학습하지 않는 random weight(ELM) 설정에서도 동작함을 보여, 방법의 이득이 특정 훈련셋에 과적합된 표현에서 오는 것이 아님을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 20</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>메모리 소비를 최적화하지 않았다. LEMUR는 product quantization이나 scalar quantization과 결합될 수 있으나, 2-bit quantization 같은 극저정밀도(extremely low-precision) 압축과의 호환성은 향후 연구로 남긴다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>문서가 점진적으로 도착하는(incrementally arrive) 상황에서 인덱스를 구축하는 것은 여전히 운영상의 과제가 될 수 있다. 별도 훈련셋 없이 corpus 자체로 학습할 수 있고 random hidden-layer weights도 동작함을 보였지만, synthetic 훈련셋과 cross-corpus 훈련셋에 대한 조사는 향후 연구로 남긴다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>MaxSim을 multi-output regression으로 정식화하는 접근이 다른 유사도 측정 방식과 다른 검색 task로 일반화되는지는 검증되지 않았으며 향후 연구 과제로 남는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>인덱스 구축 시간을 기준으로 하이퍼파라미터를 튜닝하지 않았다. 저자들은 성능의 소폭 저하만으로 인덱싱 속도를 크게 향상시킬 수 있다고 언급하지만, 그 트레이드오프 곡선은 제시하지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>CPU-only 결과만 제시한다. GPU 기반 구현(예: CAGRA 활용)이 용이하다고 언급할 뿐, 이에 대한 실험 결과는 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Visual document retrieval(ViDoRe)에서는 이미지 기반의 큰 문서 표현 때문에 reranking 단계의 상대적 비용이 커져 LEMUR와 baseline 간 성능 격차가 텍스트 데이터셋보다 좁게 나타난다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상, 문서 가중치 w_j가 corpus에 특화되어 학습되므로 corpus가 크게 갱신되거나 도메인이 바뀌면 W(및 경우에 따라 ψ)를 다시 맞춰야 한다. MSMARCO 기준 W 계산에만 70분이 소요되고 문서 수에 선형으로 증가하므로, 대량 갱신이 잦은 워크로드에서는 재인덱싱 비용이 실질적 제약이 될 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상, Theorem B.1의 오차 상한이 질의 토큰 수 |X|에 비례하므로 매우 긴 질의에서는 이론적 보장이 약해진다. ArguAna(질의당 300 벡터)에서 경험적으로 잘 동작했으나, 이는 상한이 느슨하다는 경험적 증거일 뿐 |X|에 대한 독립적 보장은 아니다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 8, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상, 최종 rerank는 여전히 k&#x27; 후보에 대한 exact MaxSim 계산이므로 문서당 임베딩 수가 큰 워크로드에서는 rerank가 병목이 된다. ViDoRe(문서당 평균 1073.3 embeddings)에서 격차가 좁아진 현상은 이 구조적 특성의 직접적 결과로 해석된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 6, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상, 인덱스가 문서당 하나의 학습된 벡터에 의존하므로 후보 선택 단계에서 놓친 문서는 rerank로 복구할 수 없다. 즉 최종 recall의 상한은 ANNS 단계의 Recall100@k&#x27;로 결정되며, 이것이 ablation에서 d&#x27;와 k&#x27;를 함께 조절하는 이유로 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>GPU 기반 LEMUR(예: CAGRA를 이용한 인덱싱·질의)는 실제로 어느 정도의 QPS와 인덱싱 시간을 달성하며, GPU에서는 baseline과의 격차가 유지되는가?</h3>
+              </div>
+              <p>저자들은 인덱싱과 질의 모두 GPU에서 구현하기 쉽다고 언급하지만 CPU-only 결과만 제시한다. 클러스터링 기반 baseline은 GPU에서 상대적으로 더 큰 이득을 볼 수 있으므로 상대 순위가 바뀔 가능성을 배제할 수 없다.</p>
+              <span class="source-ref">PDF p. 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>극저정밀도 압축(예: 2-bit product quantization)과 결합했을 때 LEMUR의 latent 벡터 {w_j}는 얼마나 견디는가? 학습된 표현이 data-oblivious한 FDE보다 양자화에 더 강한가, 아니면 더 취약한가?</h3>
+              </div>
+              <p>저자들이 메모리 최적화를 하지 않았고 극저정밀도 압축과의 호환성을 향후 연구로 명시했다. 현재는 HNSW의 scalar quantization만 사용한다.</p>
+              <span class="source-ref">PDF p. 7, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>문서가 지속적으로 유입되는 streaming/incremental 환경에서 feature encoder ψ를 고정한 채 얼마나 오래 성능이 유지되는가? 어떤 시점에 W 또는 ψ의 재학습이 필요한가?</h3>
+              </div>
+              <p>저자들은 새 문서를 선형회귀로 추가해 HNSW에 online insert할 수 있다고 하면서도, incremental 도착 상황이 운영상 과제로 남는다고 인정한다. drift 조건과 재학습 트리거는 제시되지 않았다.</p>
+              <span class="source-ref">PDF p. 5, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>MaxSim이 아닌 다른 집합 유사도(예: 정규화된 Chamfer, XTR 계열 objective, sum-of-topk)에도 동일한 합 분해 → 선형 출력층 → MIPS 환원 논리가 적용되는가?</h3>
+              </div>
+              <p>환원의 핵심은 f(X)=Σ_{x∈X} g(x)라는 질의 토큰에 대한 가법 분해이다. 이 성질이 깨지는 유사도에서는 전체 논리가 성립하지 않는다. 저자들도 다른 유사도로의 일반화를 향후 연구로 남긴다.</p>
+              <span class="source-ref">PDF p. 3, 4, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>문서당 임베딩 수가 매우 큰 visual document retrieval에서 rerank 병목을 줄이면(예: 임베딩 pruning/pooling 기법과 결합) 텍스트 수준의 속도 격차를 회복할 수 있는가?</h3>
+              </div>
+              <p>저자들은 ViDoRe에서 격차가 좁아진 원인을 큰 문서 표현으로 인한 reranking 비용으로 설명하고, 문서당 임베딩 수를 줄이는 연구들이 LEMUR와 orthogonal하며 결합 가능하다고 언급한다. 그러나 결합 실험은 없다.</p>
+              <span class="source-ref">PDF p. 6, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>corpus-only 훈련과 실제 질의 기반 훈련의 성능 차이는 정량적으로 얼마나 되며, 어떤 데이터셋 특성에서 그 차이가 커지는가?</h3>
+              </div>
+              <p>Appendix H.2는 실제 질의를 사용하면 성능이 더 높다고 서술하지만 구체적 수치가 그래프로만 제시되어 본문에서 확인할 수 없다.</p>
+              <span class="source-ref">PDF p. 5, 20</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>hidden layer를 전혀 학습하지 않는 ELM 설정에서 성능 저하가 정확히 얼마이며, latent 차원 d&#x27;를 키우면 그 저하를 상쇄할 수 있는가?</h3>
+              </div>
+              <p>Appendix H.3의 random hidden-layer weights 실험은 성능이 저하되지만 여전히 잘 동작한다고 기술할 뿐, 저하 폭과 d&#x27;와의 상호작용을 수치로 제시하지 않는다. 이는 인덱싱 시간을 20분 더 줄일 수 있는 실용적 선택지와 직결된다.</p>
+              <span class="source-ref">PDF p. 5</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>MaxSim similarity (Chamfer similarity)</dt>
+              <dd>
+                질의 X와 문서 C의 multi-vector 유사도. MaxSim(X,C) = Σ_{x∈X} max_{c∈C} ⟨x,c⟩로 정의되며, 각 질의 토큰에 대해 가장 유사한 문서 토큰과의 inner product를 취해 모두 합한 값이다. 이 논문 전체의 target function이다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late interaction</dt>
+              <dd>
+                질의와 문서를 각각 토큰 단위 임베딩 집합으로 인코딩한 뒤, 검색 시점에 토큰 간 상호작용(MaxSim)을 계산하는 방식. ColBERT 계열 모델의 핵심 구조로 single-vector 모델보다 정확하지만 계산 비용이 크다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Search reduction (corpus-specific)</dt>
+              <dd>
+                임베딩 모델 자체를 재학습하지 않고, 주어진 corpus에 특화된 경량 모델을 학습해 어려운 검색 문제(multi-vector)를 쉬운 검색 문제(single-vector MIPS)로 바꾸는 것. LEMUR의 자리매김이며, 범용 인코더를 학습하는 distillation과 구분된다.
+                <span class="source-ref">PDF p. 2, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-output regression 정식화</dt>
+              <dd>
+                target function f(X)=(f_1(X),...,f_m(X)), f_l(X)=MaxSim(X,C_l)를 문서 수 m개의 출력을 갖는 회귀 문제로 보는 것. f(X)=Σ_{x∈X} g(x)로 분해되므로 토큰 단위 함수 g만 학습하면 된다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Support function</dt>
+              <dd>
+                유한 점집합 C_l에 대해 g_l(x) = max_{c∈C_l} ⟨x,c⟩로 정의되는 함수. 항상 convex piecewise-linear이며, 저자들이 2-layer보다 깊은 네트워크가 불필요하다고 본 근거이다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Feature encoder ψ</dt>
+              <dd>
+                ψ(x)=LN(GELU(W&#x27;x+b)). 토큰 임베딩을 d&#x27;차원 latent space로 사상하는 MLP의 첫 계층으로, pretrain 후 고정되어 질의 인코딩과 문서 OLS 계산 모두에 재사용된다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Pooled query representation Ψ(X)</dt>
+              <dd>
+                Ψ(X) = Σ_{x∈X} ψ(x). 질의의 모든 토큰에 대한 feature encoder 출력을 합산한 단일 벡터로, ANNS 인덱스에 던지는 질의 벡터가 된다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MIPS (Maximum Inner Product Search)</dt>
+              <dd>
+                유사도 측도가 inner product인 최근접 이웃 탐색 문제. LEMUR는 latent space에서의 top-k&#x27; 문서 검색을 정확히 이 문제로 환원한다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>FDE (Fixed-Dimensional Encoding)</dt>
+              <dd>
+                MUVERA가 multi-vector를 single-vector로 바꾸기 위해 사용하는 data-oblivious한 고정 차원 인코딩. 논문 실험에서는 10240차원을 사용하며, LEMUR의 1024차원 학습 임베딩보다 대부분의 데이터셋에서 낮은 Recall100@k&#x27;를 보인다.
+                <span class="source-ref">PDF p. 2, 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Token-level pruning</dt>
+              <dd>
+                질의 토큰마다 전체 문서 토큰 집합에서 유사한 토큰을 먼저 찾고, 그 토큰을 포함한 문서로 후보를 좁히는 전략. ColBERT, PLAID, DESSERT, EMVB, IGP의 공통 기반이며, 논문은 token 유사도가 MaxSim의 부정확한 proxy라고 비판한다.
+                <span class="source-ref">PDF p. 1, 2, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Recall100@k&#x27;</dt>
+              <dd>
+                질의의 진짜 MaxSim 기준 100-nn 중 몇 개가 모델 추론으로 선택된 top-k&#x27; 후보 집합에 포함되는지의 비율. Ablation에서 latent 차원 d&#x27;의 표현 품질을 ANNS/rerank 비용과 분리해 측정하는 지표로 쓰인다.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>OLS closed-form solution (w_j = Z^+ y_j)</dt>
+              <dd>
+                feature encoder ψ를 고정하면 문서 j의 출력층 가중치 w_j를 구하는 문제가 표준 선형회귀가 되어 pseudo-inverse로 닫힌 형태의 해를 얻는다. gradient descent 없이 문서별 벡터를 병렬로 계산할 수 있어 인덱싱 확장성의 핵심이다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Auxiliary target function g&#x27;</dt>
+              <dd>
+                m&#x27;≪m개(실험에서는 8192개) 문서만 표본추출해 정의한 축소 target. 이를 이용해 보조 모델 ϕ&#x27;(x)=W&#x27;&#x27;ψ(x)를 학습함으로써, m이 수백만이어도 feature encoder를 현실적 비용으로 pretrain할 수 있다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ELM (Extreme Learning Machine)</dt>
+              <dd>
+                hidden layer 가중치를 학습하지 않고 무작위로 두며 최종 선형층만 데이터에 적합시키는 방식. Appendix H.3에서 LEMUR가 이 설정에서도 동작함을 보여, 성능이 훈련셋 특화 표현에 크게 의존하지 않음을 시사한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Glass / HNSW</dt>
+              <dd>
+                본 논문에서 사용한 single-vector ANNS 라이브러리와 그 기반 그래프 인덱스. graph degree R=64, insertion-time beam width L=800, scalar quantization 설정을 사용하며, HNSW의 online insert 지원 덕분에 신규 문서 추가가 가능하다.
+                <span class="source-ref">PDF p. 5, 7, 13</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Figure 2(오른쪽), Figure 3, Figure 4, Figure 5 및 Appendix F/G/H의 QPS-recall 곡선상의 개별 데이터 포인트는 라벨 없는 그래프로만 제공되어, Table 2·Table 4·Appendix C 표에 명시된 값 외의 정확한 수치는 확인되지 않음. 이에 따라 charts에는 표에 명시된 수치만 포함함.</li><li>GPU 기반 LEMUR 구현(CAGRA 이용)의 실제 속도와 인덱싱 시간에 대한 정량적 실험 결과는 논문에 없음. 구현이 용이하다는 언급만 존재함(page 5).</li><li>Appendix D의 Table 4(Pearson/Spearman 상관계수)에는 MSMARCO에 대한 값이 포함되어 있지 않아, 가장 큰 데이터셋에서의 MaxSim 근사 품질은 확인되지 않음.</li><li>MLP의 정확한 파라미터 개수와 데이터셋별 절대 latency(ms) 값은 논문에 명시되지 않음(QPS 단위로만 보고됨). 따라서 단일 질의 latency는 확인되지 않음.</li><li>Appendix H.2(Training Set Selection)에서 별도 query 표본을 사용한 학습이 corpus 기반 학습보다 더 좋다고 서술되나, 구체적 수치 차이는 그래프로만 제시되어 확인되지 않음.</li><li>Appendix H.3의 random hidden-layer weights(ELM) 설정에서의 성능 저하 폭의 구체적 수치는 확인되지 않음.</li><li>LEMUR 인덱스의 실제 메모리 사용량(문서당 d&#x27;=2048 벡터 + scalar quantization 기준)과 baseline 대비 메모리 비교 수치는 본문에서 확인되지 않음. 저자들은 메모리 최적화를 수행하지 않았다고 밝힘(page 9).</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "MSMARCO: recall≥80% 기준 방법별 최고 QPS", "labels": ["LEMUR", "MUVERA", "IGP", "PLAID"], "values": [799, 150, 62, 13], "unit": "QPS", "xLabel": "방법", "yLabel": "Best QPS"}, {"canvasId": "chart-1", "type": "bar", "title": "Quora: recall≥80% 기준 방법별 최고 QPS", "labels": ["LEMUR", "MUVERA", "IGP", "DESSERT", "PLAID"], "values": [4068, 787, 679, 284, 89], "unit": "QPS", "xLabel": "방법", "yLabel": "Best QPS"}, {"canvasId": "chart-2", "type": "bar", "title": "LEMUR의 데이터셋별 최고 QPS (recall≥80%, k=100)", "labels": ["MSMARCO", "HotpotQA", "NQ", "Quora", "Touche-2020", "TREC-Covid", "FiQA-2018", "SCIDOCS"], "values": [799, 426, 869, 4068, 1996, 1753, 2416, 2591], "unit": "QPS", "xLabel": "데이터셋", "yLabel": "Best QPS"}, {"canvasId": "chart-3", "type": "bar", "title": "데이터셋별 최고 성능 baseline의 QPS (비교용)", "labels": ["MSMARCO (MUVERA)", "HotpotQA (IGP)", "NQ (IGP)", "Quora (MUVERA)", "Touche-2020 (MUVERA)", "TREC-Covid (DESSERT)", "FiQA-2018 (IGP)", "SCIDOCS (MUVERA)"], "values": [150, 37, 107, 787, 371, 109, 310, 391], "unit": "QPS", "xLabel": "데이터셋", "yLabel": "Best QPS"}, {"canvasId": "chart-4", "type": "bar", "title": "MSMARCO(8.8M 문서) 인덱싱 시간 분해 (CPU-only)", "labels": ["feature encoder 학습", "가중치 행렬 W 계산 (OLS)", "ANN 그래프 구축"], "values": [20, 70, 198], "unit": "minutes", "xLabel": "인덱싱 단계", "yLabel": "소요 시간"}, {"canvasId": "chart-5", "type": "bar", "title": "LEMUR 추정치와 exact MaxSim 간 상관계수 (일부 데이터셋)", "labels": ["TREC-COVID (Pearson r)", "TREC-COVID (Spearman ρ)", "NQ (Pearson r)", "NQ (Spearman ρ)", "ArguAna (Pearson r)", "ArguAna (Spearman ρ)"], "values": [0.994, 0.99, 0.952, 0.942, 0.987, 0.983], "unit": "correlation coefficient", "xLabel": "데이터셋 / 지표", "yLabel": "상관계수"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
