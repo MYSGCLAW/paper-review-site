@@ -667,7 +667,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>14</small>
+          <small>15</small>
         </a>
         
 
@@ -704,7 +704,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>7</small>
+          <small>6</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -722,8 +722,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 14편</span>
-        <span class="stat">전체 항목 22개</span>
+        <span class="stat">논문 15편</span>
+        <span class="stat">전체 항목 23개</span>
       </div>
     </div>
   </header>
@@ -734,7 +734,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>14개 문서</small>
+      <small>15개 문서</small>
     </a>
     
 
@@ -778,7 +778,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>14</small>
+          <small>15</small>
         </a>
         
 
@@ -815,7 +815,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>7</small>
+          <small>6</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -836,7 +836,7 @@
     </div>
 
     <span class="pending-queue-count">
-      7편 대기 중
+      6편 대기 중
     </span>
   </div>
 
@@ -848,12 +848,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>BiSCo-LLM_Lookup-Free Binary Spherical Coding for Extreme Low-Bit Large Language Model Compression.pdf</strong>
+            <strong>A Voronoi Cell Formulation for Principled Token Pruning in Late-Interaction Retrieval Models.pdf</strong>
             <span>등록 시각 · 2026-07-12 23:26</span>
           </div>
 
           <div class="pending-queue-size">
-            630.4 KB
+            1.1 MB
           </div>
 
           <div>
@@ -867,28 +867,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>A Voronoi Cell Formulation for Principled Token Pruning in Late-Interaction Retrieval Models.pdf</strong>
-            <span>등록 시각 · 2026-07-12 23:26</span>
-          </div>
-
-          <div class="pending-queue-size">
-            1.1 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -910,7 +888,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -932,7 +910,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            5
+            4
           </div>
 
           <div class="pending-queue-paper">
@@ -954,7 +932,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            6
+            5
           </div>
 
           <div class="pending-queue-paper">
@@ -976,7 +954,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            7
+            6
           </div>
 
           <div class="pending-queue-paper">
@@ -1009,11 +987,37 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">14개</span>
+        <span class="section-count">15개</span>
       </div>
 
       <div class="library-grid">
         
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/bisco-llm-lookup-free-binary-spherical-coding-for-extreme-low-bit-large-language-model-compression/">
+            BiSCo-LLM: Lookup-Free Binary Spherical Coding for Extreme Low-Bit Large Language Model Compression
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Yuantian Shao, Peisong Wang, Zhilei Liu, Chuangyi Li, Yuanteng Chen, Pengcheng Xie, Yiwu Yao, Zhihui Wei, Jian Cheng</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2607.08643v1, cs.LG) — 정식 게재 학회/저널은 확인되지 않음</p>
+
+      <p class="summary">
+        BiSCo-LLM은 LLM weight를 weight당 2 bit 수준으로 압축하면서도 vector quantization(VQ)이 요구하는 explicit codebook과 index lookup을 완전히 제거하는 것을 목표로 하는 storage-aware 압축 파이프라인이다. 핵심 아이디어는 binary spherical quantization(BSQ)이다. d차원 weight chunk를 encoder로 latent vector에 사상하고 unit hypersphere로 정규화한 뒤 sign 함수로 이진화하면, centroid 테이블을 저장하지 않고도 각 chunk가 하나의 binary code(sign pattern)로 표현되며, 복원은 저장된 codebook 조회가 아니라 모든 chunk가 공유하는 compact neural decoder의 forward 연산으로 수행된다(lookup-free). 저자들은 여기에 세 가지 장치를 추가한다. 첫째, 단일 스테이지 code 길이를 늘리는 것이 비효율적임을 실측(Qwen3-8B qproj에서 b=64일 때 레이어당 실제 점유 code pattern 중앙값이 524,286개로 2^64 공간의 약 2.84×10^-14에 불과)으로 보이고, 대신 base 복원이 남긴 residual에 두 번째 BSQ codec을 할당하는 second-stage residual coding을 도입한다. 둘째, activation 통계와 weight 크기를 결합한 sensitivity score로 선정한 소수(ρ=1%) 채널만 8-bit로 따로 저장하는 protected-channel path를 둔다. 셋째, layer 단위 local loss 감소가 조립된 모델의 성능 회복을 보장하지 않는다는 진단(local loss는 36개 block 모두에서 평균 27.26% 감소했지만 prefix 평가 downstream 정확도는 70.34%에서 최종 53.36%로 붕괴)을 근거로, module category(q/k/v/o/gate/up/down_proj) 단위로 교체와 recovery distillation을 번갈아 수행하는 category-wise 스케줄을 채택한다. 압축 크기는 code stream, decoder parameter, 8-bit payload, LoRA adapter, metadata를 모두 더한 real storage budget(Stot)으로 명시적으로 계산된다. Qwen3-8B에서 WikiText-2 perplexity 10.18(FP16/BF16 9.73), 보고된 7개 task 평균 정확도 68.05(FP16/BF16 69.92, 격차 1.87점)로 AQLM·QuIP#·UniSVQ 등 2-bit VQ baseline을 상회한다고 보고한다. 다만 Qwen3-8B의 HellaSwag 결과와 LLaMA3-8B 전체 결과가 아직 비어 있어 논문은 진행 중인 초안 성격을 갖는다.
+      </p>
+
+      <a class="open-link" href="papers/bisco-llm-lookup-free-binary-spherical-coding-for-extreme-low-bit-large-language-model-compression/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>

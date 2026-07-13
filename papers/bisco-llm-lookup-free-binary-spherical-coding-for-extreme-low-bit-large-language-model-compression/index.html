@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>BiSCo-LLM: Lookup-Free Binary Spherical Coding for Extreme Low-Bit Large Language Model Compression</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>BiSCo-LLM: Lookup-Free Binary Spherical Coding for Extreme Low-Bit Large Language Model Compression</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Yuantian Shao, Peisong Wang, Zhilei Liu, Chuangyi Li, Yuanteng Chen, Pengcheng Xie, Yiwu Yao, Zhihui Wei, Jian Cheng</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2607.08643v1, cs.LG) — 정식 게재 학회/저널은 확인되지 않음</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘과 표현 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 위치</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>BiSCo-LLM은 LLM weight를 weight당 2 bit 수준으로 압축하면서도 vector quantization(VQ)이 요구하는 explicit codebook과 index lookup을 완전히 제거하는 것을 목표로 하는 storage-aware 압축 파이프라인이다. 핵심 아이디어는 binary spherical quantization(BSQ)이다. d차원 weight chunk를 encoder로 latent vector에 사상하고 unit hypersphere로 정규화한 뒤 sign 함수로 이진화하면, centroid 테이블을 저장하지 않고도 각 chunk가 하나의 binary code(sign pattern)로 표현되며, 복원은 저장된 codebook 조회가 아니라 모든 chunk가 공유하는 compact neural decoder의 forward 연산으로 수행된다(lookup-free). 저자들은 여기에 세 가지 장치를 추가한다. 첫째, 단일 스테이지 code 길이를 늘리는 것이 비효율적임을 실측(Qwen3-8B qproj에서 b=64일 때 레이어당 실제 점유 code pattern 중앙값이 524,286개로 2^64 공간의 약 2.84×10^-14에 불과)으로 보이고, 대신 base 복원이 남긴 residual에 두 번째 BSQ codec을 할당하는 second-stage residual coding을 도입한다. 둘째, activation 통계와 weight 크기를 결합한 sensitivity score로 선정한 소수(ρ=1%) 채널만 8-bit로 따로 저장하는 protected-channel path를 둔다. 셋째, layer 단위 local loss 감소가 조립된 모델의 성능 회복을 보장하지 않는다는 진단(local loss는 36개 block 모두에서 평균 27.26% 감소했지만 prefix 평가 downstream 정확도는 70.34%에서 최종 53.36%로 붕괴)을 근거로, module category(q/k/v/o/gate/up/down_proj) 단위로 교체와 recovery distillation을 번갈아 수행하는 category-wise 스케줄을 채택한다. 압축 크기는 code stream, decoder parameter, 8-bit payload, LoRA adapter, metadata를 모두 더한 real storage budget(Stot)으로 명시적으로 계산된다. Qwen3-8B에서 WikiText-2 perplexity 10.18(FP16/BF16 9.73), 보고된 7개 task 평균 정확도 68.05(FP16/BF16 69.92, 격차 1.87점)로 AQLM·QuIP#·UniSVQ 등 2-bit VQ baseline을 상회한다고 보고한다. 다만 Qwen3-8B의 HellaSwag 결과와 LLaMA3-8B 전체 결과가 아직 비어 있어 논문은 진행 중인 초안 성격을 갖는다.</p>
+        <span class="source-ref">PDF p. 1, 3, 6, 7, 9, 11, 12</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>BSQ(binary spherical quantization)는 code를 &#x27;unit hypersphere 위 latent의 sign pattern&#x27;으로 정의하고 복원을 공유 neural decoder의 forward로 수행함으로써, VQ의 explicit codebook과 nearest-neighbor lookup을 모두 제거한다(lookup-free).</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>one-stage binary code를 늘리는 것은 bit 낭비다. Qwen3-8B qproj(b=64)에서 실제 점유 code pattern은 레이어당 중앙값 524,286개로 2^64 공간의 약 2.84×10^-14에 불과했고, 이는 추가 bit를 residual stage에 배정하는 설계의 직접적 근거가 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>동일한 총 code 길이 조건(one-stage 32D vs two-stage 16D×2)에서 two-stage가 7개 category 중 6개의 perplexity를 개선해, 이득이 bit 증가가 아니라 residual 구조 코딩에서 옴을 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>1%의 채널만 8-bit로 보호해도 LLaMA-2-7B 평균 WikiText-2 perplexity가 5.95→5.82로 개선되고 7개 category 전부가 향상되며, 특히 down_proj에서 6.58→6.10으로 가장 큰 이득이 난다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>local loss 감소는 global recovery를 보장하지 않는다. layer-wise LoRA 복구는 36개 block 모두에서 local loss를 평균 27.26% 낮췄지만 prefix 평가 정확도는 70.34%에서 53.36%로 붕괴했고, 이것이 category-wise 교체·복구 스케줄의 근거다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Qwen3-8B에서 WikiText-2 perplexity 10.18(FP16/BF16 9.73), 7-task 평균 정확도 68.05(FP16/BF16 69.92, 격차 1.87점)로 AQLM(+3.11), QuIP#(+0.50), UniSVQ(+0.11)를 상회한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>downstream 평균에서 최신 VQ baseline과의 격차는 0.11~0.50점으로 작은 반면 perplexity 격차(QuIP# 대비 2.19, UniSVQ 대비 4.64)는 상대적으로 크다. BiSCo-LLM의 우위는 언어 모델링 분포 보존 쪽에서 더 선명하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>decoder의 비선형성은 선택 사항이 아니다. symmetric decoder를 linear decoder로 바꾸면 MLP 평균이 58.34→50.67로 무너지고 residual stage를 3개로 늘려도 회복되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>배포 병목이 연산에서 저장·대역폭으로 이동했다</h3>
+      <p>최근 LLM 배포 목표가 DeepSeek-V3/R1(671B, activated 37B), Kimi K2(1T, activated 32B), GLM-4.5(355B total, activated 32B)와 같은 대규모 MoE 아키텍처로 이동하면서 BF16/FP16 checkpoint 저장에 terabyte급 용량이 필요해졌다. 논문은 효율적 추론이 peak 연산 처리량만이 아니라 메모리 계층을 통해 실제로 이동해야 하는 모델 데이터 양(weight bandwidth)에 의해서도 제약된다고 지적하며, 특히 batch size가 작은 autoregressive decoding에서는 weight loading 비용이 지연시간과 처리량을 지배할 수 있다고 주장한다. 온디바이스/하이브리드 개인비서(Apple Intelligence), agentic·코딩 시스템의 multi-step 추론, 기업·프라이빗 클라우드·엣지의 다중 테넌트 배포 시나리오에서 저장 공간, 메모리 대역폭, serving 밀도는 모두 시스템 수준 제약이 된다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2-bit 근처에서 갈리는 두 갈래 압축 계열</h3>
+      <p>기존 low-bit 압축은 크게 두 갈래다. (1) scalar 또는 group-wise quantization은 구현이 단순하고 저정밀 커널과 잘 맞지만, target budget이 weight당 2 bit에 가까워지면 그룹 내에서 사용할 수 있는 재구성 레벨 수가 급감해 표현력이 부족해진다. (2) vector-quantized(VQ) 압축은 block-level의 더 풍부한 표현을 제공하지만, 명시적 codebook 저장, index lookup 연산, 그리고 그에 따른 추가 저장 accounting을 도입한다. 논문이 정의하는 문제는 이 둘 사이의 간극, 즉 codebook을 저장하지 않고도 block-level 표현력을 얻어 extreme low-bit(2-bit 지향) LLM weight 압축을 실현하는 것이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>&#x27;명목 bit rate&#x27;가 아니라 &#x27;실제 저장량&#x27;으로 평가해야 한다</h3>
+      <p>논문은 압축 방식이 codebook, decoder, adapter, metadata 등 여러 부수 payload를 갖는 이상, 명목 code rate(예: 2 bit/weight)만으로 방법을 비교하는 것은 공정하지 않다고 본다. 따라서 BSQ code stream, decoder parameter, metadata, 선택적 protected-channel payload, LoRA adapter, decoding 비용까지 모두 합산한 real storage budget 하에서 압축 모델을 최적화하고 평가하는 것을 문제 설정에 포함시킨다.</p>
+      <span class="source-ref">PDF p. 3, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Scalar / group-wise quantization: 방향성 정보의 손실</h3>
+      <p>bit budget이 줄어들수록 그룹 내 재구성 레벨 수가 적어지고, 그 결과 local weight vector가 갖는 지배적 구조와 layer output 유지에 중요한 방향(direction) 정보를 함께 보존하기 어려워진다. 논문은 이것이 2-bit 근처에서 scalar 계열이 무너지는 근본 이유라고 본다(Table III에서 GPTQ는 Qwen3-8B WikiText-2 perplexity 4.68×10^4로 사실상 붕괴).</p>
+      <span class="source-ref">PDF p. 1, 2, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Vector quantization: codebook 자체가 비용이다</h3>
+      <p>VQ 계열은 block-level 표현을 얻는 대가로 explicit codebook 저장, nearest-neighbor index lookup, 추가 저장 accounting을 요구한다. VQ-VAE 계열의 discrete representation learning에서는 codebook 활용도가 낮거나 일부 entry가 collapse되는 문제, vocabulary가 커질수록 lookup 비용이 커지는 문제, 그리고 codebook 자체가 별도의 저장 구성요소가 되는 문제가 알려져 있다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>최신 vector/structured-code 기법도 구조적 의존성을 남긴다</h3>
+      <p>LiftQuant, UniSVQ, LC-QAT, QuIP, QuIP#, QTIP, AQLM, VPTQ, GPTVQ 등은 VQ의 경직성과 오버헤드를 줄이는 방향으로 발전했지만, 여전히 explicit codebook, lattice lookup rule, trellis decoder, 고정 projection matrix 중 하나에 의존하며 각각 저장·구현·적응상의 제약을 남긴다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Layer-wise / local distillation: local 최적화가 global 성능과 어긋난다</h3>
+      <p>layer 단위 복구는 메모리 효율적이지만, 한 layer의 local reconstruction 또는 hidden-state loss는 모든 압축 layer가 조립된 뒤의 perplexity나 downstream accuracy와 반드시 정렬되지 않는다. 독립적으로 최적화된 여러 layer가 합성될 때 이 불일치가 증폭될 수 있다. 논문은 Qwen3-8B에서 layer-wise LoRA 복구를 실제로 수행해 36개 block 모두에서 local loss가 감소하고 평균 27.26%의 loss 감소를 얻었음에도, prefix 평가 downstream 정확도가 70.34%에서 최고 70.71%를 찍은 뒤 마지막 평가 지점에서 53.36%로 떨어지는 현상을 보고하며 이 한계를 실증한다(Fig. 3).</p>
+      <span class="source-ref">PDF p. 2, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>One-stage binary code를 늘리는 것은 bit를 낭비한다</h3>
+      <p>binary code 길이를 단순히 늘리면 implicit code space는 지수적으로 커지지만, 사전학습된 weight chunk가 실제로 점유하는 pattern은 그 공간의 극히 일부다. Qwen3-8B qproj에 one-stage 2-bit(b=64) BSQ를 학습했을 때 레이어당 실제 점유 code pattern 수의 중앙값은 524,286개로, 2^64 공간 대비 약 2.84×10^-14에 불과했다(각 레이어가 제공하는 chunk 수 2^19가 상한을 결정). 또한 동일한 nominal code rate에서 granularity(chunk dimension/binary length)를 키워도 model-level 성능이 안정적으로 향상되지 않으며, 가장 큰 64/128 설정은 여러 category가 압축된 뒤 불안정해졌다(Fig. 2).</p>
+      <span class="source-ref">PDF p. 2, 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1. Codebook-free binary spherical coding 기반 압축 파이프라인</h3>
+      <p>BiSCo-LLM은 codebook-free binary spherical coding, residual code allocation, category-wise replacement, recovery distillation을 하나의 storage-aware 2-bit 지향 파이프라인으로 통합한다. 압축 모델이 explicit real-size budget 하에서 최적화되고 평가된다는 점이 설계의 축이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2. Second-stage residual BSQ codec</h3>
+      <p>추가 code capacity를 one-stage code 길이 확장에 쓰는 대신, base spherical codec이 포착하지 못한 residual 구조에 할당한다. 이는 explicit storage accounting 하에서 실용적인 rate-distortion 경로를 제공한다는 것이 저자들의 주장이다.</p>
+      <span class="source-ref">PDF p. 3, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3. Category-wise codec optimization과 recovery distillation</h3>
+      <p>codec은 개별 layer가 아니라 Transformer linear module의 category 단위로 학습·적용되고, recovery는 각 category가 교체된 직후에 수행된다. 이렇게 하면 distillation objective가 순수 layer-wise recovery보다 &#x27;압축된 category와 나머지 모델의 상호작용&#x27;을 더 잘 반영한다.</p>
+      <span class="source-ref">PDF p. 3, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4. Real storage budget 하에서의 평가</h3>
+      <p>BSQ code stream, decoder parameter, metadata, 선택적 protected-channel payload, LoRA adapter, decoding 비용을 모두 명시적으로 계산하는 저장 예산 하에서 파이프라인을 평가한다. Qwen3-8B 최종 압축 모델은 FP16/BF16 대비 average downstream accuracy 격차를 2 percentage point 이내로 유지한다고 보고한다(실측 1.87점).</p>
+      <span class="source-ref">PDF p. 3, 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 조감</h3>
+      <p>BiSCo-LLM은 module category를 단위로 도는 반복 파이프라인이다. 각 target category c에 대해 (1) weight matrix를 d차원 chunk로 쪼개 base BSQ codec으로 인코딩·복원하고, (2) base가 남긴 residual에 두 번째 BSQ codec을 학습시켜 추가 capacity를 할당하며, (3) 선택적으로 소수의 민감 채널을 8-bit protected path로 빼내고, (4) 해당 category를 압축 모듈로 교체한 직후 category-wise recovery distillation을 수행한 뒤 다음 category로 넘어간다. 모든 target category가 처리되면 누적된 cross-category mismatch를 줄이기 위한 선택적 end-to-end recovery distillation을 적용할 수 있다.</p>
+      <span class="source-ref">PDF p. 6, 8, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Lookup-free의 의미</h3>
+      <p>일반 VQ에서 code는 codebook 테이블의 index이고 복원은 테이블 조회다. BSQ에서는 code가 unit hypersphere 위 latent vector의 sign pattern이고, 복원은 모든 chunk가 공유하는 compact neural decoder의 forward 연산이다. 따라서 저장해야 하는 것은 (a) bit-packed sign code stream과 (b) 작은 decoder 파라미터뿐이며, centroid 테이블도 nearest-neighbor 검색도 존재하지 않는다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Storage-aware bit accounting (Stot)</h3>
+      <p>실제 압축 크기는 code stream(Scode), decoder parameter(Sdec), 8-bit protected payload(S8bit), LoRA adapter(SLoRA), metadata(Smeta)의 합으로 정의된다. 이 명시적 accounting이 있어야 nominal bit rate로는 드러나지 않는 실제 저장 비용을 방법 간에 공정하게 비교할 수 있다는 것이 논문의 설계 원칙이다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Step 1 — Chunking</h3>
+      <p>layer ℓ, module category c의 weight matrix W(ℓ,c)를 d차원 weight chunk 단위로 분할한다. chunk가 BSQ 인코딩의 기본 단위다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 2 — Base BSQ 인코딩/복원</h3>
+      <p>각 chunk를 encoder E로 latent vector에 사상하고 unit hypersphere로 정규화한 뒤 sign 함수로 이진화하여 base binary spherical code를 얻는다. 미분 불가능한 sign 연산은 straight-through estimator(STE)로 우회하며, codec은 reconstruction loss, latent commitment loss, entropy regularization loss의 조합으로 학습된다. 복원은 base decoder D의 forward로 수행된다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 3 — Second-stage residual BSQ</h3>
+      <p>base 복원이 남긴 residual r(1) = x − r̂(1)에 대해 두 번째 BSQ codec(E2/D2)을 학습시켜 residual을 인코딩·복원한다. 최종 복원값은 base 복원과 residual 복원의 합 x̂ = r̂(1) + r̂(2)이다. 논문은 두 스테이지를 기본 설정으로 제시하며, 더 많은 스테이지로 확장 가능하지만 3-stage가 실제 bpw trade-off에서 명확히 낫다는 근거가 나오기 전까지는 2-stage를 default로 둔다고 명시한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 4 — (선택) 8-bit protected-channel path</h3>
+      <p>activation 통계 g와 원본 weight slice의 크기를 결합한 sensitivity score S = g·||W||₂로 상위 ⌈ρ·d⌉개 채널을 선정한다. attention projection(q/k/v/o)은 input-channel(column slice)을 보호하고, gated MLP(gate/up/down)는 intermediate channel이 세 행렬에 공유되므로 gate_proj·up_proj의 출력 행과 down_proj의 대응 입력 열을 함께 묶는 coupled intermediate-channel protection을 사용한다. 선택된 slice는 8-bit quantizer Q8로 저장하고, 나머지 complement slice에만 two-stage BSQ를 학습·적용한다. 저장 비용 S8bit는 BSQ payload와 별도로 계산된다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 5 — Category-wise recovery distillation</h3>
+      <p>한 module category 전체가 압축 모듈로 교체되면, 교체 이전 모델을 teacher, 부분 압축 모델을 student로 두고 Lrecover = λkd·LKD + λhid·Lhidden + λaux·Laux 형태의 loss로 복구한다(output distribution distillation + hidden-state alignment). 기본 설정에서는 BSQ code를 고정한 채 LoRA adapter만 학습하는데, 이는 복구 payload를 명시적으로 계량 가능하게 만들고 distillation 단계가 full-precision weight 업데이트 안에 압축 비용을 숨기는 것을 막기 위함이다. 구현은 압축된 category에 LoRA, 미압축 category에 LoRA, decoder tuning, decoder+LoRA tuning 등 여러 배치를 지원한다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 6 — 모든 category 순회 후 선택적 end-to-end 복구</h3>
+      <p>target category 집합(q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj)을 모두 압축·복구한 뒤, 누적된 cross-category mismatch를 줄이기 위한 선택적 end-to-end LoRA fine-tuning을 적용할 수 있다. category-wise recovery가 교체 직후의 local mismatch를 담당한다면, 이 단계는 전역적 누적 오차를 담당한다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 7 — Engineering 최적화와 배포</h3>
+      <p>같은 category에 속한 여러 layer의 weight chunk를 병렬 학습 인스턴스로 묶는 category-batched codec optimization, 그리고 여러 residual stage의 decoding을 배치로 묶어 순차 로딩 병목을 없애는 batched parallel residual decoding을 적용한다. 이 최적화들은 압축 표현의 수학적 형태나 storage accounting을 바꾸지 않는다. 추론 시 base/residual decoder는 독립적으로 디코딩된 뒤 합산되어 최종 weight를 구성하고, 이 weight는 표준 행렬곱 커널에 그대로 투입된다.</p>
+      <span class="source-ref">PDF p. 10, 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 표현 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Binary Spherical Quantization (BSQ)의 코드 구조</h3>
+      <p>BSQ의 code는 &#x27;unit hypersphere 위 latent vector의 각 좌표 부호&#x27;다. 즉 b차원 latent를 정규화한 뒤 각 차원에 sign을 취하면 b bit의 binary code가 되고, chunk dimension d에 대해 code rate는 b/d bit/weight가 된다(2-bit 목표는 b/d = 2). 이 구조가 explicit centroid를 필요 없게 만드는 지점이다. 학습은 STE로 sign을 통과시키고 reconstruction·commitment·entropy loss로 encoder/decoder를 동시에 최적화한다. entropy regularization은 code 사용 분포를 넓혀 VQ-VAE류의 codebook collapse에 대응하는 역할을 한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 code를 늘리지 않고 residual에 나누는가 (Fig. 1의 논거)</h3>
+      <p>one-stage code 길이 b를 늘리면 sign-pattern 공간은 2^b로 폭증하지만 실제로 채워지는 pattern 수는 chunk 개수로 상한이 걸린다. Qwen3-8B qproj, b=64 측정에서 레이어당 점유 pattern 중앙값은 524,286개였고 각 레이어가 제공하는 chunk는 2^19개뿐이었다(2^64 대비 사용률 약 2.84×10^-14). 즉 늘린 bit의 대부분은 사용되지 않는 공간을 표현하는 데 쓰인다. 대신 같은 bit를 residual stage에 배정하면 base가 놓친 오차 구조를 직접 코딩하게 되어 rate-distortion 경로가 개선된다. Table I의 budget-matched 비교(one-stage 32D vs two-stage 16D×2, 총 binary code 길이 동일)에서 two-stage가 7개 category 중 6개에서 perplexity를 개선했고(v_proj 제외), 32D에 residual stage를 추가한 32D×2 설정은 7개 category 모두를 개선했다(up_proj 6.23→5.95, down_proj 6.79→6.58).</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Sensitivity score와 coupled MLP channel 선택</h3>
+      <p>protected channel 선택은 BSQ reconstruction residual이 아니라 calibration 통계에서 나온다. attention은 column j에 대해 S(ℓ,j) = g(ℓ,j)·||W(ℓ,:,j)||₂로 점수를 매기고 TopK ⌈ρ·din⌉개를 고른다. MLP는 intermediate index j에 대해 gate_proj·up_proj의 행 노름과 down_proj의 열 노름을 activation 통계로 가중해 합산한 S_mlp(ℓ,j)를 쓰고 TopK ⌈ρ·dffn⌉개를 고른다. 이 coupled 선택은 gate/up/down을 독립 행렬로 보지 않고 하나의 결합 구조로 다루는 SpenseGPT-style aligned MLP-channel selection의 논리를 따른다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Local recovery의 실패를 근거로 한 category-wise 스케줄</h3>
+      <p>논문은 &#x27;weight reconstruction error를 줄이는 것&#x27;과 &#x27;조립된 모델이 복구되는 것&#x27;이 다르다는 점을 진단 실험으로 보인다(Fig. 3). Qwen3-8B에서 layer-wise LoRA 복구(α=0.25, β=0.1, 5k steps, lr=1e-4)는 36개 block 모두에서 local loss를 낮추었고 평균 첫→마지막 loss 감소율은 27.26%였지만, matched prefix 평가에서 평균 downstream 정확도는 복구 레이어 활성화 전 70.34%에서 최고 70.71%를 거쳐 마지막 평가 지점에서 53.36%로 떨어졌다. 저자들은 이것이 모든 layer-wise 복구 전략이 반드시 실패한다는 증명은 아니지만, local convergence만으로는 global recovery의 증거가 되지 못함을 보여준다고 해석하며 category-wise 스케줄의 근거로 삼는다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>대상 모델</h3>
+      <p>주 압축 대상은 Qwen3-8B이며, LLaMA3-8B도 비교표에 포함되어 있으나 BiSCo-LLM 결과는 아직 비어 있다(Table III에서 전 컬럼 &#x27;–&#x27;). ablation과 진단 실험(residual stage, protected channel, granularity)은 주로 LLaMA-2-7B에서 수행된다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표와 태스크</h3>
+      <p>언어 모델링은 WikiText-2 perplexity와 C4 perplexity(본문 표에서는 지면 관계로 생략)로, downstream은 BoolQ, RTE, WinoGrande, ARC-Easy, ARC-Challenge, OpenBookQA, PIQA, MMLU, HellaSwag 정확도로 평가한다. Table III의 Avg.는 각 방법이 보고한 available evaluation set을 따르며, BiSCo-LLM on Qwen3-8B의 경우 BoolQ, RTE, WinoGrande, ARC-Easy, ARC-Challenge, OpenBookQA, PIQA 7개 task 평균이다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 baseline</h3>
+      <p>FP16/BF16 full precision을 상한선으로 두고, scalar 계열(GPTQ, SpinQuant, OSTQuant, QuIP, AWQ)과 vector 계열(AQLM, VPTQ, QuIP#, LiftQuant, UniSVQ)을 2-bit regime에서 비교한다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Calibration / recovery 데이터</h3>
+      <p>calibration 및 recovery distillation에는 Alpaca, OpenOrca, FineWeb-Edu, RACE, SciQ, LongAlpaca, LongAlign을 혼합한 데이터를 사용한다고 기술된다. 다만 정확한 샘플 수, 샘플링 비율, 총 토큰 수, 최대 시퀀스 길이, 토크나이저, random seed는 &#x27;보고하겠다&#x27;는 서술만 있고 실제 수치가 제시되지 않는다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation 축</h3>
+      <p>(1) residual stage 유무 및 budget-matched 비교(Table I), (2) 1% protected channel 효과(Table II), (3) code granularity 8/16·16/32·32/64·64/128 (Fig. 2), (4) protected payload 저장 포맷 BF16 vs FP8-E4M3 vs FP8-E5M2 vs INT8, decoder 아키텍처(symmetric vs linear, residual block 유무) (Table IV), (5) protection axis input-channel vs output-channel (Table V), (6) protection ratio 0%/1%/3% (Table VI).</p>
+      <span class="source-ref">PDF p. 8, 9, 11, 12</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Qwen3-8B 메인 비교 (Table III)</h3>
+      <p>BiSCo-LLM은 WikiText-2 perplexity 10.18을 기록해 FP16/BF16의 9.73에 근접했고, 표에 보고된 모든 scalar/vector baseline보다 낮다(QuIP# 12.37, UniSVQ 14.82, AQLM 18.26, SpinQuant 17.82, OSTQuant 26.08, QuIP 27.61, GPTQ 4.68×10^4). 7개 task 평균 정확도는 68.05로 FP16/BF16의 69.92 대비 1.87점 낮으며, 이는 논문이 목표로 한 &#x27;2 percentage point 이내&#x27; 조건을 만족한다. vector baseline 대비로는 AQLM보다 3.11점, QuIP#보다 0.50점, UniSVQ보다 0.11점 높다. 개별 task에서는 ARC-Challenge 51.88, ARC-Easy 78.87로 향상 폭이 가장 뚜렷하다.</p>
+      <span class="source-ref">PDF p. 1, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>해석: 이득의 대부분은 perplexity 쪽에서 두드러진다</h3>
+      <p>평균 정확도 격차는 UniSVQ 대비 0.11점, QuIP# 대비 0.50점으로 크지 않은 반면, WikiText-2 perplexity 격차는 UniSVQ 대비 4.64, QuIP# 대비 2.19로 상대적으로 크다. 즉 BiSCo-LLM의 강점은 언어 모델링 분포를 원본에 가깝게 유지하는 데서 더 선명하게 드러나며, downstream 평균에서는 최신 VQ baseline과 접전이라고 읽는 것이 정확하다. (이는 표의 수치에 근거한 분석자의 해석이다.)</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Residual stage의 효과 (Table I)</h3>
+      <p>LLaMA-2-7B category별 순차 교체에서 32D 설정에 residual BSQ 두 번째 스테이지를 추가하면 7개 category 모두 perplexity가 개선되며, MLP projection에서 특히 뚜렷하다(up_proj 6.23→5.95, down_proj 6.79→6.58). 총 binary code 길이를 맞춘 비교(one-stage 32D vs two-stage 16D×2)에서도 two-stage가 7개 중 6개 category를 개선해, 이득이 단순한 bit 증가가 아니라 residual 구조 코딩에서 온다는 주장을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>1% protected channel의 효과 (Table II)</h3>
+      <p>LLaMA-2-7B에서 1% 채널만 8-bit로 보호하고 나머지에 two-stage 2-bit BSQ를 적용하면 평균 WikiText-2 perplexity가 5.95에서 5.82로 내려가고 7개 category 전부가 개선된다. 가장 큰 이득은 down_proj(6.58→6.10, Δ -0.48)이고, 그 다음이 v_proj(6.05→5.86)다. 즉 매우 적은 저장 비용으로 가장 취약한 category를 방어하는 안전장치로 기능한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Protection 설계 ablation (Table V, Table VI)</h3>
+      <p>동일한 1% protection ratio에서 input-channel protection은 평균 perplexity 5.82, output-channel protection은 5.89로 input-channel 보호가 우세하며 특히 v_proj, down_proj 같은 취약 category에서 효과가 크다. protection ratio는 민감 category(v_proj, down_proj) 기준 0%→1%에서 평균 perplexity가 6.32→5.98로 떨어져 3% protection이 주는 전체 개선분의 81.7%를 이미 확보하고, 1%→3%는 5.91로 0.07만 추가 개선된다. 이것이 ρ=1%를 기본값으로 채택한 근거다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Decoder 구조와 payload 포맷 ablation (Table IV)</h3>
+      <p>protected payload 저장 포맷을 BF16 대신 FP8-E4M3 / FP8-E5M2 / INT8로 바꿔도 overall 평균 정확도는 63.10~63.30 범위로 유지되어 BF16 기준값 62.82와 유사하다(즉 protected path를 더 싸게 저장해도 손해가 없다). 반면 decoder 구조는 민감하다. symmetric decoder에서 residual block을 제거하면 overall 평균이 62.82→63.69로 오히려 소폭 향상되지만, symmetric decoder를 linear decoder로 교체하면 MLP 평균이 58.34→50.67로 크게 무너지고 linear residual stage를 2개에서 3개로 늘려도 회복되지 않는다. 비선형 decoder의 표현력이 lookup-free 설계의 필수 조건임을 시사한다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Layer-wise recovery의 실패 진단 (Fig. 3)</h3>
+      <p>layer-wise LoRA 복구는 local loss를 36개 block 전부에서 낮추고 평균 27.26% 감소시켰지만, 조립된 모델의 prefix 평가 정확도는 70.34%에서 최고 70.71%를 지나 53.36%까지 붕괴했다. 이 음(-)의 결과는 category-wise 스케줄이라는 설계 선택의 직접적 근거로 제시된다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 위치</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>BiSCo-LLM은 codebook과 index lookup 없이 binary spherical code + 공유 neural decoder만으로 2-bit 수준 LLM weight 압축이 가능함을 보이고, residual 할당·protected channel·category-wise recovery라는 세 장치가 각각 어떤 실험적 근거에서 도출되었는지를 제시한다. Qwen3-8B에서 WikiText-2 perplexity 10.18, downstream 평균 격차 1.87점이 핵심 결과다.</p>
+      <span class="source-ref">PDF p. 11, 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구조적 트레이드오프의 자기 인식</h3>
+      <p>저자들은 이 방법이 &#x27;codebook 저장 부담을 공유 neural decoder로 옮긴 것&#x27;임을 분명히 하고, 그 이득이 decoder 파라미터가 충분히 많은 weight chunk와 module instance에 걸쳐 amortize될 때만 성립한다고 명시한다. 따라서 nominal code rate만으로 압축 품질을 판단해서는 안 된다는 것이 결론부의 핵심 메시지 중 하나다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>초안 상태에 대한 유의</h3>
+      <p>Table III의 LLaMA3-8B BiSCo-LLM 행이 전부 &#x27;–&#x27;이고, Qwen3-8B의 HellaSwag 결과가 비어 있어 평균이 모든 baseline과 동일한 컬럼 집합으로 계산되지 않았다. 저자들 스스로 &#x27;최종 결론은 남은 평가가 완료된 이후에 내려져야 한다&#x27;고 적었고, Models 절에는 &#x27;We plan to evaluate...&#x27;라는 미래시제가 남아 있다. 현재 판본은 진행 중인 초안으로 읽어야 한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>BiSCo-LLM 전체 동작 흐름 (category 단위 반복 파이프라인)</h3>
+                <span class="source-ref">PDF p. 6, 7, 8, 9, 10</span>
+              </div>
+              <p>target category 하나를 처리하는 흐름: chunking → base BSQ → residual BSQ → (선택) 8-bit protected channel → category 교체 → recovery distillation. 모든 category 순회 후 선택적 end-to-end 복구를 거쳐 최종 압축 모델이 나온다. 저장물은 code stream, decoder, 8-bit payload, LoRA, metadata의 합(Stot)으로 계량된다.</p>
+              <div class="mermaid">
+flowchart TD
+    A[사전학습 LLM weight W] --&gt; B[category c 선택\nq/k/v/o/gate/up/down_proj]
+    B --&gt; C[d차원 weight chunk 분할]
+    C --&gt; D{민감 채널 보호?}
+    D --&gt;|선택 1%| E[activation x weight 기반\nsensitivity TopK 선정]
+    E --&gt; F[8-bit protected slice 저장]
+    D --&gt;|나머지 slice| G[Base BSQ encoder]
+    F --&gt; G
+    G --&gt; H[unit sphere 정규화 + sign\n= base binary code]
+    H --&gt; I[Base decoder 복원]
+    I --&gt; J[residual = 원본 - base 복원]
+    J --&gt; K[Residual BSQ encoder + sign\n= 2nd stage code]
+    K --&gt; L[Residual decoder 복원]
+    I --&gt; M[최종 복원 weight\n= base + residual]
+    L --&gt; M
+    M --&gt; N[category c를 압축 모듈로 교체]
+    N --&gt; O[Category-wise recovery distillation\nKD + hidden align, LoRA만 학습]
+    O --&gt; P{모든 category 완료?}
+    P --&gt;|아니오| B
+    P --&gt;|예| Q[선택적 end-to-end LoRA 복구]
+    Q --&gt; R[최종 압축 모델\nStot = Scode + Sdec + S8bit + SLoRA + Smeta]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 VQ 대비 BiSCo-LLM의 표현/복원 경로 차이</h3>
+                <span class="source-ref">PDF p. 4, 5, 6, 7</span>
+              </div>
+              <p>왼쪽은 explicit codebook과 nearest-neighbor lookup에 의존하는 기존 VQ 경로, 오른쪽은 codebook 없이 sign pattern과 공유 neural decoder로 복원하는 BiSCo-LLM 경로. 핵심 차이는 &#x27;저장해야 하는 것&#x27;과 &#x27;복원 연산의 성격&#x27;이다.</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph VQ[기존 Vector Quantization]
+        V1[weight chunk] --&gt; V2[nearest-neighbor 검색]
+        V2 --&gt; V3[codebook index 저장]
+        V3 --&gt; V4[codebook table 조회]
+        V4 --&gt; V5[복원 weight]
+        V6[(explicit codebook\n= 추가 저장)] -.-&gt; V2
+        V6 -.-&gt; V4
+    end
+    subgraph BS[BiSCo-LLM: lookup-free BSQ]
+        B1[weight chunk] --&gt; B2[encoder + unit sphere 정규화]
+        B2 --&gt; B3[sign 이진화\n= binary code 저장]
+        B3 --&gt; B4[공유 neural decoder forward]
+        B4 --&gt; B5[base 복원]
+        B5 --&gt; B6[residual BSQ 2nd stage]
+        B6 --&gt; B7[복원 weight = base + residual]
+        B8[(codebook 없음\ndecoder 파라미터만 저장)] -.-&gt; B4
+    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>Qwen3-8B 2-bit 압축 방법별 WikiText-2 perplexity (낮을수록 좋음)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11, 12 · Table III · Qwen3-8B, 2-bit regime. GPTQ는 perplexity 4.68×10^4로 축 스케일을 왜곡하므로 이 차트에서 제외했다(표에는 존재).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Qwen3-8B 2-bit 압축 방법별 average downstream accuracy (높을수록 좋음)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11, 12 · Table III · Qwen3-8B, 2-bit regime. Avg.는 각 방법이 보고한 available evaluation set 기준이며, BiSCo-LLM은 BoolQ/RTE/WinoGrande/ARC-Easy/ARC-Challenge/OpenBookQA/PIQA 7개 task 평균(HellaSwag 결과 미보고). 따라서 방법 간 컬럼 집합이 완전히 동일하지 않다.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>1% protected channel 적용 전후 category별 WikiText-2 perplexity (LLaMA-2-7B)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table II · LLaMA-2-7B, category-replacement diagnostic. 한 번에 한 category만 교체하고 전체 모델을 평가. 보호 변형은 1% slice를 8-bit로 저장한 뒤 나머지에 동일한 two-stage 2-bit BSQ 적용(attention은 input-channel, MLP는 coupled intermediate-channel 보호).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Residual BSQ 스테이지 추가 효과 (LLaMA-2-7B, MLP projection)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table I · LLaMA-2-7B, category별 순차 교체. 32D 설정에 residual BSQ 두 번째 스테이지를 추가하면 7개 category 전부가 개선되지만, 본문에 정확한 수치가 명시된 것은 up_proj와 down_proj뿐이므로 이 두 category만 차트에 포함했다.
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>설계 선택마다 그 근거가 되는 측정을 먼저 제시한다. residual stage는 Fig. 1의 code-pattern 점유율 측정(524,286 / 2^64)에서, category-wise 스케줄은 Fig. 3의 layer-wise 복구 실패 진단에서, ρ=1%는 Table VI의 수확 체감 분석(1%가 3% 이득의 81.7% 확보)에서 도출된다. &#x27;A를 넣었더니 좋아졌다&#x27;가 아니라 &#x27;A를 넣어야 하는 이유를 먼저 측정했다&#x27;는 구성이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8, 9, 10, 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>budget-matched 비교를 명시적으로 수행한다. one-stage 32D와 two-stage 16D×2는 총 binary code 길이가 같으므로, 여기서 two-stage가 7개 중 6개 category를 개선했다는 사실은 이득이 단순한 bit 증가가 아님을 분리해 보여준다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>저장 accounting을 방법의 일부로 끌어올렸다. Stot = Scode + Sdec + S8bit + SLoRA + Smeta로 부수 payload를 전부 계량하고, recovery 단계에서 BSQ code를 고정한 채 LoRA만 학습해 &#x27;복구 비용이 full-precision weight 업데이트 안에 숨는 것&#x27;을 구조적으로 차단한다. 저정밀 압축 논문에서 흔히 흐려지는 지점을 정면으로 다룬다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>음(-)의 결과를 숨기지 않고 설계 근거로 사용한다. layer-wise LoRA 복구가 local loss는 27.26% 낮추면서도 downstream 정확도를 53.36%까지 무너뜨렸다는 결과를 그대로 보고하고, 그것이 category-wise 스케줄을 채택한 이유임을 밝힌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>MLP의 gate/up/down이 intermediate channel을 공유한다는 구조적 사실을 반영해 coupled intermediate-channel protection을 설계했다. 세 행렬을 독립적으로 보호하면 이 결합 구조가 깨진다는 지적은 실제로 down_proj가 가장 취약한 category라는 실측(6.58 → 6.10, Δ -0.48)과도 일관된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>codebook 저장 부담을 공유 neural decoder로 &#x27;옮긴&#x27; 것이며, 이 트레이드오프는 decoder 파라미터가 충분히 많은 weight chunk와 module instance에 걸쳐 amortize될 때만 이득이 된다. 따라서 nominal code rate만으로 압축 품질을 판단할 수 없다고 저자들이 직접 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>기존 scalar PTQ보다 최적화 비용이 크다. BSQ codec은 category-wise 학습이 필요하고 recovery distillation은 추가 데이터 의존성과 학습 파라미터를 도입한다. 저자들은 이 방법이 압축 모델을 여러 번 재사용해 1회성 압축·복구 비용을 상쇄할 수 있는 배포 시나리오에 가장 적합하다고 인정한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>weight reconstruction error 감소만으로는 조립된 모델의 복구가 보장되지 않는다. category-wise distillation이 이 불일치를 줄이지만, 그 대가로 최종 모델이 recovery 데이터, loss 항 가중치, adapter 배치 선택에 의존하게 되며 이 의존성은 명시적으로 보고되어야 한다고 저자들이 밝힌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>weight-only 압축 프레임워크다. 추론 시 디코딩된 weight를 표준 행렬곱 커널에 넣기 때문에 통합은 쉽지만, 저장된 code의 binary 구조를 연산에서 활용하지 못한다. binary spherical code로부터의 직접 연산, fused load-time decoding, weight-activation quantization은 별도의 kernel/runtime 설계를 요하는 orthogonal한 방향이라고 저자들이 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>대부분 고정된 code rate와 작은 고정 protected-channel 비율을 사용하며, module category·layer·residual stage에 걸친 mixed-rate allocation 같은 보다 원칙적인 확장은 아직 이루어지지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>비교표 자체가 미완성이다. Qwen3-8B의 HellaSwag 결과가 없어 평균이 모든 baseline과 동일한 컬럼 집합으로 계산되지 않았고, LLaMA3-8B에 대한 BiSCo-LLM 결과는 전 컬럼이 &#x27;–&#x27;로 비어 있다. 저자들은 최종 결론이 남은 평가 완료 이후에 내려져야 한다고 직접 적었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>메인 비교(Table III)의 우위가 실제 저장량 기준으로 검증되지 않았다. 논문의 핵심 주장은 &#x27;real storage budget 하에서 평가한다&#x27;는 것인데, Table III에서 bit-width 컬럼이 지면 관계로 생략되어 BiSCo-LLM과 QuIP#/UniSVQ가 동일한 실제 bpw에서 비교되었는지 표만으로는 확인할 수 없다. decoder·LoRA·8-bit payload를 모두 더한 Stot이 baseline의 codebook 비용보다 실제로 작은지가 논문의 성립 조건인 만큼, 이 수치의 부재는 가장 아픈 공백이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 6, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>핵심 성능 주장(Table III)과 설계 근거(ablation)가 서로 다른 모델·설정에서 나온다. residual stage, protected channel, granularity ablation은 LLaMA-2-7B에서, 메인 결과는 Qwen3-8B에서 얻어졌으며, 메인 비교에 실제로 쓰인 chunk dimension d, binary length b, residual stage 수, protection ratio 조합은 본문에 명시되지 않았다. 따라서 ablation이 검증한 설정이 메인 결과를 만든 설정과 같은지 독자가 확인할 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9, 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>decoding 지연에 대한 실측이 없다. lookup-free의 대가는 복원 시 neural decoder forward를 수행해야 한다는 것인데, batched parallel residual decoding이라는 최적화가 언급될 뿐 실제 decoding latency, throughput, 메모리 대역폭 절감 효과의 정량 측정은 제시되지 않는다. 논문이 서론에서 weight bandwidth를 문제로 제기한 만큼 end-to-end 추론 성능 수치가 필요한 지점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 10, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>category-wise 순차 교체는 category 처리 순서에 의존할 수 있으나, 순서에 대한 민감도 분석이 없다. 각 category 교체 후 recovery가 다음 category의 압축 대상 분포를 바꾸므로 순서가 결과에 영향을 줄 여지가 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>동일한 실제 저장량(Stot) 기준으로 정렬했을 때도 BiSCo-LLM이 QuIP#·UniSVQ보다 우위인가? decoder 파라미터와 LoRA adapter를 포함한 실측 bpw는 얼마인가?</h3>
+              </div>
+              <p>논문은 real storage budget 하 평가를 핵심 기여로 내세우지만, Table III에서 bit-width 컬럼이 생략되어 비교 방법 간 실제 bpw 정렬 여부를 확인할 수 없다. 저자들도 nominal code rate만으로는 판단이 불충분하다고 스스로 명시한다.</p>
+              <span class="source-ref">PDF p. 3, 6, 11, 12, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>decoder amortization은 모델 규모에 따라 어떻게 스케일하는가? 8B급에서 성립한 이득이 서론이 목표로 삼은 671B~1T MoE에서도 유지되는가?</h3>
+              </div>
+              <p>저자들이 decoder 비용의 amortization 조건을 한계로 명시했고, 동기 부분은 수백억~조 단위 MoE 배포를 겨냥하지만 실제 실험은 7B/8B 모델에 한정되어 있다.</p>
+              <span class="source-ref">PDF p. 1, 2, 12, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>residual stage를 3개 이상으로 늘리면 실제 bpw 대비 rate-distortion이 개선되는가?</h3>
+              </div>
+              <p>논문은 2-stage를 default로 두면서 &#x27;3-stage가 실제 bpw trade-off에서 명확히 낫다는 후속 실험이 나오기 전까지&#x27;라는 조건을 명시적으로 달아 두었고, linear decoder 설정에서는 stage를 2→3으로 늘려도 손실이 회복되지 않았다.</p>
+              <span class="source-ref">PDF p. 8, 11, 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>category·layer·residual stage별로 code rate를 다르게 할당하는 mixed-rate allocation은 얼마나 이득을 주는가? 특히 실측상 가장 취약한 down_proj와 v_proj에 더 많은 bit를 주는 것이 균등 할당보다 나은가?</h3>
+              </div>
+              <p>저자들이 mixed-rate allocation을 미완의 확장 방향으로 명시했고, Table I·II는 down_proj와 v_proj가 일관되게 가장 높은 perplexity와 가장 큰 보호 이득을 보이는 category임을 보여준다.</p>
+              <span class="source-ref">PDF p. 8, 9, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>저장된 binary spherical code에서 직접 연산하거나 load-time에 fused decoding을 수행하는 커널을 만들면, weight-only 압축을 넘어 실제 추론 지연과 메모리 대역폭에서 얼마나 이득을 얻는가?</h3>
+              </div>
+              <p>저자들이 현재 설계가 weight-only이며 code의 binary 구조를 연산에서 활용하지 못한다는 점을 한계로 인정하고, 이를 orthogonal한 kernel/runtime 연구 방향으로 지목했다.</p>
+              <span class="source-ref">PDF p. 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>symmetric decoder의 어떤 성질이 필수적인가? linear decoder가 MLP에서 58.34→50.67로 붕괴한 원인이 표현력 부족인지, 최적화 난이도인지, 아니면 residual 구조와의 상호작용인지는 규명되지 않았다.</h3>
+              </div>
+              <p>Table IV의 decoder ablation은 현상(linear decoder의 큰 손실, residual block 제거 시 소폭 향상)을 보여주지만 그 메커니즘에 대한 분석은 제시되지 않았다. 이 질문의 답은 decoder 크기를 줄여 amortization 조건을 완화하는 데 직결된다.</p>
+              <span class="source-ref">PDF p. 11, 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>category 처리 순서를 바꾸면 최종 성능이 달라지는가? 취약한 category(down_proj, v_proj)를 먼저 압축하는 것과 나중에 압축하는 것 중 어느 쪽이 유리한가?</h3>
+              </div>
+              <p>파이프라인이 category를 순차적으로 교체하고 매번 recovery를 수행하므로 순서 의존성이 구조적으로 존재할 수 있으나, 논문에 순서 민감도 분석이 없다.</p>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>BSQ (Binary Spherical Quantization)</dt>
+              <dd>
+                weight chunk를 encoder로 latent vector에 사상하고 unit hypersphere로 정규화한 뒤 각 좌표의 부호(sign)를 취해 binary code로 만드는 양자화 방식. code가 codebook의 index가 아니라 sign pattern 자체이므로 centroid 테이블이 필요 없다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Lookup-free</dt>
+              <dd>
+                복원 시 codebook 테이블 조회나 nearest-neighbor 검색을 하지 않는 성질. BiSCo-LLM에서 복원은 모든 chunk가 공유하는 compact neural decoder의 forward 연산으로 이루어진다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Weight chunk / chunk dimension (d)</dt>
+              <dd>
+                weight matrix를 인코딩 단위로 쪼갠 d차원 벡터. binary length b와 함께 code rate b/d(bit per weight)를 결정하며, 2-bit 목표는 b/d = 2에 해당한다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Second-stage residual coding</dt>
+              <dd>
+                base codec이 복원하고 남긴 오차(residual)에 두 번째 BSQ codec을 학습시켜 추가 bit를 배정하는 설계. 최종 복원값은 base 복원과 residual 복원의 합이며, one-stage code를 길게 늘리는 것보다 나은 rate-distortion 경로를 제공한다는 것이 논문의 주장이다.
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Straight-through estimator (STE)</dt>
+              <dd>
+                sign처럼 미분 불가능한 연산을 backward pass에서 항등 함수로 근사해 gradient를 통과시키는 학습 기법. BSQ codec의 sign 이진화를 end-to-end로 학습 가능하게 만든다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Protected channel (8-bit path)</dt>
+              <dd>
+                activation 통계와 weight 크기를 결합한 sensitivity score로 선정한 소수(기본 ρ=1%) 채널을 BSQ 대신 8-bit로 별도 저장하는 경로. 그 저장 비용 S8bit는 BSQ payload와 분리해 계량된다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Coupled intermediate-channel protection</dt>
+              <dd>
+                gated MLP에서 gate_proj·up_proj의 출력 행과 down_proj의 대응 입력 열이 같은 intermediate channel을 공유한다는 사실을 반영해, 세 행렬에서 동일한 index를 함께 선택해 보호하는 방식. 세 행렬을 독립 보호하면 이 결합 구조가 깨진다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Module category</dt>
+              <dd>
+                Transformer의 linear module을 역할별로 묶은 단위(q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj). BiSCo-LLM의 codec 학습·교체·복구가 모두 이 단위로 이루어진다.
+                <span class="source-ref">PDF p. 9, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Category-wise recovery distillation</dt>
+              <dd>
+                한 module category가 압축 모듈로 교체된 직후, 교체 전 모델을 teacher로 두고 output distribution distillation(LKD)과 hidden-state alignment(Lhidden)를 결합해 복구하는 단계. 기본 설정에서는 BSQ code를 고정하고 LoRA adapter만 학습한다.
+                <span class="source-ref">PDF p. 9, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Storage-aware bit accounting (Stot)</dt>
+              <dd>
+                실제 압축 크기를 code stream(Scode) + decoder parameter(Sdec) + 8-bit protected payload(S8bit) + LoRA adapter(SLoRA) + metadata(Smeta)의 합으로 명시 계산하는 방식. nominal bit rate로는 드러나지 않는 부수 비용을 비교 가능하게 만든다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Category-batched codec optimization</dt>
+              <dd>
+                같은 module category에 속한 여러 layer의 weight chunk를 병렬 학습 인스턴스로 묶어 codec을 최적화하는 engineering 최적화. 압축 표현의 수학적 형태나 저장 accounting은 바꾸지 않는다.
+                <span class="source-ref">PDF p. 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Batched parallel residual decoding</dt>
+              <dd>
+                여러 residual stage의 decoding을 배치로 묶어 스테이지 간 순차 로딩 병목을 제거하는 배포 측 최적화.
+                <span class="source-ref">PDF p. 10</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Table III에서 BiSCo-LLM의 LLaMA3-8B 결과가 모든 컬럼에서 &#x27;–&#x27;로 표시되어 아직 보고되지 않았다.</li><li>Qwen3-8B에서 BiSCo-LLM의 HellaSwag 결과가 제공되지 않아, 평균 점수가 다른 baseline과 동일한 task 컬럼 집합으로 계산되지 않았다.</li><li>Table III에서 C4 perplexity, RTE, OpenBookQA, MMLU, 그리고 실제 bit-width 컬럼이 지면 절약을 위해 생략되어, 방법별 실제 저장량(bpw) 정렬 여부를 표만으로 확인할 수 없다.</li><li>메인 비교(Table III)에 실제 사용된 chunk dimension d, binary length b, residual stage 수, protected-channel ratio 등 구체적 하이퍼파라미터 조합이 본문에 명시되어 있지 않다(ablation 수치는 LLaMA-2-7B 기준 별도 설정으로 제시됨).</li><li>recovery distillation에 사용된 calibration/distillation 데이터의 정확한 샘플 수, 샘플링 비율, 총 토큰 수, 최대 시퀀스 길이, 토크나이저, random seed가 &#x27;보고하겠다&#x27;고만 언급되고 실제 수치가 제시되지 않았다.</li><li>Fig. 2의 각 granularity 설정(8/16, 16/32, 32/64, 64/128)에 대한 정확한 perplexity 수치는 그래프로만 제시되어 본문에 숫자로 명시되지 않았다(따라서 해당 차트는 생성하지 않았다).</li><li>Table I의 전체 category별 수치 중 본문에 숫자로 명시된 것은 up_proj(6.23→5.95)와 down_proj(6.79→6.58)뿐이며, 나머지 category의 정확한 값은 확인되지 않았다.</li><li>decoding latency, 추론 throughput, 실제 메모리 대역폭 절감량 등 end-to-end 시스템 성능 측정치가 제시되지 않았다.</li><li>&#x27;Models&#x27; 절에 &#x27;We plan to evaluate BiSCo-LLM on... LLaMA-3 8B, Qwen3 8B&#x27;라는 미래시제 표현이 남아 있어, 논문이 진행 중인 평가를 포함한 초안 상태임을 시사한다.</li><li>논문의 정식 학회/저널 게재 여부는 확인되지 않으며, arXiv preprint(arXiv:2607.08643v1, cs.LG, 2026-07-09)로만 존재가 확인된다.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "Qwen3-8B 2-bit 압축 방법별 WikiText-2 perplexity (낮을수록 좋음)", "labels": ["FP16/BF16 (원본)", "BiSCo-LLM (제안)", "QuIP#", "UniSVQ", "SpinQuant", "AQLM", "OSTQuant", "QuIP"], "values": [9.73, 10.18, 12.37, 14.82, 17.82, 18.26, 26.08, 27.61], "unit": "perplexity", "xLabel": "방법", "yLabel": "WikiText-2 perplexity"}, {"canvasId": "chart-1", "type": "bar", "title": "Qwen3-8B 2-bit 압축 방법별 average downstream accuracy (높을수록 좋음)", "labels": ["FP16/BF16 (원본)", "BiSCo-LLM (제안)", "UniSVQ", "QuIP#", "AQLM", "OSTQuant", "SpinQuant", "QuIP", "GPTQ"], "values": [69.92, 68.05, 67.94, 67.55, 64.94, 57.47, 52.61, 43.82, 37.29], "unit": "%", "xLabel": "방법", "yLabel": "평균 정확도"}, {"canvasId": "chart-2", "type": "bar", "title": "1% protected channel 적용 전후 category별 WikiText-2 perplexity (LLaMA-2-7B)", "labels": ["qproj (무보호)", "qproj (1% 보호)", "kproj (무보호)", "kproj (1% 보호)", "vproj (무보호)", "vproj (1% 보호)", "oproj (무보호)", "oproj (1% 보호)", "gateproj (무보호)", "gateproj (1% 보호)", "upproj (무보호)", "upproj (1% 보호)", "downproj (무보호)", "downproj (1% 보호)", "평균 (무보호)", "평균 (1% 보호)"], "values": [5.67, 5.59, 5.69, 5.58, 6.05, 5.86, 5.78, 5.76, 5.95, 5.94, 5.95, 5.92, 6.58, 6.1, 5.95, 5.82], "unit": "perplexity", "xLabel": "module category / 보호 비율", "yLabel": "WikiText-2 perplexity"}, {"canvasId": "chart-3", "type": "bar", "title": "Residual BSQ 스테이지 추가 효과 (LLaMA-2-7B, MLP projection)", "labels": ["up_proj / 32D one-stage", "up_proj / 32D×2 two-stage", "down_proj / 32D one-stage", "down_proj / 32D×2 two-stage"], "values": [6.23, 5.95, 6.79, 6.58], "unit": "perplexity", "xLabel": "설정", "yLabel": "WikiText-2 perplexity"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
