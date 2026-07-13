@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PJRT Runtime 상위/하위 API와 필드 구성 정리</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">정보 수집</p>
+      <h1>PJRT Runtime 상위/하위 API와 필드 구성 정리</h1>
+      <p class="summary">OpenXLA PJRT에서 런타임이 framework/compiler 쪽에 제공하는 상위 API와 backend/plugin/driver 쪽으로 내려가는 하위 API를 구분하고, 주요 객체와 호출 인자의 필드 구성을 표와 흐름으로 정리한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-13</span>
+        <span class="tag">PJRT</span><span class="tag">OpenXLA</span><span class="tag">runtime</span><span class="tag">API</span><span class="tag">backend</span><span class="tag">plugin</span><span class="tag">C API</span><span class="tag">field map</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#표기-규칙">표기 규칙</a>
+<a class="toc-level-2" href="#수집-범위">수집 범위</a>
+<a class="toc-level-3" href="#이-조사가-답하려는-것">이 조사가 답하려는 것</a>
+<a class="toc-level-3" href="#실제로-읽은-자료">실제로 읽은 자료</a>
+<a class="toc-level-3" href="#소스-트리-접근-부분-성공">소스 트리 접근: 부분 성공</a>
+<a class="toc-level-3" href="#이번에-다루지-않은-것">이번에 다루지 않은 것</a>
+<a class="toc-level-2" href="#핵심-요약">핵심 요약</a>
+<a class="toc-level-2" href="#정보-지도">정보 지도</a>
+<a class="toc-level-3" href="#pjrt-api-계층-지도">PJRT API 계층 지도</a>
+<a class="toc-level-3" href="#4계층-지도">4계층 지도</a>
+<a class="toc-level-3" href="#객체-소유-역참조-그래프">객체 소유·역참조 그래프</a>
+<a class="toc-level-3" href="#로컬-소스-트리-지도-파일-존재만-확인">로컬 소스 트리 지도 (파일 존재만 확인)</a>
+<a class="toc-level-2" href="#상위-api-framework-compiler-facing-surface">상위 API: framework / compiler-facing surface</a>
+<a class="toc-level-3" href="#api-그룹별-분류">API 그룹별 분류</a>
+<a class="toc-level-3" href="#옵션-구조체">옵션 구조체</a>
+<a class="toc-level-3" href="#상위-계층에서-숨겨지는-것-노출되는-것">상위 계층에서 숨겨지는 것 / 노출되는 것</a>
+<a class="toc-level-2" href="#하위-api-backend-plugin-facing-surface">하위 API: backend / plugin-facing surface</a>
+<a class="toc-level-3" href="#두-갈래-구현-경로">두 갈래 구현 경로</a>
+<a class="toc-level-3" href="#옵션-b에서-실제로-써야-하는-c-함수-최소-함수-세트">옵션 B에서 실제로 써야 하는 C 함수 (= 최소 함수 세트)</a>
+<a class="toc-level-3" href="#plugin-로딩-등록-경로">plugin 로딩·등록 경로</a>
+<a class="toc-level-3" href="#extension-메커니즘-선택-실험-기능의-표현-수단">extension 메커니즘 (선택·실험 기능의 표현 수단)</a>
+<a class="toc-level-3" href="#backend가-구현해야-하는-객체-c-경로">backend가 구현해야 하는 객체 (C++ 경로)</a>
+<a class="toc-level-2" href="#객체별-필드와-상태">객체별 필드와 상태</a>
+<a class="toc-level-3" href="#pjrtclient">PjRtClient</a>
+<a class="toc-level-3" href="#pjrtdevice-pjrtdevicedescription">PjRtDevice / PjRtDeviceDescription</a>
+<a class="toc-level-3" href="#pjrtmemoryspace">PjRtMemorySpace</a>
+<a class="toc-level-3" href="#pjrtbuffer">PjRtBuffer</a>
+<a class="toc-level-3" href="#pjrtexecutable-pjrtloadedexecutable">PjRtExecutable / PjRtLoadedExecutable</a>
+<a class="toc-level-3" href="#샤딩-관련-필드">샤딩 관련 필드</a>
+<a class="toc-level-3" href="#pjrtfuture">PjRtFuture</a>
+<a class="toc-level-3" href="#pjrtcompiler-phase-compiler">PjRtCompiler / phase compiler</a>
+<a class="toc-level-3" href="#소유권과-수명-규약-한-표로-모음">소유권과 수명 규약 (한 표로 모음)</a>
+<a class="toc-level-2" href="#핵심-호출-흐름">핵심 호출 흐름</a>
+<a class="toc-level-3" href="#1-plugin-로드-client-생성">1) plugin 로드 → client 생성</a>
+<a class="toc-level-3" href="#2-compile-load">2) compile → load</a>
+<a class="toc-level-3" href="#3-buffer-생성-host-device-과-실행-그리고-completion">3) buffer 생성 (host → device)과 실행, 그리고 completion</a>
+<a class="toc-level-3" href="#4-device-host-전송">4) device → host 전송</a>
+<a class="toc-level-3" href="#5-외부-참조-zero-copy-dlpack-wrapper-내부까지">5) 외부 참조 (zero-copy / dlpack) — wrapper 내부까지</a>
+<a class="toc-level-3" href="#6-buffer-수명-delete와-donation">6) buffer 수명: delete와 donation</a>
+<a class="toc-level-2" href="#c-api와-c-api-대응표">C++ API와 C API 대응표</a>
+<a class="toc-level-3" href="#왜-args-struct-extension-chain인가">왜 args struct + extension chain인가</a>
+<a class="toc-level-3" href="#대응표">대응표</a>
+<a class="toc-level-3" href="#wrapper-경계-요약">wrapper 경계 요약</a>
+<a class="toc-level-2" href="#새-runtime-backend-설계-체크리스트">새 Runtime / Backend 설계 체크리스트</a>
+<a class="toc-level-3" href="#a-최소-api-세트-이것만-있으면-basic-workload가-돈다">A. 최소 API 세트 (이것만 있으면 basic workload가 돈다)</a>
+<a class="toc-level-3" href="#b-선택-api-세트-없어도-basic-workload는-돈다-pjrt가-명시적으로-선택으로-분류한-것들">B. 선택 API 세트 (없어도 basic workload는 돈다 — PJRT가 명시적으로 선택으로 분류한 것들)</a>
+<a class="toc-level-3" href="#c-객체-모델-체크리스트">C. 객체 모델 체크리스트</a>
+<a class="toc-level-3" href="#d-필드-체크리스트">D. 필드 체크리스트</a>
+<a class="toc-level-3" href="#e-비동기-오류-체크리스트">E. 비동기·오류 체크리스트</a>
+<a class="toc-level-3" href="#f-backend-구현-체크리스트">F. backend 구현 체크리스트</a>
+<a class="toc-level-3" href="#g-확인-필요-항목-이-체크리스트를-확정하기-전에-소스로-검증해야-하는-것">G. 확인 필요 항목 (이 체크리스트를 확정하기 전에 소스로 검증해야 하는 것)</a>
+<a class="toc-level-2" href="#쟁점과-불확실성">쟁점과 불확실성</a>
+<a class="toc-level-3" href="#1-소스-본문-미열람-이-보고서의-가장-큰-구멍">1. 소스 본문 미열람 — 이 보고서의 가장 큰 구멍</a>
+<a class="toc-level-3" href="#2-설계-문서와-현재-헤더-사이의-naming-drift">2. 설계 문서와 현재 헤더 사이의 naming drift</a>
+<a class="toc-level-3" href="#3-설계-문서-다수가-draft이고-2022-2023년-것이다">3. 설계 문서 다수가 Draft이고 2022–2023년 것이다</a>
+<a class="toc-level-3" href="#4-pjrt_c_api_client-h-가-두-곳에-있다">4. `pjrt_c_api_client.h`가 두 곳에 있다</a>
+<a class="toc-level-3" href="#5-필수-vs-선택-의-경계가-기계적으로-검증되지-않는다">5. &quot;필수 vs 선택&quot;의 경계가 기계적으로 검증되지 않는다</a>
+<a class="toc-level-3" href="#6-wrapper-왕복-오버헤드-미측정">6. wrapper 왕복 오버헤드 미측정</a>
+<a class="toc-level-3" href="#7-lpddr6-pim-관련-지금-단계에서-결론-내리면-안-되는-것">7. LPDDR6-PIM 관련: 지금 단계에서 결론 내리면 안 되는 것</a>
+<a class="toc-level-2" href="#후속-질문">후속 질문</a>
+<a class="toc-level-2" href="#참고-자료">참고 자료</a>
+<a class="toc-level-3" href="#이번에-읽은-자료-모두-references-text-에-텍스트로-존재">이번에 읽은 자료 (모두 `references/text/` 에 텍스트로 존재)</a>
+<a class="toc-level-3" href="#로컬-소스-트리-파일-목록만-확인-본문-미열람">로컬 소스 트리 (파일 목록만 확인, 본문 미열람)</a>
+<a class="toc-level-3" href="#참고-문서에-언급되었으나-이번에-확보하지-못한-자료">참고 문서에 언급되었으나 이번에 확보하지 못한 자료</a>
+<a class="toc-level-3" href="#실제-구현체-목록-d3-기준-새-backend-설계-시-참고-대상">실제 구현체 목록 (D3 기준, 새 backend 설계 시 참고 대상)</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="pjrt-runtime-상위-하위-api와-필드-구성-정리">PJRT Runtime 상위/하위 API와 필드 구성 정리</h1>
+<p>OpenXLA PJRT를 &quot;런타임이 위(framework/compiler)로 올려주는 API&quot;와 &quot;아래(backend/plugin/driver)로 내려 요구하는 API&quot;의 두 방향으로 나누어 정리한 설계 노트다. 각 API가 주고받는 객체, 옵션 구조체, 소유권과 비동기 완료 모델, 그리고 plugin 구현자가 채워야 하는 함수 테이블을 표와 호출 흐름으로 정리했다.</p>
+<h2 id="표기-규칙">표기 규칙</h2>
+<p><strong>근거 등급</strong> — 이 보고서의 모든 단정에는 근거 등급을 붙인다.</p>
+<div class="table-wrap"><table><thead><tr><th>표기</th><th>의미</th></tr></thead><tbody><tr><td><code>[문서]</code></td><td><code>references/</code> 안의 공식 문서 또는 PJRT 설계 문서 본문에서 직접 확인한 내용</td></tr><tr><td><code>[트리]</code></td><td>로컬 <code>/home/sam/xla/xla/pjrt</code> 트리에서 <strong>파일·디렉터리 이름의 존재</strong>만 확인한 내용 (본문 미열람)</td></tr><tr><td><code>[추정]</code></td><td>문서·트리로 확정하지 못한 내용. 헤더 본문 확인 전까지 신뢰하지 말 것</td></tr></tbody></table></div>
+<p><code>[추정]</code>으로 표시된 항목은 본문 표 안에서도 별도 열이나 별도 행으로 분리해 두었다. 이유는 <a href="#수집-범위" target="_blank" rel="noopener noreferrer">수집 범위</a>와 <a href="#쟁점과-불확실성" target="_blank" rel="noopener noreferrer">쟁점과 불확실성</a>에 적었다.</p>
+<p><strong>다이어그램 안의 타입 표기</strong> — 이 보고서의 모든 Mermaid 다이어그램은 라벨 안에서 꺾쇠괄호(<code>&lt;</code>, <code>&gt;</code>)를 쓰지 않는다. Mermaid는 라벨 내용을 HTML로 해석하기 때문에 <code>StatusOr&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;</code> 같은 C++ 템플릿 표기를 그대로 넣으면 <code>&lt;unique_ptr&gt;</code>가 HTML 태그로 파싱되어 라벨이 잘리거나 렌더링이 깨진다. 따라서 <strong>다이어그램 안에서만 템플릿 인자를 대괄호로 바꿔 <code>StatusOr[unique_ptr[PjRtBuffer]]</code> 형태로 적는다.<strong> 본문 표와 코드블록에서는 실제 C++ 표기를 그대로 쓰되 반드시 인라인 코드로 감싼다. 이 규칙은 렌더링 편의가 아니라 </strong>다이어그램과 본문 중 어느 쪽이 정본 타입 표기인지를 정하는 문제</strong>이므로, 다이어그램을 읽을 때는 항상 본문 표의 타입을 정본으로 보면 된다.</p>
+<p>---</p>
+<h2 id="수집-범위">수집 범위</h2>
+<h3 id="이-조사가-답하려는-것">이 조사가 답하려는 것</h3>
+<p><code>job.json</code>이 제시한 10개 질문을 3개 축으로 묶었다.</p>
+<ol><li><strong>경계 축</strong> — PJRT에서 상위 API(framework-facing)와 하위 API(backend/plugin-facing)의 경계는 어디인가. 그 사이에서 무엇이 숨겨지고 무엇이 handle로 노출되는가.</li><li><strong>필드 축</strong> — <code>PjRtClient</code>/<code>PjRtDevice</code>/<code>PjRtMemorySpace</code>/<code>PjRtBuffer</code>/<code>PjRtExecutable</code>/<code>PjRtLoadedExecutable</code>/<code>PjRtFuture</code>/<code>PjRtCompiler</code>가 각각 어떤 식별자·옵션·상태 필드를 갖는가.</li><li><strong>이식 축</strong> — 새 backend runtime(예: LPDDR6-PIM 계열)을 설계할 때 PJRT에서 그대로 가져올 수 있는 API 형태는 무엇이고, 어디를 조심해야 하는가.</li></ol>
+<h3 id="실제로-읽은-자료">실제로 읽은 자료</h3>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>자료</th><th>종류</th><th>기준일</th><th>이 보고서에서 근거로 쓰인 부분</th></tr></thead><tbody><tr><td>D1</td><td>PJRT C++ Device API 개요 (<code>cpp_api_overview</code>)</td><td>공식 문서</td><td>2025-10-28</td><td>6개 핵심 객체의 책임·역참조 관계, <code>Execute</code> 3종 시그니처, <code>BufferFromHostBuffer</code>/<code>ToLiteral</code>, future 모델, 선택 기능 목록, 실제 호출 로그</td></tr><tr><td>D2</td><td>PJRT 플러그인 통합 (<code>pjrt_integration</code>)</td><td>공식 문서</td><td>2026-04-10</td><td>plugin 최소 구현 세트(<code>PJRT_Client_Create</code>, <code>GetPjrtApi</code>), 선택 함수 3종, wrapper 경로, JAX 등록 절차</td></tr><tr><td>D3</td><td>PJRT 예 (<code>examples</code>)</td><td>공식 문서</td><td>2024-11-15</td><td>실제 plugin 구현체 목록(full vs lightweight), framework 측 구현체 목록</td></tr><tr><td>D4</td><td>PJRT - Uniform Device API (<code>xla/pjrt</code>)</td><td>공식 문서</td><td>2024-11-13</td><td>PJRT의 목표 진술, 공식 리소스(헤더·CHANGELOG·통합 가이드) 위치</td></tr><tr><td>D5</td><td>PJRT Plugin Mechanism</td><td>설계 문서</td><td>2022-12</td><td><code>dlopen</code>/<code>dlsym(&quot;GetPjrtApi&quot;)</code> 로딩 경로, <code>PluginInfo</code>, <code>PJRT_NamedValue</code> 기반 config 전달</td></tr><tr><td>D6</td><td>Device (PJRT) API ABI versioning and compatibility</td><td>설계 문서</td><td>2023-09 (Draft)</td><td><code>pjrt_api_version.major/minor</code>, minor/major 변경 분류, <code>PjRtCApiClient::api_version()</code> shim 패턴</td></tr><tr><td>D7</td><td>PJRT C API: optional and experimental features</td><td>설계 문서</td><td>2023-12</td><td>extension chain 구조체(<code>struct_size</code>/<code>type</code>/<code>next</code>), <code>extension_start</code>, optional/experimental 정책</td></tr><tr><td>D8</td><td>C APIs for AcquireExternalReference</td><td>설계 문서</td><td>2023-07 (Draft)</td><td><code>ExternalReference</code> 클래스, wrapper의 <code>struct PJRT_Buffer</code> 내부 구성, refcount C API 안</td></tr><tr><td>D9</td><td>Representing dynamic array shapes in the PJRT C API</td><td>설계 문서</td><td>2023-06</td><td><code>on_device_shape</code> vs <code>logical_on_device_shape</code>, <code>PJRT_Buffer_Dimensions</code>/<code>UnpaddedDimensions</code></td></tr><tr><td>D10</td><td>Next Pluggable Device Mechanism</td><td>설계 문서</td><td>2023-05</td><td>TF 측 PJRT 통합 배경 (본 보고서에서는 배경 확인용)</td></tr><tr><td>D11</td><td>Device PJRT API change to support versioning and compatibility</td><td>설계 문서</td><td>—</td><td>D6의 축약본 (교차 확인용)</td></tr></tbody></table></div>
+<h3 id="소스-트리-접근-부분-성공">소스 트리 접근: 부분 성공</h3>
+<p><code>/home/sam/xla/xla/pjrt</code>에 대해 <strong>파일 목록(Glob)은 열람 가능하지만 파일 본문(Read/Grep)은 권한 거부</strong> 상태다. 이번 개정 시점에도 재시도했으나 동일하게 거부되었다. WebFetch도 승인되지 않아 상류 GitHub 헤더로 대체하지도 못했다.</p>
+<p>이것이 이 보고서의 성격을 결정한다.</p>
+<ul><li><strong>확정 가능한 것</strong> — 어떤 파일/디렉터리/extension이 존재하는가, 코드가 어떤 축으로 모듈화되어 있는가. → <code>[트리]</code></li><li><strong>확정 가능한 것</strong> — 공식 문서와 설계 문서가 명시적으로 적은 클래스·함수·구조체·필드 이름. → <code>[문서]</code></li><li><strong>확정 불가능한 것</strong> — <code>CompileOptions</code>/<code>ExecuteOptions</code>/<code>LoadOptions</code>의 <strong>전체 필드 목록</strong>, <code>PJRT_Api</code> 함수 테이블의 <strong>전체 항목</strong>, 각 메서드의 <strong>정확한 현재 시그니처</strong>. 문서에 인용된 범위 밖은 모두 <code>[추정]</code>으로 격리했다.</li></ul>
+<p>즉 <strong>&quot;API 분류·경계·흐름·정책&quot;은 근거 위에 서 있고, &quot;필드 표의 완전성&quot;은 아직 서 있지 않다.</strong> 필드 표는 채우되, 각 행마다 근거 등급을 붙여 어디까지 믿을 수 있는지 명시했다.</p>
+<h3 id="이번에-다루지-않은-것">이번에 다루지 않은 것</h3>
+<ul><li>PJRT의 성능 특성(지연/대역폭 측정), 스케줄링 내부 구현.</li><li><code>distributed/</code>(coordination service, preemption)와 multi-host topology의 상세. 파일 존재만 확인했다. <code>[트리]</code></li><li>IFRT 계층. PJRT 위에 있으므로 이번 경계 정의에서 제외했다.</li><li>LPDDR6-PIM의 구체 설계. <code>job.json</code> 지시대로 &quot;PJRT에서 배울 수 있는 API 설계 포인트&quot;까지만 적었다.</li></ul>
+<p>---</p>
+<h2 id="핵심-요약">핵심 요약</h2>
+<ol><li><strong>PJRT의 경계는 &quot;클래스 계층&quot;이 아니라 &quot;ABI 경계&quot;에 그어져 있다.</strong> framework는 C++ <code>PjRtClient</code>를 보지만, plugin은 C <code>PJRT_Api</code> 함수 테이블을 채운다. 두 세계는 <code>pjrt_c_api_wrapper_impl</code>(C++ → C)과 <code>c_api_client/pjrt_c_api_client</code>(C → C++)라는 <strong>양방향 어댑터 한 쌍</strong>으로 이어진다. <code>[문서]</code> <code>[트리]</code></li></ol>
+<ol><li><strong>plugin이 반드시 구현해야 하는 함수는 놀랄 만큼 적다.</strong> wrapper 경로를 쓰면 <code>GetPjrtApi</code>와 <code>PJRT_Client_Create</code> 두 개가 실질적 필수이고, <code>PJRT_TopologyDescription_Create</code>·<code>PJRT_Plugin_Initialize</code>·<code>PJRT_Plugin_Attributes</code>는 공식 문서가 명시적으로 <code>[선택사항]</code>이라고 적었다. 나머지 C API는 wrapper가 C++ 구현으로 전달한다. <code>[문서]</code></li></ol>
+<ol><li><strong>&quot;무엇이 선택 기능인가&quot;는 extension chain으로 표현된다.</strong> 각 optional feature는 <code>PJRT_*_Extension</code> 구조체로 만들어져 <code>PJRT_Api.extension_start</code>에서 시작하는 연결 리스트에 매달린다. framework는 <strong>체인을 순회해 해당 extension의 존재 여부로 기능 지원을 판정</strong>한다. 설계 문서는 &quot;Args만 추가하는 extension이라도 빈 <code>PJRT_Api</code> extension 구조체를 항상 두라&quot;고 못박는다. <code>[문서]</code></li></ol>
+<ol><li><strong>비동기는 buffer가 아니라 future로 관측된다.</strong> 비동기 plugin은 계산을 큐에 넣고 <strong>아직 읽을 수 없는 buffer를 즉시 반환</strong>해도 되며, 값이 필요해지는 시점에 <code>GetReadyFuture()</code>가 반환한 future에서 블록된다. 오류도 이 future에서 관측된다. <code>[문서]</code></li></ol>
+<ol><li><strong>buffer는 memory space를 알지만 device를 반드시 알지는 않는다.</strong> 역참조 방향이 <code>buffer → memory space → device → client</code>로 정해져 있고, device는 자신에게 붙은 buffer를 알 필요가 없다. 새 런타임을 설계할 때 그대로 베낄 만한 소유권 그래프다. <code>[문서]</code></li></ol>
+<ol><li><strong><code>PjRtExecutable</code>과 <code>PjRtLoadedExecutable</code>의 분리는 &quot;직렬화 가능한 아티팩트&quot; 대 &quot;실행 가능한 인스턴스&quot;의 분리다.</strong> 전자는 compile 산출물과 실행 옵션을 들고 serialize/deserialize를 알고, 후자는 그 subclass로서 입력 인자를 받아 즉시 실행 가능한 메모리 내 실행체다. AOT compile → 저장 → 나중에 load 하는 경로가 여기서 나온다. <code>[문서]</code></li></ol>
+<ol><li><strong><code>PjRtCompiler</code>는 plugin이 구현할 필요가 없다.</strong> 공식 문서가 &quot;XLA 백엔드에 유용한 구현 세부정보를 제공하지만 플러그인이 구현할 필요는 없다&quot;고 명시한다. 컴파일 책임은 <code>PjRtClient::Compile</code>이 지면 되고, 입력 모듈을 받아 <code>PjRtLoadedExecutable</code>을 돌려주는 것이 계약의 전부다. <code>[문서]</code></li></ol>
+<ol><li><strong>버전 호환은 &quot;함수 테이블 + minor 버전 게이트&quot;로 처리된다.</strong> framework가 <code>pjrt_api-&gt;pjrt_api_version.minor_version &gt;= N</code>을 검사해 새 메서드/새 필드를 쓸지 결정하고, 아니면 unimplemented나 기본값으로 후퇴한다. 필드 <strong>추가·이름 변경·메서드 폐기</strong>는 minor, <strong>삭제·타입 변경·구조체 필드 재배열</strong>은 major다. <code>[문서]</code></li></ol>
+<ol><li><strong>ABI 안정성의 부담은 struct에 몰려 있다.</strong> 모든 args 구조체가 <code>struct_size</code>를 첫 필드로 갖고, 과거 <code>void* priv</code> 자리가 <code>extension_start</code>로 재활용되었다. 크기 기반 버저닝 + 확장 체인이 PJRT의 ABI 전략의 핵심이다. <code>[문서]</code></li></ol>
+<ol><li><strong><code>job.json</code>이 요구한 항목 중 네 가지는 근거를 확보하지 못했다.</strong> <code>LoadOptions</code>의 존재 여부, buffer donation의 API 형태, executable cost analysis, phase compile의 입출력 필드다. 창작으로 메우지 않고 <a href="#쟁점과-불확실성" target="_blank" rel="noopener noreferrer">쟁점과 불확실성</a>과 <a href="#후속-질문" target="_blank" rel="noopener noreferrer">후속 질문</a>으로 넘겼다.</li></ol>
+<p>---</p>
+<h2 id="정보-지도">정보 지도</h2>
+<h3 id="pjrt-api-계층-지도">PJRT API 계층 지도</h3>
+<h3 id="4계층-지도">4계층 지도</h3>
+<div class="mermaid">flowchart TB
+ subgraph L1[&quot;상위: framework / compiler facing&quot;]
+ FW[&quot;JAX / TF / PyTorch-XLA / GoMLX / ZML&quot;]
+ XC[&quot;xla_client 바인딩&quot;]
+ end
+
+ subgraph L2[&quot;runtime core objects (C++)&quot;]
+ C[&quot;PjRtClient&quot;]
+ D[&quot;PjRtDevice&quot;]
+ M[&quot;PjRtMemorySpace&quot;]
+ B[&quot;PjRtBuffer&quot;]
+ E[&quot;PjRtExecutable&quot;]
+ LE[&quot;PjRtLoadedExecutable&quot;]
+ F[&quot;PjRtFuture&quot;]
+ CP[&quot;PjRtCompiler&quot;]
+ T[&quot;PjRtTopologyDescription&quot;]
+ end
+
+ subgraph L3[&quot;ABI 경계: PJRT C API&quot;]
+ API[&quot;PJRT_Api 함수 테이블&quot;]
+ ARGS[&quot;PJRT_*_Args 구조체들&quot;]
+ EXT[&quot;extension chain: extension_start 에서 시작하는 next 연결 리스트&quot;]
+ end
+
+ subgraph L4[&quot;하위: backend / plugin / driver&quot;]
+ P1[&quot;옵션 A: C API 직접 구현&quot;]
+ P2[&quot;옵션 B: C++ 구현 + wrapper&quot;]
+ DRV[&quot;device driver / kernel / allocator&quot;]
+ end
+
+ FW --&gt; XC --&gt; C
+ C --&gt; D
+ C --&gt; M
+ C --&gt; B
+ C --&gt; LE
+ C --&gt; CP
+ C --&gt; T
+ CP --&gt; E
+ E --&gt; LE
+ B --&gt; F
+ LE --&gt; F
+ C -.-&gt;|&quot;PjRtCApiClient가 C로 하강&quot;| API
+ API --- ARGS
+ API --- EXT
+ API --&gt; P1
+ API --&gt; P2
+ P2 -.-&gt;|&quot;pjrt_c_api_wrapper_impl&quot;| L2
+ P1 --&gt; DRV
+ P2 --&gt; DRV</div>
+<p>경계 해석:</p>
+<ul><li><strong>L1 → L2</strong>는 소스 레벨 결합이다. framework가 C++로 직접 링크할 수도 있다. <code>[문서]</code></li><li><strong>L2 ↔ L3</strong>은 <strong>선택적 왕복</strong>이다. <code>PjRtCApiClient</code>는 C++ 인터페이스를 유지한 채 내부에서 C API를 호출하고, <code>pjrt_c_api_wrapper_impl</code>은 반대로 C API 호출을 C++ 객체로 되돌린다. plugin이 C++로 작성되면 &quot;C++ → C → C++&quot; 왕복이 실제로 일어난다. <code>[문서]</code> <code>[트리]</code></li><li><strong>L3 → L4</strong>가 진짜 ABI 경계다. <code>.so</code> 하나가 <code>GetPjrtApi</code> 심볼만 내보내면 된다. <code>[문서]</code></li></ul>
+<h3 id="객체-소유-역참조-그래프">객체 소유·역참조 그래프</h3>
+<p>공식 문서가 명시적으로 적은 방향만 그렸다. &quot;대부분 항목에는 역포인터도 있다&quot;는 주석이 원문에 달려 있다. <code>[문서]</code></p>
+<div class="mermaid">flowchart LR
+ C[&quot;PjRtClient / 플러그인의 device와 memory space를 소유&quot;]
+ D[&quot;PjRtDevice&quot;]
+ DD[&quot;PjRtDeviceDescription / kind / 로컬·전역 위치&quot;]
+ M[&quot;PjRtMemorySpace / pinned 또는 unpinned&quot;]
+ B[&quot;PjRtBuffer&quot;]
+
+ C --&gt;|&quot;소유&quot;| D
+ C --&gt;|&quot;소유&quot;| M
+ D --&gt;|&quot;attached&quot;| M
+ D --&gt;|&quot;has&quot;| DD
+ M --&gt;|&quot;attached buffers&quot;| B
+ B --&gt;|&quot;자신의 memory space를 안다&quot;| M
+ M --&gt;|&quot;복수의 device를 안다&quot;| D
+ D --&gt;|&quot;client를 안다&quot;| C
+ M --&gt;|&quot;client를 안다&quot;| C
+ B -.-&gt;|&quot;device는 전이적으로만 안다&quot;| D</div>
+<p><strong>설계 포인트</strong>: buffer → device 직결 포인터가 없다는 점이 중요하다. memory space가 &quot;여러 device가 접근 가능한 unpinned 영역&quot;일 수 있기 때문에, buffer를 특정 device에 못 박지 않는다. PIM처럼 &quot;메모리에 붙은 연산기&quot;를 모델링할 때 이 간접 계층이 정확히 필요한 자리다. <code>[문서]</code></p>
+<h3 id="로컬-소스-트리-지도-파일-존재만-확인">로컬 소스 트리 지도 (파일 존재만 확인)</h3>
+<p><code>[트리]</code> — 아래는 Glob으로 확인한 파일/디렉터리 목록이다. <strong>본문은 열지 못했으므로 각 파일이 무엇을 담는지는 이름에서 추론한 것</strong>이며, &quot;역할&quot; 열은 별도 표기가 없으면 <code>[추정]</code>이다.</p>
+<p><strong>핵심 인터페이스 헤더 (<code>xla/pjrt/</code>)</strong></p>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>추정 역할</th></tr></thead><tbody><tr><td><code>pjrt_client.h</code></td><td><code>PjRtClient</code>, <code>PjRtDevice</code>, <code>PjRtMemorySpace</code>, <code>PjRtBuffer</code>, <code>PjRtLoadedExecutable</code>. D1이 이 4+1개 클래스를 모두 이 헤더로 링크한다 <code>[문서]</code></td></tr><tr><td><code>pjrt_executable.h</code></td><td><code>PjRtExecutable</code>, 컴파일/실행 옵션 계열 <code>[문서]</code> (D1이 <code>PjRtExecutable</code>를 이 헤더로 링크)</td></tr><tr><td><code>pjrt_compiler.h</code></td><td><code>PjRtCompiler</code> <code>[문서]</code></td></tr><tr><td><code>pjrt_device_description.h</code></td><td><code>PjRtDeviceDescription</code> <code>[문서]</code></td></tr><tr><td><code>pjrt_future.h</code></td><td><code>PjRtFuture</code></td></tr><tr><td><code>pjrt_layout.h</code></td><td>레이아웃 표현</td></tr><tr><td><code>pjrt_common.h</code>, <code>pjrt_client_utils.h</code></td><td>공용 타입/헬퍼</td></tr><tr><td><code>pjrt_api.h</code></td><td>plugin 등록/조회 (D5의 <code>LoadPjrtPlugin</code>/<code>GetPjrtApi</code> 경로)</td></tr><tr><td><code>pjrt_abi_version.h</code></td><td>ABI 버전 상수</td></tr><tr><td><code>pjrt_device_dimensions.h</code>, <code>dynamic_shapes.h</code></td><td>D9의 동적 shape 처리</td></tr><tr><td><code>device_event.h</code>, <code>device_event_utils.h</code>, <code>async_work_runner.h</code></td><td>비동기 완료/이벤트</td></tr><tr><td><code>compiled_memory_stats.h</code></td><td>executable 메모리 통계</td></tr><tr><td><code>abstract_tracked_device_buffer.h</code>, <code>common_pjrt_client.h</code></td><td>backend 공통 골격</td></tr><tr><td><code>errors.h</code>, <code>exceptions.h</code></td><td>오류 전파</td></tr><tr><td><code>pjrt_phase_compile_sample_plugin.h</code></td><td>phase compile 예제 plugin</td></tr><tr><td><code>pjrt_stream_executor_client.h</code>, <code>se/</code></td><td>StreamExecutor 기반 backend 골격</td></tr></tbody></table></div>
+<p><strong>ABI 경계 (<code>xla/pjrt/c/</code>)</strong></p>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>추정 역할</th></tr></thead><tbody><tr><td><code>pjrt_c_api.h</code></td><td><code>PJRT_Api</code> 함수 테이블, <code>PJRT_*_Args</code> 구조체 원본 <code>[문서]</code></td></tr><tr><td><code>pjrt_c_api_wrapper_impl.h</code></td><td>C++ <code>PjRtClient</code> → C API wrapper. <code>CreateWrapperClient</code>, <code>CreatePjrtApi</code> 제공 <code>[문서]</code></td></tr><tr><td><code>pjrt_c_api_helpers.h</code>, <code>pjrt_c_api_macros.h</code>, <code>pjrt_c_api_status_utils.h</code></td><td>변환/상태 헬퍼</td></tr><tr><td><code>pjrt_c_api_test.h</code>, <code>pjrt_c_api_test_base.h</code></td><td><code>RegisterPjRtCApiTestFactory</code> 기반 적합성 테스트 <code>[문서]</code></td></tr><tr><td><code>pjrt_c_api_cpu.h</code>, <code>pjrt_c_api_gpu.h</code>, <code>pjrt_c_api_tpu.h</code> (+ <code>_internal</code>)</td><td>레퍼런스 plugin 진입점</td></tr><tr><td><code>pjrt_c_api_device_event.h</code></td><td>C 레벨 device event</td></tr><tr><td><code>pjrt_c_api_abi_version_extension.h</code>, <code>pjrt_c_api_abi_version_helpers.h</code></td><td>D6의 버전 협상</td></tr></tbody></table></div>
+<p><strong>Extension 목록</strong> — 이것이 곧 &quot;선택 기능 카탈로그&quot;다. <code>[트리]</code></p>
+<p><code>callback</code>, <code>collectives</code>, <code>custom_partitioner</code>, <code>ffi</code>, <code>gpu</code>, <code>layouts</code>, <code>megascale</code>, <code>memory_descriptions</code>, <code>multi_slice</code>, <code>phase_compile</code>, <code>profiler</code>, <code>raw_buffer</code>, <code>shardings</code>, <code>stream</code>, <code>tpu_topology</code>, <code>tpu_executable</code>, <code>triton</code>, <code>xla_transform</code>, <code>abi_version</code> 그리고 <code>xla/pjrt/extensions/</code> 아래에 <code>cross_host_transfers</code>, <code>executable_metadata</code>, <code>example</code>, <code>host_allocator</code>, <code>host_memory_allocator</code>.</p>
+<p><strong>C → C++ 하강 어댑터 (<code>xla/pjrt/c_api_client/</code>)</strong></p>
+<p><code>pjrt_c_api_client.{h,cc}</code>, <code>pjrt_c_api_phase_compiler.{h,cc}</code>, <code>pjrt_c_api_multi_slice_config.{h,cc}</code>, <code>README.md</code></p>
+<blockquote>관찰: <code>xla/pjrt/pjrt_c_api_client.h</code>와 <code>xla/pjrt/c_api_client/pjrt_c_api_client.h</code>가 <strong>둘 다 존재한다</strong>. 이동 중 남긴 forwarding 헤더로 보이지만 확인하지 못했다. → <a href="#4-pjrt_c_api_clienth가-두-곳에-있다" target="_blank" rel="noopener noreferrer">쟁점 4</a> 참조. <code>[트리]</code></blockquote>
+<p>---</p>
+<h2 id="상위-api-framework-compiler-facing-surface">상위 API: framework / compiler-facing surface</h2>
+<p><code>PjRtClient</code>가 상위 API의 단일 진입점이다. 문서 표현으로 &quot;클라이언트는 기기와 프레임워크 간의 모든 통신을 관리하고 통신에 사용되는 모든 상태를 캡슐화한다&quot;. <code>[문서]</code></p>
+<h3 id="api-그룹별-분류">API 그룹별 분류</h3>
+<div class="table-wrap"><table><thead><tr><th>그룹</th><th>대표 호출</th><th>입력</th><th>반환</th><th>근거</th></tr></thead><tbody><tr><td><strong>플랫폼 질의</strong></td><td><code>platform_name()</code>, <code>platform_version()</code>, <code>process_index()</code></td><td>—</td><td>문자열 / 정수</td><td><code>[문서]</code> D1 호출 로그에서 실제 호출 확인</td></tr><tr><td><strong>device 질의</strong></td><td><code>devices()</code>, <code>addressable_device_count()</code>, <code>IsAddressable()</code>, <code>description()</code></td><td>—</td><td><code>PjRtDevice*</code> 목록, 개수, bool</td><td><code>[문서]</code> D1</td></tr><tr><td><strong>topology 질의</strong></td><td><code>PjRtTopologyDescription</code> (AOT 경로), C API는 <code>PJRT_TopologyDescription_Create</code></td><td>—</td><td>토폴로지 기술 객체</td><td><code>[문서]</code> D2 (C API 측), 필드 구성은 <code>[추정]</code></td></tr><tr><td><strong>memory space 질의</strong></td><td><code>memory_spaces()</code>, device의 <code>default_memory_space()</code>, <code>AttachDefaultMemorySpace()</code></td><td>—</td><td><code>PjRtMemorySpace*</code> 목록</td><td><code>[문서]</code> D1</td></tr><tr><td><strong>buffer 생성 / host→device</strong></td><td><code>BufferFromHostBuffer(...)</code></td><td>host 데이터 + shape/layout + <strong>host buffer semantics</strong></td><td><code>absl::StatusOr&lt;std::unique_ptr&lt;PjRtBuffer&gt;&gt;</code></td><td><code>[문서]</code> D1이 시그니처와 semantics 링크 명시</td></tr><tr><td><strong>device→host</strong></td><td><code>PjRtBuffer::ToLiteral(xla::MutableLiteralBase* literal)</code></td><td>출력 리터럴 포인터</td><td><code>xla::Future&lt;&gt;</code></td><td><code>[문서]</code> D1 원문 시그니처</td></tr><tr><td><strong>외부 공유 (zero-copy/dlpack)</strong></td><td><code>PjRtBuffer::AcquireExternalReference()</code></td><td>—</td><td><code>StatusOr&lt;unique_ptr&lt;ExternalReference&gt;&gt;</code></td><td><code>[문서]</code> D8</td></tr><tr><td><strong>compile</strong></td><td><code>PjRtClient::Compile(...)</code></td><td>입력 모듈 + <code>CompileOptions</code></td><td><code>PjRtLoadedExecutable</code></td><td><code>[문서]</code> D1 (&quot;입력 모듈을 가져와 <code>PjRtLoadedExecutable</code>를 반환&quot;)</td></tr><tr><td><strong>serialize / load</strong></td><td><code>PjRtExecutable</code>의 직렬화·역직렬화</td><td>컴파일 아티팩트</td><td>저장 가능한 실행 파일</td><td><code>[문서]</code> D1</td></tr><tr><td><strong>execute (전 device)</strong></td><td><code>Execute(absl::Span&lt;const std::vector&lt;PjRtBuffer*&gt;&gt; argument_handles, ...)</code></td><td>인자 handle 2차원 배열</td><td><code>StatusOr&lt;vector&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;&gt;</code></td><td><code>[문서]</code> D1 원문</td></tr><tr><td><strong>execute (sharded)</strong></td><td><code>ExecuteSharded(absl::Span&lt;PjRtBuffer* const&gt;, PjRtDevice*, ...)</code></td><td>인자 + 대상 device</td><td><code>StatusOr&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;</code></td><td><code>[문서]</code> D1 원문</td></tr><tr><td><strong>execute (portable)</strong></td><td><code>ExecutePortable(absl::Span&lt;PjRtBuffer* const&gt;, PjRtDevice*, ...)</code></td><td>인자 + 대상 device</td><td><code>StatusOr&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;</code></td><td><code>[문서]</code> D1 원문</td></tr><tr><td><strong>완료 대기</strong></td><td><code>PjRtBuffer::GetReadyFuture()</code></td><td>—</td><td>future</td><td><code>[문서]</code> D1</td></tr><tr><td><strong>수명 종료</strong></td><td><code>PjRtBuffer::Delete()</code>, <code>IsDeleted()</code></td><td>—</td><td>— / bool</td><td><code>[문서]</code> D1</td></tr><tr><td><strong>shape 질의</strong></td><td><code>on_device_shape()</code>, <code>logical_on_device_shape()</code></td><td>—</td><td><code>xla::Shape</code></td><td><code>[문서]</code> D9</td></tr><tr><td><strong>executable 메타데이터</strong></td><td><code>num_replicas()</code>, <code>num_partitions()</code>, <code>GetHloModules()</code></td><td>—</td><td>정수 / HLO 모듈</td><td><code>[문서]</code> D1 호출 로그</td></tr></tbody></table></div>
+<h3 id="옵션-구조체">옵션 구조체</h3>
+<p>여기가 이번 조사의 <strong>가장 약한 지점</strong>이다. 문서는 옵션 구조체의 존재와 일부 필드만 언급하고 전체 필드 목록을 주지 않는다. 헤더를 열지 못했으므로 아래처럼 <strong>확인된 필드와 미확인 필드를 분리</strong>했다.</p>
+<div class="table-wrap"><table><thead><tr><th>구조체</th><th>확인된 필드</th><th>근거</th><th>미확인 (헤더 확인 필요)</th></tr></thead><tbody><tr><td><code>CompileOptions</code></td><td>—</td><td>—</td><td>전체 필드. <code>ExecutableBuildOptions</code>, device assignment, 인자 레이아웃, 환경 override 등이 들어갈 것으로 보이나 <strong>미확인</strong> <code>[추정]</code></td></tr><tr><td><code>ExecuteOptions</code></td><td>C API 대응물 <code>PJRT_ExecuteOptions</code>에 <code>send_callbacks</code>, <code>recv_callbacks</code>, <code>num_send_ops</code>, <code>num_recv_ops</code> 존재</td><td><code>[문서]</code> D7 (optional feature 목록에서 필드명 명시)</td><td>launch id, 인자 donation 지정, untuple 여부 등 <strong>미확인</strong> <code>[추정]</code></td></tr><tr><td><code>LoadOptions</code></td><td>—</td><td>—</td><td><strong>존재 여부 자체를 문서에서 확인하지 못함.</strong> <code>job.json</code>이 요구한 항목이지만 D1~D11 어디에도 이름이 나오지 않는다 <code>[추정]</code></td></tr><tr><td>host buffer semantics</td><td>문서상 &quot;호스트 버퍼의 리터럴 데이터를 <strong>공유(share)/복사(copy)/변경(mutate)</strong> 가능 여부를 지정&quot;</td><td><code>[문서]</code> D1 (<code>pjrt_client.h#L858</code> 링크)</td><td>enum 값의 정확한 이름 <strong>미확인</strong> <code>[추정]</code></td></tr><tr><td>layout 관련</td><td><code>PJRT_Client_BufferFromHostBuffer_Args::device_layout</code>, <code>PJRT_Client_CreateViewOfDeviceBuffer_Args::layout</code>, <code>PJRT_Buffer_ToHostBuffer_Args::layout</code></td><td><code>[문서]</code> D7 (optional feature <code>memory_layouts</code>가 덮는 필드로 명시)</td><td>C++ 쪽 대응 인자명 <strong>미확인</strong> <code>[추정]</code></td></tr></tbody></table></div>
+<p><strong>해석</strong>: 옵션 필드 중 <strong>layout과 send/recv callback은 명시적으로 &quot;선택 기능&quot;</strong> 으로 분류되어 있다는 사실이 필드 목록 자체보다 중요하다. 즉 새 backend는 layout을 무시하고도 basic workload를 돌릴 수 있어야 한다는 뜻이다. <code>[문서]</code> D7</p>
+<h3 id="상위-계층에서-숨겨지는-것-노출되는-것">상위 계층에서 숨겨지는 것 / 노출되는 것</h3>
+<div class="table-wrap"><table><thead><tr><th>숨겨짐 (plugin 내부 상태)</th><th>노출됨 (framework가 쥐는 handle)</th></tr></thead><tbody><tr><td>실제 device memory 주소, allocator</td><td><code>PjRtBuffer*</code> (opaque)</td></tr><tr><td>스트림/큐, 커널 스케줄링</td><td><code>PjRtFuture</code> (완료 시점만)</td></tr><tr><td>컴파일러 파이프라인, 코드 생성</td><td><code>PjRtLoadedExecutable*</code></td></tr><tr><td>device 토폴로지 내부 표현</td><td><code>PjRtDevice*</code> + <code>PjRtDeviceDescription</code> (id, kind, 위치)</td></tr><tr><td>메모리 계층 물리 구조</td><td><code>PjRtMemorySpace*</code> (pinned/unpinned 구분만)</td></tr></tbody></table></div>
+<p>예외가 하나 있다. <code>AcquireExternalReference()</code>는 <strong>의도적으로 opaque device memory pointer를 뚫어준다</strong>. CPU zero-copy와 GPU dlpack이 이 구멍을 쓴다. 즉 &quot;완전 추상화&quot;가 아니라 <strong>명시적 탈출구를 둔 추상화</strong>다. <code>[문서]</code> D8</p>
+<p>---</p>
+<h2 id="하위-api-backend-plugin-facing-surface">하위 API: backend / plugin-facing surface</h2>
+<h3 id="두-갈래-구현-경로">두 갈래 구현 경로</h3>
+<p>공식 문서가 제시하는 선택지는 정확히 둘이다. <code>[문서]</code> D2</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>옵션 A: C API 직접 구현</th><th>옵션 B: C++ 구현 + wrapper</th></tr></thead><tbody><tr><td>전제</td><td>없음 (XLA 소스에 의존하지 않아도 됨)</td><td>XLA 저장소 C++ 코드에 대해 빌드 가능해야 함 (fork 또는 bazel)</td></tr><tr><td>구현 대상</td><td><code>PJRT_Api</code>의 함수 포인터 전부</td><td><code>xla::PjRtClient</code> 등 C++ 인터페이스 + <strong>C API 몇 개</strong></td></tr><tr><td>대표 사례</td><td>Tenstorrent-XLA (MLIR 기반 C plugin)</td><td>XLA CPU/GPU plugin, Intel XLA plugin</td></tr><tr><td>장점</td><td>의존성 최소</td><td>구현량 최소</td></tr></tbody></table></div>
+<h3 id="옵션-b에서-실제로-써야-하는-c-함수-최소-함수-세트">옵션 B에서 실제로 써야 하는 C 함수 (= 최소 함수 세트)</h3>
+<pre><code class="language-c">// D2 원문 예제
+#include &quot;third_party/tensorflow/compiler/xla/pjrt/c/pjrt_c_api_wrapper_impl.h&quot;
+
+namespace my_plugin {
+PJRT_Error* PJRT_Client_Create(PJRT_Client_Create_Args* args) {
+  std::unique_ptr&lt;xla::PjRtClient&gt; client = GetPluginPjRtClient();
+  args-&gt;client = pjrt::CreateWrapperClient(std::move(client));
+  return nullptr;
+}
+}  // namespace my_plugin
+
+const PJRT_Api* GetPjrtApi() {
+  static const PJRT_Api pjrt_api =
+      pjrt::CreatePjrtApi(my_plugin::PJRT_Client_Create);
+  return &amp;pjrt_api;
+}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>함수</th><th>필수 여부</th><th>역할</th><th>근거</th></tr></thead><tbody><tr><td><code>GetPjrtApi</code></td><td><strong>필수</strong> (dlsym으로 찾는 유일한 심볼)</td><td><code>PJRT_Api*</code> 반환</td><td><code>[문서]</code> D2, D5</td></tr><tr><td><code>PJRT_Client_Create</code></td><td><strong>필수</strong></td><td>client 생성. framework가 넘긴 옵션을 소비할 수 있음</td><td><code>[문서]</code> D2 (<code>pjrt_c_api.h#L344-L365</code>)</td></tr><tr><td><code>PJRT_TopologyDescription_Create</code></td><td>선택</td><td>AOT compile용 토폴로지 기술</td><td><code>[문서]</code> D2가 <code>[선택사항]</code>으로 명시 (<code>#L1815-L1830</code>)</td></tr><tr><td><code>PJRT_Plugin_Initialize</code></td><td>선택</td><td><strong>다른 함수 호출 전에</strong> framework가 1회 호출하는 일회성 초기화</td><td><code>[문서]</code> D2 <code>[선택사항]</code> (<code>#L173-L180</code>)</td></tr><tr><td><code>PJRT_Plugin_Attributes</code></td><td>선택</td><td>plugin 속성 질의. 호환성 판정의 통합 지점</td><td><code>[문서]</code> D2 <code>[선택사항]</code> (<code>#L182-L194</code>), D6</td></tr></tbody></table></div>
+<p>문서의 결정적 한 줄: <strong>&quot;래퍼를 사용하면 나머지 C API를 구현할 필요가 없다.&quot;</strong> <code>[문서]</code> D2</p>
+<p><code>PJRT_Plugin_Initialize</code>가 왜 생겼는지도 설계 문서에 남아 있다. D5의 open question — &quot;PJRT client 생성과 무관한 plugin 초기화는 어디서 하나? <code>PJRT_Client_Create</code>에서 1회만 실행하게 할 것인가, 아니면 별도 <code>InitializePlugin</code>을 둘 것인가&quot; — 가 후자로 결론난 흔적이다. <code>[문서]</code> D5 + D2 (<code>[추정]</code> — 인과관계는 추론)</p>
+<h3 id="plugin-로딩-등록-경로">plugin 로딩·등록 경로</h3>
+<pre><code class="language-c">// D5 원문 (pseudo code)
+Status LoadPjrtPlugin(string library_path, map&lt;string, string&gt; config_values) {
+  library_handle = dlopen(library_path);
+  function_prt = dlsym(library_handle, &quot;GetPjrtApi&quot;);
+  if (function_prt != nullptr) {
+     PJRT_Api* api = function_prt();
+     plugin_name = parse(library_path);
+     PluginInfo plugin_info(api, config_values);
+     global_pjrt_plugin_map[plugin_name] = plugin_info;
+  }
+}</code></pre>
+<ul><li><code>global_pjrt_plugin_map</code>은 <code>map&lt;plugin_name, PluginInfo&gt;</code>이고 <strong>프로그램과 수명이 같다</strong>. <code>PluginInfo</code>는 생성 후 immutable이며 <code>PJRT_Api*</code>와 config values의 getter를 갖는다. <code>[문서]</code> D5</li><li>config values는 <code>GetCApiClient</code>가 map으로 받아 <strong><code>PJRT_NamedValue</code>를 통해 <code>PJRT_Client_Create</code>로 전달</strong>된다. <code>[문서]</code> D5</li><li>탐색은 <code>PJRT_PLUGIN_LIBRARY_PATH</code> 환경변수 + 네이밍 규약(<code>pjrt-plugin-&lt;name&gt;.so</code> / <code>.json</code>). <code>[문서]</code> D5</li><li>JAX 측 등록: <code>jax_plugins</code> 네임스페이스 패키지 또는 <code>entry_points</code> 그룹, 그리고 <code>initialize()</code>에서 <code>xb.register_plugin(&#x27;my_plugin&#x27;, priority=500, library_path=path, options=None)</code>. 기본 우선순위는 400. <code>[문서]</code> D2</li></ul>
+<h3 id="extension-메커니즘-선택-실험-기능의-표현-수단">extension 메커니즘 (선택·실험 기능의 표현 수단)</h3>
+<pre><code class="language-c">// D7 원문
+struct PJRT_Structure_Base {   // &quot;I also wanna rename this PJRT_Extension_Base&quot;
+    size_t struct_size;
+    PJRT_Structure_Type type;
+    const struct PJRT_Structure_Base* next;
+};
+
+struct PJRT_Api {
+    size_t struct_size;
+    PJRT_Structure_Base* extension_start;   // 이전에는 void*
+    [...]
+};
+
+struct PJRT_Client_BufferFromHostBuffer_Args {
+    size_t struct_size;
+    PJRT_Structure_Base* extension_start;   // 이전에는 void* priv (미사용)
+    [...]
+};</code></pre>
+<p>핵심 규칙 <code>[문서]</code> D7:</p>
+<ol><li>optional feature 하나 = extension 하나. (예: <code>PJRT_MemoryLayouts_Extension</code>, 메서드 <code>PJRT_MemoryLayouts_PJRT_Buffer_GetMemoryLayout</code>)</li><li>기존 메서드의 <strong>인자를 확장</strong>할 때는 args 구조체의 <code>extension_start</code>에 Args extension을 매단다.</li><li>framework는 <strong><code>PJRT_Api</code>의 extension chain을 순회</strong>해 기능 지원 여부를 판정한다.</li><li>따라서 <strong>Args만 추가하는 extension이라도 빈 <code>PJRT_Api</code> extension 구조체를 반드시 등록</strong>해야 한다. (안 그러면 framework가 탐지할 방법이 없다)</li><li>모든 experimental feature는 optional이다. experimental extension에는 ABI/API 호환성 보장이 없고, 구분은 <strong>주석</strong>으로만 표시된다.</li><li>plugin은 미구현 experimental 기능의 필드를 <strong><code>nullptr</code>로 두어야</strong> 한다. <code>[문서]</code> D6</li></ol>
+<p>extension chain을 순회하는 판정 경로는 이렇게 생겼다. (구조만 그린 것이므로 라벨에 타입 표기를 넣지 않았다.)</p>
+<div class="mermaid">flowchart LR
+ FWQ[&quot;framework: memory_layouts 지원하나?&quot;]
+ S[&quot;PJRT_Api.extension_start&quot;]
+ X1[&quot;extension node: type=Profiler&quot;]
+ X2[&quot;extension node: type=MemoryLayouts&quot;]
+ X3[&quot;extension node: next = nullptr&quot;]
+ YES[&quot;지원: extension의 함수 포인터 호출&quot;]
+ NO[&quot;미지원: 기본 layout 경로로 후퇴&quot;]
+
+ FWQ --&gt; S --&gt; X1 --&gt;|&quot;next&quot;| X2 --&gt;|&quot;next&quot;| X3
+ X2 -.-&gt;|&quot;type 일치&quot;| YES
+ X3 -.-&gt;|&quot;체인 끝까지 불일치&quot;| NO</div>
+<blockquote>대안이었던 Proposal B(<code>PJRT_Api_OptionalFeatures</code> 구조체에 <code>bool memory_layouts; bool host_send_recv_callbacks;</code> 같은 플래그를 두고 <code>PJRT_Plugin_Attributes_Args</code>로 노출)는 <strong>채택되지 않았다</strong>. 이유: &quot;같은 일을 하는 방법이 둘이 되는 것보다 extension이 낫다. extension은 기계적으로 유지·테스트하기 쉽고 주석에 덜 의존한다.&quot; <code>[문서]</code> D7</blockquote>
+<h3 id="backend가-구현해야-하는-객체-c-경로">backend가 구현해야 하는 객체 (C++ 경로)</h3>
+<div class="table-wrap"><table><thead><tr><th>구현 대상</th><th>필수/선택</th><th>근거</th></tr></thead><tbody><tr><td><code>PjRtClient</code> 파생</td><td>필수</td><td><code>[문서]</code> D2 (<code>GetPluginPjRtClient()</code>가 반환)</td></tr><tr><td><code>PjRtDevice</code> / <code>PjRtDeviceDescription</code> 파생</td><td>필수</td><td><code>[문서]</code> D1 (client가 device를 소유)</td></tr><tr><td><code>PjRtMemorySpace</code> 파생</td><td>필수 (최소 default 1개)</td><td><code>[문서]</code> D1 (로그에 <code>AttachDefaultMemorySpace</code>, <code>default_memory_space</code>)</td></tr><tr><td><code>PjRtBuffer</code> 파생 (+ <code>BufferFromHostBuffer</code>, <code>ToLiteral</code>, <code>GetReadyFuture</code>, <code>Delete</code>, <code>IsDeleted</code>, <code>on_device_shape</code>)</td><td>필수</td><td><code>[문서]</code> D1</td></tr><tr><td><code>PjRtLoadedExecutable</code> 파생 (+ <code>Execute</code>)</td><td>필수</td><td><code>[문서]</code> D1</td></tr><tr><td><code>PjRtExecutable</code> serialize/deserialize</td><td>사실상 선택 (AOT 필요 시)</td><td><code>[문서]</code> D1 <code>[추정]</code> — 필수 여부 명시 없음</td></tr><tr><td><code>PjRtCompiler</code></td><td><strong>불필요</strong></td><td><code>[문서]</code> D1 (&quot;플러그인이 구현할 필요는 없다&quot;)</td></tr><tr><td>future의 올바른 구현</td><td>비동기 plugin이면 <strong>필수</strong></td><td><code>[문서]</code> D1 (&quot;퓨처를 적절하게 구현해야 합니다&quot;)</td></tr><tr><td><code>AcquireExternalReference</code></td><td>선택 (zero-copy/dlpack 필요 시)</td><td><code>[문서]</code> D8</td></tr><tr><td>memory spaces / custom layouts / send-recv / host offload / sharding</td><td><strong>전부 선택</strong></td><td><code>[문서]</code> D1 (&quot;이러한 기능은 모두 선택사항입니다&quot;)</td></tr></tbody></table></div>
+<p>---</p>
+<h2 id="객체별-필드와-상태">객체별 필드와 상태</h2>
+<p>각 행의 근거 등급에 주의할 것. 필드 <strong>이름</strong>이 문서에 나온 것만 <code>[문서]</code>다.</p>
+<h3 id="pjrtclient">PjRtClient</h3>
+<div class="table-wrap"><table><thead><tr><th>범주</th><th>항목</th><th>근거</th></tr></thead><tbody><tr><td>식별</td><td><code>platform_name()</code>, <code>platform_version()</code>, <code>process_index()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>device</td><td><code>devices()</code>, <code>addressable_device_count()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>memory</td><td><code>memory_spaces()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>소유권</td><td>해당 plugin의 device와 memory space를 <strong>소유</strong></td><td><code>[문서]</code> D1</td></tr><tr><td>버전 (C API client 한정)</td><td><code>api_version()</code> → <code>std::pair&lt;int,int&gt;</code> (major, minor), 내부 <code>major_version_</code>, <code>minor_version_</code></td><td><code>[문서]</code> D6</td></tr><tr><td>속성</td><td><code>client.attributes[&#x27;support_memory_space&#x27;]</code> 형태의 문자열 키 속성 맵</td><td><code>[문서]</code> D6</td></tr></tbody></table></div>
+<h3 id="pjrtdevice-pjrtdevicedescription">PjRtDevice / PjRtDeviceDescription</h3>
+<div class="table-wrap"><table><thead><tr><th>범주</th><th>항목</th><th>근거</th></tr></thead><tbody><tr><td>식별</td><td><code>id()</code>, <code>device_kind()</code> — kind는 &quot;GPU/CPU/xPU를 식별하는 고유 해시&quot;</td><td><code>[문서]</code> D1</td></tr><tr><td>위치</td><td>device grid 내 <strong>로컬 및 전역</strong> 위치</td><td><code>[문서]</code> D1</td></tr><tr><td>프로세스</td><td><code>process_index()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>접근성</td><td><code>IsAddressable()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>메모리</td><td><code>memory_spaces()</code>, <code>default_memory_space()</code>, <code>AttachDefaultMemorySpace()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>역참조</td><td><code>client()</code>, <code>description()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>표시</td><td><code>ToString()</code>, <code>DebugString()</code>, <code>Attributes()</code></td><td><code>[문서]</code> D1 로그</td></tr></tbody></table></div>
+<h3 id="pjrtmemoryspace">PjRtMemorySpace</h3>
+<div class="table-wrap"><table><thead><tr><th>범주</th><th>항목</th><th>근거</th></tr></thead><tbody><tr><td>종류</td><td><strong>unpinned</strong> (device가 접근 가능한 어디든) 또는 <strong>pinned</strong> (특정 device에 고정)</td><td><code>[문서]</code> D1</td></tr><tr><td>역참조</td><td>붙어 있는 buffer들, <strong>복수</strong> device, 소속 client</td><td><code>[문서]</code> D1</td></tr><tr><td>kind</td><td>C API에 <code>PJRT_Memory_Kind</code>가 존재 (D6이 minor 14에 추가된 예로 인용)</td><td><code>[문서]</code> D6</td></tr><tr><td>상세 기술</td><td><code>c/pjrt_c_api_memory_descriptions_extension.h</code> 존재 → memory space를 더 자세히 기술하는 <strong>선택 extension</strong>이 있다</td><td><code>[트리]</code>, 필드 구성은 <code>[추정]</code></td></tr></tbody></table></div>
+<h3 id="pjrtbuffer">PjRtBuffer</h3>
+<div class="table-wrap"><table><thead><tr><th>범주</th><th>항목</th><th>근거</th></tr></thead><tbody><tr><td>데이터</td><td>plugin이 쓰기 편한 형식으로 device에 데이터 보유 (MLIR elements attribute, 독자 텐서 포맷 등)</td><td><code>[문서]</code> D1</td></tr><tr><td>shape</td><td><code>on_device_shape()</code> = 정적(패딩 포함) shape, <code>logical_on_device_shape()</code> = 논리(unpadded) shape</td><td><code>[문서]</code> D9</td></tr><tr><td>C API shape</td><td><code>PJRT_Buffer_Dimensions</code> (실제 동적 shape 있으면 그것, 없으면 정적), <code>PJRT_Buffer_UnpaddedDimensions</code> (unpadded 없으면 Dimensions와 동일하거나 Unimplemented)</td><td><code>[문서]</code> D9</td></tr><tr><td>layout</td><td><code>device_layout</code> / <code>layout</code> args 필드 (선택 기능 <code>memory_layouts</code>)</td><td><code>[문서]</code> D7</td></tr><tr><td>생성</td><td><code>BufferFromHostBuffer(...)</code> + <strong>host buffer semantics</strong> (share / copy / mutate 가능 여부)</td><td><code>[문서]</code> D1</td></tr><tr><td>반출</td><td><code>ToLiteral(xla::MutableLiteralBase*)</code> → <code>xla::Future&lt;&gt;</code></td><td><code>[문서]</code> D1</td></tr><tr><td>완료</td><td><code>GetReadyFuture()</code></td><td><code>[문서]</code> D1</td></tr><tr><td>수명</td><td><code>Delete()</code>, <code>IsDeleted()</code></td><td><code>[문서]</code> D1</td></tr><tr><td>위치</td><td><code>memory_space()</code>, <code>device()</code>, <code>IsOnCpu()</code> (true면 external reference 허용)</td><td><code>[문서]</code> D1 로그</td></tr><tr><td>외부 참조</td><td><code>AcquireExternalReference()</code> → <code>ExternalReference</code> (opaque device memory pointer + dtype/dim 메타데이터)</td><td><code>[문서]</code> D1, D8</td></tr><tr><td>donation</td><td>실행 시 인자 buffer를 donate하는 개념 자체는 PJRT 생태계에서 통용되나, <strong>참고 문서 11개 어디에도 donation API의 이름·필드·소유권 규약이 나오지 않는다</strong></td><td><code>[추정]</code> — 근거 없음, 창작하지 않음</td></tr></tbody></table></div>
+<p><code>ExternalReference</code>의 C++ 정의는 D8에 그대로 있다:</p>
+<pre><code class="language-cpp">class ExternalReference {
+ public:
+  virtual ~ExternalReference() = 0;
+  void* OpaqueDeviceMemoryDataPointer() const { return data_ptr_; }
+ protected:
+  void* data_ptr_;
+};
+virtual StatusOr&lt;std::unique_ptr&lt;ExternalReference&gt;&gt; AcquireExternalReference() = 0;</code></pre>
+<h3 id="pjrtexecutable-pjrtloadedexecutable">PjRtExecutable / PjRtLoadedExecutable</h3>
+<div class="table-wrap"><table><thead><tr><th>객체</th><th>책임</th><th>근거</th></tr></thead><tbody><tr><td><code>PjRtExecutable</code></td><td>컴파일된 아티팩트 + 실행 옵션을 들고, <strong>serialize / deserialize</strong>를 알아서 저장·재로드 가능</td><td><code>[문서]</code> D1</td></tr><tr><td><code>PjRtLoadedExecutable</code></td><td>입력 인자를 받아 <strong>즉시 실행 가능한 메모리 내 실행체</strong>. <code>PjRtExecutable</code>의 <strong>subclass</strong></td><td><code>[문서]</code> D1</td></tr><tr><td>메타데이터</td><td><code>num_replicas()</code>, <code>num_partitions()</code>, <code>GetHloModules()</code></td><td><code>[문서]</code> D1 로그</td></tr><tr><td>메모리 통계</td><td><code>compiled_memory_stats.h</code> 존재 → 컴파일 산출물의 메모리 사용량을 보고하는 경로가 있다</td><td><code>[트리]</code> (필드 미확인)</td></tr><tr><td>추가 메타데이터</td><td><code>extensions/executable_metadata</code> 존재 → 일부 메타데이터는 <strong>선택 extension</strong>으로 빠져 있다</td><td><code>[트리]</code></td></tr><tr><td>cost analysis</td><td><code>job.json</code>이 요구했으나 참고 문서에 근거 없음</td><td><code>[추정]</code></td></tr></tbody></table></div>
+<h3 id="샤딩-관련-필드">샤딩 관련 필드</h3>
+<p><code>job.json</code>이 요구한 항목이지만 근거가 얇다. 확보된 것만 적는다.</p>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>내용</th><th>근거</th></tr></thead><tbody><tr><td>실행 API</td><td><code>ExecuteSharded(...)</code>가 존재하고, 인자 목록과 <strong>대상 device 하나</strong>를 받는다</td><td><code>[문서]</code> D1 원문 시그니처</td></tr><tr><td>replica/partition</td><td><code>num_replicas()</code>, <code>num_partitions()</code>로 executable이 몇 갈래로 쪼개졌는지 질의 가능</td><td><code>[문서]</code> D1 로그</td></tr><tr><td>지원 여부</td><td>공식 문서가 sharding을 <strong>선택 기능</strong> 목록에 넣었다</td><td><code>[문서]</code> D1</td></tr><tr><td>C API 표현</td><td><code>c/pjrt_c_api_shardings_extension.h</code>(및 <code>custom_partitioner</code>) 존재 → extension으로 제공</td><td><code>[트리]</code></td></tr><tr><td>샤딩 기술 구조체의 필드</td><td><strong>미확인</strong></td><td><code>[추정]</code> — 헤더 확인 필요</td></tr></tbody></table></div>
+<h3 id="pjrtfuture">PjRtFuture</h3>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>내용</th><th>근거</th></tr></thead><tbody><tr><td>반환처</td><td><code>GetReadyFuture()</code> (buffer), <code>ToLiteral()</code> (device→host)</td><td><code>[문서]</code> D1</td></tr><tr><td>의미</td><td>비동기 plugin은 <strong>아직 준비되지 않은 buffer를 즉시 반환</strong>할 수 있고, 값이 필요할 때 future에서 블록</td><td><code>[문서]</code> D1</td></tr><tr><td>용도</td><td>&quot;기기 및 버퍼를 비롯한 객체를 사용할 수 있는 시점 확인&quot;</td><td><code>[문서]</code> D1</td></tr><tr><td>오류</td><td>future에서 관측 (<code>ToLiteral</code>의 반환형이 <code>Future&lt;&gt;</code>이고 생성 계열은 <code>StatusOr</code>)</td><td><code>[문서]</code> D1 + <code>[추정]</code> (오류 전파 규약의 세부는 미확인)</td></tr><tr><td>C 레벨 대응</td><td><code>c/pjrt_c_api_device_event.h</code>, <code>device_event.h</code>, <code>async_work_runner.h</code> 존재</td><td><code>[트리]</code></td></tr></tbody></table></div>
+<h3 id="pjrtcompiler-phase-compiler">PjRtCompiler / phase compiler</h3>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>내용</th><th>근거</th></tr></thead><tbody><tr><td>필수 여부</td><td>plugin이 구현할 필요 <strong>없음</strong></td><td><code>[문서]</code> D1</td></tr><tr><td>계약</td><td>입력 모듈 → <code>PjRtLoadedExecutable</code> (<code>PjRtCompiler</code> 또는 <code>PjRtClient::Compile</code>)</td><td><code>[문서]</code> D1</td></tr><tr><td>phase compile</td><td><code>c/pjrt_c_api_phase_compile_extension.h</code>, <code>c/pjrt_c_api_phase_compile_internal.h</code>, <code>c_api_client/pjrt_c_api_phase_compiler.{h,cc}</code>, <code>pjrt_phase_compile_sample_plugin.h</code> 존재 → <strong>extension으로 제공되는 선택 기능</strong></td><td><code>[트리]</code></td></tr><tr><td>phase compile 입출력 필드</td><td><strong>미확인</strong></td><td><code>[추정]</code> — <code>job.json</code>이 명시적으로 물었으나 참고 문서에 없음</td></tr></tbody></table></div>
+<h3 id="소유권과-수명-규약-한-표로-모음">소유권과 수명 규약 (한 표로 모음)</h3>
+<div class="table-wrap"><table><thead><tr><th>객체</th><th>누가 소유하는가</th><th>수명 규칙</th><th>근거</th></tr></thead><tbody><tr><td><code>PjRtClient</code></td><td>framework</td><td>나머지 모든 객체보다 오래 살아야 한다 (device·memory space를 소유하므로)</td><td><code>[문서]</code> D1</td></tr><tr><td><code>PjRtDevice</code>, <code>PjRtMemorySpace</code></td><td>client</td><td>client가 소유. framework는 raw 포인터만 빌려 쓴다</td><td><code>[문서]</code> D1</td></tr><tr><td><code>PjRtBuffer</code></td><td>framework (<code>unique_ptr</code>)</td><td><code>Delete()</code> 호출 또는 소멸로 정리. <code>IsDeleted()</code>로 확인</td><td><code>[문서]</code> D1</td></tr><tr><td><code>ExternalReference</code></td><td>framework (<code>unique_ptr</code>)</td><td>살아 있는 동안 대상 buffer는 파괴되지 않는다 (wrapper가 refcount 보유)</td><td><code>[문서]</code> D8</td></tr><tr><td><code>PjRtLoadedExecutable</code></td><td>framework</td><td>compile 결과로 넘겨받음</td><td><code>[문서]</code> D1</td></tr><tr><td><code>PJRT_Api*</code></td><td>plugin (<code>.so</code>의 static)</td><td><code>PluginInfo</code>는 immutable이고 프로그램과 수명이 같다</td><td><code>[문서]</code> D5</td></tr><tr><td>donate된 인자 buffer</td><td><strong>미확인</strong></td><td>소유권 이전 규약을 확인하지 못함</td><td><code>[추정]</code></td></tr></tbody></table></div>
+<p>---</p>
+<h2 id="핵심-호출-흐름">핵심 호출 흐름</h2>
+<h3 id="1-plugin-로드-client-생성">1) plugin 로드 → client 생성</h3>
+<div class="mermaid">sequenceDiagram
+ participant FW as Framework (JAX)
+ participant XB as xla_bridge / pjrt_api
+ participant SO as plugin .so
+ participant W as wrapper impl
+ participant BE as backend C++ 구현
+
+ FW-&gt;&gt;XB: register_plugin(name, priority, library_path, options)
+ XB-&gt;&gt;SO: dlopen(library_path)
+ XB-&gt;&gt;SO: dlsym(&quot;GetPjrtApi&quot;)
+ SO--&gt;&gt;XB: const PJRT_Api 포인터
+ XB-&gt;&gt;XB: global_pjrt_plugin_map[name] = PluginInfo(api, config_values)
+ Note over XB: PluginInfo는 생성 후 immutable
+ FW-&gt;&gt;XB: create_pjrt_client(plugin_name)
+ XB-&gt;&gt;SO: PJRT_Plugin_Initialize(...) [선택, 1회]
+ XB-&gt;&gt;SO: PJRT_Client_Create(args)
+ Note over XB,SO: config_values는 PJRT_NamedValue로 전달
+ SO-&gt;&gt;BE: GetPluginPjRtClient()
+ BE--&gt;&gt;SO: unique_ptr[PjRtClient]
+ SO-&gt;&gt;W: pjrt::CreateWrapperClient(std::move(client))
+ W--&gt;&gt;SO: PJRT_Client 포인터
+ SO--&gt;&gt;XB: args.client 설정, return nullptr (성공)</div>
+<p>근거: D2, D5. <code>[문서]</code></p>
+<h3 id="2-compile-load">2) compile → load</h3>
+<p><code>PjRtClient::Compile</code>이 곧바로 <code>PjRtLoadedExecutable</code>을 돌려주는 경로(JIT)와, <code>PjRtExecutable</code>을 직렬화해 두었다가 나중에 되살리는 경로(AOT)가 갈라진다. AOT 경로에서 <code>PJRT_TopologyDescription_Create</code>가 필요해지는 이유가 여기 있다 — 대상 기기가 그 자리에 없어도 컴파일해야 하기 때문이다. <code>[문서]</code> D1, D2</p>
+<div class="mermaid">sequenceDiagram
+ participant FW as Framework
+ participant C as PjRtClient
+ participant CP as PjRtCompiler (플러그인 필수 아님)
+ participant E as PjRtExecutable
+ participant LE as PjRtLoadedExecutable
+ participant ST as 저장소 (파일 등)
+
+ Note over FW,LE: --- 경로 1: JIT compile ---
+ FW-&gt;&gt;C: Compile(module, CompileOptions)
+ C-&gt;&gt;CP: 백엔드 컴파일 파이프라인 (내부 구현)
+ CP--&gt;&gt;C: 컴파일 산출물
+ C--&gt;&gt;FW: PjRtLoadedExecutable
+
+ Note over FW,ST: --- 경로 2: AOT compile 후 저장/복원 ---
+ FW-&gt;&gt;C: TopologyDescription 확보 (PJRT_TopologyDescription_Create, 선택)
+ FW-&gt;&gt;C: Compile(module, CompileOptions, topology)
+ C--&gt;&gt;FW: PjRtExecutable (직렬화 가능한 아티팩트)
+ FW-&gt;&gt;E: serialize()
+ E--&gt;&gt;ST: 직렬화된 실행 파일
+ Note over ST: 프로세스 경계를 넘어 저장
+ ST--&gt;&gt;FW: 나중에 로드
+ FW-&gt;&gt;C: deserialize / load
+ C--&gt;&gt;FW: PjRtLoadedExecutable (실행 가능한 인스턴스)</div>
+<p><code>[문서]</code> D1(직렬화·역직렬화 책임과 subclass 관계), D2(topology 함수의 선택성). <strong><code>LoadOptions</code>라는 이름의 구조체가 실제로 있는지는 확인하지 못했다</strong> — 위 다이어그램의 &quot;load&quot; 단계는 D1이 말한 &quot;저장했다가 나중에 다시 로드한다&quot;는 서술에 근거한 것이지, 특정 옵션 구조체의 존재를 주장하는 것이 아니다. <code>[추정]</code></p>
+<h3 id="3-buffer-생성-host-device-과-실행-그리고-completion">3) buffer 생성 (host → device)과 실행, 그리고 completion</h3>
+<p>D1의 실제 로그(StableHLO 참조 plugin + JAX, <code>y = jax.jit(lambda x: jnp.power(x, jnp.int32(2)))(1)</code>)에서 관측된 순서를 그대로 옮겼다. 다이어그램 라벨에서는 <a href="#표기-규칙" target="_blank" rel="noopener noreferrer">표기 규칙</a>대로 템플릿 인자를 대괄호로 적었다. 실제 타입은 <code>absl::StatusOr&lt;std::unique_ptr&lt;PjRtBuffer&gt;&gt;</code>와 <code>StatusOr&lt;vector&lt;vector&lt;unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;&gt;</code>다. <code>[문서]</code></p>
+<div class="mermaid">sequenceDiagram
+ participant FW as Framework
+ participant C as PjRtClient
+ participant B as PjRtBuffer
+ participant LE as PjRtLoadedExecutable
+ participant DEV as backend / device
+
+ Note over FW,LE: --- jit 실행 시작 ---
+ FW-&gt;&gt;LE: num_replicas() / num_partitions()
+ FW-&gt;&gt;C: BufferFromHostBuffer(literal, host_buffer_semantics, ...)
+ C-&gt;&gt;B: CreateFromLiteral
+ B--&gt;&gt;C: PjRtBuffer 핸들
+ C--&gt;&gt;FW: StatusOr[unique_ptr[PjRtBuffer]]
+ FW-&gt;&gt;B: device() / memory_space()
+ FW-&gt;&gt;LE: GetHloModules()
+ FW-&gt;&gt;LE: Execute(argument_handles, ExecuteOptions)
+ LE-&gt;&gt;B: IsDeleted() 확인
+ LE-&gt;&gt;DEV: 커널/인터프리터 실행 요청
+ DEV--&gt;&gt;LE: 결과
+ LE-&gt;&gt;C: default_memory_space()
+ LE-&gt;&gt;B: 결과 buffer 생성
+ LE--&gt;&gt;FW: vector[vector[unique_ptr[PjRtBuffer]]]
+ Note over FW,DEV: 비동기 plugin이면 여기서 buffer는 아직 not-ready일 수 있음
+
+ Note over FW,B: --- print(y): 값이 실제로 필요해지는 시점 ---
+ FW-&gt;&gt;B: GetReadyFuture()
+ B--&gt;&gt;FW: PjRtFuture
+ FW-&gt;&gt;FW: future 대기 (여기서 블록 / 오류 관측)
+ FW-&gt;&gt;B: on_device_shape()
+ FW-&gt;&gt;B: IsOnCpu()
+ Note right of B: true면 external reference 허용
+ FW-&gt;&gt;B: AcquireExternalReference()
+ B--&gt;&gt;FW: ExternalReference (opaque data ptr + dtype/dims)</div>
+<p><strong>설계상 가장 중요한 지점</strong>: <code>Execute</code>가 돌아왔다고 계산이 끝난 게 아니다. 문서 표현대로 &quot;비동기 플러그인은 계산을 큐에 추가하고 아직 읽을 준비가 되지 않은 버퍼를 즉시 반환할 수 있으며&quot;, framework는 <code>x</code>가 필요 없는 다른 계산을 계속 큐에 넣는다. <strong>블록 지점은 오직 <code>GetReadyFuture()</code></strong> 다. <code>[문서]</code> D1</p>
+<h3 id="4-device-host-전송">4) device → host 전송</h3>
+<div class="mermaid">sequenceDiagram
+ participant FW as Framework
+ participant B as PjRtBuffer
+ participant DEV as backend
+
+ FW-&gt;&gt;FW: xla::MutableLiteralBase literal 준비
+ FW-&gt;&gt;B: ToLiteral(literal 포인터)
+ B-&gt;&gt;DEV: 비동기 복사 요청
+ B--&gt;&gt;FW: xla::Future (값 없음: 완료·오류 신호용)
+ DEV--&gt;&gt;B: 복사 완료
+ B--&gt;&gt;FW: future 완료 (오류 시 여기서 관측)
+ FW-&gt;&gt;FW: literal 사용</div>
+<p>근거: D1의 시그니처 <code>xla::Future&lt;&gt; ToLiteral(xla::MutableLiteralBase* literal) override</code>. <code>[문서]</code></p>
+<h3 id="5-외부-참조-zero-copy-dlpack-wrapper-내부까지">5) 외부 참조 (zero-copy / dlpack) — wrapper 내부까지</h3>
+<div class="mermaid">sequenceDiagram
+ participant FW as Framework
+ participant CC as PjRtCApiClient (C++)
+ participant API as PJRT_Api (C)
+ participant PB as struct PJRT_Buffer (wrapper)
+ participant CPP as xla::PjRtBuffer (plugin C++)
+
+ FW-&gt;&gt;CC: AcquireExternalReference()
+ CC-&gt;&gt;CC: PjRtCApiExternalReference 생성
+ CC-&gt;&gt;API: PJRT_Buffer_IncreaseReference(args)
+ API-&gt;&gt;PB: refs.push_back(buffer.AcquireExternalReference())
+ CC-&gt;&gt;API: PJRT_Buffer_OpaqueDeviceMemoryDataPointer(args)
+ API-&gt;&gt;CPP: OpaqueDeviceMemoryDataPointer()
+ CPP--&gt;&gt;API: void 포인터 (data_ptr)
+ API--&gt;&gt;CC: args.data_ptr
+ CC--&gt;&gt;FW: unique_ptr[ExternalReference] (data_ptr_ 세팅됨)
+ Note over FW,CPP: 참조가 살아 있는 동안 PJRT_Buffer는 파괴되지 않음
+ FW-&gt;&gt;CC: ExternalReference 소멸
+ CC-&gt;&gt;API: PJRT_Buffer_DecreaseReference(args)
+ API-&gt;&gt;PB: refs.pop_back()</div>
+<p>wrapper의 <code>PJRT_Buffer</code> 내부 구성이 D8에 pseudo-code로 명시되어 있다 — <strong>C 구조체가 C++ 객체를 그대로 품는다</strong>:</p>
+<pre><code class="language-cpp">struct PJRT_Buffer {
+  std::unique_ptr&lt;xla::PjRtBuffer&gt; buffer;
+  PJRT_Client* client;
+  std::vector&lt;xla::ExternalReference&gt; refs;   // refcount &gt; 0이면 buffer를 살려둠
+};</code></pre>
+<p><code>[문서]</code> D8. (단 이 문서는 Draft이고 두 가지 옵션을 저울질하고 있었으므로, <strong>현재 헤더가 Option 1을 택했는지 Option 2(<code>PJRT_ExternalReference</code> 별도 구조체)를 택했는지는 미확인</strong> <code>[추정]</code>)</p>
+<h3 id="6-buffer-수명-delete와-donation">6) buffer 수명: delete와 donation</h3>
+<p><code>Delete()</code>와 <code>IsDeleted()</code>는 확인했다 — &quot;버퍼가 더 이상 필요하지 않으면 프레임워크에서 <code>Delete</code> 메서드를 호출하여 정리한다&quot;. <code>[문서]</code> D1</p>
+<p>아래 상태도에서 <strong>실선은 문서로 확인된 전이</strong>, <strong>점선은 근거를 확보하지 못한 전이</strong>다. donation은 <code>job.json</code>이 요구한 항목이지만 참고 문서 11개 어디에도 API 이름·필드·소유권 규약이 나오지 않으므로, 상태 하나를 두되 전이를 <strong>미확인으로 명시</strong>하고 세부 흐름은 그리지 않았다. 창작하지 않는 쪽이 낫다고 판단했다. → <a href="#후속-질문" target="_blank" rel="noopener noreferrer">후속 질문 Q3</a></p>
+<div class="mermaid">stateDiagram-v2
+ [*] --&gt; NotReady: BufferFromHostBuffer 또는 Execute 결과
+ NotReady --&gt; Ready: GetReadyFuture 완료
+ NotReady --&gt; Error: future가 오류를 실어 옴
+ Ready --&gt; Ready: on_device_shape / memory_space / IsOnCpu 질의
+ Ready --&gt; Externally_Referenced: AcquireExternalReference (선택)
+ Externally_Referenced --&gt; Ready: ExternalReference 소멸 (refcount 감소)
+ Ready --&gt; Deleted: Delete()
+ Error --&gt; Deleted: Delete()
+ Deleted --&gt; [*]
+ Ready --&gt; Donated: Execute에 donate 인자로 전달 (미확인 경로)
+ Donated --&gt; [*]
+ note right of Donated
+ donation의 API 이름, 옵션 필드,
+ 소유권 이전 시점 모두 근거 없음. 추정 영역
+ end note
+ note right of Deleted
+ IsDeleted()가 true를 반환하는 상태
+ end note</div>
+<p><code>[문서]</code> D1 (NotReady/Ready/Deleted 및 external reference 경로), <code>[추정]</code> (Donated 상태와 그 전이)</p>
+<p>---</p>
+<h2 id="c-api와-c-api-대응표">C++ API와 C API 대응표</h2>
+<h3 id="왜-args-struct-extension-chain인가">왜 args struct + extension chain인가</h3>
+<p>C API의 목적은 <strong>plugin <code>.so</code>와 framework를 따로 빌드·배포하면서도 ABI를 깨지 않는 것</strong>이다. 그래서 세 가지 장치를 쓴다. <code>[문서]</code> D6, D7</p>
+<div class="table-wrap"><table><thead><tr><th>장치</th><th>목적</th><th>깨지는 조건</th></tr></thead><tbody><tr><td><strong>함수 테이블 (<code>PJRT_Api</code>)</strong></td><td>심볼을 하나(<code>GetPjrtApi</code>)로 줄이고, 나머지는 구조체 안 함수 포인터로</td><td>필드 <strong>재배열/삭제</strong> → major</td></tr><tr><td><strong>args 구조체 + <code>struct_size</code></strong></td><td>인자를 늘려도 함수 시그니처가 그대로</td><td>필드 <strong>재배열/타입 변경</strong> → major. 필드 <strong>추가/이름 변경</strong> → minor</td></tr><tr><td><strong><code>extension_start</code> 체인</strong></td><td>선택·실험 기능을 본체 밖에 격리</td><td>experimental extension은 보장 없음</td></tr></tbody></table></div>
+<p>버전 게이트의 실제 코드 패턴 (D6 원문):</p>
+<pre><code class="language-c">// Framework code — PJRT_Memory_Kind가 MINOR 14에 추가되었다고 가정
+if (pjrt_api-&gt;pjrt_api_version.minor_version &gt;= 14) {
+    return pjrt_api-&gt;PJRT_Memory_Kind(...);
+} else {
+    return unimplemented or default;
+}</code></pre>
+<p>그리고 이 shim이 사는 곳이 <code>PjRtCApiClient</code>다:</p>
+<pre><code class="language-cpp">// D6 원문 — layout이 버전 N에 추가되었다고 가정
+PjRtCApiClient::BufferFromHostBuffer(...) {
+    BufferFromHostBuffer_Args args;
+    if (minor_version_ &gt; N) {
+        args.device_layout = ...;
+    }
+    c_api_-&gt;PJRT_Client_BufferFromHostBuffer(args);
+}</code></pre>
+<p><strong>즉 &quot;버전 분기&quot;라는 지저분한 일을 <code>PjRtCApiClient</code> 한 곳에 몰아넣고, 위쪽 framework는 C++ 인터페이스만 보게 한다.<strong> 다만 D6은 한계도 적었다 — &quot;plugin 버전에 따라 </strong>다른 메서드를 호출해야 하는 경우</strong>나, 어차피 전부 unimplemented가 뻔한 일련의 호출을 아예 건너뛰고 싶은 경우&quot;는 shim으로 못 감추고 JAX가 <code>api_version</code>을 직접 봐야 한다. <code>[문서]</code> D6</p>
+<h3 id="대응표">대응표</h3>
+<div class="table-wrap"><table><thead><tr><th>C++ 개념</th><th>C API 대응</th><th>근거</th></tr></thead><tbody><tr><td><code>xla::PjRtClient</code> (구현체)</td><td><code>PJRT_Client_Create</code> + <code>struct PJRT_Client</code></td><td><code>[문서]</code> D2, D8</td></tr><tr><td><code>PjRtCApiClient</code> (C API를 감싸는 C++ client)</td><td><code>PJRT_Api*</code> 보유 + <code>api_version()</code></td><td><code>[문서]</code> D6</td></tr><tr><td><code>xla::PjRtBuffer</code></td><td><code>struct PJRT_Buffer { unique_ptr&lt;PjRtBuffer&gt; buffer; PJRT_Client* client; vector&lt;ExternalReference&gt; refs; }</code></td><td><code>[문서]</code> D8</td></tr><tr><td><code>PjRtClient::BufferFromHostBuffer</code></td><td><code>PJRT_Client_BufferFromHostBuffer</code> + <code>PJRT_Client_BufferFromHostBuffer_Args</code> (<code>device_layout</code> 필드 포함, optional)</td><td><code>[문서]</code> D6, D7</td></tr><tr><td><code>PjRtBuffer::ToLiteral</code></td><td><code>PJRT_Buffer_ToHostBuffer</code> + <code>_Args</code> (<code>layout</code> 필드, optional)</td><td><code>[문서]</code> D7</td></tr><tr><td><code>on_device_shape()</code></td><td><code>PJRT_Buffer_Dimensions</code></td><td><code>[문서]</code> D9</td></tr><tr><td><code>logical_on_device_shape()</code></td><td><code>PJRT_Buffer_UnpaddedDimensions</code></td><td><code>[문서]</code> D9</td></tr><tr><td><code>AcquireExternalReference()</code></td><td><code>PJRT_Buffer_IncreaseReference</code> / <code>DecreaseReference</code> / <code>OpaqueDeviceMemoryDataPointer</code> (Option 1) 또는 <code>PJRT_Buffer_AcquireExternalReference</code> + <code>PJRT_ExternalReference_Destroy</code> (Option 2)</td><td><code>[문서]</code> D8 — <strong>어느 쪽이 채택됐는지 미확인</strong> <code>[추정]</code></td></tr><tr><td><code>ExecuteOptions</code>의 host callback</td><td><code>PJRT_ExecuteOptions::send_callbacks</code> / <code>recv_callbacks</code> / <code>num_send_ops</code> / <code>num_recv_ops</code> (optional feature)</td><td><code>[문서]</code> D7</td></tr><tr><td>memory space kind</td><td><code>PJRT_Memory_Kind</code></td><td><code>[문서]</code> D6</td></tr><tr><td>topology (AOT)</td><td><code>PJRT_TopologyDescription_Create</code></td><td><code>[문서]</code> D2</td></tr><tr><td>plugin 속성</td><td><code>PJRT_Plugin_Attributes</code> + <code>PJRT_NamedValue</code></td><td><code>[문서]</code> D2, D5, D7</td></tr><tr><td>오류</td><td><code>PJRT_Error*</code> (성공 시 <code>nullptr</code>)</td><td><code>[문서]</code> D2, D7, D8</td></tr><tr><td>future / device event</td><td><code>c/pjrt_c_api_device_event.h</code></td><td><code>[트리]</code> — C++ <code>PjRtFuture</code>와의 정확한 대응은 미확인 <code>[추정]</code></td></tr><tr><td><code>PjRtCompiler</code></td><td>(대응 없음 — plugin 필수 아님). phase compile은 <code>pjrt_c_api_phase_compile_extension.h</code></td><td><code>[문서]</code> D1 + <code>[트리]</code></td></tr></tbody></table></div>
+<h3 id="wrapper-경계-요약">wrapper 경계 요약</h3>
+<pre><code>framework (C++)
+   ↓  PjRtClient 인터페이스
+PjRtCApiClient          ← xla/pjrt/c_api_client/pjrt_c_api_client.h  [트리]
+   ↓  PJRT_Api 함수 포인터 호출 (+ minor 버전 게이트)
+=========== ABI 경계 (.so) ===========
+GetPjrtApi → PJRT_Api
+   ↓
+pjrt_c_api_wrapper_impl ← xla/pjrt/c/pjrt_c_api_wrapper_impl.h  [트리]
+   ↓  CreateWrapperClient / CreatePjrtApi
+backend의 xla::PjRtClient 구현 (C++)</code></pre>
+<p>옵션 B로 만든 plugin에서는 이 왕복이 실제로 두 번 일어난다. 오버헤드가 문제되면 옵션 A(C API 직접 구현)로 가야 한다. <code>[추정]</code> — 오버헤드 크기는 미측정. <a href="#6-wrapper-왕복-오버헤드-미측정" target="_blank" rel="noopener noreferrer">쟁점 6</a> 참조.</p>
+<p>---</p>
+<h2 id="새-runtime-backend-설계-체크리스트">새 Runtime / Backend 설계 체크리스트</h2>
+<p>PJRT를 참고해 새 backend runtime을 만들 때 <strong>먼저 결정해야 하는 것</strong>들이다. LPDDR6-PIM 같은 특정 하드웨어의 설계를 확정하는 것이 아니라, PJRT가 어떤 선택을 했고 왜 했는지에서 뽑아낸 체크 항목이다.</p>
+<h3 id="a-최소-api-세트-이것만-있으면-basic-workload가-돈다">A. 최소 API 세트 (이것만 있으면 basic workload가 돈다)</h3>
+<ul><li>[ ] <strong>진입점 1개</strong> — <code>.so</code>에서 내보내는 심볼 하나 (<code>GetPjrtApi</code> 대응물). 나머지는 전부 함수 테이블 안으로. <code>[문서]</code></li><li>[ ] <strong>client 생성</strong> — config를 key-value로 받는 생성자 (<code>PJRT_NamedValue</code> 대응물).</li><li>[ ] <strong>device 열거</strong> + addressable 여부 + id/kind/위치.</li><li>[ ] <strong>memory space 최소 1개</strong> (default) + device→default 연결.</li><li>[ ] <strong>buffer 생성 (host→device)</strong> + host buffer semantics (share/copy/mutate).</li><li>[ ] <strong>buffer 반출 (device→host)</strong> — future 반환.</li><li>[ ] <strong>compile</strong> — 모듈 + 옵션 → 실행 가능 객체.</li><li>[ ] <strong>execute</strong> — 인자 handle 배열 → 결과 handle 배열.</li><li>[ ] <strong>ready future</strong> — 완료·오류 관측 지점.</li><li>[ ] <strong>delete / is_deleted</strong>.</li></ul>
+<h3 id="b-선택-api-세트-없어도-basic-workload는-돈다-pjrt가-명시적으로-선택으로-분류한-것들">B. 선택 API 세트 (없어도 basic workload는 돈다 — PJRT가 명시적으로 선택으로 분류한 것들)</h3>
+<div class="table-wrap"><table><thead><tr><th>기능</th><th>PJRT에서의 위치</th></tr></thead><tbody><tr><td>custom layout</td><td><code>memory_layouts</code> extension (<code>device_layout</code> 필드들)</td></tr><tr><td>host send/recv callback</td><td><code>PJRT_ExecuteOptions::send_callbacks</code> 등</td></tr><tr><td>multiple memory spaces (host offload 포함)</td><td>선택</td></tr><tr><td>sharding</td><td>선택 (<code>shardings</code>, <code>custom_partitioner</code> extension)</td></tr><tr><td>collectives</td><td><code>collectives</code> extension</td></tr><tr><td>profiler</td><td><code>profiler</code> extension</td></tr><tr><td>external reference (zero-copy/dlpack)</td><td><code>AcquireExternalReference</code></td></tr><tr><td>AOT topology</td><td><code>PJRT_TopologyDescription_Create</code></td></tr><tr><td>phase compile</td><td><code>phase_compile</code> extension</td></tr><tr><td>executable serialize/deserialize</td><td>AOT 필요 시</td></tr><tr><td>memory space 상세 기술</td><td><code>memory_descriptions</code> extension</td></tr></tbody></table></div>
+<p><code>[문서]</code> D1, D7 + <code>[트리]</code> (extension 목록)</p>
+<p><strong>교훈</strong>: 선택 기능 목록을 <strong>처음부터 명시적으로 문서화</strong>하라. PJRT가 겪은 문제가 정확히 이것이다 — D7의 목표 1번이 &quot;optional feature를 명확히 규정해서 plugin 저자가 구현 우선순위를 정할 수 있게 하는 것&quot;이었고, 그전까지는 &quot;de facto optional&quot;인 기능들이 본체 API에 섞여 있었다. <code>[문서]</code> D7</p>
+<h3 id="c-객체-모델-체크리스트">C. 객체 모델 체크리스트</h3>
+<ul><li>[ ] <strong>client이 device와 memory space를 소유</strong>하는가?</li><li>[ ] <strong>buffer가 memory space를 가리키고, device는 전이적으로만 아는가?</strong> (buffer→device 직결을 피하면 unpinned 메모리와 PIM처럼 &quot;메모리에 붙은 연산기&quot;를 자연스럽게 표현할 수 있다)</li><li>[ ] <strong>executable을 &quot;직렬화 가능한 아티팩트&quot;와 &quot;실행 가능한 인스턴스&quot;로 분리</strong>했는가?</li><li>[ ] <strong>compiler를 필수 인터페이스에서 뺐는가?</strong> (PJRT는 뺐다. compile 책임은 client가 진다)</li><li>[ ] 역포인터를 어디까지 둘 것인가? (PJRT는 memory space→device, device→client를 둔다)</li></ul>
+<h3 id="d-필드-체크리스트">D. 필드 체크리스트</h3>
+<ul><li>[ ] 모든 ABI 구조체에 <strong><code>struct_size</code> 첫 필드</strong>.</li><li>[ ] 확장 여지를 위한 <strong><code>extension_start</code> 포인터</strong> (PJRT는 과거 <code>void* priv</code>를 이 용도로 재활용했다).</li><li>[ ] device: id, kind, 로컬/전역 위치, process index, addressable 플래그.</li><li>[ ] buffer: <strong>정적 shape와 논리 shape를 분리</strong>할 것인가? (PJRT는 분리했고, PyTorch/XLA가 재컴파일 판정에 정적 shape를 필요로 했기 때문이다 — D9)</li><li>[ ] 옵션 구조체에 넣을 필드와 extension으로 뺄 필드의 기준.</li></ul>
+<h3 id="e-비동기-오류-체크리스트">E. 비동기·오류 체크리스트</h3>
+<ul><li>[ ] <strong>&quot;실행 요청 반환 ≠ 실행 완료&quot;</strong> 를 API 계약으로 못박았는가?</li><li>[ ] not-ready handle을 반환하고 <strong>완료 관측은 future 한 곳으로</strong> 모았는가?</li><li>[ ] 오류를 future에서 관측하는가, 반환값에서 관측하는가? (PJRT는 생성 계열은 <code>StatusOr</code>, 완료 계열은 future로 이원화 — <code>[문서]</code> D1 + <code>[추정]</code>)</li><li>[ ] C 경계의 오류 표현: 성공 = <code>nullptr</code>, 실패 = 오류 객체 포인터. <code>[문서]</code></li><li>[ ] 미구현 기능은 <strong>UNIMPLEMENTED를 반환</strong>하는가, 아니면 아예 함수 포인터를 <code>nullptr</code>로 두는가? (PJRT는 experimental의 경우 <code>nullptr</code> — <code>[문서]</code> D6)</li></ul>
+<h3 id="f-backend-구현-체크리스트">F. backend 구현 체크리스트</h3>
+<ul><li>[ ] 버전 협상: major/minor를 분리하고, <strong>필드 추가·이름 변경·메서드 폐기는 minor, 삭제·타입 변경·재배열은 major</strong>로 규정.</li><li>[ ] 호환 창(compatibility window)을 몇 주로 할 것인가? (PJRT는 6주 시작 → 12주 목표)</li><li>[ ] framework가 plugin보다 <strong>오래된</strong> 경우의 동작을 <strong>plugin이 정의</strong>한다 (abort할 것인가, 구버전처럼 행동할 것인가). <code>[문서]</code> D6</li><li>[ ] 적합성 테스트 하네스 제공 (<code>RegisterPjRtCApiTestFactory</code> 대응물).</li><li>[ ] 미구현 optional 기능이 있는 plugin에 대해 <strong>테스트를 건너뛰는</strong> 메커니즘. (D7이 &quot;불완전한 plugin에게도 테스트 스위트가 쓸모 있게 해달라&quot;는 plugin 저자들의 오랜 요청이라고 적었다)</li></ul>
+<h3 id="g-확인-필요-항목-이-체크리스트를-확정하기-전에-소스로-검증해야-하는-것">G. 확인 필요 항목 (이 체크리스트를 확정하기 전에 소스로 검증해야 하는 것)</h3>
+<ul><li><code>CompileOptions</code> / <code>ExecuteOptions</code>의 실제 필드 전체 목록.</li><li><code>LoadOptions</code>가 실제로 존재하는지, 존재한다면 어떤 필드를 갖는지.</li><li>donation의 API 형태와 소유권 이전 규약.</li><li><code>PjRtFuture</code>의 오류 전파 규약 (<code>Status</code>를 품는가, 별도 채널인가).</li><li>memory space kind의 값 집합과 host offload 표현 방식.</li><li><code>PJRT_Api</code> 함수 테이블의 실제 항목 수와 필수/선택 구분.</li><li>executable의 cost analysis / memory stats가 노출하는 필드.</li></ul>
+<p>---</p>
+<h2 id="쟁점과-불확실성">쟁점과 불확실성</h2>
+<h3 id="1-소스-본문-미열람-이-보고서의-가장-큰-구멍">1. 소스 본문 미열람 — 이 보고서의 가장 큰 구멍</h3>
+<p><code>/home/sam/xla/xla/pjrt</code>에 대한 Read/Grep 권한이 없어 <strong>헤더 본문을 한 줄도 읽지 못했다</strong>. 이번 개정에서 다시 시도했으나 여전히 거부되었다. Glob으로 파일 이름만 확인 가능했고, WebFetch도 승인되지 않아 상류 GitHub 헤더로 대체할 수도 없었다.</p>
+<p><strong>영향 범위</strong>:</p>
+<ul><li>API <strong>분류·경계·정책·흐름</strong>은 공식 문서와 설계 문서로 충분히 근거를 확보했다. 신뢰 가능.</li><li><strong>필드 표의 완전성</strong>은 확보하지 못했다. 문서가 인용한 필드만 알고, 나머지는 모른다.</li><li><code>job.json</code>이 명시적으로 요구한 항목 중 <strong><code>LoadOptions</code>, donation, cost analysis, phase compile의 입출력 필드</strong>는 근거를 전혀 찾지 못해 <code>[추정]</code>으로도 채우지 않고 비워 두었다.</li></ul>
+<p>이 구멍을 메우는 방법은 <a href="#후속-질문" target="_blank" rel="noopener noreferrer">후속 질문</a> Q1에 적었다. 권한 한 번이면 해결되는 문제다.</p>
+<h3 id="2-설계-문서와-현재-헤더-사이의-naming-drift">2. 설계 문서와 현재 헤더 사이의 naming drift</h3>
+<p>D7(2023-12)은 확장 기반 구조체를 <code>PJRT_Structure_Base</code> / <code>PJRT_Structure_Type</code>이라 부르면서, 본문에 <strong>&quot;I also wanna rename this <code>PJRT_Extension_Base</code>&quot;</strong> 라는 저자 메모를 남겼다. 그리고 현재 트리의 파일 이름은 전부 <code>pjrt_c_api_*_extension.h</code> 형태다. <code>[트리]</code></p>
+<p>→ <strong>이름 변경이 실제로 반영되었을 가능성이 높다.</strong> 하지만 확인하지 못했다. 이 보고서의 C API 구조체 이름들(<code>PJRT_Structure_Base</code>, <code>PJRT_Structure_Type</code>)은 <strong>설계 문서 시점의 이름</strong>이며, 현재 헤더에서는 <code>PJRT_Extension_Base</code> / <code>PJRT_Extension_Type</code>일 수 있다. 코드를 쓸 때 그대로 복사하면 안 된다.</p>
+<h3 id="3-설계-문서-다수가-draft이고-2022-2023년-것이다">3. 설계 문서 다수가 Draft이고 2022–2023년 것이다</h3>
+<div class="table-wrap"><table><thead><tr><th>문서</th><th>상태</th><th>위험</th></tr></thead><tbody><tr><td>D5 Plugin Mechanism</td><td>2022-12, &quot;decision has not been made yet&quot;가 본문에 있음</td><td>자동 로딩 Option 1/2 중 무엇이 채택됐는지 불명</td></tr><tr><td>D6 ABI versioning</td><td>2023-09 <strong>Draft</strong></td><td>호환 창 6주 → 12주 확장 여부 불명</td></tr><tr><td>D8 AcquireExternalReference</td><td>2023-07 <strong>Draft</strong>, Option 1/2 저울질 중</td><td>어느 쪽이 구현됐는지 불명</td></tr><tr><td>D7 optional/experimental</td><td>2023-12, Proposal A 권고</td><td>권고가 실제로 이행됐는지, 어디까지 이행됐는지 불명</td></tr></tbody></table></div>
+<p>반면 공식 문서 D1(2025-10-28)과 D2(2026-04-10)는 최신이다. <strong>두 부류가 충돌하면 공식 문서를 믿어야 한다.</strong> 이 보고서에서 D5–D9의 코드 조각은 &quot;설계 의도를 보여주는 증거&quot;로 썼지 &quot;현재 API의 정의&quot;로 쓰지 않았다.</p>
+<h3 id="4-pjrt_c_api_client-h-가-두-곳에-있다">4. <code>pjrt_c_api_client.h</code>가 두 곳에 있다</h3>
+<p><code>xla/pjrt/pjrt_c_api_client.h</code>와 <code>xla/pjrt/c_api_client/pjrt_c_api_client.h</code>가 공존한다. <code>[트리]</code> 리팩터링 중 남긴 forwarding 헤더로 보이지만, 둘 중 어느 쪽이 정본인지 확인하지 못했다. 새 코드가 어느 쪽을 include해야 하는지는 열어봐야 안다.</p>
+<h3 id="5-필수-vs-선택-의-경계가-기계적으로-검증되지-않는다">5. &quot;필수 vs 선택&quot;의 경계가 기계적으로 검증되지 않는다</h3>
+<p>D7이 인정한 문제다. optional feature를 extension으로 표현하기로 했지만, <strong>experimental 여부는 여전히 주석으로만 표시</strong>된다. 그리고 &quot;지금은 사실상 선택인데 본체 API에 들어가 있는 기능들&quot;이 남아 있고, D7은 &quot;일부는 본체에 그냥 남겨두게 될 수도 있다&quot;고 적었다.</p>
+<p>→ <strong>새 backend를 붙일 때 &quot;이 함수를 구현 안 하면 뭐가 깨지는지&quot;를 헤더만 보고는 알 수 없다.</strong> 실제로는 framework 테스트를 돌려보며 알아내야 한다. 새 런타임을 설계한다면 이 부분은 PJRT를 <strong>따라 하지 말고 개선해야 할 지점</strong>이다.</p>
+<h3 id="6-wrapper-왕복-오버헤드-미측정">6. wrapper 왕복 오버헤드 미측정</h3>
+<p>옵션 B(C++ 구현 + wrapper)는 &quot;C++ → C → C++&quot; 왕복을 만든다. buffer 하나당, 실행 하나당 이 경계를 몇 번 넘는지, 그 비용이 얼마인지 측정된 자료가 참고 문서에 없다. D1의 호출 로그를 보면 <code>print(y)</code> 한 번에 <code>on_device_shape()</code>가 <strong>7회</strong>, <code>memory_space()</code>가 <strong>6회</strong> 호출된다 — 경계를 넘는 호출 수가 결코 적지 않다. <code>[문서]</code> D1</p>
+<p>→ PIM처럼 <strong>메모리 접근당 비용이 중요한 backend</strong>라면 이 경계 비용을 먼저 재봐야 한다.</p>
+<h3 id="7-lpddr6-pim-관련-지금-단계에서-결론-내리면-안-되는-것">7. LPDDR6-PIM 관련: 지금 단계에서 결론 내리면 안 되는 것</h3>
+<p><code>job.json</code>이 &quot;구체 설계 확정처럼 쓰지 말라&quot;고 못박았고, 실제로 그럴 근거도 없다. 다만 PJRT 구조에서 <strong>PIM류 backend에 특히 유리해 보이는 지점</strong>과 <strong>불리해 보이는 지점</strong>을 관찰로만 적어 둔다.</p>
+<ul><li>유리: <code>PjRtMemorySpace</code>가 이미 &quot;여러 device가 접근 가능한 unpinned 영역&quot; 개념을 갖고 있고, buffer가 device에 직결되지 않는다. &quot;메모리에 붙은 연산기&quot;를 표현할 자리가 이미 있다. <code>[문서]</code> D1</li><li>유리: <code>AcquireExternalReference</code>가 opaque device memory pointer를 노출하는 공식 탈출구를 제공한다. <code>[문서]</code> D8</li><li>불리 (미확인): memory space가 &quot;위치&quot;만 표현하는지, &quot;연산 능력&quot;까지 표현할 수 있는지 불명. PIM은 memory space가 곧 연산 유닛이므로 이 모델이 맞는지 검증 필요. <code>memory_descriptions</code> extension이 답을 갖고 있을 수 있다. <code>[추정]</code></li><li>불리 (미확인): <code>on_device_shape</code>/layout이 PIM의 뱅크 인터리빙 같은 물리 배치를 표현할 수 있는지 불명. custom layout은 <strong>선택 기능</strong>이므로 표현력이 제한적일 수 있다. <code>[추정]</code></li></ul>
+<p>---</p>
+<h2 id="후속-질문">후속 질문</h2>
+<p>우선순위 순. 각 질문에 <strong>어떻게 답할지</strong>를 함께 적었다.</p>
+<p><strong>Q1. <code>CompileOptions</code> / <code>ExecuteOptions</code> / (존재한다면) <code>LoadOptions</code>의 실제 필드는 무엇인가?</strong> → <code>xla/pjrt/pjrt_executable.h</code>와 <code>pjrt_client.h</code>를 읽으면 즉시 해결된다. <strong>이 조사의 최대 병목이며, <code>/home/sam/xla</code> 읽기 권한 한 번이면 끝난다.</strong> 대안으로 상류 <code>openxla/xla</code> main의 동일 헤더를 WebFetch할 수 있으나 로컬 트리와 커밋이 달라 drift 위험이 있다.</p>
+<p><strong>Q2. <code>PJRT_Api</code> 함수 테이블의 전체 항목과, 각 항목의 필수/선택 여부는?</strong> → <code>xla/pjrt/c/pjrt_c_api.h</code>를 읽고, <code>xla/pjrt/c/CHANGELOG.md</code>(D4가 공식 리소스로 언급)와 <code>xla/pjrt/c/docs/pjrt_integration_guide.md</code>를 함께 본다. 후자는 이번 <code>references/</code>에 포함되지 않았다.</p>
+<p><strong>Q3. buffer donation의 API 형태와 소유권 이전 규약은?</strong> → 참고 문서 11개 어디에도 없다. <code>pjrt_client.h</code>의 <code>ExecuteOptions</code> 주변과 <code>PjRtBuffer</code>의 donation 관련 메서드를 확인해야 한다. 새 backend 설계에서 <strong>가장 실수하기 쉬운 부분</strong>이므로 우선순위가 높다. 이것이 채워지면 <a href="#6-buffer-수명-delete와-donation" target="_blank" rel="noopener noreferrer">buffer 수명 상태도</a>의 점선 전이를 실선으로 바꿀 수 있다.</p>
+<p><strong>Q4. D7의 Proposal A(extension 기반 optional feature)는 실제로 어디까지 이행되었는가?</strong> → <code>pjrt_c_api.h</code>에서 <code>PJRT_Extension_Base</code>/<code>PJRT_Extension_Type</code>의 존재를 확인하고, <code>extensions/</code> 디렉터리의 각 헤더가 &quot;빈 <code>PJRT_Api</code> extension 구조체&quot;를 갖는지 본다. 이행 정도가 곧 &quot;새 backend가 무엇을 안 만들어도 되는가&quot;의 답이다.</p>
+<p><strong>Q5. <code>AcquireExternalReference</code>는 Option 1(refcount 3함수)과 Option 2(<code>PJRT_ExternalReference</code> 구조체) 중 무엇으로 구현되었나?</strong> → <code>pjrt_c_api.h</code>에서 <code>PJRT_Buffer_IncreaseReference</code> 또는 <code>PJRT_ExternalReference</code>를 grep하면 즉답. zero-copy 경로를 쓸 계획이면 반드시 확인.</p>
+<p><strong>Q6. phase compile은 정확히 무엇을 나누고, 어떤 입출력 필드를 갖는가?</strong> → <code>c/pjrt_c_api_phase_compile_extension.h</code>, <code>c_api_client/pjrt_c_api_phase_compiler.h</code>, <code>pjrt_phase_compile_sample_plugin.h</code>를 읽는다. 컴파일을 단계별로 쪼개는 기능은 <strong>새 backend가 XLA 파이프라인의 일부만 재사용하고 싶을 때 핵심</strong>이 될 수 있으므로, 이번에 파일 존재만 확인한 것이 아쉽다.</p>
+<p><strong>Q7. <code>PjRtFuture</code>는 오류를 어떻게 실어 나르는가?</strong> → <code>pjrt_future.h</code>를 읽는다. <code>Future&lt;Status&gt;</code>인지 <code>Future&lt;&gt;</code>가 내부에 status를 품는지에 따라 backend의 오류 전파 구현이 달라진다.</p>
+<p><strong>Q8. memory space는 &quot;위치&quot;만 표현하는가, 아니면 능력(capability)도 표현할 수 있는가?</strong> → <code>pjrt_client.h</code>의 <code>PjRtMemorySpace</code>와 <code>c/pjrt_c_api_memory_descriptions_extension.h</code>를 읽는다. PIM류 backend의 모델링 가능성을 판정하는 질문이다.</p>
+<p><strong>Q9. wrapper 경계를 넘는 호출 비용은 얼마인가?</strong> → 측정 과제. D1의 로그처럼 단순 연산 하나에도 getter가 수 회 호출되므로, <code>pjrt_c_api_cpu</code> plugin으로 마이크로벤치를 돌려 경계 비용을 재는 것이 현실적이다.</p>
+<p><strong>Q10. <code>xla/pjrt/pjrt_c_api_client.h</code>와 <code>c_api_client/pjrt_c_api_client.h</code> 중 정본은?</strong> → 두 파일을 열어 forwarding 여부를 확인. 사소하지만 새 코드의 include 경로를 정하려면 필요하다.</p>
+<p>---</p>
+<h2 id="참고-자료">참고 자료</h2>
+<h3 id="이번에-읽은-자료-모두-references-text-에-텍스트로-존재">이번에 읽은 자료 (모두 <code>references/text/</code> 에 텍스트로 존재)</h3>
+<p><strong>공식 문서 (OpenXLA)</strong></p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>제목</th><th>URL</th><th>최종 업데이트</th></tr></thead><tbody><tr><td>D1</td><td>PJRT C++ Device API 개요</td><td>https://openxla.org/xla/pjrt/cpp_api_overview</td><td>2025-10-28</td></tr><tr><td>D2</td><td>PJRT 플러그인 통합</td><td>https://openxla.org/xla/pjrt/pjrt_integration</td><td>2026-04-10</td></tr><tr><td>D3</td><td>PJRT 예</td><td>https://openxla.org/xla/pjrt/examples</td><td>2024-11-15</td></tr><tr><td>D4</td><td>PJRT - Uniform Device API</td><td>https://openxla.org/xla/pjrt</td><td>2024-11-13</td></tr></tbody></table></div>
+<p><strong>PJRT 설계 문서 (Google, 외부 공개)</strong></p>
+<div class="table-wrap"><table><thead><tr><th>ID</th><th>제목</th><th>저자</th><th>시점 / 상태</th></tr></thead><tbody><tr><td>D5</td><td>PJRT Plugin Mechanism</td><td>jieying@, skyewm@</td><td>2022-12</td></tr><tr><td>D6</td><td>Device (PJRT) API ABI versioning and compatibility</td><td>jieying@, skyewm@, phawkins@, fishx@</td><td>2023-09, Draft</td></tr><tr><td>D7</td><td>PJRT C API: optional and experimental features</td><td>skyewm@ (jieying@, wcromar@ 협력)</td><td>2023-12</td></tr><tr><td>D8</td><td>C APIs for AcquireExternalReference</td><td>jieying@ (sagyakwa@, skyewm@ 협력)</td><td>2023-07, Draft</td></tr><tr><td>D9</td><td>Representing dynamic array shapes in the PJRT C API</td><td>skyewm@</td><td>2023-06</td></tr><tr><td>D10</td><td>Next Pluggable Device Mechanism</td><td>chuanhao@, jieying@, fishx@</td><td>2023-05</td></tr><tr><td>D11</td><td>Device PJRT API change to support versioning and compatibility</td><td>—</td><td>(D6 축약)</td></tr></tbody></table></div>
+<p><strong>D1이 인용한 소스 위치</strong> (커밋 고정 permalink이므로 로컬 트리와 줄 번호가 다를 수 있음)</p>
+<ul><li><code>pjrt_client.h &gt; PjRtClient</code> — <code>#L486</code></li><li><code>pjrt_client.h &gt; PjRtDevice</code> — <code>#L102</code> / <code>pjrt_device_description.h</code></li><li><code>pjrt_client.h &gt; PjRtMemorySpace</code> — <code>#L72</code></li><li><code>pjrt_client.h &gt; PjRtBuffer</code> — <code>#L1111</code>, buffer semantics — <code>#L858</code></li><li><code>pjrt_client.h &gt; PjRtLoadedExecutable</code> — <code>#L1506</code></li><li><code>pjrt_executable.h &gt; PjRtExecutable</code> — <code>#L306</code></li><li><code>pjrt_compiler.h &gt; PjRtCompiler</code> — <code>#L157</code></li><li><code>pjrt_c_api.h</code>: <code>PJRT_Client_Create</code> <code>#L344-L365</code>, <code>PJRT_Plugin_Initialize</code> <code>#L173-L180</code>, <code>PJRT_Plugin_Attributes</code> <code>#L182-L194</code>, <code>PJRT_TopologyDescription_Create</code> <code>#L1815-L1830</code></li><li><code>pjrt_c_api_test.h &gt; RegisterPjRtCApiTestFactory</code> — <code>#L31</code></li></ul>
+<h3 id="로컬-소스-트리-파일-목록만-확인-본문-미열람">로컬 소스 트리 (파일 목록만 확인, 본문 미열람)</h3>
+<ul><li><code>/home/sam/xla/xla/pjrt/</code> — 핵심 인터페이스 헤더</li><li><code>/home/sam/xla/xla/pjrt/c/</code> — C API, wrapper, extension 헤더</li><li><code>/home/sam/xla/xla/pjrt/c_api_client/</code> — C → C++ 하강 어댑터</li><li><code>/home/sam/xla/xla/pjrt/extensions/</code> — 추가 extension</li><li><code>/home/sam/xla/xla/pjrt/cpu/</code>, <code>gpu/</code>, <code>se/</code>, <code>distributed/</code> — 레퍼런스 backend 구현</li></ul>
+<h3 id="참고-문서에-언급되었으나-이번에-확보하지-못한-자료">참고 문서에 언급되었으나 이번에 확보하지 못한 자료</h3>
+<div class="table-wrap"><table><thead><tr><th>자료</th><th>위치</th><th>왜 필요한가</th></tr></thead><tbody><tr><td>PJRT C API CHANGELOG</td><td><code>xla/pjrt/c/CHANGELOG.md</code></td><td>minor 버전별 API 추가 이력 → 어떤 기능이 언제 들어왔는지</td></tr><tr><td>PJRT 통합 가이드</td><td><code>xla/pjrt/c/docs/pjrt_integration_guide.md</code></td><td>D2보다 상세할 가능성</td></tr><tr><td>PJRT 설계 문서 드라이브 폴더</td><td>Google Drive (D4가 링크)</td><td>D5–D9의 최신판 존재 여부</td></tr><tr><td>실제 plugin 구현</td><td><code>intel/intel-extension-for-openxla</code>, <code>tenstorrent/tt-xla</code> (<code>src/common/api_impl.cc</code>)</td><td>&quot;C API 직접 구현&quot; 경로의 실제 코드량과 구조</td></tr></tbody></table></div>
+<h3 id="실제-구현체-목록-d3-기준-새-backend-설계-시-참고-대상">실제 구현체 목록 (D3 기준, 새 backend 설계 시 참고 대상)</h3>
+<div class="table-wrap"><table><thead><tr><th>유형</th><th>구현체</th></tr></thead><tbody><tr><td>완전 통합 plugin (PJRT + MLIR + XLA)</td><td>XLA CPU (<code>xla/pjrt/cpu/cpu_client.cc</code>), XLA GPU (<code>xla/pjrt/gpu/se_gpu_pjrt_client.cc</code>), Intel XLA plugin</td></tr><tr><td>경량 통합 plugin (PJRT + MLIR)</td><td>StableHLO 참조 인터프리터 plugin, Tenstorrent-XLA plugin (MLIR 기반 <strong>C</strong> plugin)</td></tr><tr><td>framework 측 구현</td><td>JAX (<code>xla_client</code> 경유), GoMLX (<code>gomlx/gopjrt</code>), ZML (<code>pjrt.zig</code>, <code>buffer.zig</code>, <code>module.zig</code>)</td></tr></tbody></table></div>
+<p>새 backend를 <strong>C API 직접 구현</strong>으로 갈 경우 Tenstorrent-XLA가, <strong>C++ + wrapper</strong>로 갈 경우 Intel XLA plugin이 가장 가까운 참조 대상이다.</p>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+{
+  "title": "PJRT Runtime 상위/하위 API와 필드 구성 정리",
+  "summary": "OpenXLA PJRT에서 런타임이 framework/compiler 쪽에 제공하는 상위 API와 backend/plugin/driver 쪽으로 내려가는 하위 API를 구분하고, 주요 객체와 호출 인자의 필드 구성을 표와 흐름으로 정리한다.",
+  "type": "정보 수집",
+  "topic": "OpenXLA PJRT Runtime API surface and object field map",
+  "scope": "OpenXLA PJRT를 런타임 인터페이스 관점에서 분석한다. PjRtClient, PjRtDevice, PjRtMemorySpace, PjRtBuffer, PjRtExecutable, PjRtLoadedExecutable, PjRtFuture, PjRtCompiler, PJRT C API, plugin/backend registration을 중심으로 상위 API와 하위 API의 경계를 정리한다. 단순 개념 요약이 아니라 각 API가 받는 입력 객체, 반환 객체, 주요 옵션/필드, 소유권, 비동기 완료 모델, backend가 구현해야 하는 책임을 표로 만든다.",
+  "parent_slug": null,
+  "generated_from_plan": null,
+  "project": {},
+  "tags": [
+    "PJRT",
+    "OpenXLA",
+    "runtime",
+    "API",
+    "backend",
+    "plugin",
+    "C API",
+    "field map"
+  ],
+  "updated": "2026-07-13",
+  "source": {
+    "repo_url": null,
+    "local_path": null,
+    "branch": null,
+    "paths": [],
+    "reference_dir": "['references/code-analysis/pjrt', 'references/research/pjrt-runtime-api-surface']",
+    "docs": [
+      {
+        "title": "OpenXLA PJRT overview",
+        "url": "https://openxla.org/xla/pjrt"
+      },
+      {
+        "title": "OpenXLA PJRT C++ API overview",
+        "url": "https://openxla.org/xla/pjrt/cpp_api_overview"
+      },
+      {
+        "title": "OpenXLA PJRT examples",
+        "url": "https://openxla.org/xla/pjrt/examples"
+      },
+      {
+        "title": "OpenXLA PJRT plugin integration",
+        "url": "https://openxla.org/xla/pjrt/pjrt_integration"
+      },
+      {
+        "title": "Local XLA PJRT source tree",
+        "local_path": "/home/sam/xla/xla/pjrt"
+      },
+      {
+        "title": "Local PJRT C API source tree",
+        "local_path": "/home/sam/xla/xla/pjrt/c"
+      }
+    ]
+  },
+  "analysis": {
+    "model": "opus",
+    "effort": "xhigh",
+    "max_turns": 200,
+    "analysis_style": "런타임 API 설계 노트처럼 작성한다. 설명형 문단만 쓰지 말고 API 분류표, 객체별 필드/메서드 표, C++ API와 C API 대응표, 호출 sequence diagram, backend 구현 체크리스트를 포함한다. 모든 단정은 공식 문서 또는 /home/sam/xla/xla/pjrt 소스의 파일/클래스/구조체 이름에 근거해 적고, 확인이 필요한 추정은 명시적으로 분리한다.",
+    "sections": [
+      {
+        "title": "PJRT API 계층 지도",
+        "prompt": "PJRT를 framework/compiler-facing 상위 API, runtime core object API, backend/plugin-facing 하위 API, C API ABI surface로 나누어 전체 지도를 만든다.",
+        "required": [
+          "상위 API",
+          "하위 API",
+          "runtime core objects",
+          "C++ API",
+          "C API",
+          "plugin/backend boundary"
+        ]
+      },
+      {
+        "title": "상위 API: framework/compiler-facing surface",
+        "prompt": "PjRtClient를 중심으로 device query, memory space query, buffer creation/import, compile, load, execute preparation, transfer 관련 API를 정리한다. 각 API의 입력 객체, option struct, 반환 타입, 주요 필드를 표로 만든다.",
+        "required": [
+          "PjRtClient",
+          "PjRtDevice",
+          "PjRtMemorySpace",
+          "PjRtBuffer",
+          "PjRtExecutable",
+          "PjRtLoadedExecutable",
+          "CompileOptions",
+          "LoadOptions",
+          "ExecuteOptions",
+          "host transfer options"
+        ]
+      },
+      {
+        "title": "하위 API: backend/plugin-facing surface",
+        "prompt": "backend나 plugin 구현자가 제공해야 하는 객체 구현, compiler 구현, loaded executable 구현, buffer 구현, C API 함수 테이블과 args 구조체를 정리한다.",
+        "required": [
+          "backend implementation responsibility",
+          "plugin registration",
+          "PjRtCompiler",
+          "PjRtLoadedExecutable implementation",
+          "PjRtBuffer implementation",
+          "PJRT_Api",
+          "PJRT_*_Args structs",
+          "extension mechanism"
+        ]
+      },
+      {
+        "title": "객체별 필드와 상태",
+        "prompt": "주요 PJRT 객체가 어떤 식별자, device reference, memory space, shape/layout, sharding, future/event, executable metadata, option field를 갖는지 소스 기준으로 정리한다.",
+        "required": [
+          "identity fields",
+          "device fields",
+          "memory space fields",
+          "shape/layout fields",
+          "sharding fields",
+          "async/future fields",
+          "executable metadata fields",
+          "ownership and lifetime"
+        ]
+      },
+      {
+        "title": "핵심 호출 흐름",
+        "prompt": "buffer 생성/전송, compile/load, execute, completion/error 회수, delete/donation 흐름을 상위 API 호출에서 backend 구현 호출까지 sequenceDiagram 또는 flowchart로 표현한다.",
+        "required": [
+          "buffer creation flow",
+          "host to device transfer flow",
+          "device to host transfer flow",
+          "compile and load flow",
+          "execute flow",
+          "future/error flow",
+          "delete/donation flow"
+        ]
+      },
+      {
+        "title": "C++ API와 C API 대응표",
+        "prompt": "C++ PjRt* 클래스/메서드와 PJRT C API의 함수/args 구조체를 대응시킨다. ABI 안정성을 위해 C API가 args struct와 extension chain을 쓰는 이유도 설명한다.",
+        "required": [
+          "C++ class to C API mapping",
+          "method to function table mapping",
+          "args struct fields",
+          "extension chain",
+          "ABI/versioning",
+          "wrapper boundary"
+        ]
+      },
+      {
+        "title": "새 Runtime/Backend 설계 체크리스트",
+        "prompt": "PJRT 스타일을 참고해 새 backend runtime을 만들 때 어떤 상위 API, 하위 API, 객체 필드, async/error 모델을 먼저 설계해야 하는지 체크리스트로 정리한다. 단, LPDDR6-PIM에 대한 구체 설계 확정처럼 쓰지 말고 PJRT에서 배울 수 있는 API 설계 포인트로 제한한다.",
+        "required": [
+          "minimum API set",
+          "optional API set",
+          "object model checklist",
+          "field checklist",
+          "async/error checklist",
+          "backend implementation checklist",
+          "확인 필요 항목"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/05.2023 Next Pluggable Device Mechanism.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/05.2023 Next Pluggable Device Mechanism.txt",
+      "text": "references/text/pjrt-runtime-api-surface__05.2023 Next Pluggable Device Mechanism.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/C API for AcquireExternalReference.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/C API for AcquireExternalReference.txt",
+      "text": "references/text/pjrt-runtime-api-surface__C API for AcquireExternalReference.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/Device PJRT API change to support versioning and compatibility.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/Device PJRT API change to support versioning and compatibility.txt",
+      "text": "references/text/pjrt-runtime-api-surface__Device PJRT API change to support versioning and compatibility.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/OpenXLA folder Device PJRT API ABI versioning and compatibility.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/OpenXLA folder Device PJRT API ABI versioning and compatibility.txt",
+      "text": "references/text/pjrt-runtime-api-surface__OpenXLA folder Device PJRT API ABI versioning and compatibility.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/OpenXLA folder EXTERNAL PJRT Plugin Mechanism.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/OpenXLA folder EXTERNAL PJRT Plugin Mechanism.txt",
+      "text": "references/text/pjrt-runtime-api-surface__OpenXLA folder EXTERNAL PJRT Plugin Mechanism.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/PJRT C API_ optional and experimental features.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/PJRT C API_ optional and experimental features.txt",
+      "text": "references/text/pjrt-runtime-api-surface__PJRT C API_ optional and experimental features.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/research/pjrt-runtime-api-surface/Representing dynamic array shapes in the PJRT C API.txt",
+      "raw": "references/raw/pjrt-runtime-api-surface/Representing dynamic array shapes in the PJRT C API.txt",
+      "text": "references/text/pjrt-runtime-api-surface__Representing dynamic array shapes in the PJRT C API.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT - Uniform Device API  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT - Uniform Device API  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT C++ Device API 개요  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT C++ Device API 개요  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 예  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 예  _  OpenXLA Project.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "raw": "references/raw/pjrt/PJRT 플러그인 통합  _  OpenXLA Project.html",
+      "text": "references/text/pjrt__PJRT 플러그인 통합  _  OpenXLA Project.txt"
+    },
+    {
+      "title": "OpenXLA PJRT overview",
+      "url": "https://openxla.org/xla/pjrt",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "OpenXLA PJRT C++ API overview",
+      "url": "https://openxla.org/xla/pjrt/cpp_api_overview",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "OpenXLA PJRT examples",
+      "url": "https://openxla.org/xla/pjrt/examples",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "OpenXLA PJRT plugin integration",
+      "url": "https://openxla.org/xla/pjrt/pjrt_integration",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "Local XLA PJRT source tree",
+      "url": "",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "Local PJRT C API source tree",
+      "url": "",
+      "note": "URL only; content was not fetched automatically."
+    }
+  ]
+}
