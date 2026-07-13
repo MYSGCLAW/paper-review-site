@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PJRT · Code Analysis</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-hover: #252b3d;
+      --border: #2d3548;
+      --text: #e1e4eb;
+      --muted: #8892a4;
+      --accent: #58a6ff;
+      --header-bg: #0d1117;
+      --passed: #87d7a5;
+      --warning: #f6c177;
+      --failed: #ff8f8f;
+      --unverified: #aeb8c6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .page-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 56px;
+    }
+
+    .top-link {
+      display: inline-flex;
+      margin-bottom: 26px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .top-link:hover { color: var(--accent); }
+
+    .hero {
+      padding: 32px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .section-eyebrow {
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 8px 0 10px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.08;
+    }
+
+    .hero p {
+      max-width: 820px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 9px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .section-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-bar h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .section-count {
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .library-card {
+      display: flex;
+      min-height: 300px;
+      flex-direction: column;
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .library-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.35;
+    }
+
+    .metadata {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .summary {
+      margin: 16px 0 0;
+      color: var(--muted);
+    }
+
+    .open-link {
+      margin-top: auto;
+      padding-top: 20px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .status-badge {
+      flex: 0 0 auto;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .status-passed { color: var(--passed); }
+    .status-warning { color: var(--warning); }
+    .status-failed { color: var(--failed); }
+    .status-unverified { color: var(--unverified); }
+
+    @media (max-width: 720px) {
+      .page-shell {
+        width: min(100% - 24px, 1180px);
+        padding-top: 24px;
+      }
+
+      .section-bar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-shell">
+    <a class="top-link" href="../../../#code-analysis">← 코드 분석 프로젝트로 돌아가기</a>
+
+    <section class="hero">
+      <p class="section-eyebrow">Code Analysis Project</p>
+      <h1>PJRT</h1>
+      <p>분석 대상 경로: /home/sam/xla/xla/pjrt</p>
+      <div class="tag-row project-tags"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span><span class="tag">c-api</span><span class="tag">abi</span><span class="tag">wrapper</span><span class="tag">version</span><span class="tag">buffer</span></div>
+    </section>
+
+    <section>
+      <div class="section-bar">
+        <h2>분석 문서</h2>
+        <span class="section-count">6개 문서</span>
+      </div>
+      <div class="library-grid">
+        
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="../../pjrt-distributed-runtime/">
+            Distributed 런타임 (멀티 호스트 조정)
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">distributed</span><span class="tag">multi-host</span><span class="tag">topology</span><span class="tag">coordination</span></div>
+
+      <p class="summary">
+        참고 문서에는 설명되지 않은 xla/pjrt/distributed 디렉터리를 분석하여 멀티 프로세스/멀티 호스트 PJRT 클라이언트가 어떻게 토폴로지와 상태를 공유하는지 파악한다.
+      </p>
+
+      <a class="open-link" href="../../pjrt-distributed-runtime/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="../../pjrt-c-api-bridge/">
+            PJRT C API와 C++ 구현의 연결 지점
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">c-api</span><span class="tag">abi</span><span class="tag">wrapper</span><span class="tag">version</span></div>
+
+      <p class="summary">
+        PJRT_Api 함수 테이블, GetPjRtApi, C→C++ 래퍼(CreateWrapperClient/CreatePjrtApi)를 통해 C API가 C++ PjRtClient를 어떻게 감싸는지 분석한다.
+      </p>
+
+      <a class="open-link" href="../../pjrt-c-api-bridge/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="../../pjrt-buffer-data-movement/">
+            PjRtBuffer와 데이터 이동/비동기 이벤트
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">buffer</span><span class="tag">async</span><span class="tag">data-transfer</span><span class="tag">future</span></div>
+
+      <p class="summary">
+        PjRtBuffer의 생명주기, 호스트-디바이스 데이터 전송 경로, 그리고 이를 뒷받침하는 device_event/staging_buffer/raw_buffer/세마포어 등 비동기 동기화 메커니즘을 분석한다.
+      </p>
+
+      <a class="open-link" href="../../pjrt-buffer-data-movement/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="../../pjrt-client-device/">
+            PjRtClient / PjRtDevice / PjRtMemorySpace 계층
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">client</span><span class="tag">device</span><span class="tag">memory-space</span><span class="tag">entry-point</span></div>
+
+      <p class="summary">
+        PJRT의 최상위 진입점인 PjRtClient와 이를 구성하는 PjRtDevice, PjRtMemorySpace의 책임 분리와 상호 참조(역포인터) 구조를 분석한다.
+      </p>
+
+      <a class="open-link" href="../../pjrt-client-device/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="../../pjrt-executable-compiler/">
+            PjRtExecutable / PjRtLoadedExecutable / PjRtCompiler
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">executable</span><span class="tag">compiler</span><span class="tag">execution</span><span class="tag">layout</span></div>
+
+      <p class="summary">
+        컴파일된 아티팩트를 나타내는 PjRtExecutable 계열과 컴파일 파이프라인(PjRtCompiler), 실행 진입점(Execute 계열 메서드)의 구조를 분석한다.
+      </p>
+
+      <a class="open-link" href="../../pjrt-executable-compiler/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="../../pjrt-plugin-backend-integration/">
+            Plugin/Backend 통합 메커니즘 (CPU/GPU/TPU/예제 플러그인)
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-11</p>
+      <div class="tag-row"><span class="tag">XLA</span><span class="tag">PJRT</span><span class="tag">Runtime</span><span class="tag">OpenXLA</span><span class="tag">JAX</span><span class="tag">plugin</span><span class="tag">backend</span><span class="tag">cpu</span><span class="tag">gpu</span><span class="tag">registration</span></div>
+
+      <p class="summary">
+        새 디바이스/백엔드를 PJRT에 연결하기 위한 등록 패턴(static/dynamic registration)과 CPU/GPU 구체 구현을 example_plugin과 비교 분석한다.
+      </p>
+
+      <a class="open-link" href="../../pjrt-plugin-backend-integration/">
+        열기 →
+      </a>
+    </article>
+    
+      </div>
+    </section>
+  </main>
+</body>
+</html>
