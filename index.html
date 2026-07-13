@@ -667,7 +667,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>18</small>
+          <small>19</small>
         </a>
         
 
@@ -704,7 +704,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>3</small>
+          <small>2</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -722,8 +722,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 18편</span>
-        <span class="stat">전체 항목 26개</span>
+        <span class="stat">논문 19편</span>
+        <span class="stat">전체 항목 27개</span>
       </div>
     </div>
   </header>
@@ -734,7 +734,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>18개 문서</small>
+      <small>19개 문서</small>
     </a>
     
 
@@ -778,7 +778,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>18</small>
+          <small>19</small>
         </a>
         
 
@@ -815,7 +815,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>3</small>
+          <small>2</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -836,7 +836,7 @@
     </div>
 
     <span class="pending-queue-count">
-      3편 대기 중
+      2편 대기 중
     </span>
   </div>
 
@@ -848,12 +848,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>GEM_A Native Graph-based Index for Multi-Vector Retrieval.pdf</strong>
+            <strong>TileMaxSim_IO-Aware GPU MaxSim Scoring with.pdf</strong>
             <span>등록 시각 · 2026-07-12 23:26</span>
           </div>
 
           <div class="pending-queue-size">
-            1.6 MB
+            775.4 KB
           </div>
 
           <div>
@@ -867,28 +867,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>TileMaxSim_IO-Aware GPU MaxSim Scoring with.pdf</strong>
-            <span>등록 시각 · 2026-07-12 23:26</span>
-          </div>
-
-          <div class="pending-queue-size">
-            775.4 KB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -921,7 +899,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">18개</span>
+        <span class="section-count">19개</span>
       </div>
 
       <div class="library-grid">
@@ -1025,6 +1003,32 @@
       </p>
 
       <a class="open-link" href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/gem-a-native-graph-based-index-for-multi-vector-retrieval/">
+            GEM: A Native Graph-based Index for Multi-Vector Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Yao Tian, Zhoujin Tian, Xi Zhao, Ruiyuan Zhang, Xiaofang Zhou</p>
+      <p class="metadata">2026</p>
+
+      <p class="summary">
+        GEM은 multi-vector retrieval(질의와 문서를 모두 토큰 단위 벡터들의 집합, vector set으로 표현하는 검색)을 위해 vector set 자체를 그래프의 정점으로 삼는 최초의 native graph index이다. 기존 방식은 (1) 모든 개별 벡터를 단일 ANN 인덱스에 pooling하거나(PLAID, IGP 계열), (2) vector set을 단일 벡터로 사상하거나(MUVERA의 FDE), (3) LSH sketch로 압축(DESSERT)하는 식으로 단일 벡터용 인덱스를 재사용했는데, 이들은 set-level semantics를 보존하지 못하거나 pruning이 약해 느리다. GEM의 핵심 통찰은 그래프 기반 검색이 전제하는 metric 성질(삼각부등식)을 MaxSim/Chamfer(CH) 유사도가 만족하지 않는다는 점이며, 이를 metric decoupling으로 해결한다. 즉 그래프 구축(edge weight)에는 삼각부등식을 만족하고 CH(Q,P) &lt;= EMD(Q,P)를 만족하는 Earth Mover&#x27;s Distance(EMD)를 쓰고, 실제 relevance 산출과 탐색에는 원래의 Chamfer distance를 쓴다. 여기에 TF-IDF 기반 set-level clustering으로 각 set을 소수의 유의미한 cluster에만 할당해 index redundancy를 줄이고(예: MSMARCO에서 set당 평균 cluster membership 43.8 -&gt; 2.9), cluster 내부 local proximity graph를 cluster 간 bridge로 이어 붙여 globally navigable한 dual graph를 만든다. Chamfer 상으로는 가깝지만 EMD 그래프 상 멀리 떨어진 쌍은 학습 pair를 재사용한 semantic shortcut으로 직접 연결한다. 인덱싱과 검색 모두 centroid codebook 기반의 quantized EMD(qEMD)/quantized Chamfer(qCH) lookup으로 set-to-set 거리 계산 비용을 낮추며, 질의 시에는 cluster filtering -&gt; multi-entry 병렬 beam search -&gt; cluster 기반 early pruning -&gt; exact Chamfer rerank 순으로 처리한다. MSMARCO, LoTTE, OK-VQA, EVQA 네 벤치마크에서 GEM은 모든 품질 지표(R@100, S@100, MRR@10)에서 최고 성능을 내면서 지연시간도 가장 낮았고(MSMARCO 140ms vs PLAID 352ms), 동일 MRR@10 기준 최대 16배 speedup과 함께 index size는 PLAID/IGP와 비슷하거나 더 작다.
+      </p>
+
+      <a class="open-link" href="papers/gem-a-native-graph-based-index-for-multi-vector-retrieval/">
         보고서 열기 →
       </a>
     </article>

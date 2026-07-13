@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>GEM: A Native Graph-based Index for Multi-Vector Retrieval</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>GEM: A Native Graph-based Index for Multi-Vector Retrieval</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Yao Tian, Zhoujin Tian, Xi Zhao, Ruiyuan Zhang, Xiaofang Zhou</span>
+        <span><strong>출처</strong> · Venue 확인 필요</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘과 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 시사점</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>GEM은 multi-vector retrieval(질의와 문서를 모두 토큰 단위 벡터들의 집합, vector set으로 표현하는 검색)을 위해 vector set 자체를 그래프의 정점으로 삼는 최초의 native graph index이다. 기존 방식은 (1) 모든 개별 벡터를 단일 ANN 인덱스에 pooling하거나(PLAID, IGP 계열), (2) vector set을 단일 벡터로 사상하거나(MUVERA의 FDE), (3) LSH sketch로 압축(DESSERT)하는 식으로 단일 벡터용 인덱스를 재사용했는데, 이들은 set-level semantics를 보존하지 못하거나 pruning이 약해 느리다. GEM의 핵심 통찰은 그래프 기반 검색이 전제하는 metric 성질(삼각부등식)을 MaxSim/Chamfer(CH) 유사도가 만족하지 않는다는 점이며, 이를 metric decoupling으로 해결한다. 즉 그래프 구축(edge weight)에는 삼각부등식을 만족하고 CH(Q,P) &lt;= EMD(Q,P)를 만족하는 Earth Mover&#x27;s Distance(EMD)를 쓰고, 실제 relevance 산출과 탐색에는 원래의 Chamfer distance를 쓴다. 여기에 TF-IDF 기반 set-level clustering으로 각 set을 소수의 유의미한 cluster에만 할당해 index redundancy를 줄이고(예: MSMARCO에서 set당 평균 cluster membership 43.8 -&gt; 2.9), cluster 내부 local proximity graph를 cluster 간 bridge로 이어 붙여 globally navigable한 dual graph를 만든다. Chamfer 상으로는 가깝지만 EMD 그래프 상 멀리 떨어진 쌍은 학습 pair를 재사용한 semantic shortcut으로 직접 연결한다. 인덱싱과 검색 모두 centroid codebook 기반의 quantized EMD(qEMD)/quantized Chamfer(qCH) lookup으로 set-to-set 거리 계산 비용을 낮추며, 질의 시에는 cluster filtering -&gt; multi-entry 병렬 beam search -&gt; cluster 기반 early pruning -&gt; exact Chamfer rerank 순으로 처리한다. MSMARCO, LoTTE, OK-VQA, EVQA 네 벤치마크에서 GEM은 모든 품질 지표(R@100, S@100, MRR@10)에서 최고 성능을 내면서 지연시간도 가장 낮았고(MSMARCO 140ms vs PLAID 352ms), 동일 MRR@10 기준 최대 16배 speedup과 함께 index size는 PLAID/IGP와 비슷하거나 더 작다.</p>
+        <span class="source-ref">PDF p. 1, 2, 4, 10, 11</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>GEM은 vector set 자체를 정점으로 하는 최초의 native graph index로, multi-vector 표현의 semantic richness와 그래프 인덱스의 pruning 효율을 결합한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>핵심 통찰은 metric decoupling이다. Chamfer(MaxSim)는 삼각부등식을 만족하지 않아 그래프 탐색의 전제를 깨므로, 그래프 구축에는 CH &lt;= EMD를 만족하는 metric인 EMD를 쓰고 탐색·relevance 산출에는 Chamfer를 유지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>EMD가 Chamfer의 상한일 뿐 역은 성립하지 않으므로 생기는 사각지대는, 학습 (query, ground-truth) pair를 재사용한 semantic shortcut edge로 보완한다. 추가 라벨링이나 exhaustive search가 필요 없다는 점이 실용적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>TF-IDF guided cluster pruning은 set당 평균 cluster membership을 MSMARCO 43.8 -&gt; 2.9(93.4% 감소), EVQA 120.8 -&gt; 1.7(98.6% 감소)로 줄여 index redundancy를 크게 낮춘다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>네 벤치마크 전부에서 GEM이 모든 품질 지표 1위와 최저 지연시간을 동시에 달성했고(MSMARCO 140ms vs PLAID 352ms), 동일 MRR@10 기준 최대 16배(OKVQA, DESSERT 대비) 빠르다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>저자들이 만든 naive graph baseline MVG는 작은 k에서는 경쟁력이 있지만 MSMARCO k=1000에서 recall 94.2%로 saturate되어(타 기법 약 97%), non-metric 거리 위에 그래프를 세우는 것의 구조적 한계를 실증한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>효율은 corpus 크기 N보다 set당 벡터 수 m에 훨씬 민감하다(N을 8배 늘릴 때 67ms -&gt; 85ms, m을 8배 늘릴 때 44ms -&gt; 85ms). set-to-set 거리 계산이 지배적이기 때문이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>vision-language 데이터셋(OKVQA/EVQA)에서는 brute-force조차 Success@100이 약 77~90%에 그쳐, 남은 병목이 검색 알고리즘이 아니라 embedding 모델과 multi-modal alignment에 있음을 저자들이 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>문제 정의: vector set 단위의 top-k 검색</h3>
+      <p>논문이 다루는 문제는 multi-vector retrieval(= vector set search)이다. 데이터베이스 D = {P1, P2, ..., PN}의 각 원소 Pi = {p1, ..., pmi}가 d차원 벡터들의 집합이고, 질의 Q = {q1, ..., qmq} 역시 벡터 집합일 때, Chamfer(CH) 유사도가 가장 높은 top-k개의 set을 반환하는 것이 목표이다(Eq. 2: R = k-arg max{CH(Q,P) | P in D}). 여기서 CH(A,B)는 A의 각 벡터가 B의 모든 벡터에 대해 얻는 최대 유사도를 합산한 값(Eq. 1)으로, ColBERT의 MaxSim 연산자와 동일하다. 논문은 문서와 vector set, 토큰과 벡터를 서로 바꿔 쓸 수 있는 용어로 사용하며, 이 문제 자체는 데이터 출처와 무관한 일반 문제(벡터가 이미지 패치일 수도, 텍스트 청크일 수도 있음)라고 명시한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동기: 단일 벡터 압축의 정보 손실</h3>
+      <p>LLM 기반 embedding이 정보 검색의 표준 데이터 형식이 되면서 검색 패러다임이 lexical matching에서 semantic similarity로 이동했다. 그러나 하나의 객체를 단일 벡터로 압축하는 것은 &#x27;문단 전체를 한 단어로 요약하는 것&#x27;과 같아서 fine-grained detail이 필연적으로 손실되고, 이는 무관한 검색 결과와 downstream LLM의 hallucination(특히 long-context 추론에서)으로 이어진다. ColBERT로 대표되는 multi-vector 표현은 토큰마다 embedding을 만들고 MaxSim으로 late interaction을 수행해 검색 품질, 해석 가능성, 일반화 능력을 개선했고, Weaviate/Vespa/Pinecone 같은 산업용 벡터 DB의 핵심 기능이 되었다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 어려운가: 저장·계산·인덱싱 비용</h3>
+      <p>multi-vector 표현의 이득은 비용을 수반한다. 첫째, 항목마다 여러 벡터를 저장하므로 저장 요구량이 수 개 자릿수 증가한다. 둘째, set-to-set 비교는 집합 내 모든 벡터 쌍에 대한 거리 계산을 요구해 비용이 크다. 저자들은 low-bit quantization이나 정보량 높은 벡터만 남기는 기법이 이를 일부 완화할 수 있지만, multi-vector 표현에 대해 정확하고 효율적인 indexing 및 search 알고리즘은 여전히 open challenge로 남아 있다고 명시한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>(1) 모든 벡터를 단일 ANN 인덱스에 pooling</h3>
+      <p>가장 직관적인 접근은 모든 set의 모든 벡터를 IVFPQ, DiskANN 같은 하나의 ANN 인덱스에 모아 넣고, 질의 시 각 질의 벡터의 top-k 이웃을 모아 후보 pool을 만든 뒤 refinement하는 것이다. 논문은 두 가지 문제를 지적한다. 첫째, vector-level 유사도가 set-level 관련성을 보장하지 않는다. &#x27;family-friendly beaches in Europe&#x27; 질의에 &#x27;rocky beaches in Portugal&#x27; 문서가 &#x27;beaches&#x27;라는 공통 토큰 때문에 검색되는 식으로, 의도가 명백히 어긋나는 무관한 후보가 대량 생성된다. 둘째, 개별 벡터를 모두 인덱싱하면 인덱스가 비대해진다(문서 1만 개 × 벡터 100개 = 백만 규모 ANN task).</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(2) MUVERA: vector set을 단일 벡터로 사상</h3>
+      <p>Google의 MUVERA는 distance-preserving mapping인 FDE(Fixed Dimensional Encoding)로 vector set을 단일 벡터로 바꿔 기존 ANN 인덱스를 재사용한다. 그러나 이론적으로 타당한 distance-preserving mapping은 투영 공간의 차원이 지나치게 높아야 하므로 잘 최적화된 ANN 인덱스조차 효율적으로 다루기 어렵고, 애초에 multi-vector 표현을 쓰는 동기와 모순된다(그렇다면 처음부터 단일 벡터 embedding 모델을 학습하면 되지 않는가). 또한 token-level alignment가 필연적으로 손실되어 recall이 낮아질 위험이 있다. 실험에서도 MUVERA는 FDE를 비현실적으로 높은 20480차원까지 조정해도 GEM의 질의 품질에 도달하지 못했다.</p>
+      <span class="source-ref">PDF p. 2, 3, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(3) DESSERT: LSH sketch 기반 native 기법</h3>
+      <p>DESSERT는 multi-vector retrieval을 위해 설계된 최초의 native 해법으로, vector set을 locality-sensitive hashing(LSH) 기반 sketch로 압축하고 hash code 비교로 top-k 후보를 얻는다. 그러나 효과적인 sketch-level pruning이 없어 모든 sketch를 훑는 exhaustive scan이 병목이 되고 speedup이 제한적이며, 많은 hash 값을 저장해야 해 storage 부담도 크다.</p>
+      <span class="source-ref">PDF p. 2, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(4) ColBERT 계열: ColBERTv2, PLAID, IGP</h3>
+      <p>초기 ColBERT 연구는 단순 inverted list로 모든 개별 embedding을 인덱싱해 대규모 배포가 어려웠다. ColBERTv2는 centroid ID + 저비트 residual로 저장 부담을 줄였으나 search 자체는 여전히 비쌌고, PLAID는 centroid interaction으로 무관 문서를 공격적으로 pruning해 속도를 크게 높였다. IGP는 inverted list를 centroid vector 위의 proximity graph로 대체했지만, 어디까지나 centroid-level 그래프이므로 vector set 사이의 관계(inter-set relations)를 포착하지 못한다. 한편 PLAID는 GEM과 유사한 clustering 아이디어를 쓰지만 fine-grained token-level clustering만 수행하고 문서를 그 토큰이 매핑되는 모든 cluster에 할당하므로, cluster당 문서 수가 수십 개 수준으로 매우 적어 cluster별 그래프 인덱스를 세우는 것이 무의미해지고, membership 중복이 커서 그래프 구축 비용과 질의 시 중복 edge가 늘어난다.</p>
+      <span class="source-ref">PDF p. 3, 5, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(5) 저자가 직접 만든 naive graph baseline: MVG</h3>
+      <p>저자들은 단일 벡터 그래프 인덱스를 그대로 확장한 baseline(MVG)을 Section 3.2에서 정의한다. 정점은 vector set, 간선은 Chamfer distance로 충분히 가까운 두 정점을 연결하며, 구축/탐색 절차는 단일 벡터 방법과 동일하다. 이 직접 확장은 두 가지 결정적 문제로 실패한다. 첫째, fragmented neighbors and local optima: Chamfer distance는 metric이 아니고 삼각부등식을 만족하지 않으므로, Q가 P1에 가깝고 P1이 P2에 가까워도 Q가 P2에 가깝다는 보장이 없다. 그 결과 Q의 최근접 이웃들이 그래프 전역에 흩어져 local hop으로 도달하기 어렵고, greedy search 경로가 진동(oscillatory)하며 local optima에 조기 수렴해 recall이 떨어진다. 둘째, lack of cheap distance approximation and pruning: Chamfer distance 계산 비용이 과도해서 탐색의 매 단계마다 질의와 모든 후보 이웃 사이의 set-to-set 비교를 수행하는 것은 비현실적이다. 따라서 더 싼 거리 근사, 효과적인 pruning, 더 정보량 있는 entry point가 필요하다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>C1. multi-vector retrieval을 위한 최초의 native graph index</h3>
+      <p>GEM은 multi-vector retrieval을 위한 최초의 native graph index로 제시된다. 핵심 아이디어는 set-level indexing, 즉 각 정점이 하나의 vector set을 나타내는 proximity graph를 직접 구축함으로써 multi-vector 표현의 semantic richness와 graph 기반 인덱스의 강력한 pruning 능력을 동시에 취하는 것이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C2. set-level clustering (TF-IDF guided pruning)</h3>
+      <p>각 문서를 소수의 semantically relevant cluster에만 할당하는 set-level clustering 기법을 제안한다. centroid에 대한 adaptive TF-IDF 스타일 가중치로 벡터의 informativeness를 평가하고 점수가 높은 상위 r개 cluster에만 set을 할당하여, semantic coverage는 유지하면서 이후 그래프 구축의 index redundancy를 줄인다(Section 4.1, 4.4.2).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C3. dual graph 구조 (intra-cluster graph + global graph)</h3>
+      <p>cluster 내부의 local structure를 담는 intra-cluster graph와, 여러 cluster에 공유되는 set이 자연스럽게 bridge 역할을 하여 형성되는 통합 global graph로 구성된 dual graph를 설계한다. 이 설계는 local structure를 보존하면서 global connectivity를 보장한다(Section 4.3).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C4. metric decoupling과 semantic shortcut</h3>
+      <p>그래프 구축에는 metric(삼각부등식)을 만족하는 EMD를, 탐색과 relevance 산출에는 Chamfer를 사용하도록 유사도 척도를 분리한다. EMD가 Chamfer의 상한이므로 EMD 상 가까운 정점은 Chamfer 상으로도 가깝고, 따라서 EMD 그래프를 따라 내려가는 navigation이 신뢰할 만한 heuristic이 된다. 여기에 Chamfer 상으로는 가깝지만 EMD 상으로는 여러 hop 떨어진 쌍을 직접 잇는 shortcut을 추가해 탐색 효율을 높이고 local optima 탈출을 돕는다(Section 4.3.1, 4.4.1).</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C5. quantized EMD/Chamfer</h3>
+      <p>centroid-level codebook과 centroid 기반 quantized 표현을 활용해 EMD와 Chamfer의 quantized 버전(qEMD, qCH)을 도입함으로써, 비싼 set-to-set 유사도 계산을 constant-time lookup으로 대체하여 인덱싱 단계와 검색 단계 모두의 효율을 높인다(Section 4.2.2, 4.5).</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C6. cluster-guided multi-entry search</h3>
+      <p>여러 개의 semantically relevant cluster에서 각각 entry point를 잡아 global graph 위에서 병렬로 layer-wise 확장하는 새로운 탐색 전략을 제안한다. cluster-guided early pruning이 유망하지 않은 경로를 공격적으로 잘라 탐색이 무관한 영역으로 표류하는 것을 막는다(Section 4.5).</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>C7. 광범위한 실험적 검증</h3>
+      <p>in-domain(MSMARCO), out-of-domain(LoTTE), multi-modal(OK-VQA, EVQA) 벤치마크에서 GEM이 검색 품질과 지연시간 모두에서 state-of-the-art를 유의미하게 능가하며, index size와 indexing time은 비슷하거나 오히려 더 작음을 보였다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 조감</h3>
+      <p>GEM은 크게 세 층으로 구성된다. (a) set-level clustering 층: two-stage k-means로 세밀 centroid 집합 Cquant와 거친 centroid 집합 Cindex를 얻고, TF-IDF 점수로 각 set을 상위 r개 cluster에만 할당한다. (b) dual graph 층: 각 cluster 내부에 qEMD 기반 local proximity graph를 만들고, 여러 cluster에 속한 set을 bridge로 삼아 이들을 하나의 globally connected graph로 엮은 뒤, 학습 pair로부터 semantic shortcut을 주입한다. (c) query processing 층: cluster filtering으로 관련 cluster를 고르고, cluster마다 entry point를 하나씩 잡아 qCH 기반 병렬 beam search를 수행하며 cluster 단서로 early pruning하고, 마지막에 exact Chamfer로 rerank한다.</p>
+      <span class="source-ref">PDF p. 1, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>두 종류의 centroid: Cquant vs Cindex</h3>
+      <p>1단계에서 D 전체의 벡터 표본에 k-means를 적용해 Cquant = {C1, ..., Ck1}를 얻는다. 이는 qEMD(그래프 구축)와 qCH(검색)의 거리 근사를 위한 vocabulary 역할을 한다. 2단계에서 Cquant를 다시 클러스터링해 더 거친 centroid 집합 Cindex = {C&#x27;1, ..., C&#x27;k2}를 얻고, 이것이 set-level indexing을 위한 cluster 공간이 된다(Figure 2의 예시에서는 8개 fine cluster -&gt; 3개 coarse cluster). 각 벡터 p는 Cindex 상 최근접 centroid NN(p)에 할당되어, set P는 centroid 집합 C(P) = {NN(p1), ..., NN(pm)}로 근사 표현된다(Eq. 4). 즉 fine-grained clustering은 정확한 거리 근사를 위해, coarse clustering은 set-level 인덱싱을 위해 역할이 분리되어 있다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 dual graph인가</h3>
+      <p>cluster-level graph는 국소적으로는 잘 탐색되지만 cluster를 하나씩 순회하는 방식은 비효율적이고, set을 여러 cluster에 중복 저장하면 redundancy가 생긴다. GEM은 여러 cluster에 걸친 set(bridge set)을 이용해 cluster-level graph들을 하나의 globally connected graph로 엮는다. 중요한 구현 포인트는, 각 P가 논리적으로는 여러 cluster에 속하지만 물리적으로는 global graph의 단일 정점으로 저장된다는 것이다. 이 설계는 intra-cluster 구조적 일관성을 유지하면서 bridge를 통한 cross-cluster traversal을 지원하고 정점 중복 저장을 제거한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>metric decoupling의 근거</h3>
+      <p>EMD는 삼각부등식을 만족하는 확립된 거리 함수이고, 임의의 두 vector set Q, P에 대해 CH(Q,P) &lt;= EMD(Q,P)가 성립한다(Eq. 10). 따라서 현재 정점 P1에 있는 탐색 경로에서 이웃 P2까지의 거리는 CH(Q,P2) &lt;= EMD(Q,P2) &lt;= EMD(Q,P1) + EMD(P1,P2)로 예측 가능한 상한을 갖는다. 즉 EMD 기준 최근접 이웃 방향으로 이동하는 것이 Chamfer 공간에서도 합리적인 후보를 찾는 신뢰할 만한 heuristic이 되며, 이것이 진동하는 탐색 행동과 local optima 함정을 완화한다. EMD는 transport plan T = {tij}에 대해 sum(tij * dX(pi, p&#x27;j))를 최소화하는 값으로 정의되며(Eq. 11-12), dX는 cosine similarity 사용 시 1 - &lt;pi, p&#x27;j&gt;, L2 사용 시 ||pi - p&#x27;j||2이다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>인덱싱 1: Two-stage clustering</h3>
+      <p>D 내 모든 set에서 표본 추출한 벡터에 k-means를 적용해 세밀 centroid Cquant를 만들고, Cquant를 재클러스터링해 거친 centroid Cindex를 만든다. 그 뒤 각 토큰 벡터를 Cindex의 최근접 centroid에 할당한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 2: TF-IDF guided cluster pruning</h3>
+      <p>가장 단순한 set-level clustering은 어떤 토큰이라도 매핑된 모든 cluster에 set을 연결하는 것이지만, &#x27;is&#x27;, &#x27;the&#x27;, &#x27;of&#x27; 같은 비정보적 토큰 때문에 set이 지나치게 많은 cluster에 등장해 index redundancy와 질의 시 오버헤드가 커진다. GEM은 TF(C&#x27;j, P) = P 안에서 C&#x27;j에 매핑된 토큰 벡터 수(Eq. 5)와 IDF(C&#x27;j) = log(N / (1 + 그 cluster를 갖는 set의 수))(Eq. 6)를 곱한 Score(C&#x27;j, P)(Eq. 7)로 weighted centroid profile S(P)(Eq. 8)를 만들고, 점수 상위 r개 cluster만 Ctop(P)로 선택한다(Eq. 9). Figure 3의 예에서 P3는 C&#x27;3와의 연결이 약하므로(1.6점) 점수 18.4와 12.6인 두 cluster만 인덱싱 대상이 된다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 3: cluster-level APG 구축 (Algorithm 2)</h3>
+      <p>각 cluster Ci에 대해 LocalGraphAndBridges를 호출한다. cluster에 속한 각 set P에 대해, 현재 cluster의 그래프 위에서 임의의 entry point로부터 Algorithm 5(탐색)를 qEMD를 거리로 하여 실행해 top-f ANN을 찾는다. P가 그래프에 처음 등장하면 찾아낸 이웃들과 양방향 edge를 추가하고, 이웃 P&#x27;의 degree가 M을 넘으면 가장 덜 유사한 edge를 제거한다. P가 이미 이전 cluster에서 삽입된 적이 있다면 P는 cross-cluster bridge가 될 수 있으므로 UpdateBridges(Algorithm 3)를 호출한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 4: cross-cluster bridge 갱신 (Algorithm 3)</h3>
+      <p>bridge set P에 대해 이전 cluster에서 이미 연결된 이웃 Cold와 현재 cluster에서 새로 찾은 이웃 Cnew를 합쳐 Call을 만든다. |Call| &lt;= M이면 모두 유지하고, 그렇지 않으면 qEMD 기준 가장 가까운 M개만 남긴다. 이때 P가 bridge 역할을 잃지 않도록, Ctop(P)의 각 cluster Ci에 대해 최종 이웃 집합에 그 cluster 출신 이웃이 최소 하나는 포함되도록 강제한다(없으면 가장 먼 이웃을 그 cluster의 가장 가까운 노드로 교체). 예를 들어 P가 C&#x27;2와 C&#x27;4에 속한다면 최종 이웃 목록에는 C&#x27;2 출신 하나, C&#x27;4 출신 하나가 반드시 남는다. 이것이 새 연결이 기존 inter-cluster link를 덮어쓰는 것을 막고 global connectivity를 보존한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 5: semantic shortcut 주입 (Algorithm 4)</h3>
+      <p>EMD가 Chamfer의 상한이지만 그 역은 성립하지 않으므로, 두 set이 Chamfer 상으로는 가깝지만 EMD 공간에서는 멀어 구축 시 직접 연결되지 못하고 질의 시 긴 경로를 타야 하는 경우가 생긴다. GEM은 (Q, P) 학습 pair(사람이 라벨링한 ground-truth 문서 쌍)를 이용해 shortcut을 주입한다. 중요한 점은 이 학습 pair가 추가 라벨링이나 exhaustive search 없이, embedding 모델 학습에 이미 널리 쓰이는 학습 셋을 재사용해 얻어진다는 것이다(MSMARCO의 경우 질의당 하나의 positive passage). 각 pair마다 현재 그래프에서 Q의 top-f&#x27; ANN을 구하고, ground-truth P가 그 안에 없으면서 P와 top-1 결과 Ptop 둘 다 degree 여유가 있으면 (Ptop, P) 무방향 edge를 추가한다. 테스트 질의가 학습 데이터와 유사한 분포를 따른다는 가정 하에, 이 edge는 이후 질의가 정답 영역에 더 직접 도달하게 하는 shortcut으로 작동한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 6: adaptive cluster cutoff</h3>
+      <p>모든 set에 잘 맞는 단일 r 값은 없다(어떤 set은 소수 cluster로 잘 표현되고, 어떤 set은 더 넓은 cluster coverage가 필요하다). GEM은 lightweight decision tree로 set별 최적 r을 예측한다. 각 학습 pair (Q,P)에 대해, TF-IDF로 정렬된 profile S(P)에서 Q의 관련 cluster 집합 Cquery(Q)와 처음 교차하는 cluster의 순위를 r_label로 삼고(상위 r_max(기본 10) 내에 교차가 없으면 r_max), 상위 r_max개 TF-IDF 점수와 P의 벡터 수를 입력으로 decision tree를 학습시킨다. 인덱싱 시 이 모델이 set별 r을 추론해 최종 cluster 할당에 사용한다. 즉 &#x27;검색 시 발견 가능성(discoverability)에 필요한 최소 cluster 표현만 유지&#x27;하는 것이 설계 원칙이다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의 1: cluster filtering</h3>
+      <p>multi-vector 환경에서는 거리 계산이 특히 비싸므로, 그래프 순회를 시작하기 전에 가망 없는 set을 최대한 먼저 걸러야 한다. GEM은 ColBERTv2의 initial filtering 전략을 채택해 query-centroid relevance matrix Sc,q = C · Q^T를 계산한다(C는 k2 × d centroid 행렬, Q는 mq × d 질의 토큰 행렬, Eq. 15). 각 질의 토큰 qi마다 top-t 최근접 centroid를 고르고 모든 토큰에 대해 합집합을 취해 관련 cluster 집합 Cquery를 만든다. 이 단계가 false positive를 다소 만들더라도, 이후 그래프 순회 모듈이 높은 정밀도로 정제한다는 것이 저자들의 논리다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의 2: multi-entry point 초기화</h3>
+      <p>Chamfer 기준 관련 set들은 여러 cluster에 분산될 수 있으므로, 단일 entry point는 편향된 초기화와 긴 순회 경로를 낳는다. GEM은 Cquery의 각 cluster에서 무작위로 하나씩 정점을 골라 entry point 집합 E를 구성한다. 이 multi-entry 전략은 인덱스 쪽의 semantic shortcut과 결합되어 Chamfer 최근접 이웃의 fragmentation을 효과적으로 완화한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의 3: cluster-guided parallel beam search (Algorithm 5)</h3>
+      <p>각 entry point마다 local priority queue W_ep를 두고, 전역으로 공유되는 result heap R과 visited set V를 초기화한 뒤 thread별로 병렬 탐색한다. 각 thread는 W_ep에서 qCH 기준 질의에 가장 가까운 P를 꺼내고, R의 현재 최원거리 tau와 비교해 qCH(Q,P) &gt; tau이면 그 경로를 유망하지 않다고 보고 종료한다. 그렇지 않으면 P의 이웃 P&#x27;를 확장하는데, 이때 cluster-aware pruning 조건이 적용된다: P&#x27;가 아직 방문되지 않았고 Ctop(P&#x27;)와 Cquery의 교집합이 비어 있지 않은 경우에만 qCH를 계산한다(즉 pruned cluster에 속한 이웃은 거리 계산조차 없이 즉시 배제). 통과한 P&#x27;는 W_ep, V, R에 삽입되고, |R| &gt; ef이면 가장 먼 후보를 제거한 뒤 tau를 갱신한다. R과 V가 thread 간 공유되므로 한 경로가 더 가까운 노드를 찾으면 tau가 갱신되어 다른 경로들이 더 일찍 pruning할 수 있고, 한 번 방문된 정점은 다른 thread가 건너뛰어 중복 계산을 막는다(암묵적 통신). 모든 W_ep가 소진되면 종료한다. qCH는 sum over q in Q of min over p in P of dX(NN(q), NN(p))로 정의되며(Eq. 16), NN(.)은 Cquant 상 최근접 centroid이다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>질의 4: exact Chamfer rerank</h3>
+      <p>마지막으로 result heap R에 남은 후보 중 top-k를 정확한(exact) Chamfer distance로 재정렬해 반환한다(Algorithm 5, Line 20). rerank 후보 pool 크기(#rerank)는 정확도-지연 trade-off를 조절하는 질의 파라미터이다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 유지보수</h3>
+      <p>새 vector set 삽입 시에는 먼저 fine-to-coarse centroid 계층에 벡터를 매핑하고 TF-IDF 기반 pruning으로 비정보적 cluster를 제거한 뒤, qEMD 기준 최근접 이웃에 연결하고 cross-cluster bridge를 갱신해 국소·전역 연결성을 유지한다. 삭제는 graph 기반 인덱스에서 흔한 lazy deletion을 따른다: 제거 대상 정점을 inactive로 표시해 탐색에서 건너뛰게 하고, 이후 유지보수 단계에서 물리적으로 제거한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Algorithm 1: 인덱스 구축 파이프라인</h3>
+      <p>입력은 데이터베이스 D, two-stage cluster 개수 k1/k2, degree limit M, 파라미터 f, 학습 pair T이며 출력은 GEM proximity graph G이다. 절차는 (1) V = D, E = 공집합으로 G 초기화, (2) ClusterAndAssign(D, k1, k2)로 Cquant, Cindex, Ctop 계산, (3) Cindex의 각 cluster Ci에 대해 LocalGraphAndBridges(Alg. 2) 호출, (4) InjectShortcuts(G, T, M)(Alg. 4) 호출, (5) G 반환이다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>quantized EMD (qEMD)</h3>
+      <p>EMD는 성질은 좋지만 정확한 계산 비용이 지나치게 크다. GEM은 각 토큰 벡터를 Cquant의 최근접 centroid로 매핑하고 원 벡터 간 거리를 centroid 간 거리로 근사한다(dX(pi, p&#x27;j) ≈ dX(NN(pi), NN(p&#x27;j)), Eq. 13). 이로부터 두 가지 계산 이득이 생긴다. 첫째, 모든 centroid-to-centroid 거리를 k1 × k1 codebook에 미리 계산해 두면 고차원 거리 계산 대신 constant-time lookup이 가능하다. 둘째, centroid 공간이 축소되어 transport plan이 훨씬 희소해지므로 EMD 최적화 자체가 빨라진다. qEMD는 Eq. 14로 정의된다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>quantized Chamfer (qCH)</h3>
+      <p>검색 단계에서는 같은 codebook을 사용해 qCH(Q,P) = sum_{q in Q} min_{p in P} dX(NN(q), NN(p))로 set-to-set 유사도를 근사한다(Eq. 16). 즉 그래프 구축은 qEMD, 그래프 탐색은 qCH, 최종 rerank는 exact CH라는 3단 구조이며, 이것이 metric decoupling과 quantization을 결합한 GEM의 계산 뼈대이다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조 요약</h3>
+      <p>최종 인덱스는 (a) Cquant centroid 집합과 k1 × k1 거리 codebook, (b) Cindex cluster 공간과 set별 Ctop(P) 할당 정보, (c) 정점이 vector set인 단일 global proximity graph(각 정점의 degree &lt;= M, cluster 내부 edge + cross-cluster bridge edge + semantic shortcut edge로 구성)로 이루어진다. 논문은 index size가 작은 이유를 &#x27;그래프 인덱스는 주로 edge 정보만 저장하며, 이 저장 오버헤드는 단일/다중 벡터 설정과 무관하고 데이터셋 크기에 비하면 무시할 만하다&#x27;는 점으로 설명한다.</p>
+      <span class="source-ref">PDF p. 6, 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>네 개의 multi-vector retrieval 벤치마크를 사용한다(Table 1). MS MARCO v1(corpus 8.8M, vectors 597M, queries 6980, text-only)은 in-domain 평가용, LoTTE pooled(2.4M, 339M, 2931, text-only)는 out-of-domain 평가용이며, OK-VQA(114K, 14M, 5046, text+image)와 EVQA(50K, 9.7M, 3750, text+image)는 multi-modal vision-language 검색용이다. 텍스트 데이터셋은 ColBERTv2로, multi-modal 데이터셋은 preFLMR로 인코딩하며 벡터 차원은 모두 d = 128이다. 모든 데이터셋의 train split은 shortcut 강화용으로, test split의 질의와 사람이 라벨링한 relevance annotation은 평가용 ground truth로 사용한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상(baseline)</h3>
+      <p>PLAID, DESSERT, MUVERA, IGP 네 가지 대표 기법과, 저자들이 Section 3.2에서 정의한 naive graph baseline인 MVG를 비교한다. MVG는 기본 경쟁력을 확보하기 위해 인덱싱과 검색 모두에 qCH를 사용하고 GEM과 동일한 인덱싱 파라미터를 쓴다. 모든 경쟁자는 원 논문 또는 소스코드의 설정을 따르되 최적 질의 성능이 나오도록 튜닝했다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>주요 파라미터</h3>
+      <p>GEM의 |Cquant|는 선행 연구의 경험식(16 × sqrt(#vectors)에 가장 가까운 2의 거듭제곱)을 따라 MSMARCO/LoTTE 262K, OK-VQA/EVQA 32K로 설정한다. |Cindex|는 cluster당 약 10^3~10^4개 객체가 들어가도록 MSMARCO 40K, LoTTE 10K, OK-VQA/EVQA 1K로 설정한다. 그래프 구축은 M = 24, ef_construction = 80이며 학습 인스턴스의 20%를 무작위 표본으로 뽑아 shortcut을 만든다. 질의 시 t = 4로 고정하고 ef_search와 #rerank를 조절해 효율-정확도 trade-off를 탐색한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표와 환경</h3>
+      <p>질의 성능은 Recall@k(Eq. 17), MRR@k(Eq. 18), Success@k(Eq. 19), 질의 지연시간(데이터셋별 10회 반복 평균)으로, 인덱싱 성능은 indexing time과 index size로 평가한다. 주의할 점은 ground truth가 brute-force kNN이 아니라 &#x27;이 passage로 질의에 답할 수 있다&#x27;는 사람의 직접 라벨이라는 것이며, 따라서 결과는 end-to-end semantic similarity retrieval 성능을 반영한다. 구현은 C++(g++ -Ofast, OpenMP)이고, 실험 환경은 Intel Xeon Gold 6218 CPU 4소켓(160 threads), 1.5TB RAM의 Ubuntu 서버이다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ablation 설계</h3>
+      <p>각 구성요소를 개별적으로 비활성화하고 동일 정확도(MSMARCO는 MRR@10 = 0.42, OKVQA는 MRR@10 = 0.30)에 도달하는 데 필요한 질의 지연시간을 비교한다. 변형은 w/o EMD(그래프 구축에 qEMD 대신 qCH 사용), w/o multi-path(모든 entry point를 단일 queue에 넣고 greedy 확장), w/o pruning(adaptive TF-IDF 대신 |Ctop| = 3 고정), w/o bridge(bridge의 cluster별 최소 1이웃 제약 제거), w/o shortcut(shortcut 제거), w/o all(전부 제거)이다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>end-to-end 성능 (Table 2)</h3>
+      <p>GEM은 네 데이터셋 모두에서 모든 질의 품질 지표를 앞서면서 동시에 가장 낮은 지연시간을 기록했다. MSMARCO에서 R@100 = 0.915, S@100 = 0.920, MRR@10 = 0.447, 140ms이며, 최상위 baseline인 PLAID는 R@100 = 0.913, S@100 = 0.919, MRR@10 = 0.395로 352ms가 걸렸다. LoTTE는 0.749 / 0.910 / 0.592 / 210ms, OKVQA는 0.410 / 0.754 / 0.236 / 165ms, EVQA는 0.895 / 0.895 / 0.477 / 197ms이다. 동등하거나 더 나은 품질을 유지하면서 speedup은 MSMARCO 최대 2.5배, LoTTE 2.2배, OKVQA 3.9배, EVQA 2.8배였다. 참고로 EVQA는 질의당 정답 문서가 정확히 하나이므로 recall과 success 값이 항상 동일하다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>k를 바꿔가며 (Table 3)</h3>
+      <p>MSMARCO에서 GEM은 k = 10, 100, 1000에 각각 88ms, 140ms, 212ms만 필요했고(R@10 = 71.1, R@100 = 91.5, R@1k = 97.5), 비슷한 recall에 도달하기 위해 최상위 baseline들은 각각 222ms(PLAID), 310ms(MUVERA), 336ms(DESSERT)가 필요했다. LoTTE에서 GEM은 133ms, 210ms, 251ms였고 가장 빠른 baseline들도 288ms(PLAID), 338ms(IGP), 412ms(IGP, 원문 표기 그대로)가 필요했다. 흥미로운 관찰은 naive baseline인 MVG가 작은 k에서는 잘 튜닝된 baseline들과 경쟁할 만하다는 것이다(k가 작으면 fragmented neighbor 문제가 덜 심각하고, ef_search를 조금 키우면 local minima를 빠져나올 수 있으며, qCH quantization 덕에 후보당 거리 계산 비용도 낮다). 그러나 k = 1000에서 다른 방법들이 약 97% recall에 도달할 때 MVG는 94.2%에서 saturate되어, ef_search를 더 키우고 시간을 더 써도 개선이 제한된다. 이는 non-metric Chamfer 위에 그래프를 세운 데서 오는 구조적 열위이며, metric decoupling과 shortcut, multi-entry search 같은 GEM의 최적화가 필요함을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>정확도-지연 trade-off (Figure 8)</h3>
+      <p>동일 MRR@10 기준으로 GEM은 OKVQA에서 DESSERT 대비 최대 16배, MUVERA 대비 10배, IGP 대비 8배 빠르고, MSMARCO에서 PLAID 대비 최대 5배 빠르다. 또한 GEM과 PLAID는 모든 데이터셋에서 안정적인 반면 IGP, DESSERT, MUVERA는 데이터셋별 성능 변동이 크다. 반대로 MVG는 OKVQA, EVQA 같은 복잡한 multi-modal 데이터셋에서 일부 경쟁자를 앞서는데, 저자들은 이를 set-level 인덱싱이 fine-grained semantics를 보존하기 때문으로 해석하며, 반대로 MUVERA처럼 set을 단일 벡터로 압축하면 데이터 복잡도가 커질수록 정보 손실이 악화된다고 설명한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱싱 성능 (Figure 9)</h3>
+      <p>GEM의 index size는 MSMARCO 2GB, OKVQA 27MB로 MUVERA(10.5GB / 139MB)와 DESSERT(107GB / 1.8GB)보다 훨씬 작고, IGP(2.3GB / 59MB), PLAID(1.5GB / 34MB)와는 비슷한 수준이다. DESSERT는 LSH가 만드는 많은 hash 값을, MUVERA는 모든 vector set의 FDE를 저장해야 해서 데이터셋 크기에 비례해 커진다. indexing time은 MSMARCO/LoTTE에서 PLAID, DESSERT, IGP, GEM이 모두 clustering이 지배적이라 비슷하며(GPU 가속 가능하므로 실무적 부담이 작다고 저자들은 주장), 작은 데이터셋인 OKVQA/EVQA에서는 clustering 비중이 줄어 GEM의 그래프 구축이 PLAID의 IVF, IGP의 단일 벡터 그래프, DESSERT의 LSH보다 느려진다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ablation (Figure 10)</h3>
+      <p>동일 정확도 목표 도달 기준으로 각 구성요소 제거의 영향은 다음과 같다. w/o EMD(구축에 qCH 사용)는 두 데이터셋 모두에서 지연시간을 약 2배로 늘려 metric decoupling의 중요성을 확인시켰다. w/o multi-path는 지연시간을 70~80% 증가시켰는데, 경로 간 visited/best-found 공유가 없으면 pruning이 덜 공격적이고 탐색 공간이 느리게 수축해 더 큰 ef_search가 필요해지기 때문이다. w/o pruning(|Ctop| = 3 고정)은 길고 주제적으로 다양한 문서의 recall을 해치고 짧은 문서는 불필요한 cluster 유지로 효율을 잃게 만든다. w/o bridge constraint는 성능을 크게 떨어뜨리며 특히 corpus가 큰 MSMARCO에서 하락폭이 크다. w/o shortcut은 상대적으로 완만한 저하를 보여, shortcut은 소수의 hard-to-find 케이스를 위한 보조 장치임을 시사한다. 모든 구성요소를 제거한 w/o all은 지연시간을 5~6배 증가시켜, 구성요소들이 상호보완적으로 함께 작동함을 보여준다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>파라미터 및 확장성 분석</h3>
+      <p>t(질의 토큰당 선택할 최근접 cluster 수)는 t = 1이면 pruning이 과도해 정확도가 부족하고, t = 2에서 크게 개선되며 t = 8로 갈수록 이득이 포화되어 기본값을 t = 4로 둔다(Figure 11). #rerank는 k = 10일 때 정확도에 뚜렷한 영향을 주지만 k = 100에서는 영향이 미미하다(Figure 12). M과 ef_construction은 M = 8/ef = 40이면 그래프 품질이 부족하고 M = 48/ef = 200이면 인덱스와 구축 시간이 크게 늘지만 질의 성능 개선은 미미해(hop마다 검증할 후보가 늘어 오히려 지연시간을 해침) M = 24, ef_construction = 80이 최적 trade-off이다(Figure 13). 확장성 측면에서 corpus 크기 N을 1/8N에서 N으로 늘리면 지연시간은 67ms -&gt; 85ms로 완만히 증가(그래프 인덱스의 로그적 질의 비용과 부합)하지만 인덱싱 시간은 0.13h -&gt; 1.79h로 증가하고, set당 평균 벡터 수 m을 1/8m에서 m으로 늘리면 지연시간이 44ms -&gt; 85ms, 인덱싱 시간이 0.06h -&gt; 1.79h로 증가한다. 즉 GEM의 효율은 N보다 m에 훨씬 민감하며, 이는 set-to-set 거리 계산에서 비롯된다(Figure 14). shortcut 표본 비율은 5%/10%/20%/40%가 각각 약 10k/20k/40k/80k edge를 만들며, 20%까지는 trade-off가 좋아지지만 40%에서는 그래프가 조밀해져 hop마다 거리 계산이 늘어 오히려 저하되므로 기본값은 20%이다(Figure 15). |Cquant|(131k/262k/524k)에 대해서는 성능이 robust하다고 정성적으로만 보고한다(Figure 16).</p>
+      <span class="source-ref">PDF p. 12, 13, 14</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 시사점</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>저자의 결론</h3>
+      <p>GEM은 metric decoupling을 적용한 set-level dual graph로 복잡한 inter-set 관계를 표현하고, adaptive TF-IDF 기반 clustering과 semantic shortcut으로 이를 정제하며, quantized distance estimation과 cluster-guided multi-path search로 효율과 정확도를 함께 끌어올려 semantic expressiveness와 retrieval efficiency 사이의 간극을 메운다. 실험적으로 검색 품질과 지연시간에서 state-of-the-art를 일관되게 능가하면서 index size와 구축 비용은 비슷하거나 더 작아, 대규모 multi-vector retrieval의 실용적 해법임을 확인했다고 결론짓는다. 향후 과제로는 ultra-low-bit quantization 통합을 통한 계산·메모리 비용 추가 절감을 제시한다.</p>
+      <span class="source-ref">PDF p. 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자의 정리: 이 논문의 설계 논리</h3>
+      <p>GEM의 기여는 개별 기법의 신규성보다는 &#x27;왜 multi-vector에 그래프 인덱스를 그대로 쓸 수 없는가&#x27;를 정확히 진단하고(non-metric Chamfer + 비싼 set-to-set 거리) 각 진단에 1:1로 대응하는 장치를 배치한 co-design에 있다고 볼 수 있다. non-metric 문제에는 EMD 상한 관계를 이용한 metric decoupling과 shortcut이, 비싼 거리 계산에는 centroid codebook 기반 qEMD/qCH가, 그래프의 전역 연결성 문제에는 TF-IDF pruning + bridge 제약이, 탐색 초기화 편향에는 cluster filtering + multi-entry가 대응한다. ablation의 w/o all이 5~6배 저하를 보인다는 사실은 이 장치들이 개별적으로가 아니라 결합해서 작동함을 뒷받침한다(analyst_inference).</p>
+      <span class="source-ref">PDF p. 2, 4, 12</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>GEM 전체 동작 흐름 (인덱싱 + 질의)</h3>
+                <span class="source-ref">PDF p. 4, 5, 6, 7, 8</span>
+              </div>
+              <p>인덱싱 단계는 two-stage clustering, TF-IDF 기반 cluster 할당, qEMD 기반 cluster-level local graph, cross-cluster bridge, semantic shortcut 주입으로 구성된다. 질의 단계는 cluster filtering, multi-entry 초기화, qCH 기반 cluster-guided 병렬 beam search, exact Chamfer rerank로 구성된다. Algorithm 1~5 및 Figure 2, 3, 5, 6, 7의 구조를 그대로 반영했다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph IDX[&quot;인덱싱 단계&quot;]
+    A[&quot;데이터베이스 D: vector set 모음&quot;] --&gt; B[&quot;1단계 k-means: 세밀 centroid Cquant&quot;]
+    B --&gt; C[&quot;2단계 클러스터링: 거친 centroid Cindex&quot;]
+    C --&gt; D[&quot;TF-IDF 점수로 상위 r개 cluster만 할당: Ctop of P&quot;]
+    D --&gt; E[&quot;cluster 내부 local APG 구축: qEMD 기준 top-f ANN&quot;]
+    E --&gt; F[&quot;cross-cluster bridge 병합: 전역 연결 그래프&quot;]
+    F --&gt; G[&quot;학습 pair 기반 semantic shortcut 주입&quot;]
+    G --&gt; H[&quot;GEM dual graph 인덱스&quot;]
+  end
+  subgraph QRY[&quot;질의 단계&quot;]
+    Q[&quot;질의 Q: 토큰 벡터 집합&quot;] --&gt; R1[&quot;cluster filtering: 토큰별 top-t centroid 합집합으로 Cquery 구성&quot;]
+    R1 --&gt; R2[&quot;multi-entry 초기화: Cquery의 cluster마다 entry point 1개&quot;]
+    R2 --&gt; R3[&quot;qCH 기반 병렬 beam search&quot;]
+    R3 --&gt; R4[&quot;cluster-aware early pruning: Cquery와 무관한 이웃은 거리 계산 없이 배제&quot;]
+    R4 --&gt; R5[&quot;exact Chamfer로 top-k rerank&quot;]
+    R5 --&gt; R6[&quot;최종 top-k vector set&quot;]
+  end
+  H --&gt; R3
+  H --&gt; R4
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 GEM의 차이</h3>
+                <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+              </div>
+              <p>기존 접근은 단일 벡터 인덱스를 재사용하거나(pooling, FDE, LSH sketch) Chamfer 위에 그래프를 그대로 세우는데, 각각 false positive 과다, token-level 정렬 손실, pruning 부재, non-metric으로 인한 fragmented neighbor 문제를 겪는다. GEM은 set-level 정점 + EMD 구축/Chamfer 탐색 분리 + 양자화 + cluster 기반 탐색으로 이를 해소한다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph PRIOR[&quot;기존 방식&quot;]
+    P1[&quot;모든 토큰 벡터를 단일 ANN 인덱스에 pooling&quot;] --&gt; P2[&quot;vector-level 유사도가 set-level 관련성을 보장하지 못함: 무관 후보 과다, 인덱스 비대&quot;]
+    M1[&quot;MUVERA: vector set을 단일 FDE 벡터로 사상&quot;] --&gt; M2[&quot;token-level 정렬 손실, 타당한 사상은 과도한 투영 차원 요구&quot;]
+    D1[&quot;DESSERT: LSH sketch로 압축&quot;] --&gt; D2[&quot;sketch-level pruning 부재로 exhaustive scan, hash 저장 부담&quot;]
+    N1[&quot;MVG: Chamfer 위에 그래프 직접 구축&quot;] --&gt; N2[&quot;non-metric으로 fragmented neighbor와 local optima, 거리 계산 과다&quot;]
+  end
+  subgraph GEM[&quot;GEM&quot;]
+    G1[&quot;vector set 자체가 정점: set-level dual graph&quot;] --&gt; G2[&quot;metric decoupling: 구축은 EMD, 탐색과 relevance는 Chamfer&quot;]
+    G2 --&gt; G3[&quot;semantic shortcut으로 EMD 사각지대 보완&quot;]
+    G3 --&gt; G4[&quot;qEMD와 qCH codebook lookup으로 거리 비용 절감&quot;]
+    G4 --&gt; G5[&quot;cluster filtering과 multi-entry 병렬 탐색으로 조기 pruning&quot;]
+    G5 --&gt; G6[&quot;높은 정확도와 낮은 지연시간, 작은 인덱스&quot;]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>MSMARCO 질의 지연시간 비교 (낮을수록 좋음)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 2 · MSMARCO, default settings, k=100 기준 end-to-end 지연시간
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MSMARCO MRR@10 비교 (높을수록 좋음)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 2 · MSMARCO, default settings
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>데이터셋별 GEM과 최상위 baseline PLAID의 지연시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 2 · default settings, k=100. PLAID는 Table 2에서 전반적으로 가장 강한 baseline이라 대표로 선택
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MSMARCO에서 k에 따른 GEM 지연시간과 동일 recall 달성에 필요한 최상 baseline 지연시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 3 · MSMARCO. GEM은 k별로 ef_search=800/2000/8000. baseline은 각 k에서 비슷한 recall에 도달하는 데 필요한 최소 지연시간 기준
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>TF-IDF guided cluster pruning의 효과: set당 평균 cluster membership 수</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 5 · Figure 4 · Ours(40K cluster, w/o TF-IDF) vs Ours(40K cluster, w/ TF-IDF). 본문에 수치가 명시된 두 설정만 표시하며 PLAID(260K) 막대의 수치는 본문에 없어 제외
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MSMARCO 인덱스 크기 비교 (작을수록 좋음)</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Figure 9 (본문에 명시된 수치) · default settings. raw data를 제외한 index 파일만 측정. MVG의 수치는 본문에 명시되지 않아 제외
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>OKVQA 인덱스 크기 비교 (작을수록 좋음)</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Figure 9 (본문에 명시된 수치) · default settings. raw data 제외. DESSERT의 1.8GB를 MB로 환산해 표기
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>OKVQA 확장성: corpus 크기 N과 set당 벡터 수 m에 따른 질의 지연시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-7"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 13 · Figure 14 (본문에 명시된 수치) · OKVQA. 한 번에 한 요인만 변화. 본문에 수치가 명시된 1/8 지점과 전체 지점만 표시(중간 지점 0.25/0.5/0.75 값은 본문에 없음)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>OKVQA 확장성: N과 m에 따른 인덱스 구축 시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-8"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 13 · Figure 14 (본문에 명시된 수치) · OKVQA. 본문에 수치가 명시된 1/8 지점과 전체 지점만 표시
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>문제 진단과 해법이 1:1로 대응한다. non-metric Chamfer -&gt; metric decoupling(EMD 구축), EMD의 역방향 사각지대 -&gt; semantic shortcut, 비싼 set-to-set 거리 -&gt; qEMD/qCH codebook, index redundancy -&gt; TF-IDF pruning, 초기화 편향 -&gt; multi-entry search라는 식으로 각 설계 결정에 명시적 근거가 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 5, 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>저자들이 스스로 naive baseline(MVG)을 정의하고 실험에 포함시켜, &#x27;그래프를 쓰면 좋아진다&#x27;가 아니라 &#x27;그래프를 어떻게 써야 좋아지는가&#x27;를 분리해 보였다. MVG가 k=1000에서 94.2%로 saturate되는 결과는 metric decoupling의 필요성을 직접 증명하는 통제된 증거에 가깝다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>CH(Q,P) &lt;= EMD(Q,P)라는 상한 관계를 통해 EMD 그래프를 따라가는 탐색이 Chamfer 공간에서도 타당하다는 논거를 제시하여, 단순한 휴리스틱 교체가 아니라 부등식에 기반한 설계임을 밝혔다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>shortcut 학습에 추가 라벨링이나 exhaustive search가 필요 없고 embedding 모델 학습에 이미 쓰이는 (query, positive passage) 쌍을 재사용한다는 점에서, 추가 데이터 비용 없이 적용 가능한 실용적 설계이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>품질과 지연시간의 trade-off를 한쪽으로 몰지 않고, 네 데이터셋 전부에서 모든 품질 지표 1위와 최저 지연시간을 동시에 달성했으며 index size까지 PLAID/IGP 수준으로 유지했다. 세 축(품질, 속도, 크기)을 동시에 보고한 점이 평가의 신뢰도를 높인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>in-domain(MSMARCO), out-of-domain(LoTTE), multi-modal(OKVQA, EVQA)로 평가 범위를 나누어, 특정 도메인에 과적합된 최적화가 아님을 보였다. 또한 vision-language에서의 성능 한계를 자기 방법의 문제가 아니라 embedding 모델의 문제로 분리해 진단했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>ablation을 &#x27;정확도 하락&#x27;이 아니라 &#x27;동일 정확도 도달에 필요한 지연시간&#x27;으로 측정해, 각 구성요소의 기여를 검색 시스템에서 실제로 중요한 축(같은 품질을 얼마나 싸게 얻는가)으로 환산했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>vision-language 검색(OKVQA, EVQA)에서는 탐색 시간을 늘려도 모든 방법의 Success@100이 약 75~89%에 머물고 brute-force조차 약 77~90%에 그친다. 저자들은 이 병목이 검색 알고리즘이 아니라 더 강력한 embedding 모델과 개선된 multi-modal feature alignment의 부재에 있다고 명시한다. 즉 GEM은 이 영역의 절대 품질 한계를 해결하지 못한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>GEM의 효율은 corpus 크기 N보다 set당 평균 벡터 수 m에 훨씬 민감하며, 이는 set-to-set 거리 계산에서 기인한다고 저자들이 명시한다. 저자들은 이 때문에 많은 연구가 더 적은 벡터로 semantics를 보존하는 embedding 학습 최적화에 집중한다고 언급하며, GEM은 그러한 발전과 상호보완적으로 결합될 수 있다고 밝힌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>결론에서 저자들은 향후 과제로 ultra-low-bit quantization 통합을 통한 계산·메모리 비용 추가 절감을 제시하는데, 이는 현재 구현이 아직 이러한 초저비트 양자화를 포함하지 않았음을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 14</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>semantic shortcut과 adaptive cluster cutoff(decision tree)는 모두 학습용 (query, ground-truth) pair에 의존하며, &#x27;테스트 질의가 학습 데이터와 유사한 분포를 따른다&#x27;는 가정 위에서 작동한다고 논문이 직접 밝힌다. 질의 분포가 크게 이동하는 상황에서의 성능은 논문에서 별도로 평가되지 않아 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>인덱스 유지보수(insertion/lazy deletion) 절차는 Section 4.6에서 설계로 기술되지만, 삽입·삭제 처리량, 갱신 후 검색 품질 저하 여부, 재구축 주기에 대한 실험적 평가는 제시되지 않는다(확인되지 않음).</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>그래프 구축이 cluster를 순차적으로 처리하며 이전 cluster에서 만들어진 이웃과 병합하는 구조(Algorithm 2, 3)이므로, cluster 처리 순서에 따라 bridge의 이웃 구성이 달라질 수 있다. 이 순서 의존성이 최종 그래프 품질에 미치는 영향은 논문에서 분석되지 않는다(확인되지 않음).</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>작은 데이터셋(OKVQA, EVQA)에서는 clustering 비중이 줄면서 GEM의 그래프 구축이 PLAID의 IVF, IGP의 단일 벡터 그래프, DESSERT의 LSH보다 느려진다고 논문이 직접 보고한다. 즉 인덱싱 시간 이점은 대규모 텍스트 코퍼스에 한정된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>실험 환경이 160 threads / 1.5TB RAM의 대형 서버이고 검색 알고리즘 자체가 multi-entry 병렬 탐색에 기반하므로, thread 수가 제한된 환경이나 메모리 제약 환경에서의 지연시간 이득은 그대로 재현되지 않을 수 있다. 논문은 thread 수를 바꿔가며 측정한 결과를 제시하지 않는다(확인되지 않음).</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>질의 분포가 학습 데이터와 크게 다를 때(진정한 out-of-distribution) semantic shortcut과 decision tree 기반 adaptive cluster cutoff는 여전히 이득을 주는가, 아니면 잘못된 shortcut이 탐색을 오도하는가?</h3>
+              </div>
+              <p>논문은 shortcut의 유효성이 &#x27;테스트 질의가 학습 데이터와 유사한 분포를 따른다&#x27;는 가정에 기댄다고 직접 명시한다. LoTTE는 out-of-domain 벤치마크지만 그 자체의 train split을 사용하므로, 학습-질의 분포 자체가 어긋나는 경우는 평가되지 않았다.</p>
+              <span class="source-ref">PDF p. 7, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>EMD 대신 다른 metric(예: 삼각부등식을 만족하는 다른 set distance)을 구축 metric으로 썼을 때도 유사한 이득이 나오는가? 즉 이득의 원천이 &#x27;EMD 특유의 성질&#x27;인가 &#x27;어떤 metric이든 metric이기만 하면 되는가&#x27;?</h3>
+              </div>
+              <p>ablation의 w/o EMD는 qEMD를 qCH로 바꾸는 비교(즉 metric vs non-metric)만 수행하며, 다른 metric 후보와의 비교는 없다. CH &lt;= EMD 상한 관계가 논거의 핵심이므로, 상한 관계가 느슨한 다른 metric에서는 결과가 달라질 여지가 있다.</p>
+              <span class="source-ref">PDF p. 6, 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>set당 벡터 수 m에 대한 민감도를 구조적으로 완화할 수 있는가? 예를 들어 저자들이 언급한 벡터 pruning/pooling 기반 embedding 최적화와 GEM을 결합하면 품질 손실 없이 m 의존성을 낮출 수 있는가?</h3>
+              </div>
+              <p>저자들은 m 민감도가 set-to-set 거리 계산에서 기인하며 GEM이 embedding 측 발전과 상호보완적으로 결합될 수 있다고 언급하지만, 실제 결합 실험은 수행하지 않았다.</p>
+              <span class="source-ref">PDF p. 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>동적 워크로드(대량 삽입/삭제가 반복되는 환경)에서 dual graph의 cluster 할당과 bridge 제약이 시간이 지나며 열화되는가? 재구축 없이 얼마나 오래 품질을 유지할 수 있는가?</h3>
+              </div>
+              <p>Section 4.6이 insertion과 lazy deletion 절차를 설계로 제시하지만, 이에 대한 실험 결과가 논문에 전혀 없다.</p>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>결론에서 제시한 ultra-low-bit quantization을 qEMD/qCH codebook 위에 얹었을 때, 이미 centroid 근사를 쓰고 있는 GEM의 정확도가 추가로 얼마나 손상되는가?</h3>
+              </div>
+              <p>GEM은 이미 centroid quantization(qEMD/qCH)으로 근사 오차를 감수하고 있는데, 여기에 또 다른 양자화 층을 더할 때의 오차 누적은 논문에서 논의되지 않았다.</p>
+              <span class="source-ref">PDF p. 6, 14</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>multi-entry 병렬 beam search의 이득 중 알고리즘 자체의 기여와 하드웨어 병렬성(160 threads)의 기여는 각각 얼마인가? thread 수가 적은 환경에서도 70~80% latency 이득이 유지되는가?</h3>
+              </div>
+              <p>w/o multi-path ablation은 entry point를 단일 queue로 합치는 변경으로 병렬성과 알고리즘 구조를 동시에 바꾸므로 두 요인이 분리되지 않으며, 논문은 thread 수 변화 실험을 제시하지 않는다.</p>
+              <span class="source-ref">PDF p. 8, 9, 12</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Multi-vector retrieval (vector set search)</dt>
+              <dd>
+                질의와 데이터를 각각 하나의 벡터가 아니라 벡터들의 집합(set of vectors)으로 표현하고, 집합 간 유사도로 top-k를 검색하는 패러다임. 논문에서는 문서/vector set, 토큰/벡터를 서로 바꿔 쓸 수 있는 용어로 사용한다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim / Chamfer similarity (CH)</dt>
+              <dd>
+                집합 A의 각 벡터가 집합 B의 모든 벡터에 대해 얻는 최대 유사도를 합산한 점수. CH(A,B) = sum_{a in A} max_{b in B} Sim(a,b) (Eq. 1). ColBERT의 late interaction 점수와 동일하며, metric이 아니고 삼각부등식을 만족하지 않는다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Earth Mover&#x27;s Distance (EMD)</dt>
+              <dd>
+                두 집합 사이의 최적 transport plan에 따른 최소 이동 비용으로 정의되는 거리(Eq. 11-12). 삼각부등식을 만족하는 metric이며, CH(Q,P) &lt;= EMD(Q,P)라는 상한 관계 때문에 GEM의 그래프 구축 metric으로 채택된다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Metric decoupling</dt>
+              <dd>
+                그래프 구축에 쓰는 거리(EMD)와 검색·relevance 산출에 쓰는 거리(Chamfer)를 분리하는 GEM의 핵심 설계. non-metric Chamfer 위에 직접 그래프를 세울 때 생기는 fragmented neighbor와 local optima 문제를 완화한다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>qEMD / qCH (quantized EMD / Chamfer)</dt>
+              <dd>
+                각 토큰 벡터를 Cquant의 최근접 centroid로 매핑하고, 미리 계산된 k1 × k1 centroid 거리 codebook을 조회해 set-to-set 거리를 근사하는 기법. qEMD는 그래프 구축에(Eq. 14), qCH는 질의 시 탐색에(Eq. 16) 사용된다.
+                <span class="source-ref">PDF p. 6, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Two-stage clustering (Cquant, Cindex)</dt>
+              <dd>
+                1단계에서 표본 벡터에 k-means를 적용해 세밀한 centroid 집합 Cquant(양자화 vocabulary)를 얻고, 2단계에서 Cquant를 재클러스터링해 거친 centroid 집합 Cindex(set-level 인덱싱용 cluster 공간)를 얻는 절차.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>TF-IDF guided cluster pruning</dt>
+              <dd>
+                TF(set 내에서 해당 cluster에 매핑된 토큰 수)와 IDF(그 cluster를 공유하는 set 수의 로그 역가중치)의 곱으로 cluster 중요도를 매기고, 상위 r개 cluster Ctop(P)에만 set을 할당해 index redundancy를 줄이는 기법(Eq. 5-9).
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Dual graph (intra-cluster graph + global graph)</dt>
+              <dd>
+                cluster 내부의 local proximity graph들과, 여러 cluster에 속한 set(bridge)을 통해 이들을 하나로 엮은 global graph로 구성된 GEM의 인덱스 구조. 각 set은 논리적으로 여러 cluster에 속하지만 물리적으로는 단일 정점으로 저장된다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Bridge set / bridge constraint</dt>
+              <dd>
+                여러 cluster에 할당되어 cluster 간 연결 통로 역할을 하는 vector set. degree limit M을 넘을 때도 Ctop(P)의 각 cluster에서 최소 하나의 이웃을 유지하도록 강제하는 제약(Algorithm 3, Line 7-10)이 global connectivity를 보존한다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Semantic shortcut</dt>
+              <dd>
+                Chamfer 상으로는 가깝지만 EMD 그래프에서는 여러 hop 떨어진 두 정점을 직접 잇는 edge. 학습 (query, ground-truth) pair로 현재 그래프를 검색해 ground-truth가 상위에 없을 때 top-1 결과와 ground-truth 사이에 추가한다(Algorithm 4).
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cluster filtering / Cquery</dt>
+              <dd>
+                질의-centroid relevance matrix Sc,q = C · Q^T를 계산하고 각 질의 토큰의 top-t 최근접 centroid들의 합집합으로 관련 cluster 집합 Cquery를 만드는 질의 전처리. 그래프 순회 이전에 무관 영역을 배제한다(ColBERTv2의 initial filtering 차용).
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cluster-guided early pruning</dt>
+              <dd>
+                beam search 중 이웃 P&#x27;의 Ctop(P&#x27;)가 Cquery와 교집합이 없으면 거리 계산조차 하지 않고 즉시 배제하는 규칙(Algorithm 5, Line 14).
+                <span class="source-ref">PDF p. 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-entry search</dt>
+              <dd>
+                Cquery의 각 cluster에서 하나씩 entry point를 뽑아 여러 thread가 병렬로 beam search를 수행하는 전략. result heap R과 visited set V를 전역 공유해 한 경로의 발견이 다른 경로의 pruning을 앞당긴다.
+                <span class="source-ref">PDF p. 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>APG (Approximate Proximity Graph)</dt>
+              <dd>
+                각 정점이 데이터 객체이고 충분히 유사한 정점 쌍을 간선으로 잇는 근사 근접 그래프. 단일 벡터 ANN에서 정확도-효율 trade-off가 가장 좋은 방식이며, GEM은 정점을 벡터가 아닌 vector set으로 확장한다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MVG (Multi-Vector Graph)</dt>
+              <dd>
+                저자들이 Section 3.2에서 정의한 naive baseline. vector set을 정점으로 하고 Chamfer distance로 간선을 잇는 단순 확장이며, non-metric 문제와 거리 계산 비용 문제를 그대로 안고 있다.
+                <span class="source-ref">PDF p. 4, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PLAID / DESSERT / MUVERA / IGP</dt>
+              <dd>
+                비교 대상 기법들. PLAID는 centroid interaction으로 후보를 pruning하는 ColBERTv2 계열, DESSERT는 LSH sketch 기반 최초의 native multi-vector 기법, MUVERA는 vector set을 FDE(Fixed Dimensional Encoding) 단일 벡터로 사상하는 기법, IGP는 centroid 벡터 위에 proximity graph를 세우는 기법이다.
+                <span class="source-ref">PDF p. 2, 3, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ef_search / #rerank</dt>
+              <dd>
+                GEM의 질의 파라미터. ef_search는 result heap이 유지하는 후보 수(탐색 폭)를, #rerank는 그래프 탐색 후 exact Chamfer로 재정렬할 후보 pool 크기를 결정하며, 둘 다 정확도-지연 trade-off를 조절한다.
+                <span class="source-ref">PDF p. 8, 9, 13</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문 상단의 학회 정보가 &#x27;Conference&#x27;17, Washington, DC, USA&#x27;와 미기재 ACM ISBN/DOI로 되어 있어 ACM 템플릿의 채워지지 않은 placeholder로 보이며, 실제 게재 학회·저널명은 본문에서 확정적으로 명시되지 않았다. GitHub 저장소 경로가 &#x27;sigmod26gem&#x27;이어서 SIGMOD 2026 투고를 암시하나 본문에는 명시적 확인이 없다. 따라서 venue는 null로 두었다.</li><li>Figure 10(ablation)의 각 변형별 지연시간 값은 그래프 축 라벨로만 존재하고 본문 텍스트에는 배수(2배, 70~80%, 5~6배)만 서술되어 있어, 개별 막대의 정확한 ms 수치를 근거로 한 차트는 생성하지 않았다.</li><li>Figure 11(파라미터 t의 영향)과 Figure 12(#rerank의 영향)에 대응하는 정확한 MRR@10 / Success@10 / Success@100 수치는 그래프로만 제시되고 본문에 숫자가 기재되어 있지 않아 확인할 수 없다.</li><li>Figure 16(|Cquant| 변화의 영향)에 대해서는 &#x27;성능이 |Cquant| 선택에 robust하다&#x27;는 정성적 설명만 제공되며 구체적인 정확도 수치는 본문에 명시되지 않았다.</li><li>본문 5.2.1절(p.10)의 &#x27;On LoTTE...&#x27; 문장에서 baseline latency 비교 시 &#x27;IGP&#x27;가 338ms와 412ms 두 차례 언급되어 있어 둘 중 하나가 다른 방법의 오기일 가능성이 있으나, 원문 그대로 기재했으며 412ms에 해당하는 방법을 확실히 특정할 수 없다.</li><li>Figure 13(M, ef_construction의 영향)의 Index Size(1.1 / 2.0 / 3.8 GB)와 Index Time(15.5 / 28.0 / 37.9 hr) 막대 수치가 각 설정(M=8 / 24 / 48)에 어떻게 대응하는지는 본문에 직접 명시되어 있지 않아 차트로 만들지 않았다. 또한 5.4.3절 본문은 &#x27;M = 8과 ef_construction = 24&#x27;로 적고 있으나 Figure 13 범례는 &#x27;M=8, ef_cons=40&#x27;으로 되어 있어 두 값이 불일치한다.</li><li>Table 2의 MVG index size 및 indexing time 수치는 본문 텍스트에 명시되지 않아 인덱스 크기 차트에서 제외했다.</li><li>Figure 4의 PLAID(260K clusters) 막대에 해당하는 정확한 평균 cluster membership 수치는 본문에 기재되어 있지 않아(&#x27;high redundancy&#x27;라는 정성적 서술만 존재) 차트에서 제외했다.</li><li>GEM의 shortcut 및 adaptive cluster cutoff가 학습 데이터에 의존함에도, 학습 pair를 전혀 사용할 수 없는 데이터셋에서의 성능(즉 shortcut/adaptive cutoff 없이 순수 unsupervised 구성)에 대한 별도 평가는 제시되지 않았다(w/o shortcut ablation은 MSMARCO/OKVQA에서만 수행됨).</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "MSMARCO 질의 지연시간 비교 (낮을수록 좋음)", "labels": ["PLAID", "DESSERT", "MUVERA", "IGP", "MVG", "GEM"], "values": [352, 344, 310, 340, 360, 140], "unit": "ms", "xLabel": "방법", "yLabel": "질의 지연시간"}, {"canvasId": "chart-1", "type": "bar", "title": "MSMARCO MRR@10 비교 (높을수록 좋음)", "labels": ["PLAID", "DESSERT", "MUVERA", "IGP", "MVG", "GEM"], "values": [0.395, 0.372, 0.385, 0.389, 0.421, 0.447], "unit": "score", "xLabel": "방법", "yLabel": "MRR@10"}, {"canvasId": "chart-2", "type": "bar", "title": "데이터셋별 GEM과 최상위 baseline PLAID의 지연시간", "labels": ["MSMARCO / GEM", "MSMARCO / PLAID", "LoTTE / GEM", "LoTTE / PLAID", "OKVQA / GEM", "OKVQA / PLAID", "EVQA / GEM", "EVQA / PLAID"], "values": [140, 352, 210, 462, 165, 570, 197, 211], "unit": "ms", "xLabel": "데이터셋 / 방법", "yLabel": "질의 지연시간"}, {"canvasId": "chart-3", "type": "bar", "title": "MSMARCO에서 k에 따른 GEM 지연시간과 동일 recall 달성에 필요한 최상 baseline 지연시간", "labels": ["k=10 / GEM", "k=10 / PLAID", "k=100 / GEM", "k=100 / MUVERA", "k=1000 / GEM", "k=1000 / DESSERT"], "values": [88, 222, 140, 310, 212, 336], "unit": "ms", "xLabel": "k / 방법", "yLabel": "질의 지연시간"}, {"canvasId": "chart-4", "type": "bar", "title": "TF-IDF guided cluster pruning의 효과: set당 평균 cluster membership 수", "labels": ["MSMARCO / w/o TF-IDF", "MSMARCO / w TF-IDF", "LoTTE / w/o TF-IDF", "LoTTE / w TF-IDF", "OKVQA / w/o TF-IDF", "OKVQA / w TF-IDF", "EVQA / w/o TF-IDF", "EVQA / w TF-IDF"], "values": [43.8, 2.9, 94, 5.8, 76, 3, 120.8, 1.7], "unit": "개", "xLabel": "데이터셋 / 설정", "yLabel": "set당 평균 cluster 수"}, {"canvasId": "chart-5", "type": "bar", "title": "MSMARCO 인덱스 크기 비교 (작을수록 좋음)", "labels": ["GEM", "PLAID", "IGP", "MUVERA", "DESSERT"], "values": [2, 1.5, 2.3, 10.5, 107], "unit": "GB", "xLabel": "방법", "yLabel": "인덱스 크기"}, {"canvasId": "chart-6", "type": "bar", "title": "OKVQA 인덱스 크기 비교 (작을수록 좋음)", "labels": ["GEM", "PLAID", "IGP", "MUVERA", "DESSERT"], "values": [27, 34, 59, 139, 1800], "unit": "MB", "xLabel": "방법", "yLabel": "인덱스 크기"}, {"canvasId": "chart-7", "type": "bar", "title": "OKVQA 확장성: corpus 크기 N과 set당 벡터 수 m에 따른 질의 지연시간", "labels": ["1/8 N", "N (전체)", "1/8 m", "m (전체)"], "values": [67, 85, 44, 85], "unit": "ms", "xLabel": "설정", "yLabel": "질의 지연시간"}, {"canvasId": "chart-8", "type": "bar", "title": "OKVQA 확장성: N과 m에 따른 인덱스 구축 시간", "labels": ["1/8 N", "N (전체)", "1/8 m", "m (전체)"], "values": [0.13, 1.79, 0.06, 1.79], "unit": "hour", "xLabel": "설정", "yLabel": "인덱싱 시간"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
