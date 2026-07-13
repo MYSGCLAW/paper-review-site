@@ -667,7 +667,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>20</small>
+          <small>21</small>
         </a>
         
 
@@ -704,7 +704,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>1</small>
+          <small>0</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -722,8 +722,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 20편</span>
-        <span class="stat">전체 항목 28개</span>
+        <span class="stat">논문 21편</span>
+        <span class="stat">전체 항목 29개</span>
       </div>
     </div>
   </header>
@@ -734,7 +734,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>20개 문서</small>
+      <small>21개 문서</small>
     </a>
     
 
@@ -778,7 +778,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>20</small>
+          <small>21</small>
         </a>
         
 
@@ -815,7 +815,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>1</small>
+          <small>0</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -836,33 +836,16 @@
     </div>
 
     <span class="pending-queue-count">
-      1편 대기 중
+      0편 대기 중
     </span>
   </div>
 
   <div class="pending-queue-list">
     
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            1
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>col_Bandit.pdf</strong>
-            <span>등록 시각 · 2026-07-12 23:26</span>
-          </div>
-
-          <div class="pending-queue-size">
-            1.2 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-next">
-              다음 분석
-            </span>
-          </div>
-        </div>
-        
+      <div class="pending-queue-empty">
+        현재 분석을 기다리는 논문이 없습니다.
+      </div>
+    
   </div>
 </section>
 <!-- PENDING_QUEUE_SECTION_END -->
@@ -877,7 +860,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">20개</span>
+        <span class="section-count">21개</span>
       </div>
 
       <div class="library-grid">
@@ -929,6 +912,32 @@
       </p>
 
       <a class="open-link" href="papers/bisco-llm-lookup-free-binary-spherical-coding-for-extreme-low-bit-large-language-model-compression/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/col-bandit/">
+            Col-Bandit: Query-Time Top-K Estimation for Late-Interaction Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Roi Pony, Adi Raz Goldfarb, Oshri Naparstek, Idan Friedman, Udi Barzelay, Eli Schwartz</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2602.02827v2 [cs.IR])</p>
+
+      <p class="summary">
+        Col-Bandit은 ColBERT류 late-interaction retriever의 rerank 단계를 가속하는 query-time 알고리즘이다. 핵심 관찰은 N개의 candidate document와 T개의 query token이 만드는 implicit N×T MaxSim Matrix H에서, 각 문서의 최종 점수 Si가 해당 행의 row-sum이라는 점이다(Eq. 3-5, p.3-4). 기존 exhaustive scorer는 이 행렬의 모든 cell을 계산하지만, 논문은 top-K 문서 집합을 &#x27;식별(identify)&#x27;하는 데에는 행렬 전체가 필요하지 않다고 본다(Figure 2, p.4). Col-Bandit은 이를 finite-population Top-K identification 문제로 정식화하고, 부분적으로 공개된(partially revealed) cell로부터 문서별 신뢰구간 [LCBi, UCBi]를 유지한다. 이 구간은 support [a,b]에서 나오는 deterministic hard bound와 empirical Bernstein–Serfling inequality(Bardenet and Maillard, 2015) 기반의 variance-adaptive radius r_i^eff(Eq. 7)를 결합한 hybrid interval이다(p.4). 매 round마다 공유된 random permutation π를 따라 B(=4)개의 query token cell을 active set 전체에 대해 한 번의 SIMD pass로 공개하고, UCB가 K번째로 큰 LCB(threshold τr) 아래로 떨어진 문서를 영구 제거한다(Algorithm 1, p.5). 남은 K+M명의 survivor는 Full-MaxSim과 동일한 fused kernel로 전체 T개 token에 대해 정확히 rescore되므로, 최종 점수는 exhaustive baseline과 bit-identical하다(p.5). relaxation knob αef는 compute–fidelity trade-off를 조절하는 단일 파라미터로, αef=1에서는 δ-PAC guarantee(Theorem 1)를 제공하고 배포 기본값 αef=0.2는 formal certificate 없이 calibrated된 운용점을 제공한다(p.5, p.9). 실험적으로 index 수정이나 retraining 없이 BEIR 5개 corpus와 REAL-MM-RAG 4개 corpus(최대 2.68M documents)에서 모든 corpus Overlap@5 ≥ 0.90을 유지하면서 서버 CPU(AMD EPYC 7763, AVX2)에서 single-thread 평균 7.0×, Apple M1 Max(NEON)에서 12.9× wall-clock speedup을 보고한다(p.2, p.8).
+      </p>
+
+      <a class="open-link" href="papers/col-bandit/">
         보고서 열기 →
       </a>
     </article>
