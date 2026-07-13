@@ -667,7 +667,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>19</small>
+          <small>20</small>
         </a>
         
 
@@ -704,7 +704,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>2</small>
+          <small>1</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -722,8 +722,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 19편</span>
-        <span class="stat">전체 항목 27개</span>
+        <span class="stat">논문 20편</span>
+        <span class="stat">전체 항목 28개</span>
       </div>
     </div>
   </header>
@@ -734,7 +734,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>19개 문서</small>
+      <small>20개 문서</small>
     </a>
     
 
@@ -778,7 +778,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>19</small>
+          <small>20</small>
         </a>
         
 
@@ -815,7 +815,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>2</small>
+          <small>1</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -836,7 +836,7 @@
     </div>
 
     <span class="pending-queue-count">
-      2편 대기 중
+      1편 대기 중
     </span>
   </div>
 
@@ -845,28 +845,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             1
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>TileMaxSim_IO-Aware GPU MaxSim Scoring with.pdf</strong>
-            <span>등록 시각 · 2026-07-12 23:26</span>
-          </div>
-
-          <div class="pending-queue-size">
-            775.4 KB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-next">
-              다음 분석
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            2
           </div>
 
           <div class="pending-queue-paper">
@@ -879,8 +857,8 @@
           </div>
 
           <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
+            <span class="pending-queue-status queue-next">
+              다음 분석
             </span>
           </div>
         </div>
@@ -899,7 +877,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">19개</span>
+        <span class="section-count">20개</span>
       </div>
 
       <div class="library-grid">
@@ -1159,6 +1137,32 @@
       </p>
 
       <a class="open-link" href="papers/quantifying-and-expanding-the-theoretical-capacity-of-late-interaction-retrieval-models/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/tilemaxsim-io-aware-gpu-maxsim-scoring-with/">
+            TileMaxSim: IO-Aware GPU MaxSim Scoring with Dimension Tiling and Fused Product Quantization
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Ashutosh Sharma</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2606.26439v1, cs.IR)</p>
+
+      <p class="summary">
+        TileMaxSim은 ColBERT 계열 multi-vector retrieval의 핵심 연산인 MaxSim scoring을 GPU에서 IO-aware하게 재구현한 Triton kernel 계열이다. 저자는 현대 GPU에서 MaxSim에 대한 roofline analysis를 수행하여, naive 구현이 N_q×N_d 크기의 similarity matrix를 HBM에 명시적으로 materialize하기 때문에 peak HBM bandwidth의 5~18%만 사용한다는 점을 문제의 근본 원인으로 지목한다(pp.1-2). 해결책은 FlashAttention이 attention에 적용한 IO-aware paradigm을 MaxSim 고유의 matmul→max→sum reduction 구조에 맞게 재설계하는 것이다. 구체적으로 (1) query tile과 document tile을 동시에 tiling하여 BQ=N_q로 설정함으로써 각 document embedding을 HBM에서 정확히 한 번만 읽는 multi-query SRAM tiling(V2-MQ), (2) embedding dimension을 128-wide chunk로 분할해 d=64~768을 하나의 kernel family로 처리하는 dimension tiling, (3) shared-memory lookup table로 PQ 압축 문서를 명시적 decompression 없이 채점하는 fused PQ decompression+scoring(TileMaxSim-PQ)의 세 기법을 제시한다(pp.2-5). 실험(H100)에서 V2-MQ는 N_q=32, N_d=128, B=100K 조건에서 peak HBM bandwidth의 80.2%를 달성하고 PyTorch Loop 대비 220배, PyTorch Naive 대비 6.5배, PLAID의 실제 GPU scoring 경로 대비 1.7~1.9배 빠르며, 동일 노드에서 측정한 WARP(CPU) 대비 scoring throughput이 469배 높다(pp.6-10). 동시에 MS MARCO와 세 개 BEIR 데이터셋에서 reference PyTorch MaxSim과 동일한 ranking·retrieval metric을 산출하여 exact quality를 보존하며, PLAID의 scoring kernel을 drop-in 교체할 경우 100K candidates 기준 end-to-end pipeline latency가 약 98% 감소한다(pp.9-10).
+      </p>
+
+      <a class="open-link" href="papers/tilemaxsim-io-aware-gpu-maxsim-scoring-with/">
         보고서 열기 →
       </a>
     </article>

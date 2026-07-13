@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>TileMaxSim: IO-Aware GPU MaxSim Scoring with Dimension Tiling and Fused Product Quantization</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>TileMaxSim: IO-Aware GPU MaxSim Scoring with Dimension Tiling and Fused Product Quantization</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Ashutosh Sharma</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2606.26439v1, cs.IR)</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">주요 구성요소와 단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘과 IO 분석</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 함의</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>TileMaxSim은 ColBERT 계열 multi-vector retrieval의 핵심 연산인 MaxSim scoring을 GPU에서 IO-aware하게 재구현한 Triton kernel 계열이다. 저자는 현대 GPU에서 MaxSim에 대한 roofline analysis를 수행하여, naive 구현이 N_q×N_d 크기의 similarity matrix를 HBM에 명시적으로 materialize하기 때문에 peak HBM bandwidth의 5~18%만 사용한다는 점을 문제의 근본 원인으로 지목한다(pp.1-2). 해결책은 FlashAttention이 attention에 적용한 IO-aware paradigm을 MaxSim 고유의 matmul→max→sum reduction 구조에 맞게 재설계하는 것이다. 구체적으로 (1) query tile과 document tile을 동시에 tiling하여 BQ=N_q로 설정함으로써 각 document embedding을 HBM에서 정확히 한 번만 읽는 multi-query SRAM tiling(V2-MQ), (2) embedding dimension을 128-wide chunk로 분할해 d=64~768을 하나의 kernel family로 처리하는 dimension tiling, (3) shared-memory lookup table로 PQ 압축 문서를 명시적 decompression 없이 채점하는 fused PQ decompression+scoring(TileMaxSim-PQ)의 세 기법을 제시한다(pp.2-5). 실험(H100)에서 V2-MQ는 N_q=32, N_d=128, B=100K 조건에서 peak HBM bandwidth의 80.2%를 달성하고 PyTorch Loop 대비 220배, PyTorch Naive 대비 6.5배, PLAID의 실제 GPU scoring 경로 대비 1.7~1.9배 빠르며, 동일 노드에서 측정한 WARP(CPU) 대비 scoring throughput이 469배 높다(pp.6-10). 동시에 MS MARCO와 세 개 BEIR 데이터셋에서 reference PyTorch MaxSim과 동일한 ranking·retrieval metric을 산출하여 exact quality를 보존하며, PLAID의 scoring kernel을 drop-in 교체할 경우 100K candidates 기준 end-to-end pipeline latency가 약 98% 감소한다(pp.9-10).</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6, 7, 8, 9, 10</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MaxSim의 성능 병목은 연산량이 아니라 N_q×N_d similarity matrix를 HBM에 materialize하는 메모리 트래픽이며, naive 구현은 peak HBM bandwidth의 5~18%만 사용한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>query tile 크기 BQ를 N_q와 같게 설정하는 multi-query tiling(V2-MQ)이 각 document embedding을 HBM에서 정확히 한 번만 읽게 만드는 핵심 최적화이며, 이것 하나로 BQ=16 대비 4.5배 높은 bandwidth를 얻는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 7, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>V2-MQ는 H100 peak HBM bandwidth의 80.2%를 달성하면서 achieved compute는 peak FP16 Tensor Core의 4.3%에 그쳐, kernel이 설계 의도대로 완전히 memory-bound 영역에서 동작함을 확인시킨다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>TileMaxSim은 exact MaxSim을 계산하므로 MS MARCO와 세 BEIR 데이터셋에서 reference PyTorch MaxSim과 동일한 nDCG@10/MRR@10/Recall을 산출한다(최대 score 차이 9×10⁻⁶).</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>PLAID의 scoring kernel을 drop-in 교체하면 100K candidates 기준 scoring latency가 267.4ms에서 1.21ms로 줄고 end-to-end pipeline latency가 약 98% 감소한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>PQ 압축 문서에 대해서는 lookup table을 SRAM/L2에 상주시키는 fused kernel이 decompress-then-score 대비 최대 약 31배의 HBM IO 감소를 만들지만, 실제 speedup은 1.0~2.9배로 상대적으로 작다. PQ scoring이 덜 memory-bound하기 때문이라는 것이 저자의 설명이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>성능 이득은 배치 크기에 크게 의존한다. B=1K에서는 launch-bound라 PLAID가 근소하게 더 빠르고, bandwidth 이득은 B가 커져 kernel이 bandwidth-bound가 될 때 비로소 드러난다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim scoring이 GPU 하드웨어를 활용하지 못한다</h3>
+      <p>ColBERT와 같은 multi-vector retrieval 모델은 질의 토큰 임베딩 집합과 문서 토큰 임베딩 집합 사이의 MaxSim scoring(각 query token에 대해 document token들과의 유사도 최댓값을 구한 뒤 query token에 대해 합산)을 수행한다. 저자는 현대 GPU에서 MaxSim에 대한 roofline analysis를 수행한 결과, naive 구현들이 peak HBM bandwidth의 5~18%만 달성한다고 보고한다. 근본 원인은 N_q×N_d 크기의 similarity matrix S를 HBM에 명시적으로 materialize한다는 점이다. S는 한 번 max-reduction에 쓰이고 곧바로 버려지는 중간 데이터인데, 이를 HBM에 쓰고 다시 읽는 메모리 트래픽이 전체 성능을 지배한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>대규모 검색에서 scoring 비용이 latency를 지배한다</h3>
+      <p>질의 토큰 수 N_q, 문서 토큰 수 N_d, 임베딩 차원 d에 대해 naive MaxSim은 O(N_q·N_d·d)의 곱셈-누산(multiply-accumulate) 연산을 요구한다. 질의당 수백만 개의 후보 문서를 채점해야 하는 대규모 검색 환경에서 이 비용은 전체 retrieval latency를 지배하게 되며, 특히 candidate generation 단계가 개선될수록 scoring이 차지하는 상대적 비중은 더 커진다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>CPU 중심 scoring이라는 아키텍처 불일치</h3>
+      <p>저자는 MaxSim이 본질적으로 GPU 병렬성에 잘 맞는 batched matrix operation임에도 불구하고 PLAID, WARP, GEM 등 주요 multi-vector 엔진들이 scoring을 CPU에 국한시키고 있다는 점을 아키텍처 불일치(architectural mismatch)로 규정한다. 근거로 현대 GPU가 CPU보다 30~50배 높은 메모리 대역폭(H100 3.35 TB/s vs. dual-channel DDR5 약 100 GB/s)을 제공한다는 점을 든다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>PLAID: centroid 기반 근사와 PyTorch scoring</h3>
+      <p>PLAID는 centroid pruning과 product quantization을 도입해 ColBERTv2 대비 최대 7배의 latency 감소를 달성했다. 그러나 CUDA kernel로 처리하는 부분은 centroid 기반 근사 decompression뿐이고 최종 scoring은 PyTorch에서 실행하며, bandwidth utilization은 보고되지 않았다. 또한 exact MaxSim이 아니라 centroid-approximate 방식이다.</p>
+      <span class="source-ref">PDF p. 1, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>WARP: CPU에 국한된 SIMD 최적화</h3>
+      <p>WARP는 SIMD 가속 C++ kernel로 CPU scoring을 최적화하여 XTR reference 구현 대비 41배, PLAID 대비 3배의 속도 향상을 달성했다. 하지만 implicit decompression을 위한 lookup table과 two-stage aggregation을 사용하는 CPU 중심 기여이며, GPU의 높은 메모리 대역폭은 활용하지 못한다.</p>
+      <span class="source-ref">PDF p. 1, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>GEM: CPU OpenMP 기반 graph index</h3>
+      <p>GEM은 인덱스 구성(construction)에 Earth Mover&#x27;s Distance를, 검색(search)에 Chamfer distance를 사용하는 graph-based index를 구축하지만 CPU 기반 OpenMP 병렬화에 의존한다. 결국 PLAID, WARP, GEM 세 시스템 모두 MaxSim scoring을 CPU에 국한시키고 있다는 것이 저자의 공통된 지적이다.</p>
+      <span class="source-ref">PDF p. 1, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>GPU 라이브러리는 single-vector 거리만 지원</h3>
+      <p>NVIDIA cuVS(CAGRA, IVF-PQ, HNSW)와 FAISS 같은 GPU 가속 벡터 검색 라이브러리는 단일 벡터(single-vector) 거리 계산만 지원하며, 임베딩 집합에 대한 MaxSim의 matmul-max-sum reduction을 네이티브로 계산할 수 없다. 이들 라이브러리를 MaxSim에 적용하려면 결국 전체 N_q×N_d similarity matrix를 materialize해야 하는데, 이것이 바로 TileMaxSim이 없애려는 병목이다.</p>
+      <span class="source-ref">PDF p. 5, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>EMVB: 빠른 candidate generation, 표준 scoring</h3>
+      <p>EMVB는 bitvector prefiltering과 product quantization으로 ColBERT retrieval을 가속하고 메모리 footprint를 줄여 빠른 candidate generation을 가능하게 하지만, 최종 MaxSim scoring은 IO-aware하지 않은 표준적인 CPU 또는 GPU 연산에 위임한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>(1) Bandwidth gap의 근본 원인 분석</h3>
+      <p>현대 GPU에서 MaxSim에 대한 roofline analysis를 수행하여, naive 구현이 similarity matrix materialization 때문에 peak bandwidth의 17.6%만 달성함을 보이고, memory-bound ceiling에 도달하기 위해 필요한 IO 감소량이 2.0배임을 정량화한다(Section 2.3). 이는 최적화의 방향이 compute 증대가 아니라 memory traffic 감소임을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(2) d&gt;128을 위한 dimension tiling</h3>
+      <p>embedding dimension을 128-wide chunk로 분할하는 tiling 전략을 제시하여 register/SRAM 용량을 초과하지 않으면서 하나의 kernel family가 d=64부터 d=768까지의 임베딩을 모두 처리하도록 한다. d=768에서 peak bandwidth의 86%를 달성한다(Section 3).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(3) Fused PQ decompression+scoring</h3>
+      <p>TileMaxSim-PQ는 명시적 decompression 없이 shared-memory lookup table을 통해 PQ 압축 문서를 채점하며, decompress-then-score 파이프라인 대비 최대 약 31배의 HBM IO 감소를 달성한다(Section 4).</p>
+      <span class="source-ref">PDF p. 2, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(4) 80% peak bandwidth utilization</h3>
+      <p>multi-query tiled kernel(V2-MQ)이 각 document embedding을 HBM에서 정확히 한 번만 읽음으로써 H100 peak HBM bandwidth의 80.2%를 달성한다. 저자는 비교 맥락으로, compute-bound kernel인 FlashAttention-3가 peak compute의 약 75%를 달성한다는 점을 언급하며 TileMaxSim은 memory-bound kernel로서 compute가 아니라 bandwidth를 목표로 한다고 설명한다(Section 6).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(5) Exact quality 보존과 포괄적 평가</h3>
+      <p>MS MARCO와 세 개의 BEIR benchmark에서 reference MaxSim과 동일한 ranking을 유지하면서, loop 기반 scoring 대비 220배, WARP 대비 469배(동일 노드 기준)의 scoring throughput을 달성한다. 또한 near-linear한 multi-GPU scaling, 100K~500K 문서 구간에서 일정한 83M docs/s throughput, dimension(64~768)·precision·token count·domain 전반의 견고성을 보인다(Sections 6, 6.10).</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>(6) Drop-in 시스템 통합</h3>
+      <p>ColBERTv2/PLAID의 scoring kernel을 직접 대체하는 실험을 통해, 100K candidates에서 동일한 retrieval quality를 유지하면서 end-to-end pipeline latency를 최대 98%까지 감소시킴을 보인다(Table 15).</p>
+      <span class="source-ref">PDF p. 2, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>설계 원리: MaxSim에 맞춘 IO-aware kernel</h3>
+      <p>TileMaxSim은 FlashAttention의 IO-aware paradigm(중간 행렬을 HBM에 쓰지 않고 SRAM에서 tiling하여 처리)을 따르되, MaxSim 고유의 matmul→max→sum reduction 구조에 맞춰 kernel을 새로 설계한다. 저자는 이 구조가 softmax 정규화가 필요한 attention과도 다르고, scatter-sum 방식의 sparse retrieval과도 다르다고 명시한다. 핵심은 similarity matrix S를 HBM에 절대 materialize하지 않고, query token별 running maximum을 register에 유지한 채 document embedding을 SRAM으로 streaming하는 것이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>세 가지 축의 기법</h3>
+      <p>전체 설계는 세 축으로 구성된다. 첫째, multi-query SRAM tiling은 query tile과 document tile을 동시에 tiling하여 BQ=N_q일 때 각 document embedding을 HBM에서 정확히 한 번만 읽는 IO-optimal 패턴을 만든다. 둘째, dimension tiling은 임베딩 차원을 128-wide chunk로 나눠 부분 dot product를 누산함으로써 d&gt;128인 모델에서도 register/SRAM 용량 제약을 넘지 않게 한다. 셋째, fused PQ decompression+scoring은 PQ code를 decompress하지 않고 shared-memory lookup table 조회로 곧바로 유사도를 누산한다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Kernel variant의 진화 경로</h3>
+      <p>논문은 V1(per-query-token) → V2(per-document) → V2-MQ(multi-query tiling)의 순서로 kernel을 제시하며, 각 단계에서 어떤 IO 비효율이 남는지를 드러낸다. V1은 document tile을 query token마다 반복 로드하여 최적 대비 N_q배의 document read가 발생하고, V2는 중간 token-max buffer를 없애고 sum-reduction을 fuse하지만 여전히 document embedding을 N_q번 다시 읽는다. V2-MQ만이 single-pass IO-optimal 패턴을 달성한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>주요 구성요소와 단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>구성요소 1 — TileMaxSim V1 (Per-Query-Token Kernel, Algorithm 1)</h3>
+      <p>(batch, query-token) 쌍마다 하나의 thread block을 배정한다. 각 block은 하나의 query token을 register에 로드하고 BLOCK_Nd 크기의 document token tile들을 순회하며 SRAM에 로드해 dot product를 계산하고 running maximum을 갱신한다. 구조상 각 document tile이 query token마다 한 번씩 반복 로드되므로 최적 대비 N_q배 많은 document read가 발생한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2 — TileMaxSim V2 (Per-Document Kernel, Algorithm 2)</h3>
+      <p>문서 하나당 하나의 program을 배정한다. 각 program은 N_q개 query token 전체를 순회하며 document token tile들에 대해 running max를 갱신한 뒤 합산한다. 이로써 V1의 중간 token-max buffer를 제거하고 sum-reduction을 kernel 내부로 fuse하지만, 각 document embedding을 여전히 N_q번 다시 읽는다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3 — TileMaxSim V2-MQ (Multi-Query Tiling, 최적 variant, Algorithm 3 / Figure 1)</h3>
+      <p>query token과 document token을 동시에 tiling하는 최고 성능 variant이다. BQ×d 크기의 query tile을 한 번만 register에 로드하고, BN×d 크기의 document tile들을 SRAM으로 streaming하며 tl.dot(Tensor Core)로 부분 similarity S_t=Qtile·D_t^T를 계산한 뒤 BQ개의 running maxima로 reduction하고 atomic_add로 scores[b]에 누적한다. BQ=N_q로 설정하면 각 document embedding이 HBM에서 정확히 한 번만 읽히는 IO-optimal 패턴이 된다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4 — TileMaxSim-PQ (Fused decompression+scoring)</h3>
+      <p>Phase 1(Table Construction)에서 (N_q, M) 크기의 program grid가 query token과 sub-quantizer별 per-query distance(lookup) table T[i,m,k]를 미리 계산해 SRAM/L2에 상주시킨다. Phase 2(Fused Lookup+Max+Sum)에서 각 program이 (batch, query-token) 쌍을 담당하여 document token마다 M개의 1-byte PQ code를 로드해 table lookup으로 유사도를 근사 누산하고 running maximum을 갱신한다. decompressed vector는 HBM에 전혀 기록되지 않는다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 단계 1~2 — Grid 실행과 query tile 로드</h3>
+      <p>Grid를 (B, ⌈N_q/BQ⌉)개의 program으로 실행한다. 각 program은 (batch 내 document, query-token tile) 조합 하나를 담당한다. 각 program은 자신의 BQ×d query tile(Qtile)을 HBM에서 register로 한 번만 로드하고, BQ개의 running maxima를 −∞로 초기화한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 단계 3~4 — Document tile streaming과 running max 갱신</h3>
+      <p>document token tile마다(총 ⌈N_d/BN⌉개) BN×d 크기의 document tile D_t를 HBM에서 SRAM으로 로드한다. 이어서 tl.dot(Tensor Core 연산)으로 부분 similarity S_t=Qtile·D_t^T(BQ×BN)를 계산하고, m ← max(m, rowmax(S_t))로 register 내 running maxima를 갱신한다. 이 S_t는 SRAM/register에만 존재하며 HBM에 기록되지 않는다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 단계 5 — 최종 score 누적</h3>
+      <p>모든 document tile을 처리한 뒤, BQ개의 running maxima의 합을 atomic_add로 scores[b]에 HBM에 누적한다. 이 전체 과정에서 similarity matrix나 token-max buffer 같은 중간 텐서는 전혀 HBM에 다시 기록되지 않는다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동작 단계 6~7 — PQ 경로(Phase 1 / Phase 2)</h3>
+      <p>PQ로 압축된 문서를 다룰 때는 Phase 1에서 (N_q, M) program grid가 각각 d_sub 차원의 K개 dot product를 계산하여 distance table T[i,m,k]=q_i[sub-vector m]^⊤·C[m,k]를 구축한다. 이 table은 H100의 50MB L2 cache에 들어갈 만큼 작아 해당 query의 scoring 단계 동안 L2에 상주한다. Phase 2에서는 각 program이 (batch, query-token) 쌍 하나를 맡아 document token tile마다 M개의 1-byte PQ code를 로드해 table lookup으로 유사도를 누산하고 running maximum을 갱신한다. 모든 문서가 동일한 table을 공유하므로 table access의 locality가 높다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 IO 분석</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>IO-optimal 조건: BQ = N_q</h3>
+      <p>V2-MQ의 핵심 알고리즘적 통찰은 query tile 크기 BQ를 N_q와 같게 잡는 것이다. 이렇게 하면 하나의 program이 모든 query token을 한 번의 pass에서 처리하므로, document embedding을 다시 읽을 이유가 사라진다. 논문의 tile size ablation(Table 12)은 BQ=32(=N_q)로 설정하는 것이 가장 큰 효과를 내는 최적화이며 BQ=16 대비 4.5배 높은 bandwidth를 달성한다고 보고한다. BQ=32 계열 내에서는 BN=32가 최적으로 1,302 GB/s, 39.7M docs/s를 기록한다.</p>
+      <span class="source-ref">PDF p. 3, 4, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Arithmetic intensity와 roofline</h3>
+      <p>논문의 Arithmetic Intensity Comparison(Section 3)에 따르면, TileMaxSim은 naive 구현 대비 HBM IO를 2.0배 줄이며 arithmetic intensity를 16.1에서 32.0 FLOP/byte로 높인다. 이는 이론적으로 2.0배의 speedup에 해당하고, N_q=64로 늘어나면 IO 감소량은 3.0배로 증가한다. 모든 MaxSim variant는 14~32 FLOP/byte 구간에 있어 H100의 crossover point인 591 FLOP/byte에 훨씬 못 미치므로 깊게 memory-bound이며, 따라서 최적화 방향이 memory traffic 감소여야 한다는 것이 저자의 논지이다.</p>
+      <span class="source-ref">PDF p. 3, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Dimension tiling 알고리즘</h3>
+      <p>d&gt;128인 경우 V2-MQ는 자동으로 dimension-tiled variant로 전환하여 embedding dimension을 128 크기의 chunk로 tiling한다. 각 chunk에 대한 부분 dot product를 누산한 뒤에야 max를 계산하므로, max reduction의 의미론이 보존되면서도 register/SRAM 용량 제약을 넘지 않는다. 실측에서 bandwidth utilization은 d가 커질수록 오히려 증가하는데(d=64의 44%에서 d=768의 86%), 저자는 큰 임베딩이 더 나은 memory coalescing을 제공하기 때문이라고 설명한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PQ fused kernel의 IO 이득</h3>
+      <p>TileMaxSim-PQ는 decompress-then-score 파이프라인 대비 HBM IO를 최대 약 31.0배 줄인다(218,124,288 bytes vs. 6,758,400,000 bytes, B=100K, N_q=32, N_d=128, M=16, K=256 기준). 각 document token이 M바이트의 code로만 표현되므로 arithmetic intensity는 오히려 더 낮아지지만(batch size에 따라 5~31 FLOP/byte), decompressed vector의 HBM read를 shared-memory table lookup으로 대체하므로 memory-bound IO가 빠른 SRAM access로 전환된다.</p>
+      <span class="source-ref">PDF p. 5, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>하드웨어와 워크로드</h3>
+      <p>실험은 NVIDIA H100(peak HBM bandwidth 3.35 TB/s, peak FP16 Tensor Core 1,979 TFLOP/s)에서 수행되며, 모든 timing은 CUDA event로 50회 측정한다. 주 워크로드는 ColBERT 관례를 따르는 synthetic uniform-length MaxSim workload(d=128, N_q=32, N_d∈{64,128,256}, batch size B=100~500K)이고, 추가로 embedding dimension sweep(d∈{64,128,256,384,768})과 query-token sweep(N_q∈{8,16,32,64})을 수행한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실제 데이터셋</h3>
+      <p>MS MARCO에서는 ColBERTv2 임베딩(128차원)으로 인코딩된 200개 dev query와 각각의 top-1000 BM25 candidate(총 187,565 query-passage 쌍)를 사용하고, 대규모 처리량 추정에는 전체 8.8M-passage corpus를 참조한다. BEIR benchmark로는 SciFact(문서 5,183/질의 300), NFCorpus(문서 3,633/질의 323), TREC-COVID(전체 171K corpus 중 50,000-문서 subset/질의 50)를 사용한다. Drop-in end-to-end 통합 테스트와 WARP CPU 비교에는 BEIR-NFCorpus PLAID index를 사용한다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Baseline</h3>
+      <p>비교 대상은 PyTorch Naive(torch.einsum으로 전체 N_q×N_d similarity matrix를 계산한 뒤 max-reduce 및 sum), PyTorch Loop(query token을 순회하며 한 번에 similarity row 하나씩 계산), torch.compile(mode=&quot;max-autotune&quot;), PLAID GPU(ColBERTv2/PLAID의 colbert_score 경로: batched D@Q.T 후 max-over-tokens 및 sum-over-query), PyTorch PQ(PQ 압축 문서에 대한 decompress-then-score), 그리고 동일 노드에서 직접 벤치마크한 최신 CPU multi-vector 엔진 WARP이다.</p>
+      <span class="source-ref">PDF p. 6, 7, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>측정 지표</h3>
+      <p>성능 지표로 Latency(ms), Throughput(docs/sec, M docs/s), HBM bandwidth utilization(GB/s 및 peak 3.35TB/s 대비 %), 달성 compute throughput(TFLOP/s 및 peak FP16 Tensor Core 대비 %), arithmetic intensity(FLOP/byte)를 사용한다. 품질 지표로는 nDCG@10, MRR@10, Recall@10/100/1000과 함께, reference MaxSim 대비 최대 절대 score 차이 및 top-k(top-100) ranking overlap을 사용하여 exactness를 검증한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Baseline 대비 throughput</h3>
+      <p>N_d=128, B=100K 조건에서 V2-MQ는 PyTorch Loop 대비 220배의 throughput을 달성한다(81.2M docs/s / 1.23ms vs. 372K docs/s / 268.6ms). PyTorch Naive가 메모리에 들어가는 범위(B≤10K)에서는 N_d=128, B=10K 기준 6.5배 빠르며(60.4M vs. 9.3M docs/s), PyTorch Naive는 B=100K에서 OOM이 발생한다. torch.compile(max-autotune) 대비로는 여러 설정에서 일관되게 6.6~8.5배 빠른데, 저자는 컴파일러가 matmul→max→sum fusion을 발견하지 못하기 때문이라고 설명한다(Tables 1, 2).</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Kernel variant 간 비교</h3>
+      <p>N_d=128, B=100K 조건에서 BQ=32의 multi-query tiling(V2-MQ)은 V1(per-query-token) 대비 14.1배의 throughput 향상을 제공한다(82.0M vs. 5.8M docs/s). 저자는 그 원인을 V2-MQ가 document embedding을 HBM에서 정확히 한 번 읽는 반면 V1은 N_q=32번 읽는다는 점에서 찾는다(Table 3).</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실제 시스템(PLAID) GPU 경로 대비</h3>
+      <p>PLAID의 실제 GPU scoring 경로(colbert_score)와 비교하면 V2-MQ는 B≥10K에서 1.7~1.9배 빠르고 torch.compile 대비로는 3.5~4.1배 빠르다. B=1K에서는 두 kernel 모두 launch-bound(0.1ms 이하)라 PLAID가 근소하게 빠르다(0.9배). ranking은 top-100 overlap 98~100/100으로 일치하며 PLAID 대비 최대 절대 score 오차는 4.6×10⁻³ 이하인데, 저자는 이것이 PLAID의 FP16 bmm 누산이 TileMaxSim의 FP32 누산보다 정확도가 낮기 때문이라고 설명한다(Table 4).</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Bandwidth utilization과 memory-bound 검증</h3>
+      <p>V2-MQ(BQ=32, single-pass)는 B=100K에서 H100 peak HBM bandwidth의 80.2%(3,350 GB/s 중 2,687 GB/s)를 달성한다(Table 6). 전용 profiling run에서는 2,660 GB/s(peak 대비 79.4%)와 85.1 TFLOP/s의 achieved compute를 기록하는데, 이는 peak FP16 Tensor Core(1,979 TFLOP/s)의 4.3%에 불과하여 kernel이 완전히 memory-bound임을 확인시켜 준다(Table 7). torch.profiler와 nsys 프로파일링에서 V2-MQ Triton kernel이 전체 CUDA time의 99.7%를 차지하고 launch당 평균 589μs가 소요되며, scoring 중 device-to-host memory copy가 전혀 없고 cudaLaunchKernel 오버헤드는 call당 3.7μs(kernel time의 0.6%)이다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Scaling 특성</h3>
+      <p>throughput은 B≥100K에서 약 83M docs/s로 정체(plateau)되며 B=200K에서 peak bandwidth의 81.5%에 도달하고, 단일 H100에서 B=500K(16.4GB 임베딩)까지 scaling이 검증되었다(Table 8). embedding dimension을 64~768로 sweep하면 d=64에서 90.5M docs/s(peak의 44%), d=128에서 60.9M docs/s(60%), d=768에서 14.7M docs/s(86%)를 달성한다(Table 9). N_q를 8→64로 늘려도 BQ=N_q 설정 덕분에 throughput 감소가 완만하며(67.0M→35.5M docs/s), N_d를 32→512로 늘리면 throughput은 103.1M→22.0M docs/s로 감소하지만 achieved bandwidth는 845→2,881 GB/s로 오히려 증가한다(Tables 10, 11).</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PQ scoring</h3>
+      <p>TileMaxSim-PQ는 중간 batch size에서 PyTorch decompress-then-score 대비 1.9~2.9배의 speedup을 달성하며(N_d=64, B=10K에서는 1.0배), baseline이 OOM을 일으키는 B=100K까지 확장 가능하다(M=16 sub-quantizer, K=256 centroid, d_sub=8 기준). 저자는 speedup이 full-precision MaxSim만큼 크지 않은 이유를 PQ scoring이 문서당 데이터량이 작아 덜 memory-bound(낮은 arithmetic intensity)이기 때문이라고 설명한다(Table 5).</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>품질 보존(exactness)</h3>
+      <p>MS MARCO 200개 dev query, 187,565개 BM25 candidate 쌍에서 TileMaxSim과 reference PyTorch MaxSim은 소수점 6자리까지 동일한 retrieval metric을 산출하며(예: MRR@10=0.3399로 동일), 최대 절대 score 차이는 9×10⁻⁶으로 부동소수점 반올림 오차 범위 이내이다. SciFact, NFCorpus, TREC-COVID 세 BEIR 데이터셋 모두에서 reference와 정확히 동일한(Exact match) nDCG@10, MRR@10, Recall@100을 산출한다(Table 13).</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>시스템 통합과 CPU 엔진 비교</h3>
+      <p>PLAID의 scoring kernel을 TileMaxSim으로 교체하면 100K candidates에서 scoring latency가 267.4ms에서 1.21ms로(220배) 줄고, end-to-end pipeline latency가 약 98% 감소한다(약 272ms → 약 5ms; candidate generation/decompression은 동일하게 유지)(Table 15). 동일 노드에서 직접 측정한 WARP(CPU) 대비 scoring throughput은 469배 높다(82.0M docs/s vs. 175K docs/s). 다만 이 비교는 TileMaxSim이 500K candidates(1.23ms)를 채점하는 반면 WARP는 질의당 최대 196개 candidates(1.12ms)만 채점하는 조건에서 이루어졌다(Table 14). 실제 MS MARCO ColBERTv2 임베딩 100K개에 대해서는 71.6M docs/s(peak bandwidth의 70%)를 달성하며 reference 대비 최대 score 차이는 2×10⁻⁶이다(Table 16).</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 함의</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>핵심 결론</h3>
+      <p>저자의 결론은 MaxSim scoring이 CPU에 머물러야 할 본질적 이유가 없으며, similarity matrix materialization을 제거하는 IO-aware kernel 설계만으로 GPU peak bandwidth의 80% 수준을 달성할 수 있다는 것이다. TileMaxSim은 exact MaxSim을 계산하므로 어떤 근사도 도입하지 않고 기존 시스템의 scoring kernel을 그대로 대체할 수 있는 drop-in component이며, 83M docs/s 기준으로 100K candidates를 밀리초 단위에 채점할 수 있다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>대규모 외삽 추정</h3>
+      <p>83M docs/s의 실측 throughput을 기준으로 외삽하면, 전체 8.8M-passage MS MARCO corpus에 대한 brute-force FP16 scoring은 단일 H100에서 약 107ms, 4×H100에 data-parallel로 분산할 경우 약 27ms가 소요된다. 다만 이 수치는 직접 측정치가 아니라 저자의 외삽 추정치임을 논문이 명시한다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>완전 GPU-resident 파이프라인</h3>
+      <p>scoring과 torch.topk를 모두 GPU에서 수행하는 완전한 GPU-resident retrieval pipeline에서 500K-문서 corpus에 대한 end-to-end latency는 6.09ms이며(synthetic data 기준 82.0M docs/s, 실제 MS MARCO passage 기준 71.6M docs/s), top-k 선택이 추가하는 오버헤드는 0.1ms 미만이다. 이는 candidate generation 이후 단계 전체를 GPU에 두는 설계가 실현 가능함을 시사한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>TileMaxSim V2-MQ 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>V2-MQ kernel의 실행 흐름. grid를 (B, ceil(N_q/BQ))로 launch하고, query tile을 register에 한 번 로드한 뒤 document tile을 SRAM으로 streaming하며 running maxima를 갱신한다. similarity matrix는 HBM에 기록되지 않으며, 최종 score만 atomic_add로 HBM에 누적된다. PQ 경로는 Phase 1의 lookup table 구축과 Phase 2의 fused lookup+max+sum으로 분기한다(pp.3-5).</p>
+              <div class="mermaid">
+flowchart TD
+    A[&quot;Grid launch: (B, ceil(Nq/BQ)) programs&quot;] --&gt; B[&quot;Query tile BQ x d 를 HBM에서 register로 1회 로드&quot;]
+    B --&gt; C[&quot;running maxima m 을 -inf 로 초기화&quot;]
+    C --&gt; D{&quot;남은 document tile 있음?&quot;}
+    D -- &quot;예&quot; --&gt; E[&quot;Document tile BN x d 를 HBM에서 SRAM으로 로드&quot;]
+    E --&gt; F[&quot;tl.dot: S_t = Qtile · D_t^T (Tensor Core)&quot;]
+    F --&gt; G[&quot;m = max(m, rowmax(S_t)) — register 내 갱신&quot;]
+    G --&gt; D
+    D -- &quot;아니오&quot; --&gt; H[&quot;BQ개 maxima 합산&quot;]
+    H --&gt; I[&quot;atomic_add 로 scores[b] 에 누적 (HBM 쓰기)&quot;]
+    F -.-&gt; J[&quot;S_t 는 SRAM/register에만 존재\nHBM에 materialize 하지 않음&quot;]
+    A --&gt; K{&quot;문서가 PQ 압축?&quot;}
+    K -- &quot;예&quot; --&gt; L[&quot;Phase 1: (Nq, M) grid 로 distance table T[i,m,k] 구축 → L2 상주&quot;]
+    L --&gt; M[&quot;Phase 2: document token 당 M개 1-byte code 로드&quot;]
+    M --&gt; N[&quot;table lookup 으로 유사도 누적 + running max 갱신&quot;]
+    N --&gt; I
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식(naive/PLAID)과 TileMaxSim의 IO 경로 비교</h3>
+                <span class="source-ref">PDF p. 1, 2, 3, 7</span>
+              </div>
+              <p>naive 구현은 전체 N_q×N_d similarity matrix를 HBM에 쓰고 다시 읽어 max/sum reduction을 수행하므로 중간 데이터에 메모리 트래픽을 낭비한다. TileMaxSim은 동일한 reduction을 SRAM/register 내부에서 fuse하여 document embedding을 HBM에서 한 번만 읽고 최종 score만 기록한다(pp.1-4).</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph Naive [&quot;기존 방식 (PyTorch Naive / PLAID colbert_score)&quot;]
+        A1[&quot;Q, D 를 HBM에서 읽기&quot;] --&gt; A2[&quot;S = Q · D^T 계산&quot;]
+        A2 --&gt; A3[&quot;S (Nq x Nd) 를 HBM에 write&quot;]
+        A3 --&gt; A4[&quot;S 를 HBM에서 re-read&quot;]
+        A4 --&gt; A5[&quot;max over doc tokens&quot;]
+        A5 --&gt; A6[&quot;sum over query tokens → score&quot;]
+    end
+    subgraph Tile [&quot;TileMaxSim V2-MQ (IO-aware)&quot;]
+        B1[&quot;Q tile 을 register 로 1회 로드&quot;] --&gt; B2[&quot;D tile 을 SRAM 으로 streaming (문서당 HBM read 1회)&quot;]
+        B2 --&gt; B3[&quot;S_t 계산 + max/sum 을 SRAM/register 에서 fuse&quot;]
+        B3 --&gt; B4[&quot;최종 score 만 HBM 에 atomic_add&quot;]
+    end
+    A3 -.-&gt; C1[&quot;낭비되는 IO: S 는 한 번 쓰고 버려짐\n→ peak BW 의 17.6% 만 활용&quot;]
+    B4 -.-&gt; C2[&quot;IO 2.0배 감소 (AI 16.1 → 32.0 FLOP/byte)\n→ peak BW 의 80.2% 달성&quot;]
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>방법별 HBM bandwidth 활용률 (H100 peak 3.35 TB/s 대비)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 6 · N_q=32, N_d=128, d=128, B=100K, V2-MQ는 BQ=32 single-pass. torch.cuda.Event 50회 측정. PyTorch Naive는 B=100K에서 OOM이라 제외했으며, B=50K 기준 18.4%로 보고됨.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Batch size에 따른 V2-MQ throughput (BQ=32)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 8 · N_q=32, N_d=128, d=128, FP16, BQ=32. CUDA event 50회 측정 평균. B=100K 이상에서 약 83M docs/s로 plateau.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Batch size에 따른 V2-MQ의 peak bandwidth 활용률</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 8 · N_q=32, N_d=128, d=128, FP16, BQ=32. H100 peak 3.35 TB/s 기준.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Embedding dimension에 따른 V2-MQ throughput (dimension tiling)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 9 · N_q=32, N_d=128, B=10K. d&gt;128에서는 V2-MQ가 dimension tiling(128-wide chunk) variant로 자동 전환.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Embedding dimension에 따른 peak bandwidth 활용률</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 9 · N_q=32, N_d=128, B=10K. 큰 임베딩일수록 memory coalescing이 좋아져 활용률이 상승한다는 것이 저자의 설명.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Kernel variant별 throughput 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 3 · N_q=32, d=128, B=100K, N_d=128 열 기준. V2-MQ는 V1 대비 14.1배.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Tile size ablation: BQ/BN 조합별 달성 bandwidth</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 12 · N_q=32, N_d=128, d=128, B=10K. BQ=32(=N_q)가 가장 큰 효과를 내는 최적화이며 BQ=32/BN=32가 최적.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>문서 토큰 수 N_d에 따른 throughput과 달성 bandwidth</h3>
+              <div class="chart-container">
+                <canvas id="chart-7"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 11 · N_q=32, d=128, B=10K, V2-MQ with BQ=32. throughput은 103.1M→22.0M docs/s로 감소하지만 bandwidth 활용률은 상승(N_d=512에서 peak의 86%).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>질의 토큰 수 N_q에 따른 throughput (BQ=N_q)</h3>
+              <div class="chart-container">
+                <canvas id="chart-8"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 10 · N_d=128, d=128, B=10K, V2-MQ는 BQ=N_q. speedup은 6.6배(N_q=8)에서 5.1배(N_q=64).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>BEIR cross-domain nDCG@10 (TileMaxSim = reference PyTorch MaxSim, Exact match)</h3>
+              <div class="chart-container">
+                <canvas id="chart-9"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 13 · ColBERTv2 임베딩(128차원). TileMaxSim과 reference PyTorch MaxSim의 nDCG@10/MRR@10/Recall@100이 full floating-point precision 수준에서 완전 일치(Exact). TREC-COVID는 전체 171K corpus 중 50K-문서 subset.
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>성능 개선의 원인을 roofline analysis로 먼저 정량화한 뒤(naive는 peak bandwidth의 17.6%, 필요한 IO 감소는 2.0배) 그 예측에 맞는 kernel을 설계하고, 실측 결과(80.2% bandwidth, achieved compute는 peak의 4.3%)로 memory-bound 가설을 다시 검증하는 구조라, 성능 이득의 인과 관계가 명확하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>V1 → V2 → V2-MQ로 kernel variant를 단계적으로 제시하고 각 단계에 남아 있는 IO 비효율(document re-read N_q회 등)을 드러낸 뒤 ablation(Table 3, Table 12)으로 확인하기 때문에, 최종 성능의 어느 부분이 어떤 설계 결정에서 오는지 분리해 볼 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 6, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>근사(approximation)를 도입하지 않고 exact MaxSim을 계산하므로 품질-속도 trade-off 논쟁 자체가 발생하지 않는다. MS MARCO에서 최대 score 차이 9×10⁻⁶, BEIR 세 데이터셋에서 metric 완전 일치라는 결과가 이를 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>자체 PyTorch baseline뿐 아니라 PLAID의 실제 GPU scoring 경로(colbert_score), torch.compile(max-autotune), 그리고 동일 노드에서 직접 벤치마크한 WARP까지 비교 대상에 포함하여, 합성 baseline만으로 speedup을 부풀린다는 비판을 상당 부분 차단한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>batch size, embedding dimension, query token 수, document token 수, precision의 다섯 축에 걸친 scaling 분석을 제공하여, 어떤 조건에서 이득이 크고 어떤 조건에서 작아지는지(예: B=1K에서는 launch-bound)를 스스로 드러낸다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>drop-in scoring kernel이라는 통합 형태 덕분에 기존 ColBERTv2/PLAID 파이프라인의 candidate generation·decompression 단계를 바꾸지 않고도 적용 가능하며, 실제 교체 실험(Table 15)으로 end-to-end 효과까지 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>TileMaxSim은 문서 임베딩이 GPU에 상주(GPU-resident)한다고 가정하며, 저자가 결론에서 이를 현재의 명시적 한계로 언급한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>가변 길이(variable-length) corpus에서는 고정된 N_d padding 때문에 38%의 token이 낭비되며, length-sorted batching을 적용해야 처리량이 약 70M docs/s 수준으로 회복된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>V2-MQ가 peak HBM bandwidth의 100%가 아닌 80.2%에 그치는 이유로 저자는 (1) N_q=32개의 동시 running maxima 유지에 따른 register pressure, (2) 2의 거듭제곱이 아닌(non-power-of-two) 차원이 vectorized load를 제한하는 점, (3) 최종 score 출력을 위한 atomic accumulation overhead를 제시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>V2-MQ kernel의 이론적 occupancy는 register 사용 제약으로 약 50%에 그친다. 다만 저자는 num_warps tuning으로 occupancy를 높여도 throughput이 개선되지 않았다는 점을 들어 kernel이 occupancy가 아니라 memory bandwidth에 의해 제한된다고 설명한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>저자는 TileMaxSim이 corpus가 GPU에 상주하고 배치 크기 B&gt;1K일 때 가장 큰 이점이 있는 drop-in scoring kernel이라고 스스로 범위를 한정한다. 질의당 후보 문서가 매우 적을 때(약 64개)는 scoring 비용 자체가 미미하여 PLAID의 기존 kernel과 end-to-end latency 차이가 거의 없다고 보고한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>WARP와의 469배 비교는 조건이 대칭적이지 않다. TileMaxSim은 500K candidates를 1.23ms에 채점한 수치이고 WARP는 질의당 최대 196개 candidates를 1.12ms에 채점한 수치이므로, 이 배수는 같은 작업량에 대한 latency 비교가 아니라 서로 다른 작업량에서 도출된 throughput 비율이다. 하드웨어 자체도 CPU(Xeon Gold 6448Y, DDR5)와 H100 HBM3로 다르다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>PQ scoring의 실제 speedup(1.0~2.9배)은 IO 감소량(최대 약 31배)에 비해 훨씬 작다. 저자는 PQ scoring이 덜 memory-bound하기 때문이라고 설명하지만, 이는 fused PQ kernel의 병목이 IO에서 다른 요인(예: table lookup의 random access 패턴, 낮은 arithmetic intensity 하에서의 latency)으로 옮겨갔음을 시사하며, 논문은 이 잔여 병목을 직접 프로파일링하지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>핵심 성능 실험 대부분이 uniform-length synthetic workload(고정 N_d)에서 수행되었고, 실제 ColBERTv2 MS MARCO 임베딩에서는 71.6M docs/s(peak의 70%)로 synthetic(82.0M docs/s, 80%+)보다 낮게 나온다. 실제 corpus의 길이 분포가 성능에 미치는 영향은 padding 낭비 언급 외에 체계적으로 다뤄지지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>8.8M-passage MS MARCO 전체 corpus에 대한 약 107ms(단일 H100) 및 4×H100에서 약 27ms라는 수치는 83M docs/s 처리량에 기반한 외삽 추정치이며 직접 측정치가 아니다. 단일 H100에서 검증된 최대 규모는 B=500K(16.4GB 임베딩)이므로, 8.8M 규모에서 임베딩이 단일 GPU 메모리에 들어갈 수 있는지는 별도 문제이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>결과가 단일 하드웨어(H100, HBM3)에 국한되어 있다. bandwidth 대비 compute 비율이 다른 GPU(예: 소비자용 GPU, 이전 세대 A100)에서 동일한 80% 수준의 활용률과 상대적 speedup이 재현되는지는 논문에서 확인되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>문서 임베딩이 GPU 메모리에 모두 들어가지 않는 corpus 규모에서, TileMaxSim의 IO-optimal 설계를 host-to-device streaming(PCIe/NVLink)과 결합하면 어떤 형태의 새로운 병목이 생기며 GPU-resident 가정 없이도 이득이 유지되는가?</h3>
+              </div>
+              <p>저자가 GPU-resident 가정을 명시적 한계로 언급하고, 단일 H100에서 검증된 최대 규모가 B=500K(16.4GB)에 그치는 반면 8.8M-passage 전체 corpus 수치는 외삽 추정치에 불과하다.</p>
+              <span class="source-ref">PDF p. 8, 10, 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>PQ fused kernel에서 IO를 약 31배 줄였음에도 speedup이 1.0~2.9배에 머문 잔여 병목은 정확히 무엇인가(table lookup의 random access latency인가, arithmetic intensity 저하에 따른 latency-bound 전환인가)? 이를 프로파일링하면 PQ 경로에서도 full-precision 경로만큼의 이득을 얻을 수 있는가?</h3>
+              </div>
+              <p>논문은 PQ speedup이 낮은 이유를 &#x27;PQ scoring이 덜 memory-bound하다&#x27;는 정성적 설명으로만 처리하고, full-precision V2-MQ에 대해 수행한 것과 같은 상세 profiling(Table 7 수준)을 PQ kernel에는 적용하지 않는다.</p>
+              <span class="source-ref">PDF p. 5, 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>가변 길이 corpus에서 발생하는 38%의 padding token 낭비를, length-sorted batching을 넘어 ragged/variable-length tiling(문서별 실제 길이만 순회하는 kernel)으로 제거하면 어느 정도까지 회복 가능한가?</h3>
+              </div>
+              <p>저자는 padding 낭비 38%와 length-sorted batching으로 약 70M docs/s 회복이라는 완화책만 제시하며, kernel 자체를 ragged 입력에 대응시키는 설계는 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>남은 20%의 bandwidth gap 요인 중 register pressure와 atomic accumulation overhead의 기여도는 각각 얼마이며, warp-level reduction이나 score buffer 재설계로 어느 정도 회수할 수 있는가?</h3>
+              </div>
+              <p>저자는 gap의 원인으로 세 가지를 나열하지만 각 요인의 정량적 기여도는 분해하지 않는다.</p>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>TileMaxSim이 scoring latency를 267.4ms에서 1.21ms로 줄여 candidate generation(약 4ms)이 새로운 지배 요인이 된 상황에서, 파이프라인 전체의 최적 재설계는 무엇인가? 예컨대 scoring이 거의 공짜라면 centroid pruning 같은 candidate 축소 단계를 완화하고 더 많은 후보를 exact scoring하는 편이 품질 측면에서 유리한가?</h3>
+              </div>
+              <p>Table 15의 drop-in 결과에서 scoring이 268ms → 1.2ms로 줄면서 병목이 candidate generation으로 이동했고, 저자도 83M docs/s면 100K candidates를 밀리초 단위에 채점할 수 있다고 언급하지만 파이프라인 재설계 자체는 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>bandwidth 대 compute 비율이 다른 GPU(A100, 소비자용 GPU, 차세대 HBM 장착 GPU)에서 BQ=N_q라는 설계 원칙과 128-wide dimension tiling chunk 크기가 그대로 최적인가, 아니면 하드웨어별 auto-tuning이 필요한가?</h3>
+              </div>
+              <p>모든 실험이 H100 단일 하드웨어에서 수행되었고, tile size ablation도 H100 기준 한 조건(B=10K)에서만 제시된다.</p>
+              <span class="source-ref">PDF p. 6, 9</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>MaxSim (late interaction scoring)</dt>
+              <dd>
+                ColBERT 계열 multi-vector retrieval의 스코어링 함수. 각 query token 임베딩에 대해 모든 document token 임베딩과의 유사도 중 최댓값을 구하고, 이를 모든 query token에 대해 합산하여 문서 점수를 만든다. 연산 구조는 matmul → max(문서 토큰 축) → sum(질의 토큰 축)이다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>IO-aware kernel</dt>
+              <dd>
+                연산량(FLOP)이 아니라 HBM과 SRAM 사이의 메모리 이동량(IO)을 최소화하도록 설계된 GPU kernel. FlashAttention이 대표적이며, TileMaxSim은 같은 원리를 MaxSim의 matmul→max→sum 구조에 적용해 similarity matrix를 HBM에 materialize하지 않는다.
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Similarity matrix materialization</dt>
+              <dd>
+                N_q×N_d 크기의 질의-문서 토큰 유사도 행렬 S를 HBM에 실제로 기록하는 것. S는 max-reduction에 한 번 쓰이고 버려지는 중간 데이터이므로, 이를 쓰고 다시 읽는 트래픽이 naive MaxSim의 주된 병목이라는 것이 이 논문의 핵심 진단이다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-query tiling (V2-MQ, BQ)</dt>
+              <dd>
+                query token 축과 document token 축을 동시에 tiling하는 기법. query tile 크기 BQ를 N_q와 같게 설정하면 하나의 program이 모든 query token을 한 pass에 처리하므로 각 document embedding을 HBM에서 정확히 한 번만 읽는 IO-optimal 패턴이 된다.
+                <span class="source-ref">PDF p. 3, 4, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Dimension tiling</dt>
+              <dd>
+                embedding dimension d를 128-wide chunk로 분할하여 부분 dot product를 누산한 뒤 max를 계산하는 기법. register/SRAM 용량을 초과하지 않으면서 하나의 kernel family가 d=64부터 d=768까지 처리할 수 있게 한다.
+                <span class="source-ref">PDF p. 2, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Product Quantization (PQ)</dt>
+              <dd>
+                벡터를 M개의 sub-vector로 나누고 각 sub-space에서 K개의 centroid 중 하나로 근사하여 M바이트(K=256 기준)의 code로 압축하는 기법. 이 논문에서는 M=16, K=256, d_sub=8 설정을 사용한다.
+                <span class="source-ref">PDF p. 4, 5, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Fused PQ decompression+scoring</dt>
+              <dd>
+                PQ code를 원본 벡터로 복원(decompress)하여 HBM에 쓰지 않고, query별 distance lookup table을 SRAM/L2에 상주시킨 뒤 code를 table index로 사용해 곧바로 유사도를 누산하는 방식. decompress-then-score 대비 최대 약 31배의 HBM IO 감소를 가져온다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Roofline analysis / Arithmetic intensity</dt>
+              <dd>
+                커널의 성능이 compute에 의해 제한되는지 memory bandwidth에 의해 제한되는지를 판별하는 분석. arithmetic intensity(FLOP/byte)가 하드웨어의 crossover point(H100에서 591 FLOP/byte)보다 훨씬 낮으면 memory-bound이다. MaxSim variant들은 14~32 FLOP/byte로 깊게 memory-bound이다.
+                <span class="source-ref">PDF p. 2, 3, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>HBM / SRAM</dt>
+              <dd>
+                HBM(High Bandwidth Memory)은 GPU의 대용량 off-chip 메모리(H100 기준 peak 3.35 TB/s)이고, SRAM(shared memory)은 SM 내부의 훨씬 빠르지만 작은 on-chip 메모리이다. IO-aware 설계의 목표는 HBM 접근을 SRAM/register 내 연산으로 대체하는 것이다.
+                <span class="source-ref">PDF p. 1, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Triton / tl.dot</dt>
+              <dd>
+                Triton은 GPU kernel을 Python 문법으로 작성할 수 있게 하는 컴파일러/언어이며, tl.dot은 Tensor Core를 사용하는 행렬 곱 primitive이다. TileMaxSim의 모든 kernel은 Triton으로 구현되었다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PLAID / colbert_score</dt>
+              <dd>
+                PLAID는 centroid pruning과 PQ로 ColBERTv2 retrieval을 가속하는 엔진이고, colbert_score는 그 실제 GPU scoring 경로(batched D@Q.T 후 max-over-tokens 및 sum-over-query)로서 이 논문의 주요 실제 시스템 baseline이다.
+                <span class="source-ref">PDF p. 1, 5, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>WARP</dt>
+              <dd>
+                SIMD 가속 C++ kernel로 CPU MaxSim scoring을 최적화한 최신 multi-vector 엔진. XTR reference 구현 대비 41배, PLAID 대비 3배 빠르며, 이 논문에서 동일 노드 CPU 비교 대상으로 사용된다.
+                <span class="source-ref">PDF p. 1, 5, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Drop-in scoring kernel</dt>
+              <dd>
+                기존 retrieval 파이프라인의 candidate generation과 decompression 단계를 바꾸지 않고 scoring 단계만 교체할 수 있는 구성요소. TileMaxSim은 exact MaxSim을 계산하므로 품질 변화 없이 PLAID의 scoring kernel을 대체할 수 있다.
+                <span class="source-ref">PDF p. 2, 10</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Table 13에는 NFCorpus의 질의 수가 323개로 기재되어 있으나 Section 6.11 본문에서는 동일한 BEIR-NFCorpus 데이터셋에 대해 324개로 서술한다. 두 수치의 불일치에 대한 설명이 논문에 없다.</li><li>Section 6.6 본문은 &#x27;BQ=16 구성이 이전에 17.6%의 bandwidth만 달성했다&#x27;고 서술하지만, 해당 조건(BQ=16, B=100K)을 직접 제시한 표가 확인되지 않는다(Table 12의 BQ=16 항목은 B=10K 조건만 보고). 이 17.6%는 Section 2.3/contribution (1)에서 언급된 naive 구현의 bandwidth 수치와 같은 값인데, 두 수치가 동일한 측정을 가리키는지 우연히 같은 숫자인지 논문이 명확히 하지 않는다.</li><li>Section 6.2 본문은 N_d=128, B=10K 조건의 PyTorch Naive throughput을 9.3M docs/s로 서술하지만 Table 1에는 같은 조건이 9.4M docs/s로 기재되어 있다. 이 불일치에 대한 설명이 없다.</li><li>Section 6.9의 precision(FP16/BF16/FP32) 비교에는 표 번호가 부여되어 있지 않고, 구체적인 정확도(accuracy) 지표나 별도 데이터셋도 제시되지 않는다. 따라서 FP32가 1.6배 느리다는 결과 외에 precision별 품질 영향은 확인되지 않음.</li><li>contribution (5)에서 &#x27;near-linear한 multi-GPU scaling&#x27;을 주장하고 4×H100에서 약 27ms라는 외삽치를 제시하지만, 본문에서 확인 가능한 multi-GPU 실측 표는 확인되지 않음. 해당 주장의 실측 근거는 불충분하다.</li><li>논문이 정식으로 게재된 학회/저널 명은 본문에 제시되어 있지 않으며, arXiv 식별자(arXiv:2606.26439v1, cs.IR, 2026-06-24)만 확인된다.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "방법별 HBM bandwidth 활용률 (H100 peak 3.35 TB/s 대비)", "labels": ["PyTorch Loop", "TileMaxSim V1", "TileMaxSim V2 (per-doc)", "TileMaxSim V2-MQ"], "values": [0.3, 5.6, 9.9, 80.2], "unit": "%", "xLabel": "방법 (B=100K)", "yLabel": "peak HBM bandwidth 대비 활용률"}, {"canvasId": "chart-1", "type": "bar", "title": "Batch size에 따른 V2-MQ throughput (BQ=32)", "labels": ["1K", "5K", "10K", "50K", "100K", "200K", "500K"], "values": [17.9, 45.8, 57.1, 79.7, 81.2, 83.3, 83.2], "unit": "M docs/s", "xLabel": "Batch size B (문서 수)", "yLabel": "Throughput"}, {"canvasId": "chart-2", "type": "bar", "title": "Batch size에 따른 V2-MQ의 peak bandwidth 활용률", "labels": ["1K", "5K", "10K", "50K", "100K", "200K", "500K"], "values": [17.5, 44.8, 55.9, 78.0, 79.4, 81.5, 81.4], "unit": "%", "xLabel": "Batch size B (문서 수)", "yLabel": "peak HBM bandwidth 대비 활용률"}, {"canvasId": "chart-3", "type": "bar", "title": "Embedding dimension에 따른 V2-MQ throughput (dimension tiling)", "labels": ["d=64", "d=128", "d=256", "d=384", "d=768"], "values": [90.5, 60.9, 36.2, 26.8, 14.7], "unit": "M docs/s", "xLabel": "Embedding dimension d", "yLabel": "Throughput"}, {"canvasId": "chart-4", "type": "bar", "title": "Embedding dimension에 따른 peak bandwidth 활용률", "labels": ["d=64", "d=128", "d=256", "d=384", "d=768"], "values": [44, 60, 71, 79, 86], "unit": "%", "xLabel": "Embedding dimension d", "yLabel": "peak HBM bandwidth 대비 활용률"}, {"canvasId": "chart-5", "type": "bar", "title": "Kernel variant별 throughput 비교", "labels": ["V1 (per-token)", "V2 (per-doc)", "V2-MQ (BQ=32)"], "values": [5.8, 10.1, 82.0], "unit": "M docs/s", "xLabel": "Kernel variant (N_d=128)", "yLabel": "Throughput"}, {"canvasId": "chart-6", "type": "bar", "title": "Tile size ablation: BQ/BN 조합별 달성 bandwidth", "labels": ["BQ=16, BN=32", "BQ=16, BN=64", "BQ=16, BN=128", "BQ=32, BN=32", "BQ=32, BN=64", "BQ=32, BN=128"], "values": [872, 962, 577, 1302, 1291, 1025], "unit": "GB/s", "xLabel": "타일 크기 조합 (BQ, BN)", "yLabel": "달성 HBM bandwidth"}, {"canvasId": "chart-7", "type": "bar", "title": "문서 토큰 수 N_d에 따른 throughput과 달성 bandwidth", "labels": ["N_d=32", "N_d=64", "N_d=128", "N_d=256", "N_d=512"], "values": [845, 1324, 1981, 2604, 2881], "unit": "GB/s", "xLabel": "문서 토큰 수 N_d", "yLabel": "달성 HBM bandwidth"}, {"canvasId": "chart-8", "type": "bar", "title": "질의 토큰 수 N_q에 따른 throughput (BQ=N_q)", "labels": ["N_q=8 (V2-MQ)", "N_q=16 (V2-MQ)", "N_q=32 (V2-MQ)", "N_q=64 (V2-MQ)", "N_q=8 (PT Naive)", "N_q=16 (PT Naive)", "N_q=32 (PT Naive)", "N_q=64 (PT Naive)"], "values": [67.0, 66.3, 60.4, 35.5, 10.2, 10.3, 9.3, 6.9], "unit": "M docs/s", "xLabel": "질의 토큰 수 N_q", "yLabel": "Throughput"}, {"canvasId": "chart-9", "type": "bar", "title": "BEIR cross-domain nDCG@10 (TileMaxSim = reference PyTorch MaxSim, Exact match)", "labels": ["SciFact", "NFCorpus", "TREC-COVID"], "values": [0.603, 0.31, 0.307], "unit": "score", "xLabel": "데이터셋", "yLabel": "nDCG@10"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
