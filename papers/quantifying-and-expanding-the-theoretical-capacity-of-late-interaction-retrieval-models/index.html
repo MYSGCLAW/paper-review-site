@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Quantifying and Expanding the Theoretical Capacity of Late-Interaction Retrieval Models</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Quantifying and Expanding the Theoretical Capacity of Late-Interaction Retrieval Models</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Julian Killingback, Varad Ingale, Hamed Zamani, Cameron Musco</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2607.05803v1 [cs.IR]), 본문에 &#x27;Preprint.&#x27;로만 명시됨 (정식 게재 여부 확인되지 않음)</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조와 주요 구성요소</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘과 정리(Theorem) 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 ColBERT 계열 late-interaction 검색 모델이 사용하는 MaxSim(Chamfer) 유사도의 이론적 표현력(representational power)을 구성적 증명(proof by construction)으로 정량화한다. 핵심 결과는 네 가지다. 첫째, 임의 차원(가산 무한 차원 포함)의 두 비음수(non-negative) k-sparse 벡터의 inner product를, R^3에 놓인 query 임베딩 k개와 document 임베딩 k+1개만으로 MaxSim이 정확히(exactly) 재현할 수 있음을 증명한다(Theorem 3.1). 구성의 핵심은 document 쪽 임베딩을 &#x27;해당 인덱스에서만 원하는 값을 갖고 다른 모든 정수 인덱스에서는 음수가 되는&#x27; 2차 다항식의 계수 벡터로 두고, query 쪽을 φ(i)=(1,i,i²)로 두는 것이다. 이렇게 하면 MaxSim의 max 연산이 인덱스가 일치하는 항만 선택하고, 불일치 항에서는 document 집합에 추가된 영벡터가 선택되어 기여가 0이 된다. 둘째, 반대로 표준 inner product 기반 단일 벡터 모델은 rank 논증에 의해 유한 차원에서 임의로 높은 차원의 sparse 벡터의 inner product를 보존할 수 없음을 증명해(Theorem 4.1) 두 패러다임 사이의 이론적 분리(separation)를 확립한다. 셋째, 표준 MaxSim은 sparsity에 임베딩 개수가 묶인 조건 아래서 실수 값(real-valued) inner product는 재현할 수 없음을 증명하고(Theorem 3.2), 이를 극복하기 위해 각 임베딩을 크기(magnitude)와 부호(sign)로 분해하여 max 연산은 크기에 대해서만 수행하고 부호는 max 이후에 곱하는 Signed MaxSim(S±)을 제안한다(Definition 3.4, Theorem 3.3). 넷째, 임베딩 차원을 절(clause) 크기에 비례해 키우면 Lagrange 보간 다항식으로 OR-clause 전체를 하나의 query 벡터에 인코딩할 수 있고, 이때 MaxSim은 weighted fuzzy OR의 합이 되며 이진 가중치에서는 부정 없는 CNF(positive CNF)의 순위 동등(rank-equivalent) 평가자가 된다(Theorem 5.1, 5.2). 실증 검증으로 Signed MaxSim으로 훈련한 모델(Fallon)을 부정(negation)이 포함된 LIMIT 형식 합성 검색 과제에서 ColBERT 베이스라인과 비교했고, vocabulary shift 조건에서 nDCG@10이 0.597→1.000, negation-only 쿼리에서 0.008→0.788로 개선되었다.</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 17</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MaxSim은 R^3 벡터 집합만으로 임의 차원(무한 차원 포함)의 두 비음수 k-sparse 벡터의 inner product를 정확히 재현할 수 있으며, query 임베딩 k개와 document 임베딩 k+1개면 충분하다(Theorem 3.1). 따라서 late-interaction 모델은 BM25, SNRM, SPLADE 같은 비음수 단일 벡터 검색기의 표현력을 본질적으로 포함한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 5, 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>구성의 핵심 트릭은 document 임베딩을 &#x27;해당 인덱스에서만 원하는 값을 갖고 다른 모든 정수 인덱스에서는 음수&#x27;인 2차 다항식 p(x)=w-C(x-d)²의 계수로 두고 query를 φ(i)=(1,i,i²)로 두는 것이며, 이로써 MaxSim의 max 연산이 인덱스 매칭 라우터로 작동하고 불일치 항은 document 집합에 포함된 영벡터가 선택되어 0이 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>유한 차원 단일 벡터 inner product는 rank 병목 때문에 d+1개의 직교 개념조차 d차원에 정확히 담을 수 없다(Theorem 4.1). MaxSim은 O(k) 파라미터로 이 rank 제약을 우회하므로, 어휘의 롱테일과 희귀 개체 처리에서 late-interaction이 구조적으로 유리하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>표준 MaxSim은 임베딩 개수가 원본 벡터의 sparsity에 묶인 조건에서 실수 값 inner product를 정확히 재현할 수 없다(Theorem 3.2). 특히 공유 document 벡터에 영벡터가 포함되면 모든 MaxSim 점수가 비음수가 되어 ⟨-e_i, e_i⟩ = -1조차 복원 불가능하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>제안된 Signed MaxSim(S±)은 각 임베딩을 크기와 부호로 분해해 max 연산은 크기로만 수행하고 부호는 max 이후에 곱함으로써, 라우팅과 부호를 분리하고 임의의 실수 값 벡터 간 inner product를 정확히 재현한다(Theorem 3.3).</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>임베딩 차원을 절 크기에 비례해 M=2m+1로 키우면 Lagrange 보간 다항식으로 OR-clause 전체를 하나의 query 벡터에 담을 수 있고, MaxSim은 weighted fuzzy OR의 합이 된다. 가중치를 모두 1로 두면 MaxSim 점수는 만족된 절의 개수와 같아져 positive CNF의 엄격 Boolean 평가와 순위 동등해진다(Theorem 5.1, 5.2).</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12, 13, 14</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>부정 포함 합성 검색 과제에서 Signed MaxSim으로 훈련한 Fallon은 vocabulary가 바뀐 out-of-domain 설정에서 nDCG@10 1.000(ColBERT 0.597), negation-only 설정에서 0.788(ColBERT 0.008)을 기록했다. ColBERT의 near-zero 성능은 corpus 대다수가 관련 문서인 상황에서도 부정된 속성을 가진 문서를 상위에 올리고 있음을 뜻한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>저자들의 설명에 따르면 표준 MaxSim에서 어떤 query 임베딩의 점수를 낮게 만들려면 무관한 것까지 포함한 모든 document 임베딩과의 유사도가 낮아야 하므로, 훈련 중 &#x27;항상 어떤 관련 feature와 매칭&#x27;하도록 학습된 ColBERT는 매칭할 관련 측면이 없는 부정 전용 쿼리에서 구조적으로 무너진다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 17</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MaxSim의 표현력은 왜 아직 규명되지 않았는가</h3>
+      <p>신경망 정보 검색은 크게 두 패러다임으로 나뉜다. 하나는 dense retriever(DPR 등)와 learned sparse retriever(SNRM 등)처럼 query와 document를 각각 하나의 고정 차원 벡터로 인코딩하고 단순 inner product로 관련성을 추정하는 단일 벡터(single-vector) 방식이고, 다른 하나는 ColBERT처럼 텍스트를 임베딩의 집합(set of embeddings)으로 표현하고 MaxSim(Chamfer similarity)으로 관련성을 계산하는 late-interaction 방식이다. MaxSim은 Definition 1.1에서 S(U,V) = Σ_{m∈U} max_{t∈V} ⟨m,t⟩로 정의되며, 각 query 임베딩에 대해 가장 잘 맞는 document 임베딩과의 inner product를 취해 모두 더한다. late-interaction 모델은 실증적으로, 특히 out-of-domain 환경에서 우수한 성능을 보였지만 MaxSim의 이론적 표현력이 표준 inner product와 비교해 정확히 어느 정도인지는 거의 알려져 있지 않았다. 이 논문은 &#x27;MaxSim이 어떤 유사도를 정확히 재현할 수 있고 어떤 유사도는 재현할 수 없는가&#x27;를 구성적 증명으로 규명하는 것을 문제로 삼는다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>성능 격차의 원인은 추가 표현 공간이 아니다</h3>
+      <p>저자들은 선행 실증 연구([14] ColBERT, [17])를 인용해, late-interaction과 단일 벡터 모델 사이의 성능 격차가 late-interaction이 사용하는 &#x27;추가적인 표현 공간(더 많은 임베딩 차원)&#x27; 때문이 아니라고 지적한다. 단일 벡터 모델에 임베딩 차원을 더 주어도 수익 체감(diminishing returns)이 나타나며 late-interaction의 성능에 미치지 못한다. 따라서 진짜 차별 요인은 MaxSim이라는 유사도 함수 자체라는 가설이 자연스럽게 도출되고, 이 논문은 그 가설을 이론적으로 증명하려 한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실수 값 지원의 필요성 — 부정(negation) 질의</h3>
+      <p>비음수 벡터에 한정된 결과만으로는 임의의 실수 값 벡터를 쓰는 dense retrieval과의 완전한 동등성(parity)을 주장할 수 없다. 또한 음수 값 지원은 실용적 효용이 뚜렷하다. 부정 질의(예: &#x27;Google을 언급하지 않는 오픈소스 AI 도구&#x27;)는 부정된 개념을 포함한 문서의 점수를 직접 깎을 수 있어야 자연스럽게 처리된다. 표준 MaxSim은 max 연산 때문에 특정 query 토큰에 대해 낮은(특히 음수) 점수를 만들려면 &#x27;모든&#x27; document 임베딩과의 유사도가 낮아야 하므로 이것이 매우 어렵고, 결과적으로 부정을 활용해 문서를 구분하지 못한다(Figure 1).</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>실증적 관찰에 머문 late-interaction 우위 설명</h3>
+      <p>late-interaction과 단일 벡터 모델의 성능 격차가 추가 표현 공간으로 설명되지 않는다는 사실은 선행 실증 연구에서 밝혀졌지만, 그 근본 원인, 즉 유사도 함수 자체의 표현력 차이에 대한 이론적 규명은 이루어지지 않았다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>multi-vector 압축 기법은 근사(approximation)일 뿐</h3>
+      <p>MUVERA[5]는 LSH(Locality Sensitive Hashing)로 multi-vector 표현을 단일 벡터로 압축하고 MaxSim과 inner product 사이 오차의 이론적 bound를 제공하며, LEMUR[9]는 데이터 인지(data-aware) 방식으로 MaxSim과 inner product의 차이를 최소화하는 매핑을 학습한다. 그러나 두 방법 모두 정확한(exact) 재현을 보장하지 않는 근사 방법이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이론 연구는 단일 벡터 dense 검색에 편중</h3>
+      <p>검색 모델의 이론적 성질을 다룬 선행 연구(Luan et al.[19]의 압축 오류 bound, Menon et al.[21]의 가산 무한 차원 근사, Ji et al.[12]의 축소 불가능 오차, Killingback et al.[15], Weller et al.[31]의 임베딩 차원 대비 표현 가능한 순서 수, S et al.[25]의 top-k 랭킹에 2k+1 차원 필요 등)는 대부분 단일 벡터 dense 검색에 집중되어 있으며, multi-vector(late-interaction) 모델의 표현력(expressivity)은 거의 탐구되지 않았다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동시대 연구(Jayaram[11])의 방향적 한계</h3>
+      <p>동시대 연구인 Jayaram[11]은 R^d의 단위 벡터 최대 m개로 만든 MaxSim 유사도를 R^D의 단일 벡터 inner product로 근사하려면 오차 ε에 대해 D=(ε²m)^Ω(1/ε)가 필요함을 보여, &#x27;단일 벡터로의 압축 불가능성&#x27;이라는 한 방향의 분리를 확립했다. 그러나 반대 방향, 즉 표준 MaxSim이 어떤 단일 벡터 유사도를 실현할 수 있는지는 다루지 않았고, MaxSim의 확장이나 그로부터 얻어지는 실증적 검색 성능 개선도 제시하지 않았다. 본 논문은 근사(approximate)가 아닌 정확(exact) 설정에서 유사한 분리를 보이면서 양방향을 모두 다룬다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1. MaxSim은 inner product 유사도를 포함한다 (Subsumption)</h3>
+      <p>R^3 벡터 집합에 대한 MaxSim 연산이, 고차원(가능하면 무한 차원) 공간의 임의의 두 비음수 벡터의 inner product를 정확히 재구성할 수 있음을 구성적으로 증명한다. 두 k-sparse 벡터의 정확한 inner product는 R^3에서 정확히 k개의 query 임베딩과 k+1개의 document 임베딩으로 달성되며, sparse와 dense 벡터 모두에 적용된다. 이는 late-interaction 모델이 SNRM, SPLADE 같은 learned-sparse 방식과 BM25 같은 전통적 용어 매칭 방식 등 임의의 비음수 단일 벡터 검색기의 표현 능력을 본질적으로 모두 갖추고 있음을 보장한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2. 단일 벡터 검색과의 이론적 분리 (Separation)</h3>
+      <p>임의로 높은 차원의 ambient space에서 뽑힌 k-sparse 벡터들의 inner product를 보존하는 유한 차원 단일 벡터 임베딩은 존재하지 않음을 증명한다. 반면 MaxSim은 크기 k의 R^3 벡터 집합만으로 이 정확한 보존을 달성한다. 이는 late-interaction 모델이 어휘의 롱테일(long tail)과 희귀 개체(rare entities)를 다루는 데 왜 특히 적합한지를 수학적으로 공식화한 것이다.</p>
+      <span class="source-ref">PDF p. 2, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3. 논리적 표현력 (Logical Expressivity)</h3>
+      <p>MaxSim이 Soft-OR(fuzzy OR)의 집계로 자연스럽게 기능함을 보이고, 이를 통해 부정이 없는 표현식에 대해 MaxSim이 순위 동등한 CNF(AND of ORs) 평가자로 작동할 수 있음을 증명한다. inner product는 모든 매칭 feature를 더하므로 &#x27;fuzzy AND&#x27;처럼 증거를 누적해 동의어가 여러 개 등장하는 문서를 과도하게 보상하지만, MaxSim은 최댓값을 취하므로 가장 잘 맞는 하나의 표면형(surface form)만 반영해 동의어 매칭에 적합하다. 이는 MaxSim을 초기 정보 검색의 고전적 Boolean search와 연결한다.</p>
+      <span class="source-ref">PDF p. 2, 3, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4. Signed MaxSim 제안과 실증 검증</h3>
+      <p>표준 MaxSim이 재현할 수 없는 실수 값 inner product를 정확히 재현하는 확장인 Signed MaxSim을 제안하고, 이 유사도로 훈련한 모델을 Fallon이라 명명한다. 부정을 포함한 합성 검색 과제에서 표준 ColBERT/MaxSim 베이스라인 대비, 특히 out-of-domain에서 큰 성능 향상을 확인했다(vocabulary shift에서 nDCG@10 0.597→1.000, negation-only 쿼리에서 0.008→0.788).</p>
+      <span class="source-ref">PDF p. 1, 3, 17</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조와 주요 구성요소</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 구조 개요</h3>
+      <p>이 논문은 시스템이 아니라 이론적 프레임워크를 제안하며, 네 개의 축으로 구성된다. (1) Section 3.1: MaxSim이 무한 차원까지 포함한 비음수 벡터 간 inner product를 정확히 재현할 수 있음을 증명. (2) Section 3.2~3.3: 표준 MaxSim은 실수 값 inner product를 정확히 재현할 수 없음을 증명한 뒤(Theorem 3.2), 이를 극복하는 Signed MaxSim을 제안(Theorem 3.3). (3) Section 4: 유한 차원 단일 벡터 inner product는 임의 고차원 sparse inner product를 보존할 수 없음을 rank 논증으로 증명해 분리를 확립(Theorem 4.1). (4) Section 5: MaxSim이 weighted fuzzy OR의 집계이자 positive CNF 평가자임을 증명(Theorem 5.1, 5.2). 마지막으로 Section 6~7에서 Signed MaxSim의 효과를 부정 포함 합성 검색 과제로 실증한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 1: MaxSim (Chamfer) Similarity</h3>
+      <p>late-interaction의 기본 연산. Definition 1.1에서 S(U,V) = Σ_{m∈U} max_{t∈V} ⟨m,t⟩로 정의된다. 각 query 임베딩 m에 대해 document 임베딩 집합 V 안에서 inner product가 최대가 되는 것을 골라 그 값을 취하고, 모든 query 임베딩에 대해 합산한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2: 2차 임베딩 맵 φ(d) = (1, d, d²)</h3>
+      <p>Definition 3.2. 정수 인덱스 d를 R^3 벡터로 보내는 맵이다. 이 벡터와 어떤 2차 다항식의 계수 벡터 c=(c0,c1,c2)의 inner product는 곧 그 다항식을 x=d에서 평가한 값 c0 + c1·d + c2·d²와 같아진다. 즉 &#x27;R^3에서의 inner product = 2차 다항식의 점 평가&#x27;라는 대응을 만든다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3: 다항식 계수 벡터 c(d, w) (Lemma 3.1)</h3>
+      <p>임의의 d∈N과 w∈R≥0에 대해, p(d)=w이고 d와 다른 모든 정수 인덱스 d&#x27;에서 p(d&#x27;)&lt;0인 2차 다항식의 계수 벡터가 존재한다. 구체적으로 p(x) = w - C(x-d)² (C&gt;w, 예: C=w+1)을 쓰면 c(d,w) = (w - C·d², 2Cd, -C)^T가 된다. 이 &#x27;뾰족한 봉우리(localized peak)&#x27; 다항식 덕분에 MaxSim의 max 연산이 인덱스가 일치하는 항만 선택하게 된다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4: Signed MaxSim 유사도 S± (Definition 3.4)</h3>
+      <p>query와 document의 각 원소를 (벡터, 부호 스칼라) 쌍으로 저장한다. 각 query 쌍 (m, s_q)에 대해 max 연산은 &#x27;벡터 성분만&#x27;으로 수행해 최대화하는 document 쌍 (t*(m), s*_d(m))을 찾고, 최종 항은 s_q · s*_d(m) · ⟨m, t*(m)⟩로 계산해 합산한다. 즉 라우팅(어느 document 임베딩을 고를지)과 부호(그 기여가 양수인지 음수인지)를 분리한다. 이 분리가 max 연산의 인덱스 매칭 기능을 유지하면서도 음수 기여를 가능하게 하는 핵심이다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 5: Signed Vector Sets (Definition 3.5)</h3>
+      <p>실수 벡터 u는 Us = {(|u_i|φ(i), sgn(u_i)) | i∈supp(u)}로, 실수 벡터 v는 Vs = {(c(i,|v_i|), sgn(v_i)) | i∈supp(v)} ∪ {(0,1)}로 표현한다. document 쪽에 추가된 (0,1) 쌍은 매칭되지 않는 인덱스에 대한 기준(baseline) 역할을 하며, 불일치 시 기여를 0으로 만든다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 6: 일반화된 임베딩 맵 φ_M과 OR-clause 다항식 c(S)</h3>
+      <p>Definition 5.3의 φ_M(d) = (1, d, d², ..., d^{M-1})^T와 Lemma 5.1의 OR-clause 다항식이다. 크기 m인 query group S에 대해, Lagrange 보간 다항식 x_S(t)로 그룹 내 키들에서 원하는 가중치를 맞추고, 루트 다항식 y_S(t) = Π_{d∈D_S}(t-d)를 써서 p_S(t) = x_S(t) - C·(y_S(t))²로 정의하면 그룹 내 키에서는 정확히 가중치를, 그 외 키에서는 음수를 반환한다. 이 다항식의 최대 차수는 2m이므로 계수 벡터는 R^{2m+1}에 놓이고, 따라서 M = 2·max_j|S_j| + 1의 차원이 필요하다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 7: Fallon 모델 (실험용 구현)</h3>
+      <p>Signed MaxSim으로 훈련된 late-interaction 검색 모델. ModernBERT(hidden 768, 149M 파라미터)를 백본으로 쓰고, 토큰 hidden state를 5-layer MLP로 128차원 임베딩으로 투영한 뒤 ℓ2 정규화한다. Fallon은 여기에 부호(가중치) 생성을 위한 별도의 5-layer MLP(출력 차원 1)를 추가한다. 이론상 부호는 ±1이지만 경사 하강에 문제가 되므로 실제로는 임의의 실수 가중치를 허용한다(Tanh 활성화도 시도했으나 ℓ2 정규화와 함께 쓰면 훈련이 불안정해 활성화 없이 사용). 베이스라인 ColBERT는 Santhanam et al.[27] 설계를 따라 query/document를 하나의 공유 인코더로 인코딩하고 표준 MaxSim으로 점수를 매긴다.</p>
+      <span class="source-ref">PDF p. 14, 15, 16</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Step 1 — Query 인코딩</h3>
+      <p>query 벡터 u의 0이 아닌 각 성분 u_i를 인덱스 i의 임베딩 φ(i)=(1,i,i²)에 곱해 U = {u_i·φ(i) | i∈supp(u)}를 만든다. Signed 버전에서는 크기와 부호를 분리해 (|u_i|·φ(i), sgn(u_i)) 쌍으로 저장한다. 이 매핑은 오직 u만 보고 수행되므로 dual-encoder 구조가 유지된다.</p>
+      <span class="source-ref">PDF p. 6, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 2 — Document 인코딩</h3>
+      <p>document 벡터 v의 0이 아닌 각 성분 v_i에 대해 Lemma 3.1의 다항식 계수 c(i, v_i)를 계산하고, 매칭되지 않는 인덱스를 위한 기준으로 영벡터를 추가해 V = {c(i,v_i) | i∈supp(v)} ∪ {0}을 만든다. Signed 버전에서는 c(i,|v_i|)와 sgn(v_i)를 쌍으로 두고 기준 쌍으로 (0,1)을 추가한다. 이 매핑도 오직 v만 보고 수행된다.</p>
+      <span class="source-ref">PDF p. 6, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 3 — Max 연산에 의한 인덱스 라우팅</h3>
+      <p>각 query 임베딩 u_i·φ(i)에 대해 V의 모든 원소와의 inner product를 계산한다. 인덱스가 일치하는 c(i,v_i)와의 값은 u_i·p(i) = u_i·v_i (&gt;0)이고, 다른 인덱스 j≠i의 c(j,v_j)와의 값은 Lemma 3.1에 의해 p(i)&lt;0이므로 음수가 된다. 영벡터와의 값은 0이다. 따라서 (a) i가 v의 support에 있으면 max는 u_i·v_i, (b) 없으면 음수 항들을 제치고 영벡터가 선택되어 max는 0이 된다. 즉 max 연산이 &#x27;인덱스 일치 여부를 판정하는 라우터&#x27;로 동작한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 4 — 합산과 정확한 inner product 복원</h3>
+      <p>모든 query 임베딩의 최댓값 항을 더하면 Σ_{i∈supp(u)} u_i·v_i = ⟨u,v⟩가 되어 정확한 inner product가 복원된다(Theorem 3.1). Signed 버전에서는 max로 선택된 document 쌍의 부호와 query 부호를 곱한 뒤 합산하며, 일치 시 기여는 sgn(u_i)·sgn(v_i)·|u_i||v_i| = u_i·v_i, 불일치 시에는 (0,1)이 선택되어 0이 되므로 임의의 실수 벡터에 대해서도 ⟨u,v⟩가 정확히 복원된다(Theorem 3.3).</p>
+      <span class="source-ref">PDF p. 7, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 5 — OR-clause 인코딩과 CNF 평가 (Section 5)</h3>
+      <p>query group(하나의 OR-clause) 내 여러 키를 Lagrange 보간 다항식 p_S로 하나의 계수 벡터에 인코딩하고, document는 φ_M(d_i)에 가중치 w_i를 곱한 벡터들과 영벡터로 임베딩한다. 그러면 MaxSim의 내부 max가 절 내에서 가장 강하게 일치하는 키의 가중 점수 w_i·w_{q,i}를 선택해 Weighted Max-OR를 계산하고(Lemma 5.2, Theorem 5.1), 전체 MaxSim은 모든 절의 Max-OR 합이 된다. 가중치를 모두 1로 두면 MaxSim 점수는 &#x27;문서가 만족시킨 절의 개수&#x27;와 정확히 같아지고, 이는 엄격한 Boolean 점수 함수와 순위 동등(rank equivalent)해진다(Theorem 5.2).</p>
+      <span class="source-ref">PDF p. 11, 12, 13, 14</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 6 — 실험: 모델 훈련</h3>
+      <p>ModernBERT 백본으로 ColBERT(표준 MaxSim)와 Fallon(Signed MaxSim) 두 모델을, 부정을 포함하는 LIMIT 형식 합성 데이터에 대해 in-batch negative와 hard negative를 함께 쓰는 contrastive cross-entropy loss(학습 가능한 temperature τ, 초기값 1)로 훈련한다. 2,500 스텝마다 validation nDCG@10으로 평가하고, 3회 연속 개선이 없으면 훈련을 중단한 뒤 최고 checkpoint를 선택한다.</p>
+      <span class="source-ref">PDF p. 14, 15, 16</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Step 7 — 실험: 평가</h3>
+      <p>In-Domain, Different Vocabulary, Negation Only 세 벤치마크에서 exhaustive search(전수 탐색)로 모든 문서의 정확한 점수를 계산해 top-1,000을 반환하고, nDCG@10, P@10, AP로 성능을 측정한다. 근사 검색(PLAID 등)을 쓰지 않은 이유는 새 late-interaction 방식이 표준 근사 기법과 직접 호환되지 않기 때문이다.</p>
+      <span class="source-ref">PDF p. 15, 16</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 정리(Theorem) 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Theorem 3.1 — MaxSim의 비음수 inner product 정확 재현</h3>
+      <p>u, v ∈ R^n_{≥0}가 각각 k_u-sparse, k_v-sparse일 때(n은 가산 무한도 가능), |U| = k_u, |V| = k_v + 1인 R^3 벡터 집합 U, V가 존재해 ⟨u,v⟩ = S(U,V)를 만족한다. 증명은 Step 1~4의 구성과 두 케이스 분석(v_i=0이면 영벡터가 max, v_i&gt;0이면 c(i,v_i)가 max)으로 완결된다. U와 V는 서로를 모른 채 독립적으로 구성될 수 있어 실제 검색 시스템의 비대칭 dual-encoder 구조와 호환된다. 저자들은 유사한 다항식 접근이 sparse matrix의 정확한 인수분해 연구([3],[4])에서 쓰였음을 밝힌다.</p>
+      <span class="source-ref">PDF p. 5, 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Theorem 3.2 — 표준 MaxSim의 sparsity-preserving 한계</h3>
+      <p>Definition 3.3의 contextual sparsity-preserving encoding(임베딩 차원 M 고정, query/document의 입력 의존 임베딩 개수가 각각 support 크기와 같고, 모든 문서가 공유하는 고정 집합 F를 추가로 허용)에서, 모든 1-sparse 벡터 쌍 u, v ∈ R^n에 대해 S(U(u),V(v)) = ⟨u,v⟩가 성립하면 n ≤ M이어야 한다. 증명은 u_i = -e_i, v_j = e_j로 두어 ⟨u_i,v_j⟩ = -δ_ij를 요구하고, 공유 벡터의 기여 b_i = max_{f∈F}⟨m_i,f⟩가 모든 문서에 대해 동일하므로 b_i ≤ -1이 강제되며, 따라서 j≠i에서 ⟨m_i,t_j⟩ = 0이 되어 행렬 A_ij = ⟨m_i,t_j⟩가 nonzero 대각 성분만 갖는 대각 행렬(rank = n)이 되는데, A = U V^T이므로 rank(A) ≤ M이라는 모순에서 n ≤ M을 얻는다. 특히 0 ∈ F이면 모든 MaxSim 점수가 비음수가 되어 ⟨-e_i, e_i⟩ = -1조차 복원할 수 없다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Theorem 3.3 — Signed MaxSim의 실수 inner product 정확 재현</h3>
+      <p>임의의 실수 벡터 u(k_u-sparse), v(k_v-sparse)에 대해 |Us| = k_u, |Vs| = k_v + 1인 (R^3 × {-1,1}) 쌍 집합이 존재해 ⟨u,v⟩ = S±(Us,Vs)를 만족한다. 핵심 아이디어는 크기(magnitude)에만 다항식 구성을 적용해 max 연산이 여전히 인덱스를 정확히 라우팅하게 하고, 부호는 max 이후에 곱해 실제 곱의 부호를 복원하는 것이다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Theorem 4.1 — 단일 벡터 inner product의 차원 병목</h3>
+      <p>S = {e_1,...,e_{d+1}} ⊂ R^{d+1}(표준 기저 벡터)에 대해, 임의의 유한 차원 d와 임의의 (비대칭 허용) 매핑 f, g: S → R^d에 대해 모든 x,y∈S에서 ⟨f(x),g(y)⟩ = ⟨x,y⟩를 만족하는 f, g는 존재하지 않는다. 증명은 매핑된 벡터들의 pairwise inner product 행렬 U^T V가 항등행렬 I_{d+1}과 같아야 하는데 rank(U^T V) ≤ d이므로 d+1 = rank(I_{d+1}) ≤ d라는 모순이 발생한다는 것이다. 이 rank 병목 때문에 임의로 큰 어휘를 고정 차원에 표현하려면 본질적으로 근사가 불가피한 반면, MaxSim은 k-sparse 벡터를 R^3 벡터 k개로 표현해 O(k) 파라미터만으로 rank 제약을 우회한다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Theorem 5.1 / 5.2 — Weighted Max-OR와 positive CNF 평가</h3>
+      <p>Definition 5.2의 Weighted Max-OR는 MaxOR(S,D) = max({0} ∪ {w_i·w_{q,i} | (d_i,w_i)∈D and (d_i,w_{q,i})∈S})로, 매칭 항이 없을 때 0이 되도록 {0}을 포함시킨다. Theorem 5.1은 M = 2·max_{S_j∈Q}|S_j| + 1일 때 |Q| = |Q|, |D| = |D|+1인 R^M 벡터 집합들이 존재해 S(Q,D) = Σ_{S_j∈Q} MaxOR(S_j, D)임을 보인다. Theorem 5.2는 모든 가중치를 1로 두면 MaxSim 점수가 문서가 만족시킨 절의 개수와 정확히 같아지므로, 모든 절을 만족하는 문서는 h점, 그렇지 않은 문서는 h-1점 이하가 되어 엄격 Boolean 점수 함수 s_K와 순위 동등(Definition 5.4)임을 증명한다. 여기서도 Q와 D는 독립적으로 구성될 수 있다.</p>
+      <span class="source-ref">PDF p. 11, 12, 13, 14</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>합성 데이터셋을 쓴 이유</h3>
+      <p>구조적 영향(architectural impact)을 분리해 관찰하고 내부 동작을 들여다보기 쉽게 하기 위해 훈련과 평가 모두 합성(synthetic) 검색 과제를 사용했다. LIMIT 데이터셋[31]에서 영감을 받아 문서는 &#x27;John Smith likes Alternative Rock, Angel Food Cakes, ...&#x27; 형식이고, 쿼리는 &#x27;People who like Alternative Rock and Blackberries but do not like Cherries&#x27;처럼 포함해야 할 속성과 포함하면 안 되는 속성을 함께 요구한다. 원래 LIMIT은 단일 속성 쿼리만 있지만, 이 논문은 다중 포함 속성과 부정 속성을 추가했다. 합성 데이터를 쓰면 validation-test 불일치나 훈련 데이터 부족 같은 교란 요인을 제거할 수 있고, 견고성 테스트용 변형을 만들기 쉽다.</p>
+      <span class="source-ref">PDF p. 14, 15</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>훈련 데이터</h3>
+      <p>원본 LIMIT의 속성과 이름 생성 방식을 사용해 쿼리 100k개, 문서 200k개를 생성했다. in-batch negative가 실제 positive가 될 위험을 줄이기 위해 쿼리당 positive 문서 수가 최소가 되도록 구성했다. 각 쿼리는 1~4개의 포함(inclusion) 항과 반드시 1개의 부정(negated) 항을 갖는다. 각 훈련 쿼리에는 hard negative 32개(부정 항을 포함한다는 점만 빼면 관련 있는 문서)가 묶여 있고, hard negative가 32개보다 적으면 무작위 negative로 채웠다.</p>
+      <span class="source-ref">PDF p. 15</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 벤치마크 3종</h3>
+      <p>(1) In-Domain: 훈련과 동일한 쿼리 형식과 vocabulary이며 쿼리는 훈련과 겹치지 않는다. (2) Different Vocabulary: 동일한 설정이지만 Gemini로 원본 vocabulary를 조건으로 새 vocabulary 항을 생성해 사용하며, 새로운 feature에 대한 일반화를 본다. (3) Negation Only: vocabulary는 In-Domain과 같지만 쿼리가 부정만 포함하도록 구조를 바꾼다(단일 또는 이중 부정, 절반은 단일 부정). 새로운 쿼리 형식에 대한 일반화를 본다. 각 벤치마크는 쿼리 2,000개, 문서 corpus 100k개다. Validation 데이터셋은 In-Domain과 같은 설정으로 쿼리 1,000개, 문서 40k개이며 훈련/평가와 쿼리가 서로소다.</p>
+      <span class="source-ref">PDF p. 15, 16</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>모델과 하이퍼파라미터</h3>
+      <p>두 모델 모두 ModernBERT[30] 백본(hidden 768, 149M 파라미터), 쿼리 접두사 &#x27;query: &#x27;, 최대 196 토큰 truncation, query-expansion 토큰 미사용, 5-layer MLP로 768→128 투영 후 ℓ2 정규화를 공유한다. Fallon은 가중치(부호) 생성을 위한 추가 5-layer MLP(출력 차원 1)를 갖는다. Transformers와 PyTorch로 구현했고 AdamW(weight decay 없음), BF16 mixed precision, TF32 텐서 연산을 사용했다. Table 1에 따르면 ColBERT는 학습률 1e-5, Fallon은 8e-5이며, 두 모델 모두 유효 배치 128, 총 223,640 스텝, hard negative 7개, warm-up 5%, 선형 LR decay, attention/MLP dropout 0.1을 사용한다.</p>
+      <span class="source-ref">PDF p. 15, 16</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 절차와 지표</h3>
+      <p>각 쿼리에 대해 corpus의 모든 문서와 정확한 유사도를 계산하는 exhaustive search로 top-1,000을 반환한다. PLAID[26] 같은 표준 근사 기법을 쓰지 않은 이유는 새 late-interaction 방식이 이들과 직접 호환되지 않기 때문이며, 근사 기법 개발은 본 연구 범위 밖이라고 명시한다. 지표는 nDCG@10, P@10(상위 결과의 정밀도), AP(재현율과 정밀도를 함께 반영)이다. 다만 100k corpus에서 top-1,000만 검색하므로 관련 문서가 매우 많은 쿼리에서는 AP의 상한이 낮아질 수 있다고 저자들이 미리 밝힌다. 통계적 유의성은 paired Student&#x27;s t-test로 계산하고 p&lt;0.01을 유의하다고 본다.</p>
+      <span class="source-ref">PDF p. 16, 17</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>In-Domain: 표준 MaxSim도 잘하지만 Fallon이 유의하게 더 낫다</h3>
+      <p>Table 2에 따르면 In-Domain에서 ColBERT는 nDCG@10 0.982, P@10 0.875, AP 0.943을 기록해, 음수 값을 자연스럽게 다루지 못함에도 합성 과제를 충분히 학습할 수 있음을 보인다. 그러나 Fallon은 nDCG@10 0.997, P@10 0.893, AP 0.997로 모든 지표에서 통계적으로 유의하게(p&lt;0.01) 더 높았다.</p>
+      <span class="source-ref">PDF p. 17</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Different Vocabulary: out-of-domain에서 격차가 크게 벌어진다</h3>
+      <p>vocabulary가 바뀌자 ColBERT는 nDCG@10 0.597, P@10 0.587, AP 0.511로 크게 떨어진 반면 Fallon은 nDCG@10 1.000, P@10 0.955, AP 1.000을 기록했다. Fallon은 오히려 In-Domain보다 좋아졌는데 저자들은 쿼리당 positive 수의 변화 때문일 가능성을 언급한다. 저자들은 이 결과가 ColBERT의 In-Domain 성능이 훈련·평가 데이터가 feature를 공유한다는 사실에 크게 의존함을 보여주며, 반대로 Fallon은 원하지 않는 feature를 직접 페널티로 처리하는 훨씬 일반적인 전략을 학습했다고 해석한다.</p>
+      <span class="source-ref">PDF p. 17</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Negation Only: 표준 MaxSim의 구조적 실패가 드러난다</h3>
+      <p>Negation Only 쿼리에서는 100k corpus의 대다수 문서가(부정된 속성을 갖지 않으므로) 관련 문서이기 때문에 무작위 검색조차 비교적 잘해야 한다. 그럼에도 ColBERT는 nDCG@10 0.008, P@10 0.009, AP 0.002로 거의 0에 가까웠는데, 이는 ColBERT가 부정된 속성을 &#x27;포함한&#x27; 문서를 오히려 상위에 적극적으로 올려놓고 있음을 뜻한다. 저자들은 이것이 MaxSim의 자연스러운 귀결이라고 설명한다. MaxSim에서 어떤 query 임베딩의 점수를 낮게 만들려면 무관한 것까지 포함해 모든 document 임베딩과의 유사도가 낮아야 하는데, 훈련 중 ColBERT는 항상 어떤 관련 feature와 매칭하도록 학습되므로 매칭할 관련 측면이 전혀 없을 때 무너진다. Fallon은 nDCG@10 0.788, P@10 0.789, AP 0.039로 이 실패를 해소하는데, Signed MaxSim이 음수 값을 기본적으로 지원해 feature에 직접 페널티를 줄 수 있기 때문이다.</p>
+      <span class="source-ref">PDF p. 17</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>낮은 AP에 대한 저자들의 해석</h3>
+      <p>Negation Only에서 Fallon의 AP(0.039)는 ColBERT(0.002) 대비 크게 개선되었지만 절대값은 낮다. 저자들은 이것이 주로 top-1,000만 평가하는 데서 오는 인공적 결과(artifact)라고 설명한다. Negation Only 쿼리에서는 관련 문서가 수만 개에 이르므로 top-1,000 밖의 관련 문서는 아무리 모델이 좋아도 precision에 기여할 수 없다. 다만 완전한 성능과의 남은 격차는 일반화의 한계가 여전히 존재할 수 있음을 시사하며, 그 한계는 표준 MaxSim이 보이는 한계보다는 훨씬 덜 치명적이라고 덧붙인다.</p>
+      <span class="source-ref">PDF p. 17</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>종합적 의미</h3>
+      <p>세 설정의 결과를 종합해 저자들은 Signed MaxSim이 표준 MaxSim의 근본적 한계, 즉 의미론적 부정과 특정 토큰 매칭의 억제를 요구하는 복잡한 관계 패턴을 인코딩하지 못하는 문제를 해결한다고 주장한다. ColBERT는 훈련과 평가 분포가 잘 정렬되어 있을 때는 무난하지만 분포가 바뀌면 성능이 급격히 떨어지는 반면, Fallon은 훨씬 잘 일반화한다.</p>
+      <span class="source-ref">PDF p. 17</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문이 확립한 것</h3>
+      <p>저자들은 MaxSim이 비음수 벡터에 대해 inner product 기반 검색만큼은 확실히 표현력이 있으며, late-interaction 모델이 O(k) 공간만으로 무한 차원 sparse 표현을 정확히 재현할 수 있음을 확립했다. 이 정확한 재현은 유한 차원 단일 벡터 모델에서는 불가능함을 증명해 두 패러다임의 용량(capacity)을 형식적으로 분리했다. 동시에 표준 MaxSim은 실수 값 벡터 간 inner product를 정확히 재현할 수 없어 inner product 유사도를 보편적으로 대체하지는 못한다는 것도 증명했고, 이를 보완하는 Signed MaxSim은 임의의 단일 벡터 inner product 기반 검색 방식만큼 표현력이 있음이 보장된다. 또한 MaxSim이 fuzzy OR의 집계로서 positive CNF를 자연스럽게 평가함을 보여, late-interaction의 실증적 우위에 대한 또 다른 설명을 제공하고 구조적 Boolean 질의를 활용하던 전통 IR과 연결한다.</p>
+      <span class="source-ref">PDF p. 17, 18</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>향후 방향</h3>
+      <p>저자들은 다항식 임베딩 구성이 주로 이론적 도구이지만, 정확한 논리 평가가 late-interaction 공간 안에서 기하학적으로 가능함을 보여준다고 강조한다. 향후 실증 연구는 훈련된 모델이 이러한 국소적(localized) 구조를 암묵적으로 학습하는지, 혹은 임베딩을 이 구성 쪽으로 명시적으로 정규화하면 out-of-domain 일반화가 개선되는지를 조사할 수 있다.</p>
+      <span class="source-ref">PDF p. 18</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름: 다항식 구성으로 MaxSim이 inner product를 재현하는 과정</h3>
+                <span class="source-ref">PDF p. 6, 7, 9, 10</span>
+              </div>
+              <p>Theorem 3.1과 Theorem 3.3의 구성 절차를 흐름도로 표현했다. query 쪽은 인덱스를 평가점(φ)으로, document 쪽은 국소 봉우리 다항식의 계수로 인코딩하며, MaxSim의 max 연산이 인덱스 일치 여부를 판정하는 라우터 역할을 한다. Signed 버전에서는 부호가 max 이후에 곱해진다.</p>
+              <div class="mermaid">
+flowchart TB
+  U[&quot;query 벡터 u (k_u-sparse)&quot;] --&gt; U1[&quot;비영 성분 u_i 추출&quot;]
+  U1 --&gt; U2[&quot;임베딩 φ(i)=(1,i,i²)에 |u_i| 곱&quot;]
+  U2 --&gt; U3[&quot;query 집합 U (또는 부호와 쌍으로 Us)&quot;]
+  V[&quot;document 벡터 v (k_v-sparse)&quot;] --&gt; V1[&quot;비영 성분 v_i 추출&quot;]
+  V1 --&gt; V2[&quot;Lemma 3.1 다항식 계수 c(i,|v_i|)&quot;]
+  V2 --&gt; V3[&quot;영벡터 0 (또는 쌍 (0,1)) 추가&quot;]
+  V3 --&gt; V4[&quot;document 집합 V (또는 Vs)&quot;]
+  U3 --&gt; M{&quot;각 query 임베딩에 대해 max 내적 계산&quot;}
+  V4 --&gt; M
+  M --&gt;|&quot;인덱스 일치&quot;| R1[&quot;값 = |u_i||v_i| (양수)&quot;]
+  M --&gt;|&quot;인덱스 불일치&quot;| R2[&quot;다항식 값 음수 → 영벡터 선택 → 0&quot;]
+  R1 --&gt; S1[&quot;부호 곱: sgn(u_i)·sgn(v_i)&quot;]
+  R2 --&gt; S2[&quot;기여 0&quot;]
+  S1 --&gt; SUM[&quot;모든 query 임베딩 합산&quot;]
+  S2 --&gt; SUM
+  SUM --&gt; OUT[&quot;결과 = ⟨u,v⟩ 정확 재현&quot;]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>표준 MaxSim vs Signed MaxSim (부정 질의 처리 차이)</h3>
+                <span class="source-ref">PDF p. 4, 8, 9</span>
+              </div>
+              <p>Figure 1의 구조를 도식화했다. 표준 MaxSim은 각 query 토큰마다 raw 유사도의 최댓값을 그대로 취하므로, 부정 토큰(&#x27;No Google&#x27;)에 대해서도 우연한 양의 유사도가 선택되어 두 문서를 구분하지 못한다. Signed MaxSim은 크기(magnitude) 유사도로 매칭할 feature를 고르는 라우팅 단계와, 부호로 그 기여의 방향을 정하는 단계를 분리해 부정 개념의 명시적 등장이 큰 음수 기여를 만들도록 한다. 구체적 수치는 Figure 1의 예시 값이다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph A[&quot;A. 표준 MaxSim&quot;]
+    A1[&quot;query 토큰 임베딩&quot;] --&gt; A2[&quot;document 임베딩과 raw 내적&quot;]
+    A2 --&gt; A3[&quot;각 query 토큰별 최댓값 선택&quot;]
+    A3 --&gt; A4[&quot;합산&quot;]
+    A4 --&gt; A5[&quot;부정 토큰도 우연한 양의 유사도가 선택됨\n두 문서 점수 동일 → 구분 실패&quot;]
+  end
+  subgraph B[&quot;B. Signed MaxSim S±&quot;]
+    B1[&quot;query: (크기 임베딩, 부호)&quot;] --&gt; B2[&quot;크기 유사도만으로 최댓값 선택 (라우팅)&quot;]
+    B2 --&gt; B3[&quot;선택된 document의 부호 × query 부호&quot;]
+    B3 --&gt; B4[&quot;부호 적용 후 합산&quot;]
+    B4 --&gt; B5[&quot;부정 개념이 실제 등장하면 큰 음수 기여\n관련 문서가 올바르게 상위&quot;]
+  end
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>이론적 결과들의 관계 (표현력 지도)</h3>
+                <span class="source-ref">PDF p. 5, 7, 8, 9, 10, 11, 12, 13, 14</span>
+              </div>
+              <p>논문의 네 정리가 어떻게 서로 맞물려 &#x27;MaxSim ⊇ 비음수 inner product&#x27;, &#x27;Signed MaxSim ⊇ 임의 실수 inner product&#x27;, &#x27;단일 벡터 inner product ⊉ 무한 차원 sparse inner product&#x27;라는 표현력 지도를 만드는지 보여준다.</p>
+              <div class="mermaid">
+flowchart LR
+  T31[&quot;Theorem 3.1\nMaxSim = 비음수 sparse\ninner product 정확 재현&quot;] --&gt; SUB[&quot;MaxSim이 BM25/SNRM/SPLADE의\n표현력을 포함&quot;]
+  T41[&quot;Theorem 4.1\n유한 차원 단일 벡터는\n무한 차원 sparse 보존 불가 (rank 병목)&quot;] --&gt; SEP[&quot;단일 벡터 vs multi-vector\n이론적 분리&quot;]
+  T31 --&gt; SEP
+  T32[&quot;Theorem 3.2\n표준 MaxSim은 실수 값\ninner product 재현 불가&quot;] --&gt; EXT[&quot;Signed MaxSim 제안&quot;]
+  EXT --&gt; T33[&quot;Theorem 3.3\nSigned MaxSim = 임의 실수\ninner product 정확 재현&quot;]
+  T51[&quot;Theorem 5.1\nMaxSim = Weighted Max-OR 합&quot;] --&gt; T52[&quot;Theorem 5.2\npositive CNF와 순위 동등&quot;]
+  T33 --&gt; EXP[&quot;실험: Fallon vs ColBERT\n(부정 포함 합성 과제)&quot;]
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>nDCG@10 비교 (ColBERT vs Fallon)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 17 · Table 2 · 쿼리 2,000개 대 100k 문서 corpus, exhaustive search로 top-1,000 검색. Fallon의 모든 값은 paired Student&#x27;s t-test에서 p&lt;0.01로 유의(†).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>P@10 비교 (ColBERT vs Fallon)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 17 · Table 2 · 쿼리 2,000개 대 100k 문서 corpus, exhaustive search로 top-1,000 검색. Fallon의 모든 값은 p&lt;0.01로 유의(†).
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>AP (Average Precision) 비교 (ColBERT vs Fallon)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 17 · Table 2 · 쿼리 2,000개 대 100k 문서 corpus, top-1,000만 검색하므로 관련 문서가 수만 개인 Negation Only 설정에서는 AP 상한이 구조적으로 낮음(저자 명시). Fallon의 모든 값은 p&lt;0.01로 유의(†).
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>&#x27;MaxSim이 왜 잘 작동하는가&#x27;라는 오래된 실증적 관찰에 대해, 근사 bound가 아니라 정확한(exact) 구성적 증명으로 답한다는 점이 이 논문의 가장 큰 강점이다. MUVERA/LEMUR 계열이 MaxSim을 inner product로 근사하는 오차 bound만 제공했던 것과 대비된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 5, 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구성이 dual-encoder 제약을 존중한다. U는 오직 u만 보고, V는 오직 v만 보고 독립적으로 만들어지므로(Theorem 3.1, 3.3, 5.1에서 모두 명시), 이론적 결과가 &#x27;문서를 미리 색인하고 쿼리는 나중에 오는&#x27; 실제 검색 시스템 설정과 호환된다. 표현력 이론에서 흔히 놓치기 쉬운 부분을 명시적으로 챙겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 9, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>불가능성 정리(Theorem 3.2)의 가정을 의도적으로 매우 관대하게 잡았다. 각 임베딩이 입력 벡터 전체를 임의로 참조해도 되고, 모든 문서가 공유하는 고정 벡터 집합 F도 허용한다. 그럼에도 불가능성이 성립하므로 결과가 강하고, 동시에 &#x27;무엇을 완화하면 가능해지는가&#x27;(= 부호를 max 밖으로 빼는 것)를 정확히 지목해 Signed MaxSim이라는 처방으로 자연스럽게 이어진다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>이론이 실제 아키텍처 변경으로 곧장 번역된다. Fallon은 ColBERT 대비 &#x27;토큰별 가중치를 만드는 MLP 하나 추가&#x27;라는 최소 변경만 필요하며(저자들도 &#x27;minimal changes&#x27;라고 표현), 그 최소 변경이 negation-only 설정에서 0.008 → 0.788이라는 극적 차이를 만든다. 이론적 기여가 장식이 아니라 실행 가능한 설계 지침임을 보여준다.</span>
+              </div>
+              <span class="source-ref">PDF p. 16, 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>실패 모드에 대한 해석이 설득력 있다. Negation Only에서 corpus 대다수가 관련 문서라 무작위 검색도 잘해야 하는데 ColBERT가 near-zero라는 사실은 단순한 &#x27;성능 저하&#x27;가 아니라 &#x27;반대로 랭킹하고 있다&#x27;는 진단이며, 이는 MaxSim의 max 구조에서 예측되는 결과와 정확히 부합한다. 이론과 실증이 같은 메커니즘을 가리킨다.</span>
+              </div>
+              <span class="source-ref">PDF p. 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>MaxSim을 fuzzy OR / positive CNF 평가자로 재해석한 Section 5는 late-interaction을 고전 Boolean IR과 잇는 개념적 다리를 놓는다. &#x27;inner product = fuzzy AND(증거 누적), MaxSim = fuzzy OR(최선의 한 매칭)&#x27;이라는 대비는 동의어가 여러 번 등장하는 문서를 과보상하지 않는다는 실무적 직관을 이론으로 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12, 13, 14</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Theorem 3.2(표준 MaxSim의 실수 값 재현 불가)는 임베딩 개수가 원본 벡터의 sparsity에 묶여 있는(tied) 경우에만 성립한다. 임베딩 개수를 sparsity와 분리(decouple)하는 더 완화된 설정에서도 정확한 실수 값 재현이 불가능한지는 다루지 않았으며 열린 문제로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 18</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>MaxSim이 표현할 수 있는 모든 유사도가 sparse 무한 차원 inner product로 정확히 표현되거나 근접 근사될 수 있는지(즉 역방향 포함 관계)는 열린 문제로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 18</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>MaxSim이 positive CNF(부정 없는 CNF)에 대해 순위 동등한 평가자임은 증명했으나, 부정을 포함한 일반 CNF 전체에 대해서도 표준 MaxSim이 순위 동등한 평가자가 될 수 있는지는 열린 문제로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 18</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>실험은 exhaustive search(전수 탐색)만 사용했다. 제안된 Signed MaxSim은 PLAID[26] 같은 표준 근사 검색 기법과 직접 호환되지 않으며, 호환되는 근사 검색 기법 개발은 본 연구 범위 밖이라고 저자들이 명시했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 16</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Negation Only 설정에서 Fallon의 AP(0.039)는 ColBERT 대비 크게 개선되었지만 여전히 완전한 성능과 거리가 있다. 저자들은 주된 원인을 top-1,000만 평가하는 데서 오는 인공적 결과로 보면서도, 완전한 성능과의 남은 격차는 일반화에 여전히 한계가 있을 수 있음을 시사한다고 직접 언급했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 17</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Fallon 훈련 시 정규화되지 않은(non-normalized) 임베딩을 쓰면 성능이 나빠졌다. 저자들은 unbounded document score가 contrastive loss의 훈련 신호를 저하시키기 때문으로 추정하며, 대안적 정규화 방법을 향후 연구에서 조사할 것을 권한다. 또한 이론상 ±1이어야 할 부호를 경사 하강 문제 때문에 임의 실수 가중치로 완화했고(Tanh 활성화는 훈련 불안정으로 포기), 실제 구현이 이론적 구성과 정확히 일치하지는 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 16</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>다항식 임베딩 구성은 주로 이론적 도구이며, 실제로 훈련된 신경망이 이러한 국소적(localized) 구조를 암묵적으로 학습하는지, 혹은 이 구성 쪽으로 임베딩을 명시적으로 정규화하면 out-of-domain 일반화가 개선되는지는 향후 실증 연구 과제로 남겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 18</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>실험이 전적으로 합성(synthetic) LIMIT 변형 데이터에 의존한다. 저자들은 교란 요인 제거를 위한 의도적 선택이라고 밝혔으나, MS MARCO나 BEIR 같은 실제 검색 벤치마크에서의 검증이 없으므로 Signed MaxSim의 이득이 자연어의 복잡한 부정·함의 표현에서도 유지되는지는 이 논문만으로는 알 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 14, 15</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>이론적 구성이 요구하는 다항식 계수 벡터는 값의 범위가 매우 클 수 있다. Lemma 3.1의 c(d,w) = (w - C·d², 2Cd, -C)에서 인덱스 d가 커질수록 성분 크기가 d²에 비례해 커지고, Lemma 5.1의 OR-clause 다항식은 차수 2m이므로 더 심하다. 실제 신경망이 ℓ2 정규화된 128차원 임베딩으로 이런 구성을 재현하기는 수치적으로 어려울 수 있으며, 논문은 이 수치 안정성(numerical conditioning) 문제를 다루지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Section 5의 CNF 평가 결과는 임베딩 차원 M = 2·max|S_j| + 1을 요구하므로, OR-clause의 크기(동의어 그룹의 크기)에 비례해 차원이 선형으로 커진다. 즉 &#x27;차원 병목을 우회한다&#x27;는 Section 4의 결론이 논리 표현력 쪽에는 그대로 적용되지 않으며, 큰 절을 다루려면 결국 더 큰 임베딩 차원이 필요하다는 상충 관계가 존재한다. 논문은 이 상충을 명시적으로 논하지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Table 1에 따르면 ColBERT의 학습률은 1e-5(스윕으로 선택), Fallon은 8e-5인데, Fallon의 학습률이 어떻게 선택되었는지는 명시되지 않는다. 두 모델에 동등한 튜닝 예산이 주어졌는지 확인되지 않으므로, 성능 격차의 일부가 하이퍼파라미터 탐색의 비대칭에서 올 가능성을 완전히 배제하기는 어렵다. 다만 negation-only에서의 0.008 vs 0.788 격차는 하이퍼파라미터만으로 설명하기에는 너무 크다.</span>
+              </div>
+              <span class="source-ref">PDF p. 16</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Signed MaxSim은 문서 점수가 음수가 될 수 있고 top-k 선택이 &#x27;크기로 라우팅한 뒤 부호를 곱하는&#x27; 두 단계로 나뉘므로, MaxSim의 단조성(monotonicity)에 의존하는 기존 인덱싱/가지치기(pruning) 기법을 그대로 쓸 수 없다. 저자들이 PLAID 비호환성을 언급했지만, 이는 단순한 엔지니어링 미완이 아니라 대규모 배포를 가로막는 구조적 장애물로 보인다. 100k 문서 규모에서 exhaustive search가 가능했던 것이 실험을 성립시킨 전제다.</span>
+              </div>
+              <span class="source-ref">PDF p. 16</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>임베딩 개수를 원본 벡터의 sparsity와 분리하면(예: query/document당 임베딩을 support 크기보다 더 많이 허용하면) 표준 MaxSim만으로도 실수 값 inner product를 정확히 재현할 수 있는가? 가능하다면 Signed MaxSim 없이도 부정 처리가 되는가?</h3>
+              </div>
+              <p>저자들이 Theorem 3.2의 가정(임베딩 개수가 sparsity에 tied)을 완화한 경우를 열린 문제로 직접 남겼다. 이 질문의 답에 따라 Signed MaxSim이라는 아키텍처 변경이 &#x27;필수&#x27;인지 &#x27;편의&#x27;인지가 갈린다.</p>
+              <span class="source-ref">PDF p. 8, 18</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>표준 MaxSim이 부정을 포함한 일반 CNF 전체에 대해 순위 동등한 평가자로 작동할 수 있는가? 만약 불가능하다면, Signed MaxSim은 일반 CNF에 대해 순위 동등한 평가자가 되는가?</h3>
+              </div>
+              <p>저자들이 첫 번째 질문을 열린 문제로 남겼다. 논문의 구조상 Signed MaxSim이 음수 기여를 지원하므로 NOT 리터럴을 자연스럽게 표현할 수 있어 보이지만, 논문은 Signed MaxSim에 대한 CNF 정리를 제시하지 않았다. Section 5의 정리들은 모두 표준 MaxSim에 대한 것이다.</p>
+              <span class="source-ref">PDF p. 14, 18</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Signed MaxSim과 호환되는 효율적 근사 검색(ANN) 및 인덱싱 알고리즘을 설계할 수 있는가? 특히 &#x27;크기로 라우팅 후 부호 곱&#x27;이라는 두 단계 구조와 음수 점수를 다루면서 PLAID 수준의 가지치기를 유지하는 것이 가능한가?</h3>
+              </div>
+              <p>저자들이 exhaustive search만 사용했고 PLAID 등 표준 근사 기법과 비호환임을 명시하며 근사 기법 개발을 범위 밖으로 두었다. 100k 문서 규모를 넘어선 실전 배포에는 이 문제의 해결이 전제 조건이다.</p>
+              <span class="source-ref">PDF p. 16</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>실제로 훈련된 late-interaction 모델(ColBERT, Fallon)의 임베딩이 논문의 다항식 구성이 예측하는 국소적(localized) 봉우리 구조를 암묵적으로 학습하고 있는가? 그리고 이 구성 쪽으로 명시적 정규화를 걸면 out-of-domain 일반화가 실제로 개선되는가?</h3>
+              </div>
+              <p>저자들이 결론에서 직접 향후 실증 과제로 제시했다. 이론적 구성이 &#x27;가능성 증명&#x27;에 그치는지, 아니면 학습된 모델의 실제 작동 원리를 기술하는지를 가르는 질문이다.</p>
+              <span class="source-ref">PDF p. 18</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>합성 LIMIT 변형에서 관찰된 Signed MaxSim의 이득이 MS MARCO, BEIR 같은 실제 자연어 검색 벤치마크에서도, 그리고 명시적 부정이 없는 일반 질의에서도 유지되는가? 아니면 Signed MaxSim의 이득은 부정/배제 질의라는 특정 질의 유형에 국한되는가?</h3>
+              </div>
+              <p>실험이 전적으로 합성 데이터로만 수행되었고 부정을 포함하는 과제로 의도적으로 좁혀졌다(저자들이 &#x27;이 능력에서 이득을 볼 가능성이 높은 과제에 집중한다&#x27;고 명시). 표준 IR 벤치마크 결과가 없어 일반 검색 품질에 대한 영향은 확인되지 않는다.</p>
+              <span class="source-ref">PDF p. 14, 15, 17</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>OR-clause를 인코딩하는 데 필요한 차원 M = 2m+1과, Section 4에서 강조한 &#x27;MaxSim은 rank 병목을 우회한다&#x27;는 결론 사이의 상충을 어떻게 조화시킬 것인가? 실제 신경망의 고정 임베딩 차원(예: 128) 안에서 표현 가능한 절의 크기에는 어떤 실질적 한계가 있는가?</h3>
+              </div>
+              <p>Lemma 5.1의 다항식 차수가 2m이므로 계수 벡터가 R^{2m+1}에 놓인다는 논문의 서술에서 직접 도출되는 분석자 관점의 질문이다. 논문은 이 차원 요구와 Section 4의 차원 우회 결론 사이 관계를 논하지 않는다.</p>
+              <span class="source-ref">PDF p. 10, 12, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>다항식 계수의 크기가 인덱스 d와 절 크기 m에 따라 급격히 커지는 수치적 조건(conditioning) 문제를, ℓ2 정규화된 저차원 임베딩을 쓰는 실제 모델에서 어떻게 다룰 것인가? 저자들이 관찰한 &#x27;비정규화 임베딩 사용 시 성능 저하&#x27;는 이 문제와 연결되는가?</h3>
+              </div>
+              <p>Lemma 3.1의 c(d,w) = (w - C·d², 2Cd, -C) 형태에서 성분 크기가 d²에 비례한다는 점, 그리고 저자들이 비정규화 임베딩에서 성능 저하와 훈련 불안정을 관찰했다고 보고한 점(unbounded document score가 원인으로 추정)을 함께 놓고 보면 이론적 구성과 실제 훈련 사이의 긴장이 드러난다.</p>
+              <span class="source-ref">PDF p. 6, 16</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>MaxSim (Chamfer Similarity)</dt>
+              <dd>
+                late-interaction 모델의 기본 유사도 함수. query 임베딩 집합 U와 document 임베딩 집합 V에 대해 S(U,V) = Σ_{m∈U} max_{t∈V} ⟨m,t⟩로 정의된다. 각 query 임베딩이 가장 잘 맞는 document 임베딩 하나를 골라 그 내적을 취하고 모두 더한다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late-interaction 검색 모델</dt>
+              <dd>
+                텍스트를 하나의 벡터가 아니라 임베딩의 집합(보통 토큰별 벡터)으로 표현하고, query와 document 인코딩을 각각 독립적으로 마친 뒤 마지막 단계(&#x27;late&#x27;)에 토큰 수준 상호작용으로 관련성을 계산하는 모델. ColBERT[14]가 이 범주를 만들었다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Support와 Sparsity (Definition 3.1)</dt>
+              <dd>
+                벡터 x의 support는 0이 아닌 원소의 인덱스 집합 supp(x) = {i∈N | x_i ≠ 0}이다. |supp(x)| ≤ k이면 x를 k-sparse라고 부른다. 논문의 표현 공간 비용은 벡터 차원 n이 아니라 이 k에만 의존한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Signed MaxSim (S±, Definition 3.4)</dt>
+              <dd>
+                각 임베딩을 (벡터, 부호 스칼라) 쌍으로 저장하는 MaxSim의 확장. max 연산은 벡터 성분만으로 수행해 매칭할 document 임베딩을 고르고(라우팅), 그 뒤에 query 부호와 선택된 document 부호를 곱해 최종 기여를 만든다. S±(Us,Vs) = Σ_{(m,s_q)∈Us} s_q · s*_d(m) · ⟨m, t*(m)⟩. 이 분리 덕분에 임의의 실수 값 inner product를 정확히 재현할 수 있다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Fallon</dt>
+              <dd>
+                이 논문에서 Signed MaxSim으로 훈련한 실험용 late-interaction 검색 모델의 이름. ModernBERT 백본에 토큰별 가중치(부호) 생성을 위한 5-layer MLP를 추가한 것이 ColBERT 베이스라인과의 주된 차이다.
+                <span class="source-ref">PDF p. 14, 16</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Contextual Sparsity-Preserving Encoding (Definition 3.3)</dt>
+              <dd>
+                Theorem 3.2의 불가능성 증명이 전제하는 인코딩 클래스. 임베딩 차원 M이 고정되어 있고, query/document의 입력 의존 임베딩 개수가 각각 원본 벡터의 support 크기와 정확히 같으며, 모든 문서가 공유하는 고정 벡터 집합 F를 추가로 붙일 수 있다. 각 임베딩은 대응하는 입력 벡터 전체에 임의로 의존해도 된다.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Weighted Max-OR (Definition 5.2)</dt>
+              <dd>
+                OR-clause의 연속값 확장. 문서 집합 D와 query group S에 대해 MaxOR(S,D) = max({0} ∪ {w_i·w_{q,i} | (d_i,w_i)∈D, (d_i,w_{q,i})∈S}). 매칭 항이 없으면 0이 되며, 가장 강하게 매칭되는 하나의 항만 반영하므로 동의어가 여러 개 있는 문서를 과보상하지 않는다.
+                <span class="source-ref">PDF p. 11, 12</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Positive CNF (Conjunctive Normal Form without negation)</dt>
+              <dd>
+                부정 리터럴이 없는 절(clause)들의 AND로 구성된 논리식. K = T_1 ∧ ... ∧ T_h이고 각 T_j = t_{j,1} ∨ ... ∨ t_{j,l_j}는 양의 키들의 OR이다. 문서 D가 모든 절에서 적어도 하나의 키를 포함하면 s_K(D)=1, 아니면 0이다.
+                <span class="source-ref">PDF p. 14</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Rank Equivalence (Definition 5.4)</dt>
+              <dd>
+                목표 점수 함수 s와 평가 점수 함수 s&#x27;에 대해, 모든 x,y에서 s(x) &gt; s(y) ⟹ s&#x27;(x) &gt; s&#x27;(y)가 성립하면 s&#x27;이 s와 순위 동등하다고 한다. 정확한 점수 값이 아니라 상대적 순서만 중요한 랭킹 과제에서 동등성을 주장할 때 쓰인다.
+                <span class="source-ref">PDF p. 14</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Lagrange 보간 다항식 (OR-clause 구성, Lemma 5.1)</dt>
+              <dd>
+                query group S의 모든 키에서 원하는 가중치를 정확히 지나는 차수 m-1 이하의 다항식 x_S(t)를 만든 뒤, 루트 다항식 y_S(t) = Π_{d∈D_S}(t-d)를 써서 p_S(t) = x_S(t) - C·(y_S(t))²로 정의한다. 그룹 내 키에서는 가중치를, 그룹 밖 키에서는 음수를 반환하며 최대 차수는 2m이므로 계수 벡터는 R^{2m+1}에 놓인다.
+                <span class="source-ref">PDF p. 12, 13</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>차원 병목 (Rank Bottleneck, Theorem 4.1)</dt>
+              <dd>
+                d차원 단일 벡터 inner product로는 d+1개의 상호 직교 벡터의 inner product조차 정확히 보존할 수 없다는 제약. U^T V의 rank가 내부 차원 d 이하로 묶이는데 항등행렬 I_{d+1}의 rank는 d+1이므로 모순이 생긴다. 임의로 큰 어휘를 고정 차원에 담으려면 본질적으로 근사가 불가피함을 뜻한다.
+                <span class="source-ref">PDF p. 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>LIMIT 데이터셋</dt>
+              <dd>
+                Weller et al.[31]이 제안한 데이터셋으로, 사람이 좋아하는 속성 목록 형태의 문서와 특정 속성을 가진 사람을 찾는 쿼리로 구성된다. 이 논문은 여기서 영감을 받아 다중 포함 속성과 부정 속성(예: &#x27;but do not like Cherries&#x27;)을 추가한 합성 변형을 만들어 훈련·평가에 사용했다.
+                <span class="source-ref">PDF p. 14, 15</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Fuzzy AND vs Fuzzy OR (검색에서의 의미)</dt>
+              <dd>
+                표준 inner product는 매칭되는 모든 feature를 더하므로 증거 누적, 즉 &#x27;fuzzy AND&#x27;처럼 동작해 &#x27;red&#x27;와 &#x27;blue&#x27;를 모두 가진 문서를 &#x27;red&#x27;만 가진 문서보다 높게 매긴다. MaxSim은 최댓값의 합이므로 그룹 내 가장 잘 맞는 하나만 반영해 &#x27;fuzzy OR&#x27;처럼 동작하며, 동의어가 여러 개 등장한다고 점수가 부풀지 않는다.
+                <span class="source-ref">PDF p. 11</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>본 논문(arXiv:2607.05803v1)이 정식 학술대회나 저널에 게재(accept)되었는지는 본문에서 확인되지 않으며 &#x27;Preprint.&#x27;로만 표기되어 있다.</li><li>실험에 사용된 컴퓨팅 하드웨어(GPU/TPU 종류와 개수) 및 총 훈련 소요 시간(wall-clock time)은 본문에 명시되어 있지 않다.</li><li>Signed MaxSim을 위한 구체적인 효율적 근사 검색/인덱싱 알고리즘은 제안되지 않았으며, 저자들이 직접 연구 범위 밖으로 명시했다.</li><li>코드와 데이터셋(합성 LIMIT 변형)의 공개 여부 및 접근 방법은 본문에서 확인되지 않는다.</li><li>Fallon의 학습률 8e-5가 어떤 절차로 선택되었는지는 명시되지 않는다(ColBERT의 1e-5는 {5e-6, 1e-5, 2e-5} 스윕과 validation nDCG@10으로 선택했다고 명시됨). 두 모델에 동등한 튜닝 예산이 주어졌는지는 확인되지 않는다.</li><li>Table 1의 Hard Neg. 값은 7로 표기되어 있으나 데이터 생성 설명에서는 쿼리당 32개의 hard negative를 준비했다고 서술한다. 전자는 훈련 배치에서 positive당 샘플링되는 hard negative 수를 뜻하는 것으로 보이나, 두 수치의 관계는 본문에서 명시적으로 설명되지 않는다.</li><li>Different Vocabulary 설정에서 Fallon이 In-Domain보다 오히려 높은 점수를 낸 이유에 대해 저자들은 &#x27;쿼리당 positive 수의 변화 때문일 가능성이 높다(likely)&#x27;고만 추정했을 뿐, 정량적 근거는 제시하지 않았다.</li><li>각 평가 벤치마크에서 쿼리당 평균 관련 문서 수는 명시되어 있지 않다(Negation Only에 대해 &#x27;수만 개(tens of thousands)&#x27;라는 정성적 서술만 있다).</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "nDCG@10 비교 (ColBERT vs Fallon)", "labels": ["ColBERT / In-Domain", "Fallon / In-Domain", "ColBERT / Different Vocab.", "Fallon / Different Vocab.", "ColBERT / Negation Only", "Fallon / Negation Only"], "values": [0.982, 0.997, 0.597, 1.0, 0.008, 0.788], "unit": "score (0~1)", "xLabel": "모델 × 평가 설정", "yLabel": "nDCG@10"}, {"canvasId": "chart-1", "type": "bar", "title": "P@10 비교 (ColBERT vs Fallon)", "labels": ["ColBERT / In-Domain", "Fallon / In-Domain", "ColBERT / Different Vocab.", "Fallon / Different Vocab.", "ColBERT / Negation Only", "Fallon / Negation Only"], "values": [0.875, 0.893, 0.587, 0.955, 0.009, 0.789], "unit": "score (0~1)", "xLabel": "모델 × 평가 설정", "yLabel": "P@10"}, {"canvasId": "chart-2", "type": "bar", "title": "AP (Average Precision) 비교 (ColBERT vs Fallon)", "labels": ["ColBERT / In-Domain", "Fallon / In-Domain", "ColBERT / Different Vocab.", "Fallon / Different Vocab.", "ColBERT / Negation Only", "Fallon / Negation Only"], "values": [0.943, 0.997, 0.511, 1.0, 0.002, 0.039], "unit": "score (0~1)", "xLabel": "모델 × 평가 설정", "yLabel": "AP"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
