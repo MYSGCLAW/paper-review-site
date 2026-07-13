@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장치 메모리(FDM)와 Memory Range Set</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">코드 분석</p>
+      <h1>장치 메모리(FDM)와 Memory Range Set</h1>
+      <p class="summary">hw/femu/csd/memory.c를 읽고 Functional Data Memory 네임스페이스와 Memory Range Set 추상화를 분석한다. FDMFS와 P2P DMA가 올라타는 토대다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-14</span>
+        <span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">FDM</span><span class="tag">memory-range-set</span><span class="tag">NVMe</span><span class="tag">computational-storage</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#분석-범위">분석 범위</a>
+<a class="toc-level-2" href="#전체-구조">전체 구조</a>
+<a class="toc-level-2" href="#먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</a>
+<a class="toc-level-2" href="#로직-다이어그램">로직 다이어그램</a>
+<a class="toc-level-3" href="#1-표준-memory-read-write-명령-흐름-코드로-직접-확인됨">1) 표준 Memory Read/Write 명령 흐름 (코드로 직접 확인됨)</a>
+<a class="toc-level-3" href="#2-memory_copy의-세-가지-경로-fdm-fdm은-동기-nvm-fdm은-ftl로-위임">2) memory_copy의 세 가지 경로 (fdm→fdm은 동기, nvm↔fdm은 FTL로 위임)</a>
+<a class="toc-level-2" href="#모듈-객체-관계도">모듈/객체 관계도</a>
+<a class="toc-level-2" href="#핵심-흐름">핵심 흐름</a>
+<a class="toc-level-3" href="#입력-검증-상태-변경-결과-단일-read-write-fill">입력 → 검증 → 상태 변경 → 결과 (단일 read/write/fill)</a>
+<a class="toc-level-3" href="#memory_copy-다중-구간-복사">memory_copy (다중 구간 복사)</a>
+<a class="toc-level-2" href="#주요-파일과-역할">주요 파일과 역할</a>
+<a class="toc-level-2" href="#중요한-설계-판단">중요한 설계 판단</a>
+<a class="toc-level-2" href="#읽으면서-주의할-점">읽으면서 주의할 점</a>
+<a class="toc-level-2" href="#더-파볼-질문">더 파볼 질문</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="장치-메모리-fdm-와-memory-range-set-hw-femu-csd-memory-c-분석">장치 메모리(FDM)와 Memory Range Set — <code>hw/femu/csd/memory.c</code> 분석</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p>FDM은 QEMU 프로세스 힙에 <code>aligned_alloc</code>으로 잡은 평범한 DRAM 버퍼(<code>SsdBackend.logical_space</code>)이고, NVMe 네임스페이스 모델 위에 <code>NVME_CSI_MEMORY</code>라는 별도 커맨드셋으로 얹혀 있으며, <code>MemoryRangeSet</code>은 이 DRAM 위의 여러 구간을 하나의 <code>rsid</code>로 묶어 CSF 실행 시마다 주소를 재전달하지 않도록 하는 &quot;이름 붙은 스캐터-개더 목록&quot;이다.</p>
+<h2 id="분석-범위">분석 범위</h2>
+<p>이번 체크아웃(<code>repo/</code>)은 git sparse-checkout으로 다음 6개 경로만 포함한다.</p>
+<ul><li><code>hw/femu/csd/memory.c</code>, <code>memory.h</code>, <code>nvme_csd.h</code>, <code>compute.h</code></li><li><code>hw/femu/backend/</code>(<code>backend.c</code>, <code>backend.h</code>, <code>dram.c</code>)</li><li><code>hw/femu/dma.c</code></li></ul>
+<p><code>references/raw/cemu/repo-map.md</code>에 따르면 MRS 생성/삭제 admin 커맨드, <code>fdm_size</code> 파라미터 파싱, CSF 실행 엔진은 각각 <code>hw/femu/csd/compute.c</code>, <code>hw/femu/param.c</code>, <code>hw/femu/nvme-admin.c</code>에 있는데 <strong>이번 체크아웃에는 포함되어 있지 않다.</strong> 이 파일들에 대한 설명은 코드 확인이 아니라 참고 문서(<code>code-structure.md</code>, <code>repo-map.md</code>, <code>application-development.md</code>) 기반 추정이며, 본문에서 &quot;문서 근거&quot;로 명시한다.</p>
+<h2 id="전체-구조">전체 구조</h2>
+<p>CEMU는 하나의 NVMe 컨트롤러(<code>FemuCtrl</code>) 아래 세 개의 네임스페이스를 노출한다(<code>CEMU-README.md</code> 108-98행 예시: <code>/dev/nvme0n1</code>=NVM, <code>/dev/nvme0m2</code>=Memory, <code>/dev/nvme0c3</code>=Compute). <code>memory.c</code>는 이 중 Memory 네임스페이스(nsid=2, CSI=<code>NVME_CSI_MEMORY</code>)의 I/O 커맨드 핸들러 전체이고, 실제 데이터는 <code>hw/femu/backend/</code>의 <code>SsdBackend</code>가 들고 있다. <code>dma.c</code>는 이 백엔드와 호스트(게스트) 메모리 사이의 PRP 기반 DMA를 담당한다.</p>
+<h2 id="먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</h2>
+<ol><li><strong><code>hw/femu/csd/nvme_csd.h</code></strong> — <code>MemoryRange</code>, <code>MemoryRangeSet</code>, <code>Program</code> 등 CSD 전역에서 쓰는 타입/전방 선언 목록. 전체 그림의 색인 역할이라 먼저 봐야 한다.</li><li><strong><code>hw/femu/csd/memory.h</code></strong> — <code>NvmeMemoryReadCmd/WriteCmd/FillCmd/CopyCmd</code>와 opcode enum. Memory 네임스페이스가 받는 실제 온-와이어 커맨드 포맷을 먼저 알아야 <code>memory.c</code>가 읽힌다.</li><li><strong><code>hw/femu/backend/backend.h</code> + <code>dram.c</code></strong> — FDM이 결국 <code>SsdBackend.logical_space</code>(DRAM <code>aligned_alloc</code>)라는 것을 가장 먼저 확인하면 이후 <code>backend_addr()</code> 호출들이 전부 &quot;그냥 포인터 산술&quot;임을 알 수 있다.</li><li><strong><code>memory.c</code>의 <code>memory_init</code> → <code>check_param</code> → <code>memory_read/write/fill</code></strong> — 표준 단일 구간 읽기/쓰기 경로. 가장 단순한 흐름이라 여기서 프로그래밍 모델을 잡는다.</li><li><strong><code>hw/femu/dma.c</code>의 <code>nvme_map_prp</code>, <code>dma_read_prp</code>, <code>dma_write_prp</code></strong> — PRP1/PRP2가 어떻게 <code>QEMUSGList</code>로 바뀌고 실제 게스트 물리 메모리 접근(<code>dma_buf_read/write</code>, <code>pci_dma_sglist_init</code>)으로 이어지는지.</li><li><strong><code>memory.c</code>의 <code>memory_region_backend_addr</code> + <code>memory_copy</code></strong> — <code>cdft</code> 2/3/4 분기, FTL 스레드로 넘기는 비동기 경로, 컨트롤러 간(P2P 유사) 주소 변환.</li><li><strong><code>hw/femu/csd/compute.h</code>의 <code>MemoryRangeSet</code>/<code>MemoryRange</code>/<code>ComputeNamespace</code></strong> — MRS의 실제 필드와 <code>slab_at(..., rsid-1)</code> 인덱싱 규칙. 단, 생성/삭제 로직(<code>compute.c</code>)은 이번 범위 밖이므로 구조체 근거로만 추론한다.</li><li><strong><code>references/raw/cemu/code-structure.md</code>, <code>repo-map.md</code>, <code>application-development.md</code></strong> — 체크아웃에 없는 <code>compute.c</code>/<code>nvme-admin.c</code>/<code>param.c</code>가 무엇을 하는지 문서로 보완하고, 위에서 읽은 실제 코드와 대조.</li></ol>
+<h2 id="로직-다이어그램">로직 다이어그램</h2>
+<h3 id="1-표준-memory-read-write-명령-흐름-코드로-직접-확인됨">1) 표준 Memory Read/Write 명령 흐름 (코드로 직접 확인됨)</h3>
+<div class="mermaid">sequenceDiagram
+ participant Host as &quot;호스트 / io_uring&quot;
+ participant Core as &quot;FEMU NVMe 큐 (범위 밖)&quot;
+ participant Mem as &quot;memory.c memory_io_cmd&quot;
+ participant Dma as &quot;dma.c dma_read_prp / dma_write_prp&quot;
+ participant Be as &quot;backend/dram.c logical_space&quot;
+
+ Host-&gt;&gt;Core: &quot;NVMe I/O 커맨드, nsid=2, opcode=MEMORY_READ 등&quot;
+ Core-&gt;&gt;Mem: &quot;memory_io_cmd(ns, cmd, req)&quot;
+ Mem-&gt;&gt;Mem: &quot;check_param(sb, len) 정렬/경계 검사&quot;
+ Mem-&gt;&gt;Dma: &quot;dma_read_prp(n, backend_addr(ns-&gt;backend, sb), rl, prp1, prp2)&quot;
+ Dma-&gt;&gt;Dma: &quot;nvme_map_prp: prp1/prp2 를 QEMUSGList 로 변환&quot;
+ Dma-&gt;&gt;Be: &quot;dma_buf_read/write 로 게스트 물리 메모리와 backend 포인터 교환&quot;
+ Mem--&gt;&gt;Core: &quot;req-&gt;cqe.n.result = 처리 길이&quot;</div>
+<ul><li><code>Host→Core→Mem</code>: 표준 NVMe 제출 경로 자체는 이번 범위 밖(FEMU core), <code>memory_io_cmd</code>(<code>memory.c:213</code>)가 CSI 디스패치의 실제 진입점.</li><li><code>Mem→Mem</code>: <code>check_param</code>(<code>memory.c:7</code>)이 4바이트 정렬과 <code>sb+len &lt;= ns-&gt;backend-&gt;size</code> 두 가지만 검사한다.</li><li><code>Mem→Dma</code>: <code>memory_read</code>(<code>memory.c:20</code>)/<code>memory_write</code>(<code>memory.c:50</code>)가 각각 <code>dma_read_prp</code>/<code>dma_write_prp</code>(<code>dma.c:137</code>, <code>dma.c:112</code>)를 호출.</li><li><code>Dma→Be</code>: <code>backend_addr()</code>(<code>backend.h:34</code>)는 <code>logical_space + offset</code>일 뿐이고, 실제 게스트-호스트 데이터 이동은 <code>nvme_map_prp</code>(<code>dma.c:23</code>)가 만든 <code>QEMUSGList</code>를 통해 QEMU의 <code>dma_buf_read/write</code>가 수행한다.</li></ul>
+<h3 id="2-memory_copy의-세-가지-경로-fdm-fdm은-동기-nvm-fdm은-ftl로-위임">2) memory_copy의 세 가지 경로 (fdm→fdm은 동기, nvm↔fdm은 FTL로 위임)</h3>
+<div class="mermaid">flowchart TD
+ A[&quot;memory_copy 진입, cdft 필드 확인&quot;] --&gt; B{&quot;cdft 값?&quot;}
+ B --&gt;|&quot;2: nvm to fdm&quot;| C[&quot;req-&gt;sres = malloc, FTL 스레드 ring에 enqueue&quot;]
+ B --&gt;|&quot;3: fdm to nvm&quot;| C
+ B --&gt;|&quot;4: fdm to fdm&quot;| D[&quot;cf[128] 스택 버퍼 사용, 동기 처리&quot;]
+ D --&gt; E[&quot;memory_region_backend_addr 로 sdaddr를 backend 포인터로 변환&quot;]
+ E --&gt; F[&quot;backend_rw_internal 로 다른 네임스페이스 backend와 직접 memmove&quot;]
+ C -.-&gt; G[&quot;ftl.c 스레드(범위 밖)가 실제 NAND&lt;-&gt;FDM 전송 완료&quot;]</div>
+<ul><li><code>memory_copy</code>(<code>memory.c:127</code>)는 <code>copy-&gt;cdft</code>로 세 포맷을 구분한다. <code>cdft==2/3</code>은 <code>req-&gt;sdaddr</code>에 backend 포인터를 저장해두고 <code>femu_ring_enqueue(n-&gt;to_ftl[...], ...)</code>로 FTL 스레드에 넘기고 즉시 리턴(비동기), <code>cdft==4</code>는 이 함수 안에서 <code>backend_rw_internal</code>(<code>backend.c:81</code>)로 동기 완료한다.</li><li><code>memory_region_backend_addr</code>(<code>memory.c:104</code>)는 전역 배열 <code>csd_memory_region[]</code>(정의부는 이번 체크아웃에 없음, 확인 필요)을 순회해 <code>sdaddr</code>가 어느 컨트롤러(<code>FemuCtrl *n</code>)의 어느 backend 오프셋인지 찾아준다 — 컨트롤러 간(P2P) 주소 변환 지점.</li></ul>
+<h2 id="모듈-객체-관계도">모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+ NS[&quot;NvmeNamespace (FEMU 코어, 범위 밖) / nsid, csi, backend, private&quot;]
+ NS --&gt;|&quot;csi = NVME_CSI_MEMORY&quot;| MNS[&quot;MemoryNamespace / memory.h&quot;]
+ NS -.-&gt;|&quot;csi = compute csi (문서 근거)&quot;| CNS[&quot;ComputeNamespace / compute.h&quot;]
+ NS --&gt;|&quot;ns-&gt;backend&quot;| BE[&quot;SsdBackend / backend.h / logical_space, size&quot;]
+ BE --&gt;|&quot;FEMU_DRAM_BACKEND&quot;| DRAM[&quot;dram.c / aligned_alloc(4096, size)&quot;]
+ CNS --&gt;|&quot;Slab mrs&quot;| MRS[&quot;MemoryRangeSet / compute.h / rsid, numr, lock&quot;]
+ MRS --&gt;|&quot;mr 배열&quot;| MR[&quot;MemoryRange / compute.h / nsid, sb, len, addr&quot;]
+ MR -.-&gt;|&quot;nsid로 참조&quot;| NS
+ MNS -.-&gt;|&quot;memory_copy cdft=4&quot;| REG[&quot;csd_memory_region[] 전역 레지스트리 / 정의 위치 확인 필요&quot;]</div>
+<ul><li><code>NS→MNS</code>, <code>NS→CNS</code>: 하나의 <code>NvmeNamespace</code>가 CSI 값에 따라 <code>ns-&gt;private</code>에 서로 다른 타입(<code>MemoryNamespace</code> 또는 <code>ComputeNamespace</code>)을 꽂는 구조. <code>memory_init</code>(<code>memory.c:240</code>)이 <code>MemoryNamespace</code>를 할당하는 실제 코드이고, Compute 쪽 초기화 함수는 이번 체크아웃에 없어 점선(문서 근거)으로 표시했다.</li><li><code>CNS→MRS</code>: <code>ComputeNamespace.mrs</code>(<code>compute.h:97</code>)는 <code>Slab</code> 컨테이너이고 <code>memory_range_set_get()</code>(<code>compute.h:121</code>)가 <code>slab_at(&amp;cns-&gt;mrs, rsid-1)</code>로 인덱싱한다. 즉 <strong>MRS 저장소는 Memory 네임스페이스가 아니라 Compute 네임스페이스 소유</strong>다 — <code>application-development.md</code>에서 <code>IOCTL_CEMU_CREATE_MRS</code>를 Compute 디바이스(<code>/dev/nvme0c3</code>) fd에 보내는 것과 일치.</li><li><code>MR-.-&gt;NS</code>: <code>MemoryRange.nsid</code>(<code>compute.h:13</code>) 필드 덕분에 하나의 MRS 안 개별 구간이 서로 다른 네임스페이스(FDM=2, 심지어 NVM=1)를 가리킬 수 있다.</li></ul>
+<h2 id="핵심-흐름">핵심 흐름</h2>
+<h3 id="입력-검증-상태-변경-결과-단일-read-write-fill">입력 → 검증 → 상태 변경 → 결과 (단일 read/write/fill)</h3>
+<ol><li><strong>입력</strong>: 호스트가 NVMe I/O 큐에 <code>NvmeMemoryReadCmd</code>/<code>WriteCmd</code>/<code>FillCmd</code>(<code>memory.h:14-69</code>, 모두 64바이트 고정 크기, <code>static_assert</code>로 강제)를 nsid=2로 제출.</li><li><strong>변환/검증</strong>: <code>check_param()</code>(<code>memory.c:7</code>)이 4바이트 정렬 여부와 <code>sb+len &lt;= ns-&gt;backend-&gt;size</code> 두 조건만 확인. 오버플로 방지용 별도 검사는 없음(아래 &quot;위험한 edge case&quot; 참고).</li><li><strong>상태 변경</strong>: <code>backend_addr(ns-&gt;backend, sb)</code>로 얻은 포인터에 대해 <code>dma_read_prp</code>/<code>dma_write_prp</code>(read/write) 또는 <code>memset</code>(fill, <code>backend_fill</code> in <code>backend.h:38</code>)이 직접 DRAM을 수정.</li><li><strong>외부 호출/결과</strong>: DMA 함수 내부에서 <code>nvme_map_prp</code>가 PRP를 <code>QEMUSGList</code>로 바꾸고, QEMU의 <code>dma_buf_read/write</code>(또는 CMB 경로의 <code>qemu_iovec_to/from_buf</code>)가 실제 게스트 물리 메모리를 건드린다. 완료 후 <code>req-&gt;cqe.n.result</code>에 처리 바이트 수를 채우고 <code>NVME_SUCCESS</code> 반환.</li></ol>
+<h3 id="memory_copy-다중-구간-복사">memory_copy (다중 구간 복사)</h3>
+<ol><li><strong>입력</strong>: <code>NvmeMemoryCopyCmd</code>(<code>memory.h:14</code>)에 <code>sdaddr</code>(목적지), <code>prp1/prp2</code>(소스 range entry 테이블 위치), <code>nr</code>(구간 수, 8비트), <code>cdft</code>(포맷)가 실린다.</li><li><strong>변환/검증</strong>: <code>memory_region_backend_addr</code>가 <code>sdaddr</code>를 실제 backend 포인터로 바꾸고, 이 주소가 속한 컨트롤러(<code>req-&gt;mem_ctrl</code>)를 알아낸다.</li><li><strong>상태 변경</strong>: <code>cdft==2/3</code>(nvm↔fdm)은 range entry들을 담을 버퍼를 <code>malloc</code>하고 FTL 스레드 링에 요청을 넘겨 비동기 처리(실제 NAND I/O는 이번 범위 밖). <code>cdft==4</code>(fdm→fdm)는 각 range entry에 대해 <code>nvme_find_namespace</code>로 소스 네임스페이스를 찾고 <code>backend_rw_internal</code>로 동기 <code>memmove</code>.</li><li><strong>외부 호출/결과</strong>: <code>cdft==4</code>는 이 함수 안에서 <code>req-&gt;status</code>/<code>req-&gt;cqe.n.result</code>를 직접 채우고 반환값 <code>1</code>로 즉시 완료를 알린다. <code>cdft==2/3</code>은 <code>0</code>을 반환해 완료를 뒤로 미룬다 — <code>memory_io_cmd</code>의 다른 모든 브랜치가 동기(주석 <code>// TODO: io command should be async</code>)인 것과 대비되는 유일한 비동기 분기.</li></ol>
+<h2 id="주요-파일과-역할">주요 파일과 역할</h2>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>역할</th></tr></thead><tbody><tr><td><code>hw/femu/csd/memory.c</code></td><td>Memory 네임스페이스(CSI)의 I/O 커맨드 핸들러: read/write/fill/copy, <code>memory_init</code>, <code>CommandSetOps</code> 등록</td></tr><tr><td><code>hw/femu/csd/memory.h</code></td><td>온-와이어 커맨드 구조체, opcode enum, <code>MemoryNamespace</code></td></tr><tr><td><code>hw/femu/csd/nvme_csd.h</code></td><td>CSD 전역 전방 선언 및 typedef(<code>nvme_pid_t</code> 등) — 코드 자체보다 색인 문서에 가까움</td></tr><tr><td><code>hw/femu/csd/compute.h</code></td><td><code>MemoryRange</code>/<code>MemoryRangeSet</code>/<code>ComputeNamespace</code>/<code>Program</code> 타입. 실제 로직(<code>compute.c</code>)은 범위 밖</td></tr><tr><td><code>hw/femu/backend/backend.h</code>, <code>backend.c</code></td><td><code>SsdBackend</code> 추상화, <code>backend_addr/rw/rw_internal/copy_internal/fill</code></td></tr><tr><td><code>hw/femu/backend/dram.c</code></td><td>FDM(및 NVM)의 실제 저장소 — <code>aligned_alloc</code> 기반 DRAM 백엔드</td></tr><tr><td><code>hw/femu/dma.c</code></td><td>PRP→<code>QEMUSGList</code> 변환(<code>nvme_map_prp</code>) 및 실제 DMA 실행(<code>dma_read_prp</code>, <code>dma_write_prp</code>, <code>nvme_addr_read/write</code>)</td></tr></tbody></table></div>
+<h2 id="중요한-설계-판단">중요한 설계 판단</h2>
+<ul><li><strong>FDM = 그냥 DRAM, NAND 시뮬레이션 없음</strong>: <code>dram.c</code>의 <code>init_dram_backend</code>는 <code>aligned_alloc(4096, b-&gt;size)</code> 한 줄이 전부다. <code>bbssd/ftl.c</code>(범위 밖)가 지연/마모 등 NAND 타이밍을 시뮬레이션하는 것과 달리, Memory 네임스페이스는 그런 시뮬레이션 계층이 없는 &quot;순수 스크래치패드&quot;로 설계되어 있다 — CSF가 빠르게 접근해야 하는 작업 메모리라는 성격과 일치한다.</li><li><strong>CSI 기반 커맨드셋 등록</strong>: <code>nvme_register(NVME_CSI_MEMORY, &amp;memory_command_set_ops)</code>(<code>memory.c:258</code>)로 Memory 네임스페이스는 표준 NVM 네임스페이스와 동일한 큐/구조를 쓰되, 커맨드 디스패치 테이블만 다르게 꽂는다. 이는 기존 FEMU의 단일 네임스페이스 가정을 깨지 않고 CSD 확장을 얹은 방식으로 보인다(추정 — FEMU core의 CSI 디스패치 코드는 범위 밖).</li><li><strong>MRS는 Compute 네임스페이스가 소유</strong>: MRS 배열이 데이터를 담는 Memory 네임스페이스가 아니라 Compute 네임스페이스의 <code>Slab mrs</code>에 있다는 점은, MRS가 &quot;메모리 자체&quot;가 아니라 &quot;CSF 실행 시 넘길 인자 목록의 사전 등록&quot;이라는 성격을 보여준다. <code>MemoryRange.nsid</code> 필드 덕분에 한 MRS 안에서 FDM과 NVM 구간을 섞어 참조할 수 있다.</li><li><strong>PRP DMA 함수 네이밍이 방향 직관과 반대</strong>: <code>memory_read</code>는 <code>dma_read_prp</code>, <code>memory_write</code>는 <code>dma_write_prp</code>를 쓰는데, 이는 &quot;prp가 가리키는 호스트 메모리 기준&quot;이 아니라 <strong>&quot;ptr(로컬 backend 버퍼) 기준&quot;</strong> 명명이다(<code>dma_write_prp</code>=호스트→ptr에 &quot;써넣는다&quot;, <code>dma_read_prp</code>=ptr을 &quot;읽어서&quot; 호스트로 보낸다). <code>memory_copy</code> 안 주석 <code>// dma read sre</code>가 실제로는 <code>dma_write_prp</code> 호출인 것으로 이 규칙이 내부적으로 일관됨을 재확인할 수 있다.</li></ul>
+<h2 id="읽으면서-주의할-점">읽으면서 주의할 점</h2>
+<ul><li><strong><code>memory.h</code>가 선언한 <code>get_mem_ctrl()</code>과 <code>memory.c</code>가 정의한 <code>memory_region_backend_addr()</code>는 이름이 다르다.</strong> 헤더의 <code>void *get_mem_ctrl(uint64_t sdaddr, uint64_t len, FemuCtrl **n, uint16_t *ret);</code> 선언에 대응하는 정의가 <code>memory.c</code>에 보이지 않는다(정의된 것은 동일 시그니처의 <code>static</code> 함수 <code>memory_region_backend_addr</code>). 실제 <code>get_mem_ctrl</code> 심볼이 다른 파일(범위 밖, 예: 삭제되었거나 다른 이름으로 정리된 레거시 선언일 가능성)에 있는지 <strong>확인이 필요함</strong>.</li><li><strong><code>memory_copy</code>의 <code>cf[128]</code> 스택 버퍼 크기 vs <code>copy-&gt;nr</code>(8비트 필드, 최대 255) 불일치.</strong> <code>cdft==4</code>(fdm→fdm) 분기에서는 <code>sres</code>가 여전히 스택 배열 <code>cf[128]</code>을 가리키는 상태로 <code>dma_write_prp(n, (void*)sres, sizeof(NvmeCopyFormat) * copy-&gt;nr, ...)</code>가 호출된다(<code>memory.c:135-136, 164</code>). <code>copy-&gt;nr</code>이 128을 넘는 값(최대 255까지 가능)으로 오면 스택 버퍼 오버플로/이후 루프에서의 OOB 읽기가 발생할 수 있는 것으로 보인다. <code>cdft==2/3</code>만 <code>req-&gt;sres</code>를 <code>malloc</code>으로 재할당하므로 이 위험은 <code>cdft==4</code> 경로에만 해당한다. 이는 코드를 직접 읽고 확인한 사실이며, 실제 익스플로잇 가능성(호스트가 임의로 <code>nr&gt;128</code>을 넣을 수 있는지, 상위 admin/queue 계층에서 별도 제한이 있는지)은 <code>nvme-io.c</code>(범위 밖)까지 봐야 확정할 수 있어 <strong>확인이 필요함</strong>으로 표시한다.</li><li><strong><code>check_param</code>은 정수 오버플로를 명시적으로 막지 않는다.</strong> <code>sb % 4 || len % 4</code>와 <code>sb + len &gt; ns-&gt;backend-&gt;size</code>만 검사하므로, 이론상 <code>sb</code>(uint64)가 매우 큰 값이고 <code>len</code>(uint32)과 더했을 때 wraparound가 나면 검사를 우회할 여지가 있는지는 필드 폭(uint64 + uint32)상 실질적으로 도달 불가능해 보이지만(추정), 방어적 코드로서 명시적 오버플로 체크는 없다.</li><li><strong>MRS 생성/삭제와 <code>pthread_spinlock_t lock</code>의 실제 사용처(락 획득/해제 지점)는 이번 체크아웃에 없다.</strong> <code>compute.h</code>가 보여주는 것은 필드 존재(<code>in_use</code>, <code>lock</code>)와 슬랩 인덱싱 규칙(<code>slab_at(slab, rsid-1)</code>)뿐이다. 동시성 제어의 구체적 스코프(생성 중 조회 차단인지, 삭제 중 실행 차단인지)는 <strong>추정</strong>이며 <code>hw/femu/csd/compute.c</code>를 읽어야 확정된다.</li><li><strong><code>fdm_size</code> → <code>ns-&gt;size</code> 연결 경로는 이번 파일들에서 직접 추적되지 않는다.</strong> <code>csd-README.md</code>가 <code>fdm_size</code>를 QEMU 디바이스 프로퍼티(MB 단위)로 문서화하고, <code>repo-map.md</code>는 이 파싱이 <code>hw/femu/param.c</code>에 있다고 밝히지만, 그 값이 어떻게 Memory 네임스페이스의 <code>ns-&gt;size</code>로 전달되어 <code>memory_init</code>의 <code>init_backend(&amp;ns-&gt;backend, FEMU_DRAM_BACKEND, NULL, ns-&gt;size)</code> 호출까지 이어지는지는 이번 체크아웃 범위 밖이라 <strong>확인이 필요함</strong>.</li></ul>
+<h2 id="더-파볼-질문">더 파볼 질문</h2>
+<ul><li><strong>FDM은 SSD의 NAND와 어떻게 다르며 왜 별도로 존재하는가?</strong> 코드로 확인된 사실: FDM(Memory 네임스페이스)과 NVM 네임스페이스 둘 다 <code>SsdBackend</code>/<code>FEMU_DRAM_BACKEND</code>를 쓰지만(<code>memory_init</code>), NVM 쪽은 <code>bbssd/ftl.c</code>(범위 밖)의 NAND 타이밍 시뮬레이션과 FTL 매핑을 거치는 반면 Memory 네임스페이스는 <code>memory.c</code>에서 그런 계층 없이 backend 포인터에 직접 접근한다. 즉 물리적으로는 둘 다 DRAM이지만, <strong>NAND처럼 느리고 페이지/블록 단위인 것처럼 시뮬레이션되는 저장소(NVM)와, 빠르고 바이트 단위로 접근 가능한 스크래치패드(FDM)라는 시뮬레이션 계층의 차이</strong>로 구분된다(코드+문서 종합 추정).</li><li><strong>Memory Range Set은 어떤 문제를 풀기 위한 추상화인가?</strong> <code>application-development.md</code>의 &quot;Create MRS once and reuse them for multiple executions to reduce overhead&quot; 문구와 <code>compute.h</code>의 <code>mr_addr</code>/<code>mr_len</code>이 <code>cemu_args.mr_addr</code>/<code>mr_len</code>과 필드명까지 그대로 대응하는 것으로 보아, <strong>매 실행(execute)마다 입출력 구간 목록을 통째로 재전달하는 대신 한 번 등록해 <code>rsid</code> 하나로 재사용</strong>하는 것이 목적이다(문서 근거, <code>compute.c</code> 미확인).</li><li><strong>CSF 실행 시 입력 데이터는 어떤 경로로 FDM에 들어오는가?</strong> <code>memory_write</code>/<code>memory_fill</code>로 직접 채우거나, <code>memory_copy</code>(cdft=2, nvm→fdm)로 NVM 네임스페이스에서 복사해 들어온다 — 코드로 확인됨. 이후 CSF에 실제로 어떻게 매핑되는지(compute.c의 ComputeJob 생성 부분)는 범위 밖.</li><li><strong>호스트가 장치 메모리를 직접 읽고 쓰는 경로는 무엇인가?</strong> (1) 표준 <code>NVME_CMD_MEMORY_READ/WRITE</code> + PRP DMA(<code>dma.c</code>) — 코드로 확인됨. (2) <code>csd_memory_region[]</code>/<code>memory_region_backend_addr</code> 기반 컨트롤러 간 주소 변환 — 이는 <code>test_p2p</code> 예제(문서 언급)와 연결되는 P2P 성격의 경로로 보이나, 이 레지스트리의 정의·등록 코드가 범위 밖이라 P2P DMA(BAR 노출 등)의 정확한 메커니즘은 확인이 필요함.</li><li><strong>메모리 네임스페이스는 여러 CSD 사이에서 어떻게 구분되는가?</strong> <code>memory_copy</code>의 <code>req-&gt;mem_ctrl != n</code> 검사와 <code>memory_region_backend_addr</code>의 <code>FemuCtrl **n</code> 출력 파라미터는 컨트롤러(즉 CSD 인스턴스, <code>FemuCtrl</code>) 단위로 backend가 구분됨을 보여준다. <code>repo-map.md</code>의 &quot;add cemu multi-drive p2p support&quot; 커밋 언급과 함께, 여러 CSD 간 구분이 이 메커니즘 위에서 이뤄지는 것으로 보이나 세부는 <code>nvme.c</code>/드라이버 쪽(범위 밖) 확인 필요.</li><li><strong>MRS의 수명은 누가 관리하며 누수 가능성은 없는가?</strong> <code>Slab mrs</code>가 고정 용량 슬랩이고 <code>in_use</code> 플래그가 있는 것으로 보아 삭제 시 <code>in_use=0</code>으로 되돌리는 재사용 모델로 추정되지만, 삭제 admin 커맨드 핸들러(<code>compute.c</code>)가 이번 범위에 없어 <strong>실제 해제/재사용/누수 여부는 확인 불가</strong> — 다음 분석 대상으로 <code>hw/femu/csd/compute.c</code>의 <code>memory_range_set_management</code> 핸들러를 명시적으로 추천한다.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

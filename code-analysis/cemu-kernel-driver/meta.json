@@ -1,0 +1,85 @@
+{
+  "title": "Linux NVMe CSD 드라이버와 UAPI",
+  "summary": "linux-cemu의 drivers/nvme/host/cemu.c와 cemu_ioctl UAPI를 읽고, 사용자 공간이 CSD를 제어하는 계약과 P2P DMA·multi-CSD 지원을 분석한다.",
+  "type": "코드 분석",
+  "topic": null,
+  "scope": null,
+  "parent_slug": "cemu",
+  "generated_from_plan": null,
+  "project": {
+    "slug": "cemu",
+    "title": "CEMU",
+    "summary": "Computational Storage Drive(CSD) 풀시스템 에뮬레이션 플랫폼 — QEMU/FEMU 기반 장치 에뮬레이터, Linux 소프트웨어 스택(FDMFS/NVMe/io_uring), uBPF 실행 환경"
+  },
+  "tags": [
+    "CEMU",
+    "CSD",
+    "Linux",
+    "NVMe",
+    "driver",
+    "p2pdma",
+    "ioctl"
+  ],
+  "updated": "2026-07-14",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/cemu/linux-cemu",
+    "branch": null,
+    "paths": [
+      "drivers/nvme/host/cemu.c",
+      "drivers/nvme/host/cemu.h",
+      "drivers/nvme/host/pci.c",
+      "drivers/nvme/host/core.c",
+      "drivers/nvme/host/ioctl.c",
+      "drivers/nvme/host/nvme.h",
+      "drivers/nvme/host/trace.h",
+      "drivers/nvme/host/Kconfig",
+      "drivers/nvme/host/Makefile",
+      "include/linux/cemu_ioctl.h",
+      "include/uapi/linux/cemu_ioctl.h",
+      "include/linux/nvme.h",
+      "include/linux/blk_types.h"
+    ],
+    "reference_dir": "references/code-analysis/cemu",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": null,
+    "sections": []
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/CEMU-README.md",
+      "raw": "references/raw/cemu/CEMU-README.md",
+      "text": "references/text/cemu__CEMU-README.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/application-development.md",
+      "raw": "references/raw/cemu/application-development.md",
+      "text": "references/text/cemu__application-development.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/code-structure.md",
+      "raw": "references/raw/cemu/code-structure.md",
+      "text": "references/text/cemu__code-structure.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/csd-README.md",
+      "raw": "references/raw/cemu/csd-README.md",
+      "text": "references/text/cemu__csd-README.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/repo-map.md",
+      "raw": "references/raw/cemu/repo-map.md",
+      "text": "references/text/cemu__repo-map.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/ubpf-README.md",
+      "raw": "references/raw/cemu/ubpf-README.md",
+      "text": "references/text/cemu__ubpf-README.txt"
+    }
+  ]
+}

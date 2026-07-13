@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux NVMe CSD 드라이버와 UAPI</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">코드 분석</p>
+      <h1>Linux NVMe CSD 드라이버와 UAPI</h1>
+      <p class="summary">linux-cemu의 drivers/nvme/host/cemu.c와 cemu_ioctl UAPI를 읽고, 사용자 공간이 CSD를 제어하는 계약과 P2P DMA·multi-CSD 지원을 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-14</span>
+        <span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">Linux</span><span class="tag">NVMe</span><span class="tag">driver</span><span class="tag">p2pdma</span><span class="tag">ioctl</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#분석-범위">분석 범위</a>
+<a class="toc-level-2" href="#전체-구조">전체 구조</a>
+<a class="toc-level-2" href="#먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</a>
+<a class="toc-level-2" href="#로직-다이어그램">로직 다이어그램</a>
+<a class="toc-level-3" href="#1-프로그램-로드부터-실행까지의-ioctl-순서">1) 프로그램 로드부터 실행까지의 ioctl 순서</a>
+<a class="toc-level-3" href="#2-메모리-네임스페이스-i-o가-p2p-커맨드로-바뀌는-경로">2) 메모리 네임스페이스 I/O가 P2P 커맨드로 바뀌는 경로</a>
+<a class="toc-level-2" href="#모듈-객체-관계도">모듈/객체 관계도</a>
+<a class="toc-level-2" href="#핵심-흐름">핵심 흐름</a>
+<a class="toc-level-3" href="#입력-변환-검증-상태-변경-외부-호출">입력 → 변환/검증 → 상태 변경 → 외부 호출</a>
+<a class="toc-level-3" href="#질문에-대한-답">질문에 대한 답</a>
+<a class="toc-level-2" href="#주요-파일과-역할">주요 파일과 역할</a>
+<a class="toc-level-2" href="#중요한-설계-판단">중요한 설계 판단</a>
+<a class="toc-level-2" href="#읽으면서-주의할-점">읽으면서 주의할 점</a>
+<a class="toc-level-2" href="#더-파볼-질문">더 파볼 질문</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="cemu-nvme-csd-커널-드라이버-분석">CEMU NVMe CSD 커널 드라이버 분석</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p><code>cemu.c</code>는 표준 NVMe PCI 드라이버(<code>pci.c</code>, <code>core.c</code>) 위에 &quot;컴퓨트 네임스페이스(c3)&quot;와 &quot;메모리 네임스페이스(m2)&quot;를 위한 별도의 블록/문자 디바이스 쌍을 직접 만들어 붙이고, <code>pci.c</code>의 <code>nvme_prep_rq()</code>와 <code>core.c</code>의 <code>nvme_setup_cmd()</code>에 조건부 분기(<code>#ifdef CONFIG_NVME_CEMU</code>)를 심어 일반 I/O bio를 CSD 전용 NVMe 커맨드(Load Program / Program Execute / Memory Read·Write·Copy)로 둔갑시키는 방식으로 동작한다.</p>
+<h2 id="분석-범위">분석 범위</h2>
+<p><code>job.json</code>이 지정한 linux-cemu 저장소의 NVMe 호스트 드라이버 경로(<code>drivers/nvme/host/{cemu.c,cemu.h,pci.c,core.c,ioctl.c,nvme.h,trace.h,Kconfig,Makefile}</code>, <code>include/uapi/linux/cemu_ioctl.h</code>, <code>include/linux/{cemu_ioctl.h,nvme.h}</code>, <code>include/linux/blk_types.h</code>)만 다룬다. <code>references/raw/cemu/repo-map.md</code>에 따르면 이 저장소의 CEMU 고유 코드는 전체의 극히 일부(약 2,600 LOC)이므로, 위 파일들에 <code>cemu</code>/<code>CEMU</code>/<code>CONFIG_NVME_CEMU</code> 마커가 붙은 부분만 실제 확장 지점이고 나머지는 Linux 6.8 upstream 그대로다. 디바이스(에뮬레이터) 측 <code>hw/femu/csd/nvme_csd.h</code>는 이 job의 <code>repo/</code> 트리에 포함돼 있지 않아 직접 열어 대조하지 못했다(아래 &quot;대조&quot; 항목에서 별도 표시).</p>
+<h2 id="전체-구조">전체 구조</h2>
+<p>세 개의 독립된 저장소(CEMU/linux-cemu/ubpf-cemu) 중 이 문서는 <strong>linux-cemu 호스트 드라이버</strong>만 다룬다. <code>references/raw/cemu/repo-map.md</code>가 정리한 전체 데이터 흐름 골격을 인용하면:</p>
+<pre><code>호스트 애플리케이션 (ioctl / io_uring cmd, cemu_ioctl.h)
+  ▼
+drivers/nvme/host/cemu.c  — /dev/nvmeXm2(블록), /dev/nvmeXc3(문자)
+  ▼
+drivers/nvme/host/core.c  — nvme_setup_cmd() 가 REQ_OP → nvme_command 변환
+  ▼
+drivers/nvme/host/pci.c   — nvme_prep_rq() 가 p2pdma 페이지/bio 플래그를 감지해
+                              Memory Read/Write/Copy 커맨드로 재작성, PRP/SGL 매핑
+  ▼
+QEMU/FEMU 경계 (에뮬레이션된 CSD 컨트롤러, 이 job 범위 밖)</code></pre>
+<p>핵심은 cemu.c가 NVMe 표준 네임스페이스 스캔 경로(<code>core.c</code>의 <code>nvme_scan_ns_list</code>/<code>nvme_alloc_ns</code>)를 <strong>거치지 않고</strong>, PCI probe 시점에 컨트롤러 단위 quirk(<code>NVME_QUIRK_CEMU</code>)를 보고 <code>cemu_dev_add()</code>를 한 번 호출해 m2/c3 노드를 수동으로 만든다는 점이다. 이는 코드를 읽어 직접 확인한 사실이며, 뒤에서 근거를 제시한다.</p>
+<h2 id="먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</h2>
+<ol><li><strong><code>include/uapi/linux/cemu_ioctl.h</code></strong> — 사용자 공간과의 유일한 공식 계약(ioctl 번호, <code>struct ioctl_download/execute/create_mrs</code>)을 먼저 외워두면 이후 커널 코드의 필드 이름이 바로 이해된다.</li><li><strong><code>drivers/nvme/host/cemu.h</code></strong> — <code>struct cemu_dev</code>, <code>struct cemu_bio</code>와 전역 배열 <code>cemu_bdev[]</code>/<code>cemu_p2p_start[]</code>/<code>cemu_p2p_end[]</code>. 이 배열들이 뒤에 나오는 멀티-드라이브 P2P의 핵심 자료구조이므로 구조부터 파악한다.</li><li><strong><code>cemu.c: cemu_dev_add()</code></strong> — 디바이스가 &quot;어떻게 발견되고 등록되는지&quot;의 실체. <code>nvme_find_get_ns(ctrl, 1)</code>로 실제 NVM 네임스페이스를 얻고, BAR2를 p2pdma 리소스로 등록하고, m2/c3 노드를 만드는 전체 순서를 여기서 본다.</li><li><strong><code>cemu.c: cemu_cdev_ioctl()</code>과 하위 핸들러</strong> (<code>cemu_load_program</code>, <code>cemu_unload_program</code>, <code>cemu_program_activation</code>, <code>cemu_program_execute</code>, <code>cemu_create_mrs</code>) — UAPI 구조체가 실제로 어떻게 소비되는지, 그리고 각 ioctl이 bio 경로를 타는지 admin passthrough를 타는지 구분해서 본다.</li><li><strong><code>core.c: nvme_setup_cmd()</code> 및 인접 <code>nvme_setup_load()</code>/<code>nvme_setup_execute()</code></strong> — cemu.c가 만든 bio(<code>REQ_OP_LOAD_PROGRAM</code>, <code>REQ_OP_PROGRAM_EXECUTE</code>)가 실제 <code>struct nvme_command</code>으로 변환되는 지점. 여기가 core.c의 CEMU 훅 전체다.</li><li><strong><code>pci.c: nvme_prep_rq()</code>의 <code>#ifdef CONFIG_NVME_CEMU</code> 블록</strong> — 일반 Read/Write bio가 p2pdma 페이지(<code>is_pci_p2pdma_page</code>)나 <code>BIO_NVME_MEMORY_CMD</code> 플래그를 갖고 있으면 Memory Read/Write/Copy 커맨드로 재작성되는 로직. P2P DMA 활용의 실제 코드다.</li><li><strong><code>pci.c: nvme_pci_probe()</code>의 quirk 분기와 <code>pci_ids[]</code>의 <code>0x8888</code> 항목</strong> — 일반 NVMe SSD와 CSD를 구분하는 유일한 기준(PCI Device ID + <code>NVME_QUIRK_CEMU</code>)을 확인한다.</li><li><strong><code>include/linux/nvme.h</code>의 <code>nvme_load_program_cmd</code>/<code>nvme_program_activation_cmd</code>/<code>nvme_program_execute_cmd</code>/<code>nvme_memory_range_set_manage_cmd</code>/<code>nvme_memory_range</code></strong> — cemu.c/core.c가 채우는 필드의 원형. 디바이스 측 <code>nvme_csd.h</code>와의 대조 기준점이 된다(단, 이 job에서는 후자를 직접 열람하지 못함).</li><li><strong><code>drivers/nvme/host/nvme.h</code>의 <code>NVME_QUIRK_CEMU</code>, <code>struct nvme_ctrl</code>의 <code>cemu_dev/cemu_p2p_start/end</code><strong> 와 </strong><code>include/linux/blk_types.h</code>의 <code>REQ_OP_LOAD_PROGRAM</code>/<code>REQ_OP_PROGRAM_EXECUTE</code>/<code>BIO_NVME_MEMORY_CMD</code></strong> — 마지막으로, 위 모든 훅이 어떤 전역 열거형 확장에 의존하는지 확인한다. 이 확장이 왜 upstream에 부담스러운지 판단하는 근거가 된다.</li></ol>
+<h2 id="로직-다이어그램">로직 다이어그램</h2>
+<h3 id="1-프로그램-로드부터-실행까지의-ioctl-순서">1) 프로그램 로드부터 실행까지의 ioctl 순서</h3>
+<div class="mermaid">sequenceDiagram
+ participant App as 사용자 프로그램
+ participant Cdev as &quot;/dev/nvmeXc3 cemu_cdev_ioctl&quot;
+ participant Bio as &quot;cemu_load_program bio path&quot;
+ participant Core as &quot;core.c nvme_setup_cmd&quot;
+ participant Dev as &quot;에뮬레이트된 CSD&quot;
+
+ App-&gt;&gt;Cdev: open &quot;/dev/nvmeXc3&quot;
+ App-&gt;&gt;Cdev: &quot;IOCTL_CEMU_DOWNLOAD ioctl_download&quot;
+ Cdev-&gt;&gt;Bio: cemu_load_program 호출
+ Bio-&gt;&gt;Bio: &quot;bio_alloc REQ_OP_LOAD_PROGRAM, dev-&gt;disk-&gt;part0&quot;
+ Bio-&gt;&gt;Core: submit_bio -&gt; nvme_queue_rq -&gt; nvme_setup_cmd
+ Core-&gt;&gt;Dev: &quot;nvme_setup_load: opcode 0x22, nsid 3&quot;
+ Dev--&gt;&gt;Cdev: &quot;pind 반환 copy_to_user&quot;
+ App-&gt;&gt;Cdev: &quot;IOCTL_CEMU_ACTIVATE pind&quot;
+ Cdev-&gt;&gt;Dev: &quot;cemu_program_activation sel 1, opcode 0x23&quot;
+ App-&gt;&gt;Cdev: &quot;IOCTL_CEMU_CREATE_MRS 선택적&quot;
+ Cdev-&gt;&gt;Dev: &quot;cemu_create_mrs opcode 0x21 sel 0&quot;
+ App-&gt;&gt;Cdev: &quot;IOCTL_CEMU_EXECUTE 또는 io_uring cmd&quot;
+ Cdev-&gt;&gt;Dev: &quot;program_execute REQ_OP_PROGRAM_EXECUTE, io_uring 경로만 실제 커맨드 전송&quot;
+ App-&gt;&gt;Cdev: &quot;IOCTL_CEMU_DEACTIVATE sel 0&quot;
+ App-&gt;&gt;Cdev: &quot;IOCTL_CEMU_UNLOAD&quot;
+ Cdev-&gt;&gt;Dev: &quot;cemu_unload_program opcode 0x22 sel 1&quot;</div>
+<ul><li><code>App→Cdev</code> 화살표들은 실제로 <code>include/uapi/linux/cemu_ioctl.h</code>에 정의된 <code>IOCTL_CEMU_*</code> 매크로와 <code>struct ioctl_download</code>/<code>ioctl_execute</code>/<code>ioctl_create_mrs</code>에 대응한다.</li><li><code>Cdev→Bio→Core→Dev</code>는 <strong>DOWNLOAD만</strong> bio 경로(<code>cemu_load_program</code>, <code>nvme_setup_load</code>)를 타고, ACTIVATE/DEACTIVATE/UNLOAD/MRS는 <code>nvme_submit_sync_cmd</code>/<code>__nvme_submit_sync_cmd</code>로 admin queue에 직접 동기 제출된다는 차이를 나타낸다.</li><li>EXECUTE 화살표는 의도적으로 &quot;io_uring 경로만 실제 커맨드 전송&quot;이라고 표기했다. <code>cemu_cdev_ioctl()</code>의 <code>IOCTL_CEMU_EXECUTE</code> 분기(<code>cemu_program_execute()</code>)는 프로그램 존재/활성 여부만 확인하고 <strong>아무 NVMe 커맨드도 보내지 않은 채 0을 반환</strong>한다(<code>cemu.c:416-435</code>). 실제로 <code>REQ_OP_PROGRAM_EXECUTE</code> bio를 만들어 제출하는 코드는 io_uring <code>uring_cmd</code>용 <code>program_execute()</code>(<code>cemu.c:581-615</code>)뿐이며, 이마저 <code>execute.pind</code>를 읽지 않고 <code>pind=1</code>을 하드코딩한다.</li></ul>
+<h3 id="2-메모리-네임스페이스-i-o가-p2p-커맨드로-바뀌는-경로">2) 메모리 네임스페이스 I/O가 P2P 커맨드로 바뀌는 경로</h3>
+<div class="mermaid">flowchart TD
+ A[&quot;사용자: /dev/nvmeXm2 에 pread/pwrite 또는 FDMFS copy_file_range&quot;] --&gt; B[&quot;cemu_bdev_submit_bio bio&quot;]
+ B --&gt; C[&quot;bio_set_dev dev-&gt;nvme_bdev, BIO_NVME_MEMORY_CMD 설정&quot;]
+ C --&gt; D[&quot;submit_bio_noacct -&gt; nvme_queue_rq&quot;]
+ D --&gt; E[&quot;nvme_prep_rq 의 CONFIG_NVME_CEMU 블록&quot;]
+ E --&gt; F{&quot;is_memory_copy_cmnd 인가&quot;}
+ F -- 예 --&gt; G[&quot;nvme_memory_copy_cmd 구성 cdft 2/3/4, opcode 1 nsid 2&quot;]
+ F -- 아니오 --&gt; H{&quot;is_memory_rw_cmnd 이고 nsid != 3 인가&quot;}
+ H -- 예 --&gt; I[&quot;nvme_memory_rw_cmd 로 재작성 opcode 2 read / 5 write, nsid 2&quot;]
+ H -- 아니오 --&gt; J[&quot;일반 nvme_map_data 경로 그대로 진행&quot;]
+ G --&gt; K[&quot;dma_map_bvec 로 copy descriptor 매핑, is_cemu_p2p_addr 로 대상 BAR 판별&quot;]
+ I --&gt; L[&quot;cemu_addr: page_to_phys 로 물리주소 계산&quot;]
+ K --&gt; M[&quot;에뮬레이트된 CSD 컨트롤러로 전송&quot;]
+ L --&gt; M</div>
+<ul><li><code>cemu_bdev_submit_bio</code>(<code>cemu.c:100-120</code>)가 m2 블록 디바이스를 &quot;가짜 디스크&quot;로 만들어, 실제 큐 처리는 원본 NVM 네임스페이스(<code>dev-&gt;nvme_bdev</code>)에 위임하면서 <code>BIO_NVME_MEMORY_CMD</code> 플래그(<code>blk_types.h:349</code>)만 얹는다는 점이 핵심이다.</li><li><code>is_memory_copy_cmnd</code>/<code>is_memory_rw_cmnd</code>/<code>is_cemu_p2p_addr</code>/<code>cemu_addr</code>은 모두 <code>pci.c:896-936</code>에 정의돼 있다.</li><li><code>is_cemu_p2p_addr()</code>는 <code>cemu_bdev_minor</code> 범위 전체(즉 <strong>모든 등록된 CSD</strong>)를 순회하며 물리주소가 속한 디바이스를 찾는다 — 이것이 멀티-드라이브 P2P의 실체다.</li></ul>
+<h2 id="모듈-객체-관계도">모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+ subgraph UAPI[&quot;include/uapi/linux/cemu_ioctl.h&quot;]
+ DL[&quot;ioctl_download&quot;]
+ EX[&quot;ioctl_execute&quot;]
+ MRS[&quot;ioctl_create_mrs&quot;]
+ end
+
+ subgraph CemuC[&quot;cemu.c / cemu.h&quot;]
+ CD[&quot;struct cemu_dev&quot;]
+ CB[&quot;struct cemu_bio&quot;]
+ SP[&quot;struct sysfs_program&quot;]
+ CD --&gt;|&quot;prog_list, 1:N&quot;| SP
+ CB --&gt;|&quot;bio-&gt;bi_private&quot;| CD
+ end
+
+ subgraph Global[&quot;cemu.c 전역 상태&quot;]
+ ARR[&quot;cemu_bdev CEMU_MAX_MINOR&quot;]
+ PSTART[&quot;cemu_p2p_start / cemu_p2p_end&quot;]
+ end
+
+ subgraph NvmeCore[&quot;core.c / nvme.h&quot;]
+ NC[&quot;struct nvme_ctrl&quot;]
+ NCMD[&quot;struct nvme_command union&quot;]
+ NC --&gt;|&quot;ctrl-&gt;cemu_dev&quot;| CD
+ end
+
+ subgraph PciC[&quot;pci.c&quot;]
+ PREP[&quot;nvme_prep_rq&quot;]
+ P2P[&quot;is_cemu_p2p_addr&quot;]
+ end
+
+ DL --&gt;|&quot;copy_from_user&quot;| CD
+ EX --&gt;|&quot;copy_from_user&quot;| CD
+ MRS --&gt;|&quot;copy_from_user&quot;| CD
+ CD --&gt;|&quot;cemu_dev_add 시 등록&quot;| ARR
+ CD --&gt;|&quot;p2p_addr, size&quot;| PSTART
+ PREP --&gt; P2P
+ P2P --&gt; ARR
+ CD --&gt;|&quot;nvme_submit_sync_cmd&quot;| NCMD</div>
+<ul><li><code>struct cemu_dev</code>(<code>cemu.h:38</code>)는 컨트롤러 1개당 1개 생성되며, <code>prog_list</code>로 여러 <code>sysfs_program</code>(프로그램 메타데이터, 로드된 CSF마다 1개)을 소유한다.</li><li><code>struct cemu_bio</code>(<code>cemu.h:14</code>)는 커널 내부 bio 완료 동기화용 임시 객체로, <code>bio-&gt;bi_private</code>를 통해 <code>cemu_dev</code>나 카운터에 연결된다.</li><li><code>cemu_bdev[]</code>/<code>cemu_p2p_start[]</code>/<code>cemu_p2p_end[]</code>(<code>cemu.h:70-72</code>, 전역 정의는 <code>cemu.c:33-35</code>)는 <strong>디바이스 소유가 아닌 모듈 전역</strong> 배열로, <code>pci.c</code>가 어떤 CSD든 상관없이 참조할 수 있게 해준다 — 이것이 &quot;multi-CSD/multi-drive P2P가 자료구조에 미친 영향&quot;의 직접적 증거다: 원래 있었다면 <code>cemu_dev</code> 안에 갇혀 있을 정보를 전역으로 뽑아내 인덱스(<code>dev-&gt;idx</code>)로 관리하게 바뀐 흔적.</li><li><code>struct nvme_ctrl</code>(<code>nvme.h</code>, <code>drivers/nvme/host/nvme.h:401-404</code>)에 추가된 <code>cemu_dev</code>/<code>cemu_p2p_start</code>/<code>cemu_p2p_end</code> 필드가 core/pci와 cemu.c를 잇는 유일한 공식 연결 고리다.</li></ul>
+<h2 id="핵심-흐름">핵심 흐름</h2>
+<h3 id="입력-변환-검증-상태-변경-외부-호출">입력 → 변환/검증 → 상태 변경 → 외부 호출</h3>
+<ol><li><strong>입력</strong>: 사용자 공간이 <code>/dev/nvmeXc3</code>를 열고 <code>include/uapi/linux/cemu_ioctl.h</code>의 <code>IOCTL_CEMU_*</code> 중 하나를 호출한다. 모든 인자는 <code>__u64</code>로 인코딩된 사용자 포인터를 담고 있어(<code>copy_from_user</code> 필요), 커널은 항상 <code>(void __user *)(uintptr_t)</code> 캐스팅 후 접근한다(<code>cemu.c</code> 전반).</li><li><strong>변환/검증</strong>: <code>cemu_cdev_ioctl()</code>이 커맨드 번호로 분기하고, 각 핸들러가 <code>dev-&gt;lock</code> 뮤텍스 하에서 <code>dev-&gt;prog_list</code>를 선형 탐색(<code>__find_program_by_id</code>/<code>__find_program_by_name</code>)해 대상 프로그램의 존재/상태를 검증한다.</li><li><strong>상태 변경</strong>: LOAD는 <code>dev-&gt;cur_pind</code>를 증가시키며 새 <code>sysfs_program</code>을 만들고 sysfs 노드(<code>/sys/fs/nvmeXm2/&lt;name&gt;</code>)를 추가한다. ACTIVATE/DEACTIVATE는 <code>prog-&gt;is_active</code> 플래그만 갱신한다. UNLOAD는 <code>sysfs_program</code>을 리스트에서 제거하고 <code>kfree</code>한다.</li><li><strong>외부 호출</strong>: 최종적으로 <code>nvme_submit_sync_cmd()</code>/<code>__nvme_submit_sync_cmd()</code>(admin queue, ACTIVATE/DEACTIVATE/MRS)나 <code>submit_bio()</code>(io queue, LOAD/EXECUTE-uring)를 통해 실제 NVMe 커맨드가 컨트롤러로 나간다. 이 지점에서 <code>core.c: nvme_setup_cmd()</code>가 block-layer <code>REQ_OP</code>를 <code>struct nvme_command</code>로 최종 직렬화한다.</li></ol>
+<h3 id="질문에-대한-답">질문에 대한 답</h3>
+<ul><li><strong>CSD를 쓰기 위한 정확한 ioctl 순서</strong>: <code>open(&quot;/dev/nvmeXc3&quot;)</code> → <code>IOCTL_CEMU_DOWNLOAD</code>(pind 획득) → <code>IOCTL_CEMU_ACTIVATE</code> → (필요 시) <code>IOCTL_CEMU_CREATE_MRS</code> → <code>IOCTL_CEMU_EXECUTE</code>(ioctl 또는 io_uring <code>IORING_OP_URING_CMD</code>) → 종료 후 <code>IOCTL_CEMU_DEACTIVATE</code> → <code>IOCTL_CEMU_UNLOAD</code>. <code>IOCTL_CEMU_DELETE_MRS</code>는 MRS를 만들었다면 정리 단계에서 호출한다. <code>application-development.md</code>에 나온 사용 순서와 코드 구현이 정확히 일치한다.</li><li><strong>P2P DMA가 없애는 데이터 이동</strong>: <code>cemu_p2pmem_setup()</code>(<code>cemu.c:645</code>)이 CSD의 BAR2(SLM, <code>CEMU_SLM_BAR=2</code>)를 <code>pci_p2pdma_add_resource()</code>로 등록해 그 메모리를 일반 페이지처럼 취급되게 만든다. 그 결과 <code>nvme_prep_rq()</code>가 그 페이지를 가리키는 bio를 만나면 Memory Read/Write/Copy 커맨드로 변환해(<code>pci.c:838-1024</code>) 호스트 DRAM을 거치지 않고 CSD 내부(NAND ↔ 디바이스 메모리) 또는 서로 다른 두 CSD의 BAR 사이에서 직접 데이터가 이동하도록 한다. 즉, &quot;디바이스→호스트 RAM→디바이스&quot;의 왕복 복사(bounce buffer)와 그에 따른 호스트 CPU/메모리 대역폭 소모를 제거하는 것이 목적이다.</li><li><strong>CSD를 일반 NVMe SSD와 구분하는 방법</strong>: 네임스페이스 Identify가 아니라 <strong>PCI Device ID</strong>로 구분한다. <code>pci.c</code> 최하단 <code>pci_ids[]</code> 테이블의 <code>PCI_VDEVICE(INTEL, 0x8888)</code> 항목(<code>#ifdef CONFIG_NVME_CEMU</code>, <code>pci.c:3564-3570</code>)에만 <code>NVME_QUIRK_CEMU</code> 비트가 설정되고, <code>nvme_pci_probe()</code>가 <code>dev-&gt;ctrl.quirks &amp; NVME_QUIRK_CEMU</code>일 때만(<code>pci.c:3265</code>) <code>cemu_dev_add()</code>를 호출한다. 컴퓨트/메모리 네임스페이스 자체는 NVMe 표준 Identify Namespace 스캔(<code>core.c: nvme_scan_ns</code>/<code>nvme_alloc_ns</code>) 경로를 전혀 타지 않는다 — 코드에서 확인한 사실이며, <code>cemu_dev_add()</code>는 <code>nvme_find_get_ns(ctrl, 1)</code>로 nsid=1(NVM)의 기존 블록 디바이스만 얻어 재사용하고, m2/c3 노드는 직접 <code>blk_alloc_disk()</code>/<code>cdev_add()</code>로 새로 만든다. <code>FIXME: nsid</code>라는 주석이 이 부분이 하드코딩된 임시 처리임을 코드 스스로 인정하고 있다.</li><li><strong>실행 중인 프로그램을 unload하면</strong>: <code>cemu_unload_program()</code>(<code>cemu.c:359</code>)은 <code>prog-&gt;is_active</code> 상태를 <strong>확인하지 않고</strong> 곧바로 Load 커맨드(sel=1)를 admin queue에 동기 전송한다. 디바이스가 성공을 반환하면 <code>sysfs_program</code>을 리스트에서 제거하고 <code>kfree</code>한다. 활성 상태 프로그램을 먼저 deactivate하도록 강제하는 로직이 커널 쪽에는 없다 — 안전장치가 사실상 디바이스 펌웨어에 위임돼 있다(추정: 디바이스가 자체적으로 거부/직렬화할 가능성이 있으나 이 저장소만으로는 확인 불가).</li><li><strong>여러 CSD가 붙었을 때 프로그램/메모리 격리</strong>: 프로그램은 <code>cemu_dev</code> 단위(컨트롤러 1개당 1개)로 완전히 분리된 <code>prog_list</code>+<code>mutex</code>+<code>sysfs kobject</code>를 가져 강하게 격리된다. 반면 디바이스 메모리 주소 공간은 전역 배열 <code>cemu_bdev[]</code>/<code>cemu_p2p_start[]</code>/<code>cemu_p2p_end[]</code>(<code>CEMU_MAX_MINOR=64</code> 슬롯)로 관리되어, <code>pci.c: is_cemu_p2p_addr()</code>가 모든 등록 CSD를 순회해 물리주소가 속한 디바이스를 찾는다 — 이는 PCI BAR 물리주소 공간이 시스템 전역에서 자연히 겹치지 않는다는 전제에 의존한 &quot;격리 없는 공유 조회 테이블&quot; 방식이다.</li><li><strong>upstream 채택 가능성</strong>: 아래 &quot;중요한 설계 판단&quot;과 &quot;읽으면서 주의할 점&quot; 참고 — 결론적으로 <strong>연구용 프로토타입</strong>에 가깝다.</li></ul>
+<h2 id="주요-파일과-역할">주요 파일과 역할</h2>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>역할</th></tr></thead><tbody><tr><td><code>include/uapi/linux/cemu_ioctl.h</code></td><td>사용자 공간 ↔ 커널 유일 공식 ABI. 7개 ioctl과 3개 구조체(<code>ioctl_download</code>, <code>ioctl_execute</code>, <code>ioctl_create_mrs</code>)</td></tr><tr><td><code>drivers/nvme/host/cemu.h</code></td><td><code>cemu_dev</code>/<code>cemu_bio</code> 정의, 전역 배열 extern 선언, <code>cemu_dev_add/remove</code> 공개 API</td></tr><tr><td><code>drivers/nvme/host/cemu.c</code></td><td>m2 블록 디바이스 + c3 문자 디바이스 생성/제거, 7개 ioctl 핸들러, p2pdma BAR2 설정, io_uring <code>uring_cmd</code></td></tr><tr><td><code>drivers/nvme/host/core.c</code></td><td><code>nvme_setup_cmd()</code>에 <code>REQ_OP_LOAD_PROGRAM</code>/<code>REQ_OP_PROGRAM_EXECUTE</code> 분기 추가(<code>nvme_setup_load</code>/<code>nvme_setup_execute</code>)</td></tr><tr><td><code>drivers/nvme/host/pci.c</code></td><td><code>nvme_prep_rq()</code>에서 p2pdma 페이지/<code>BIO_NVME_MEMORY_CMD</code> 감지 후 Memory Read/Write/Copy 커맨드로 재작성, PCI ID 0x8888 quirk 등록, probe/remove 시 <code>cemu_dev_add/remove</code> 호출</td></tr><tr><td><code>drivers/nvme/host/nvme.h</code></td><td><code>NVME_QUIRK_CEMU</code> 비트, <code>struct nvme_ctrl</code>의 <code>cemu_dev</code>/<code>cemu_p2p_start</code>/<code>cemu_p2p_end</code></td></tr><tr><td><code>include/linux/nvme.h</code></td><td>NVMe Computational Storage 커맨드 구조체(<code>nvme_load_program_cmd</code> 등 5종)와 <code>nvme_command</code> union에의 편입</td></tr><tr><td><code>include/linux/blk_types.h</code></td><td>블록 레이어 전역 <code>enum req_op</code>에 16/17번 슬롯 추가, <code>enum</code> bio flag에 <code>BIO_NVME_MEMORY_CMD</code> 추가</td></tr><tr><td><code>drivers/nvme/host/ioctl.c</code>, <code>trace.h</code></td><td>코드에서 직접적인 <code>cemu</code> 마커를 찾지 못함 — 관련 diff는 매우 작거나(공백/트레이스포인트 인자 확장 등) upstream 코드와 사실상 동일 (확인이 더 필요함)</td></tr></tbody></table></div>
+<h2 id="중요한-설계-판단">중요한 설계 판단</h2>
+<ul><li><strong>네임스페이스 인식을 NVMe 표준 스캔이 아니라 컨트롤러 quirk로 대체</strong>: m2/c3는 Identify Namespace를 거치지 않고 probe 시점에 통째로 생성된다. 구현은 단순하지만, 실제 NVMe CS(Computational Storage) 스펙이 정의하는 &quot;네임스페이스별 Command Set&quot; 모델과는 괴리가 있다(추정: 진짜 스펙 준수 구현이라면 <code>NVME_CSI_*</code> 값과 <code>nvme_update_ns_info()</code>의 CSI 분기를 통해 인식되어야 하지만, 이 코드는 그 경로를 쓰지 않는다).</li><li><strong>블록 계층의 전역 <code>enum req_op</code>를 확장</strong>: <code>REQ_OP_LOAD_PROGRAM</code>/<code>REQ_OP_PROGRAM_EXECUTE</code>를 NVMe 드라이버 전용이 아니라 <code>include/linux/blk_types.h</code>의 공유 열거형에 추가했다. 이는 모든 블록 드라이버가 공유하는 네임스페이스를 침범하는 것이라, 다른 서브시스템의 향후 opcode 확장과 충돌 위험이 있고 upstream 관례상 받아들여지기 어렵다.</li><li><strong>m2 블록 디바이스를 &quot;리다이렉터&quot;로 설계</strong>: <code>cemu_bdev_submit_bio()</code>가 자체 request_queue 처리 로직 없이 bio를 원본 NVM 네임스페이스로 재위임하는 방식은, FDMFS/O_DIRECT/mmap 같은 표준 파일-블록 스택을 그대로 재사용할 수 있게 해주는 영리한 설계다. 다만 디스크 두 개(m2, 원본 n1)가 큐를 공유하면서 논리 블록 크기를 1바이트로 강제(<code>disk-&gt;queue-&gt;limits.logical_block_size = 1</code>)하는 부분은 매우 특수한 해킹에 가깝다.</li><li><strong>전역 배열 기반 P2P 주소 조회</strong>: 멀티-드라이브 P2P를 위해 per-device 캡슐화를 깨고 전역 배열(<code>cemu_bdev[]</code> 등)로 뽑아낸 것은 기능적으로는 합리적이지만, 잠금 규율이 일관적이지 않다(아래 참고).</li></ul>
+<h2 id="읽으면서-주의할-점">읽으면서 주의할 점</h2>
+<ul><li><strong><code>cemu_program_execute()</code>(ioctl 경로)는 사실상 스텁이다.</strong> 프로그램 존재/활성 여부만 확인하고 실제 NVMe 커맨드를 전혀 보내지 않은 채 0을 반환한다(<code>cemu.c:416-435</code>). 동기 ioctl로 실행을 시도하는 사용자 코드는 조용히 아무 일도 일어나지 않는 것처럼 보일 수 있다.</li><li><strong><code>program_execute()</code>(io_uring 경로)는 <code>pind=1</code>을 하드코딩</strong>하고 <code>execute.pind</code>/<code>rsid</code>/<code>cparam1,2</code> 등 SQE 페이로드를 사용하지 않는다(<code>ioctl_execute</code>를 가리키는 코드가 주석 처리돼 있음, <code>cemu.c:583</code>). 여러 프로그램을 로드한 뒤 특정 프로그램을 지정해 실행하는 시나리오는 현재 코드로는 동작하지 않는다(추정: 개발 중인 상태로 보임).</li><li><strong>활성 상태 검사와 실제 I/O 제출 사이 락이 풀린다.</strong> <code>cemu_program_execute()</code>/<code>program_execute()</code> 모두 <code>dev-&gt;lock</code>을 짧게 잡아 존재/활성 여부만 확인한 뒤 즉시 unlock하고, 그 이후에 실제 bio 제출이 일어난다. 그 사이에 다른 스레드가 <code>IOCTL_CEMU_DEACTIVATE</code>나 <code>IOCTL_CEMU_UNLOAD</code>를 실행하면 TOCTOU 경쟁이 발생할 수 있다.</li><li><strong><code>is_cemu_p2p_addr()</code>(pci.c)가 <code>g_lock</code> 없이 전역 배열을 순회</strong>하는 반면, 배열에 대한 쓰기(<code>cemu_dev_add</code>/<code>cemu_dev_remove</code>)는 <code>g_lock</code>으로 보호된다. <code>NULL</code> 체크로 크래시는 피하지만 핫 리무브 타이밍에 따라 최신성 보장이 없는 lock-free 읽기다.</li><li><strong><code>cemu_dev_mmap()</code>은 <code>__maybe_unused</code>로 표시돼 있고 <code>cdev_fops</code>/<code>cemu_bdev_ops</code> 어디에도 연결돼 있지 않다.</strong> 죽은 코드로 보이며, 이전 설계(직접 mmap)에서 현재 설계(FDMFS + bio 리다이렉트)로 바뀐 흔적으로 추정된다.</li><li><strong><code>REQ_OP_LOAD_PROGRAM</code> bio 처리 중 <code>prog_name[len] = download.runtime_scale;</code></strong>(<code>cemu.c:231</code>)처럼, 프로그램 이름 뒤에 <code>runtime_scale</code> 값을 문자로 덮어써 사실상의 &quot;네임스페이스 접미사&quot;를 만드는 코드가 있다. 의도적인 트릭으로 보이나 매우 읽기 어렵고, <code>runtime_scale</code>이 <code>int</code>인데 문자로 캐스팅되므로 값 범위에 따라 예기치 않은 바이트가 파일명에 들어갈 수 있다.</li><li><strong>디바이스 측 <code>nvme_csd.h</code>와의 커맨드 정의 대조는 이 job 범위에서 완전히 확인하지 못했다.</strong> <code>include/linux/nvme.h</code>의 opcode(<code>0x21</code>=MRS manage, <code>0x22</code>=Load/Unload, <code>0x23</code>=Activation, Execute는 <code>0x01</code>+nsid=3, Memory Copy는 <code>0x01</code>+nsid=2)는 CEMU 참고 문서(<code>code-structure.md</code>)가 설명하는 admin/IO 커맨드 목록과 이름 수준에서는 일치하지만, 필드 바이트 오프셋까지 일치하는지는 디바이스 헤더 원문 확인이 필요하다.</li></ul>
+<h2 id="더-파볼-질문">더 파볼 질문</h2>
+<ul><li>디바이스 측 <code>hw/femu/csd/nvme_csd.h</code>(CEMU 저장소, 이 job 범위 밖)를 직접 열어 <code>nvme_load_program_cmd</code> 등 5개 구조체의 바이트 오프셋이 호스트 측과 정확히 일치하는지 바이너리 레이아웃까지 대조가 필요하다.</li><li><code>cemu_program_execute()</code>가 스텁으로 남아있는 이유가 설계 미완성인지, 아니면 io_uring 경로만 지원하기로 의도적으로 결정한 것인지 커밋 로그나 논문 본문에서 확인할 가치가 있다.</li><li>프로그램 unload 시 활성 상태 검사를 생략한 것이 디바이스 펌웨어의 방어 로직을 신뢰한 설계인지, 아니면 단순 누락인지 CEMU 에뮬레이터의 Unload 처리 코드(<code>hw/femu/nvme-admin.c</code>, 이 job 범위 밖)를 봐야 판단할 수 있다.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

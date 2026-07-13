@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>컴퓨트 유닛 스케줄러와 QoS</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">코드 분석</p>
+      <h1>컴퓨트 유닛 스케줄러와 QoS</h1>
+      <p class="summary">hw/femu/csd/sched.c와 스케줄러 4종 구현을 읽고, CSD의 컴퓨트 유닛에 잡이 배치되는 방식과 JobGroup 기반 QoS, 그리고 타이밍 모델과의 연결을 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-13</span>
+        <span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">scheduler</span><span class="tag">QoS</span><span class="tag">timing-model</span><span class="tag">computational-storage</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#분석-범위">분석 범위</a>
+<a class="toc-level-2" href="#전체-구조">전체 구조</a>
+<a class="toc-level-2" href="#먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</a>
+<a class="toc-level-2" href="#로직-다이어그램">로직 다이어그램</a>
+<a class="toc-level-2" href="#모듈-객체-관계도">모듈/객체 관계도</a>
+<a class="toc-level-2" href="#핵심-흐름">핵심 흐름</a>
+<a class="toc-level-2" href="#주요-파일과-역할">주요 파일과 역할</a>
+<a class="toc-level-2" href="#중요한-설계-판단">중요한 설계 판단</a>
+<a class="toc-level-2" href="#읽으면서-주의할-점">읽으면서 주의할 점</a>
+<a class="toc-level-2" href="#더-파볼-질문">더 파볼 질문</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="cemu-csd-컴퓨트-유닛-스케줄러와-qos-분석">CEMU CSD 컴퓨트 유닛 스케줄러와 QoS 분석</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p><code>hw/femu/csd/sched.c</code>의 단일 <code>sched_thread</code>가 우선순위 큐(pqueue)로 <code>ComputeUnit</code>(가상 스케줄링 슬롯)을 순회하며 <code>CsfScheduler</code> 플러그인의 7개 콜백을 호출해 &quot;언제 어떤 잡을 얼마 동안 실행 중인 것으로 칠지&quot;를 결정하는 가상시간 기반 성능 시뮬레이터이며, 실제 CSF 코드 실행(기능 시뮬레이션)은 별도의 <code>nr_thread</code>개 스레드에서 비동기로 이루어지고 <code>job-&gt;stat.exec_time</code>을 통해서만 두 흐름이 연결된다.</p>
+<h2 id="분석-범위">분석 범위</h2>
+<ul><li><code>hw/femu/csd/sched.c</code> / <code>sched.h</code>: 스케줄러 코어 로직, <code>ComputeEngine</code>/<code>ComputeUnit</code>/<code>ComputeJob</code>/<code>JobGroup</code> 정의, <code>CsfScheduler</code> 인터페이스</li><li><code>hw/femu/csd/sched_fifo.c</code>, <code>sched_rr.c</code>, <code>sched_grouped_fifo.c</code>, <code>sched_grouped_rr.c</code>: 4종 스케줄러 구현체</li><li><code>hw/femu/csd/compute.h</code>: <code>ComputeNamespace</code>/<code>ComputeParams</code>/<code>Program</code> 정의 (nr_cu, nr_thread, csf_runtime_scale 필드)</li><li><code>hw/femu/timing-model/timing.c</code>, <code>timing.h</code>: NAND 채널/칩 레벨 타이밍 모델 (CSD 잡 스케줄링과는 별개 계층)</li><li><code>hw/femu/statistics/statistics.c</code>, <code>statistics.h</code>, <code>femu_stat.py</code>, <code>analysis.py</code>, <code>plot_*.py</code>: 공유메모리 기반 통계 export</li></ul>
+<p><strong>범위 제약 (확인 필요)</strong>: 이 체크아웃에는 <code>hw/femu/csd/compute.c</code>가 포함되어 있지 않다. 따라서 <code>csf_runtime_scale</code>이 실제로 어디서 곱해지는지, 기능 시뮬레이션 스레드(<code>compute_threads</code>)가 <code>job-&gt;stat.exec_time</code>을 어떻게 세팅하는지, <code>CsfSchedulerOption</code> 구조체의 필드(<code>algo</code>, <code>time_slice</code>, <code>context_switch_time</code>, <code>take_care_of_group*</code>)가 어디서 파싱되는지는 헤더의 선언과 <code>references/text/cemu__csd-README.txt</code>의 설명으로만 추정했다. 코드로 직접 확인한 부분과 README/구조 문서 기반 추정을 구분해 표기했다.</p>
+<h2 id="전체-구조">전체 구조</h2>
+<p>CSD 스케줄러는 두 개의 독립된 실행 축을 가진다.</p>
+<ol><li><strong>성능 시뮬레이션 축</strong> (<code>sched.c</code>의 <code>sched_thread</code>): <code>ComputeEngine.cu[nr_cu]</code>라는 가상 코어 배열을 우선순위 큐로 관리하며, 각 CU가 &quot;다음에 리스케줄될 시각&quot;(<code>next_sched_time</code>)이 되면 <code>CsfScheduler</code> 콜백을 호출해 다음 잡을 고르고 <code>time_slice</code>/<code>context_switch_time</code>만큼 시간을 전진시킨다. 잡의 실제 완료 여부는 <code>job_exec_time()</code>(=<code>job-&gt;stat.exec_time</code>)과 비교해서만 판단한다.</li><li><strong>기능 시뮬레이션 축</strong> (코드 범위 밖, <code>compute.c</code> 추정): <code>sched_enqueue_job()</code>이 <code>scheduler-&gt;pick_thread()</code>(또는 기본 라운드로빈 <code>ce-&gt;next_thread</code>)로 고른 OS 스레드에서 실제 eBPF/공유라이브러리 코드를 실행하고, 그 결과 실행시간을 <code>set_sched_runtime()</code>을 통해 <code>job-&gt;stat.exec_time</code>에 기록한다(추정).</li></ol>
+<p>이 두 축은 <code>ComputeJob.stat</code>(스핀락 보호)만을 공유 상태로 연결되어 있어, &quot;가상 스케줄링 결정&quot;과 &quot;실제 실행 시간 측정&quot;이 명확히 분리된다.</p>
+<h2 id="먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</h2>
+<ol><li><strong><code>sched.h</code>의 <code>CsfScheduler</code> 구조체 (L178~235)</strong> — 스케줄러 플러그인이 구현해야 할 7개 콜백의 계약을 먼저 이해해야 나머지 코드가 읽힌다.</li><li><strong><code>sched.h</code>의 <code>ComputeJob</code>/<code>ComputeUnit</code>/<code>ComputeEngine</code>/<code>JobGroup</code> (L21~165)</strong> — 스케줄링 대상(잡), 스케줄링 단위(CU), 소유자(엔진), QoS 묶음(그룹)의 관계를 파악한다.</li><li><strong><code>sched.c</code>의 <code>sched_init()</code> (L179~286)</strong> — <code>csf_sched_option.algo</code>/<code>take_care_of_group</code>으로 4종 스케줄러 중 하나를 고르는 선택 로직과 그룹 0/1/2 사전 할당을 확인한다.</li><li><strong><code>sched.c</code>의 <code>sched_thread()</code> (L534~634)</strong> — 전체 스케줄러의 심장부. pqueue로 CU를 고르고 콜백을 호출하는 메인 루프.</li><li><strong><code>sched_fifo.c</code> 전체</strong> — 가장 단순한 구현체로, <code>pick_next_job</code>/<code>enqueue_job</code>이 어떻게 최소 구현되는지 기준점을 잡는다.</li><li><strong><code>sched_rr.c</code></strong> — FIFO와 비교하며 <code>time_slice</code>/원형 리스트로 라운드로빈이 어떻게 구현되는지 본다.</li><li><strong><code>sched_grouped_fifo.c</code>, <code>sched_grouped_rr.c</code></strong> — 그룹별 큐 분리와 <code>group-&gt;prio</code> 사용 방식의 차이(중요한 설계 판단 항목 참고)를 비교한다.</li><li><strong><code>sched.c</code>의 <code>job_switched_out</code>/<code>job_switched_in</code>/<code>job_finish</code> (L288~531)</strong> — 잡 상태 전이와 통계(<code>RequestStat</code>) 기록 지점을 확인한다.</li><li><strong><code>statistics.h</code>/<code>statistics.c</code> + <code>femu_stat.py</code>/<code>analysis.py</code></strong> — C 쪽에서 채운 통계가 공유메모리를 거쳐 파이썬으로 어떻게 소비되는지 확인한다.</li></ol>
+<h2 id="로직-다이어그램">로직 다이어그램</h2>
+<div class="mermaid">sequenceDiagram
+ participant IO as &quot;NVMe IO Thread&quot;
+ participant Stage as &quot;ce.staged_jobs&quot;
+ participant Sched as &quot;sched_thread&quot;
+ participant Plugin as &quot;CsfScheduler plugin&quot;
+ participant CU as &quot;ComputeUnit&quot;
+ participant Func as &quot;Functional sim thread&quot;
+
+ IO-&gt;&gt;IO: sched_alloc_job / sched_enqueue_job
+ IO-&gt;&gt;Stage: stage_job pushes ComputeJob
+ IO-&gt;&gt;Func: pick_thread selects thread id
+ Func--&gt;&gt;Func: run actual CSF, set exec_time later
+
+ loop main loop
+ Sched-&gt;&gt;Stage: enqueue_staged_job drains ring
+ Sched-&gt;&gt;Plugin: enqueue_job for each permitted cu
+ Sched-&gt;&gt;Sched: pqueue_peek picks earliest next_sched_time
+ Sched-&gt;&gt;CU: job_switched_out last_job
+ Sched-&gt;&gt;Plugin: pick_next_job cu last_job time_slice
+ Plugin--&gt;&gt;Sched: next_job time_slice context_switch_time
+ Sched-&gt;&gt;CU: job_switched_in updates last_sched_time
+ Sched-&gt;&gt;Sched: cu.next_sched_time = now + cs_time + time_slice
+ Sched-&gt;&gt;Plugin: dequeue_job when job_has_finished
+ Sched-&gt;&gt;IO: job_finish enqueues cqe to to_poller
+ end</div>
+<ul><li><code>IO-&gt;&gt;Stage</code>: <code>sched_alloc_job()</code>/<code>sched_enqueue_job()</code>(<code>sched.c:377,390</code>)이 <code>ComputeJob</code>을 할당하고 <code>stage_job()</code>(<code>sched.c:361</code>)으로 링버퍼에 적재한다. 그룹 배정은 <code>job_group_add()</code>(<code>sched.c:80</code>)에서 발생한다.</li><li><code>IO-&gt;&gt;Func</code>: <code>sched_enqueue_job()</code> 내부에서 <code>scheduler-&gt;pick_thread</code>가 있으면 호출, 없으면 <code>ce-&gt;next_thread</code> 라운드로빈으로 실행 스레드를 고른다(<code>sched.c:414~421</code>). 실제 실행/<code>exec_time</code> 세팅은 범위 밖 코드(추정).</li><li><code>Sched-&gt;&gt;Stage</code>: <code>enqueue_staged_job()</code>(<code>sched.c:439</code>)이 새 잡을 모든 허용 CU(<code>permited_cu_mask</code>)의 <code>enqueue_job</code> 콜백에 등록하고, 반환값이 <code>1</code>(선점 필요)이면 해당 CU를 <code>cu_mask</code>에 표시한다.</li><li><code>Sched-&gt;&gt;Plugin: pick_next_job</code>: <code>sched_thread()</code>의 안쪽 while(1) 루프(<code>sched.c:585~631</code>)에서 매 CU마다 호출되며, <code>time_slice</code>/<code>context_switch_time</code>은 <code>ComputeUnit</code>의 기본값에서 시작해 스케줄러가 in-out 파라미터로 덮어쓸 수 있다.</li><li><code>Sched-&gt;&gt;Sched: cu.next_sched_time</code>: 이 값이 바로 &quot;가상 시간&quot;이 전진하는 지점이며, <code>pqueue_change_priority()</code>로 CU 우선순위 큐를 재정렬한다(<code>sched.c:628~629</code>).</li><li><code>Sched-&gt;&gt;Plugin: dequeue_job</code>: <code>job_finish()</code>(<code>sched.c:288</code>) 안에서 잡이 허용된 모든 CU에 대해 호출된다(<code>sched.c:314~322</code>).</li></ul>
+<h2 id="모듈-객체-관계도">모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+ CE[&quot;ComputeEngine / compute.h sched.h&quot;] --&gt; CUARR[&quot;cu ComputeUnit array / sched.h L129&quot;]
+ CE --&gt; STG[&quot;staged_jobs ring buffer / sched.h L139&quot;]
+ CE --&gt; GRPARR[&quot;job_group JobGroup array / sched.h L152&quot;]
+ CE --&gt; SCHED[&quot;scheduler CsfScheduler pointer / sched.h L178&quot;]
+
+ SCHED --&gt;|impl| FIFO[&quot;fifo_scheduler / sched_fifo.c&quot;]
+ SCHED --&gt;|impl| RR[&quot;rr_scheduler / sched_rr.c&quot;]
+ SCHED --&gt;|impl| GFIFO[&quot;grouped_fifo_scheduler / sched_grouped_fifo.c&quot;]
+ SCHED --&gt;|impl| GRR[&quot;grouped_rr_scheduler / sched_grouped_rr.c&quot;]
+
+ CUARR --&gt; JOBRUN[&quot;job_running ComputeJob pointer&quot;]
+ CUARR --&gt; SCHEDINFO[&quot;sched_info per scheduler queue&quot;]
+ GRPARR --&gt; JOBLIST[&quot;jobs JobList of ComputeJob&quot;]
+ JOBRUN --&gt; STAT[&quot;stat ComputeJobStat / statistics.h&quot;]
+
+ CE --&gt; NS[&quot;ComputeNamespace / compute.h&quot;]
+ NS --&gt; PARAM[&quot;ComputeParams nr_cu nr_thread csf_runtime_scale&quot;]
+
+ STAT -.-&gt; SHM[&quot;FemuStat shared memory / statistics.c&quot;]
+ SHM -.-&gt; PYSTAT[&quot;femu_stat.py analysis.py&quot;]</div>
+<ul><li><code>CE</code>(<code>ComputeEngine</code>, <code>sched.h:129</code>)가 CU 배열, 스테이징 큐, 잡 그룹 배열, 스케줄러 포인터를 모두 소유하는 중심 객체다.</li><li><code>SCHED</code>는 함수 포인터 테이블(<code>CsfScheduler</code>)이며 실제 구현은 전역 심볼 <code>fifo_scheduler</code>/<code>rr_scheduler</code>/<code>grouped_fifo_scheduler</code>/<code>grouped_rr_scheduler</code>(각 파일 하단)로 존재하고, <code>sched_init()</code>이 <code>csf_sched_option.algo</code>/<code>take_care_of_group</code>으로 그중 하나를 선택해 대입한다.</li><li><code>CUARR</code>의 각 원소가 <code>sched_info</code>(스케줄러 전용 큐 자료구조, 예: <code>sched_fifo.c</code>의 <code>struct job_queue</code>)를 갖는데, <code>rr</code>/<code>grouped_rr</code>는 모든 CU가 <code>cu[0].sched_info</code>를 <strong>공유</strong>하는 반면(<code>sched_rr.c:38~46</code>), <code>fifo</code>/<code>grouped_fifo</code>는 CU마다 독립된 큐를 만든다(<code>sched_fifo.c:30~37</code>). 이는 4종 스케줄러의 근본적 설계 차이다.</li><li><code>NS</code>(<code>ComputeNamespace</code>, <code>compute.h:95</code>)는 <code>params</code>(<code>ComputeParams</code>, <code>nr_cu</code>/<code>nr_thread</code>/<code>csf_runtime_scale</code> 포함)를 갖고 있으며, <code>sched_init()</code>이 이 값을 읽어 <code>ce-&gt;nr_cu</code>, <code>ce-&gt;nr_thread</code>를 세팅한다.</li><li><code>STAT</code>→<code>SHM</code>→<code>PYSTAT</code> 경로는 <code>RequestStat</code>/<code>ComputeJobStat</code>이 <code>mmap</code>된 <code>FemuStat.req_stat[]</code> 링버퍼에 복사되고(<code>statistics.c:63~69</code>), <code>femu_stat.py</code>의 <code>open_shm()</code>이 <code>statistics.h</code>를 파싱해 동일한 <code>cffi</code> 레이아웃으로 매핑한 뒤 <code>analysis.py</code>가 폴링하는 흐름이다(점선 = 프로세스 경계를 넘는 공유메모리 연결).</li></ul>
+<h2 id="핵심-흐름">핵심 흐름</h2>
+<p><strong>입력</strong>: 호스트가 NVMe Program Execute 커맨드를 보내면 <code>sched_alloc_job()</code>이 <code>ComputeJob</code>을 슬랩 할당(<code>ce-&gt;job_slab</code>, <code>sched.c:55~66</code>)하고, <code>sched_enqueue_job()</code>이 <code>exec-&gt;group</code>(커맨드에 담긴 그룹 id)으로 <code>JobGroup</code>을 찾아 <code>job_group_add()</code>로 그룹의 <code>jobs</code> 큐에 연결한다. 기본 그룹은 <code>sched_init()</code>에서 id 0, 1, 2로 미리 3개가 할당되며 모두 <code>DEFAULT_JOB_GROUP_PRIO</code>(5)로 초기화된다(<code>sched.c:239~253</code>).</p>
+<p><strong>변환/검증</strong>: <code>stage_job()</code>이 링버퍼가 가득 찼는지 검사하고, 가득 찼으면 즉시 <code>job_finish()</code>로 실패 처리한다(<code>sched.c:361~375</code>). <code>sched_thread</code>의 <code>enqueue_staged_job()</code>은 <code>job-&gt;permited_cu_mask</code>를 확인해 해당 잡이 허용된 모든 CU의 <code>enqueue_job</code> 콜백을 호출하고, 모든 CU가 거부(<code>pushed == 0</code>)하면 <code>NVME_DNR</code> 상태로 잡을 종료시킨다(<code>sched.c:476~482</code>).</p>
+<p><strong>상태 변경</strong>: <code>sched_thread</code> 메인 루프는 pqueue에서 가장 이른 <code>next_sched_time</code>을 가진 CU를 꺼내 <code>job_switched_out()</code>(이전 잡 러닝타임 정산·그룹 <code>active_runtime</code> 갱신·완료시 <code>job_finish</code> 호출)과 <code>pick_next_job()</code>(다음 잡 선정)을 순서대로 호출한다. 잡이 처음 스케줄되면 그룹의 <code>jobs_queueing</code>을 감소, <code>jobs_running</code>을 증가시키고(<code>sched.c:608~616</code>), <code>job_switched_in()</code>이 <code>last_sched_time</code>을 <code>now + context_switch_time</code>으로 설정한다 — 이 값이 이후 <code>job_switched_out</code>에서 실제 러닝타임(<code>runtime += now - last_sched_time</code>) 계산의 기준점이 된다.</p>
+<p><strong>외부 호출/결과</strong>: 잡이 <code>job_has_finished()</code>(즉 <code>job-&gt;runtime &gt;= job_exec_time(job)</code>)를 만족하면 <code>job_finish()</code>가 <code>NvmeRequest</code> 통계를 채우고(<code>req-&gt;stat.reqlat</code>, <code>exec.queueing_time</code>, <code>exec.runtime</code> 등, <code>sched.c:298~304</code>) <code>femu_ring_enqueue()</code>로 <code>to_poller</code> 링에 완료 요청을 넣어 NVMe 컴플리션 처리 스레드로 넘긴다(<code>sched.c:326~336</code>). 이 시점에 <code>job_group_remove()</code>와 <code>job_free()</code>로 자원을 회수한다.</p>
+<h2 id="주요-파일과-역할">주요 파일과 역할</h2>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>역할</th></tr></thead><tbody><tr><td><code>sched.h</code></td><td><code>ComputeJob</code>/<code>ComputeUnit</code>/<code>ComputeEngine</code>/<code>JobGroup</code>/<code>CsfScheduler</code> 타입 정의, 인라인 헬퍼(<code>job_exec_time</code>, <code>mask_cu</code> 등)</td></tr><tr><td><code>sched.c</code></td><td><code>sched_init</code>(스케줄러 선택·초기화), <code>sched_thread</code>(가상시간 메인 루프), 잡/그룹 생명주기(alloc/enqueue/finish), 통계 갱신</td></tr><tr><td><code>sched_fifo.c</code></td><td>CU별 독립 FIFO 큐, 선점 없음(마지막 잡이 안 끝났으면 계속 재선택)</td></tr><tr><td><code>sched_rr.c</code></td><td>모든 CU가 공유하는 원형 이중연결리스트, <code>time_slice</code> 만료 시 다음 원소로 순환</td></tr><tr><td><code>sched_grouped_fifo.c</code></td><td>그룹 id별 FIFO 큐를 정렬된 리스트(<code>QLIST</code>)로 유지, 큐 간 라운드로빈(<code>last_sched_q</code>)</td></tr><tr><td><code>sched_grouped_rr.c</code></td><td>그룹별 고정배열(<code>MAX_GROUPS=8</code>) + 그룹 간 라운드로빈, 도착 간격 기반 동적 <code>time_slice</code> 계산</td></tr><tr><td><code>compute.h</code></td><td><code>ComputeParams</code>(<code>nr_cu</code>, <code>nr_thread</code>, <code>csf_runtime_scale</code>), <code>Program</code>, <code>ComputeNamespace</code> — sched.c가 소비하는 설정의 출처</td></tr><tr><td><code>timing-model/timing.c,h</code></td><td>NAND 채널/칩 레벨 타이밍(<code>advance_channel_timestamp</code>, <code>advance_chip_timestamp</code>) — CSD 잡 스케줄링과는 별개의, FEMU 원래의 플래시 타이밍 모델</td></tr><tr><td><code>statistics/statistics.h,c</code></td><td><code>RequestStat</code>/<code>ComputeJobStat</code>/<code>ComputeUnitStat</code> 정의, <code>shm_open</code>+<code>mmap</code>으로 <code>FemuStat</code> 공유메모리 노출</td></tr><tr><td><code>statistics/femu_stat.py</code></td><td><code>statistics.h</code>를 파싱해 <code>cffi</code> cdef 생성, 공유메모리를 파이썬 객체로 매핑</td></tr><tr><td><code>statistics/analysis.py</code></td><td>실시간으로 <code>FemuStat.req_stat[]</code>를 폴링해 IOPS/지연/late-io 등을 집계, 소켓으로 플로팅 서버 제공</td></tr></tbody></table></div>
+<h2 id="중요한-설계-판단">중요한 설계 판단</h2>
+<p><strong>1. 새 스케줄링 알고리즘을 추가하려면 무엇을 구현해야 하는가?</strong> <code>CsfScheduler</code> 구조체(<code>sched.h:178</code>)를 채운 전역 인스턴스를 만들고 <code>sched.h:241~244</code>의 <code>extern</code> 목록과 <code>sched.c</code>의 <code>sched_init()</code> 선택 분기(<code>sched.c:194~216</code>, 현재는 <code>algo</code> 문자열 <code>&quot;fifo&quot;</code>/<code>&quot;rr&quot;</code> + <code>take_care_of_group</code> 불리언 조합만 인식)에 등록해야 한다. 필수 콜백은 <code>pick_next_job</code>, <code>enqueue_job</code>(<code>sched.c:221~222</code>에서 assert로 강제)뿐이고 나머지 5개(<code>init</code>/<code>fini</code>/<code>dequeue_job</code>/<code>switched_from</code>/<code>pick_thread</code>)는 옵션이다. <code>enqueue_job</code>은 잡이 허용된 CU마다 별도로 호출되므로(멀티 CU 허용 시) 스케줄러 내부에서 잡의 중복 등록을 스스로 관리해야 한다(<code>rr</code>/<code>grouped_rr</code>는 <code>job-&gt;sched_info</code>로 중복 등록을 assert로 방지).</p>
+<p><strong>2. 4종 스케줄러는 어떤 상황에서 유리한가?</strong></p>
+<div class="table-wrap"><table><thead><tr><th>스케줄러</th><th>선점/시간분할</th><th>그룹 인지</th><th>특징</th></tr></thead><tbody><tr><td><code>fifo</code></td><td>없음 (잡이 끝날 때까지 점유)</td><td>없음</td><td>단순 처리량 위주, 짧은 잡이 긴 잡 뒤에서 굶주릴 수 있음</td></tr><tr><td><code>rr</code></td><td><code>time_slice</code> 단위 순환</td><td>없음</td><td>공정성 확보, 잡이 많을수록 컨텍스트 스위치 오버헤드 증가</td></tr><tr><td><code>grouped_fifo</code></td><td>없음(그룹 내부는 FIFO)</td><td>그룹 단위 라운드로빈 + 옵션으로 <code>group-&gt;prio</code>를 <code>time_slice</code> 배율로 사용(<code>sched_grouped_fifo.c:139~141</code>)</td><td>그룹 간 격리·QoS 우선순위 반영이 필요할 때</td></tr><tr><td><code>grouped_rr</code></td><td><code>time_slice</code> 단위 순환, 그룹별 동적 계산</td><td>그룹 단위 라운드로빈, <code>group-&gt;prio</code>는 QoS API가 아니라 요청의 <code>chunk_nlb</code>(전송 크기)로 매 도착마다 재계산(<code>sched_grouped_rr.c:154~168</code>)</td><td>도착 간격/크기 기반의 적응형 시간분할이 필요할 때, 단 <code>MAX_GROUPS=8</code> 제한 있음</td></tr></tbody></table></div>
+<p><strong>3. &quot;가상 시간&quot;은 어떻게 진행되며 벽시계 시간과 어떻게 분리되는가?</strong> <code>sched_thread</code>는 매 반복마다 <code>clock_ns()</code>(정의부는 이 체크아웃 범위 밖, 확인 필요)를 호출해 <code>now</code>를 얻고, <code>cu-&gt;next_sched_time = now + context_switch_time + time_slice</code>로 각 CU의 다음 스케줄 시각을 미리 계산해 우선순위 큐에 넣는다(<code>sched.c:628~629</code>). 즉 스케줄링 결정 자체는 실제 벽시계 시각을 폴링해서 이루어지므로 <strong>완전한 이산 이벤트 시뮬레이션이 아니라 벽시계 기반 근사(busy-loop polling) 방식</strong>이다(코드로 확인). 반면 잡의 &quot;실제로 얼마나 오래 걸리는가&quot;(<code>job_exec_time</code>)는 기능 시뮬레이션 스레드가 실행한 결과에 <code>csf_runtime_scale</code>(<code>compute.h:89</code>)을 곱해 결정되는 것으로 README(<code>references/text/cemu__csd-README.txt</code> &quot;CSF Runtime Simulation&quot; 절)에 기술되어 있으나, 그 곱셈이 일어나는 코드(<code>compute.c</code> 추정)는 이번 분석 범위에 없어 <strong>확인이 필요</strong>하다. 스케줄링(언제/얼마나 점유했다고 칠지)과 실행시간 산정(얼마나 걸릴지)이 이렇게 분리되어 있는 것이 &quot;성능 시뮬레이션 vs 기능 시뮬레이션&quot; 분리의 핵심이다.</p>
+<p><strong>4. deadline/bandwidth QoS는 보장인가 best-effort인가?</strong> 저장소 내 검색 결과 <code>JobGroup.bandwidth</code>와 <code>JobGroup.deadline</code>(<code>sched.h:94~95</code>)은 <code>sched_job_group_set_qos()</code>(<code>sched.c:156</code>)에서 설정될 뿐, 4개 스케줄러 어디에서도 읽히거나 시행되지 않는다(코드로 확인, <code>compute.c</code>가 범위 밖이라 그쪽에서 참조할 가능성은 완전히 배제할 수 없음 — 확인 필요). 실제로 스케줄링 결정에 반영되는 QoS 신호는 오직 <code>prio</code>뿐이며, 그마저도 <code>grouped_fifo</code>는 사용자가 설정한 <code>prio</code>(1~9)를 그대로 쓰지만 <code>grouped_rr</code>는 <code>chunk_nlb</code>로 매번 덮어써 사용자가 설정한 값이 실질적으로 무시된다(<code>sched_grouped_rr.c:155</code>). 위반 시 어떤 조치(드롭, 재시도, 에러 반환)도 코드에 없으므로 <strong>현재 구현상 deadline/bandwidth는 미시행(unenforced) 필드로 판단된다.</strong></p>
+<p><strong>5. 경쟁 조건 방지</strong> 스케줄링 <em>결정</em> 자체는 <code>sched_thread</code> 단일 스레드가 CU 큐/그룹 큐를 순차적으로만 조작하므로 CU 간 경쟁은 구조적으로 없다. 실제 락이 필요한 지점은 스레드 경계를 넘는 공유 상태뿐이다: <code>job-&gt;lock</code>(스핀락, <code>job-&gt;stat.exec_time</code>을 기능 시뮬레이션 스레드가 쓰고 스케줄 스레드가 읽음, <code>sched.h:249~255</code>), <code>group-&gt;lock</code>(<code>jobs_running</code>/<code>jobs_queueing</code>/<code>active_runtime</code> 카운터, IO 스레드·스케줄 스레드 동시 접근), <code>ce-&gt;staged_jobs.lock</code>(IO 스레드가 push, 스케줄 스레드가 drain, <code>sched.c:361~374</code>, <code>sched.c:445~489</code>), <code>ce-&gt;job_group_lock</code>/슬랩 락(그룹 할당/해제).</p>
+<p><strong>6. 통계 수집과 export</strong> <code>ComputeJobStat</code>(시작/실행/종료시각, 컨텍스트 스위치 수)과 <code>ComputeUnitStat</code>(CU별 idle/exec 시간)이 <code>statistics.h</code>에 정의되고, <code>job_finish()</code>에서 <code>RequestStat.exec</code>(<code>ExecStat</code>: runtime, queueing_time, csf_id, thread, jit 여부 등)로 집계된다. <code>femu_stat_init()</code>이 <code>shm_open</code>+<code>mmap</code>으로 <code>/dev/shm/FEMU-STAT-SHM-&lt;drive_id&gt;</code>를 여는데, 실제 shm 생성은 <code>analysis.py</code>의 <code>open_shm()</code>이 먼저 수행한다(주석 &quot;shm is created in analysis.py&quot;, <code>statistics.c:21</code>). <code>femu_stat_add_req()</code>가 링버퍼(<code>FemuStat.req_stat[FEMU_STAT_CAPACITY]</code>)에 매 요청을 덮어쓰기 방식으로 기록하고(<code>statistics.c:63~69</code>), <code>analysis.py</code>가 <code>stat.tail</code>을 폴링하며 <code>process()</code>로 opcode별 분기 처리해 IOPS/지연분포/late-io/P2P 바이트 등을 에폭 단위로 집계한다. <code>femu_stat.py</code>의 <code>open_shm()</code>이 <code>/* START */</code>~<code>/* END */</code> 마커 사이의 C 선언을 파싱해 <code>cffi</code> cdef를 자동 생성하는 점이 특징이다(코드-헤더 동기화를 매크로 파싱으로 강제).</p>
+<h2 id="읽으면서-주의할-점">읽으면서 주의할 점</h2>
+<ul><li><code>sched.h</code>의 <code>CsfScheduleInfo</code>, <code>WokerThreadPool</code>, <code>CSE_CORE_COUNT</code>, <code>CSD_THREAD_COUNT</code>(L16~26, L69~77)는 저장소 전체에서 다른 곳에 전혀 참조되지 않는다(grep 확인) — <strong>죽은/레거시 타입으로 보이며 실제 흐름과 무관하다.</strong> 혼동하지 말 것.</li><li><code>sched_grouped_rr.c</code>의 <code>struct job_queue</code>는 <code>groups[MAX_GROUPS]</code>(8개 고정 배열)를 <code>job-&gt;group-&gt;id</code>로 직접 인덱싱한다(<code>sched_grouped_rr.c:32~36, 139~140</code>). 그런데 <code>MAX_JOB_GROUPS</code>는 1024이고 슬랩으로 그룹 id가 순차 할당된다(<code>sched.c:236</code>). 사용자가 8개 이상의 그룹을 만들고 <code>grouped_rr</code>를 쓰면 <strong>배열 범위를 벗어난 쓰기가 발생할 수 있다</strong> — 실사용 전 반드시 확인/수정이 필요한 잠재적 버그로 보인다.</li><li><code>grouped_rr</code>의 <code>group-&gt;prio</code>는 QoS API(<code>sched_job_group_set_qos</code>)가 아니라 매 잡 도착시 <code>chunk_nlb * 10</code>으로 덮어써진다(그룹 id 0 제외). <code>sched_job_group_set_qos()</code>로 설정한 <code>prio</code>는 <code>grouped_rr</code>에서는 사실상 무의미해진다는 점을 놓치기 쉽다.</li><li><code>job_group_free()</code>(<code>sched.c:117</code>)는 아직 실행/대기 중인 잡이 있는 그룹을 삭제하면 해당 잡들을 그룹 0으로 강제 이관한다(<code>sched.c:123~145</code>) — 삭제 즉시 실패하지 않고 조용히(에러 로그만 남기고) 재배치되는 동작이므로, 그룹 삭제 후 QoS가 갑자기 바뀔 수 있음에 유의.</li><li><code>pick_thread</code>는 4개 스케줄러 모두 구현하지 않으므로, 현재 제공된 스케줄러들은 항상 기본 라운드로빈(<code>ce-&gt;next_thread</code>)으로 기능 시뮬레이션 스레드를 배정한다(<code>sched.c:414~421</code>). CU(가상 코어, <code>nr_cu</code>)와 기능 시뮬레이션 스레드(<code>nr_thread</code>)는 서로 다른 카운트이며 기본 배정 로직도 서로 독립적이라는 점을 혼동하지 말 것.</li><li><code>compute.c</code>가 범위 밖이므로 <code>csf_runtime_scale</code>의 실제 적용 지점, <code>CsfSchedulerOption</code> 파싱 위치, <code>job-&gt;stat.exec_time</code> 최초 설정 지점은 이 문서에서 코드로 검증하지 못했다.</li></ul>
+<h2 id="더-파볼-질문">더 파볼 질문</h2>
+<ul><li><code>csf_runtime_scale</code>이 <code>compute.c</code>(또는 관련 파일)의 어느 함수에서 곱해지며, ARM 서버 원격 실행 모드(README의 &quot;Run CSF on ARM Server&quot;)일 때는 이 스케일이 어떻게 다르게 적용되는가?</li><li><code>deadline</code>/<code>bandwidth</code> 필드가 정말 코드베이스 전체(이번 checkout 범위 밖 포함)에서 미사용인지, 아니면 상위 계층(예: admin command 핸들러, <code>nvme_csd.h</code>)에서 별도로 조회하는지?</li><li><code>grouped_rr</code>의 <code>MAX_GROUPS=8</code> 하드코딩이 의도된 제한인지, 아니면 <code>MAX_JOB_GROUPS=1024</code>와의 불일치가 실제 버그인지(재현 테스트 필요)?</li><li><code>clock_ns()</code>의 정의(모노토닉 클록 vs QEMU 가상클록)에 따라 &quot;가상 시간&quot;의 성격(실제 벽시계 대비 배속 여부)이 달라지는데, 그 정의가 어디 있는지?</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

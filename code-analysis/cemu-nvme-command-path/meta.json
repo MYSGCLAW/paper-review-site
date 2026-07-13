@@ -1,0 +1,82 @@
+{
+  "title": "NVMe CSD 커맨드 경로 — CEMU가 FEMU에 붙는 지점",
+  "summary": "hw/femu/nvme-admin.c와 nvme-io.c를 읽고 NVMe Computational Storage 커맨드가 장치에서 디스패치되는 경로, 그리고 CEMU가 FEMU 인프라에 통합되는 방식(femu_mode=4)을 분석한다.",
+  "type": "코드 분석",
+  "topic": null,
+  "scope": null,
+  "parent_slug": "cemu",
+  "generated_from_plan": null,
+  "project": {
+    "slug": "cemu",
+    "title": "CEMU",
+    "summary": "Computational Storage Drive(CSD) 풀시스템 에뮬레이션 플랫폼 — QEMU/FEMU 기반 장치 에뮬레이터, Linux 소프트웨어 스택(FDMFS/NVMe/io_uring), uBPF 실행 환경"
+  },
+  "tags": [
+    "CEMU",
+    "CSD",
+    "NVMe",
+    "FEMU",
+    "QEMU",
+    "computational-storage"
+  ],
+  "updated": "2026-07-14",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/cemu/CEMU",
+    "branch": null,
+    "paths": [
+      "hw/femu/nvme-admin.c",
+      "hw/femu/nvme-io.c",
+      "hw/femu/nvme.h",
+      "hw/femu/nvme-def.h",
+      "hw/femu/nvme-util.c",
+      "hw/femu/femu.c",
+      "hw/femu/param.c",
+      "hw/femu/param.h",
+      "hw/femu/csd/nvme_csd.h",
+      "hw/femu/csd/compute.h",
+      "hw/femu/intr.c"
+    ],
+    "reference_dir": "references/code-analysis/cemu",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": null,
+    "sections": []
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/CEMU-README.md",
+      "raw": "references/raw/cemu/CEMU-README.md",
+      "text": "references/text/cemu__CEMU-README.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/application-development.md",
+      "raw": "references/raw/cemu/application-development.md",
+      "text": "references/text/cemu__application-development.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/code-structure.md",
+      "raw": "references/raw/cemu/code-structure.md",
+      "text": "references/text/cemu__code-structure.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/csd-README.md",
+      "raw": "references/raw/cemu/csd-README.md",
+      "text": "references/text/cemu__csd-README.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/repo-map.md",
+      "raw": "references/raw/cemu/repo-map.md",
+      "text": "references/text/cemu__repo-map.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/ubpf-README.md",
+      "raw": "references/raw/cemu/ubpf-README.md",
+      "text": "references/text/cemu__ubpf-README.txt"
+    }
+  ]
+}

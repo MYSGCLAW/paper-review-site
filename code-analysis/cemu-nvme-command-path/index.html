@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NVMe CSD 커맨드 경로 — CEMU가 FEMU에 붙는 지점</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">코드 분석</p>
+      <h1>NVMe CSD 커맨드 경로 — CEMU가 FEMU에 붙는 지점</h1>
+      <p class="summary">hw/femu/nvme-admin.c와 nvme-io.c를 읽고 NVMe Computational Storage 커맨드가 장치에서 디스패치되는 경로, 그리고 CEMU가 FEMU 인프라에 통합되는 방식(femu_mode=4)을 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-14</span>
+        <span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">NVMe</span><span class="tag">FEMU</span><span class="tag">QEMU</span><span class="tag">computational-storage</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#분석-범위">분석 범위</a>
+<a class="toc-level-2" href="#전체-구조">전체 구조</a>
+<a class="toc-level-2" href="#먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</a>
+<a class="toc-level-2" href="#로직-다이어그램">로직 다이어그램</a>
+<a class="toc-level-2" href="#모듈-객체-관계도">모듈/객체 관계도</a>
+<a class="toc-level-2" href="#핵심-흐름">핵심 흐름</a>
+<a class="toc-level-3" href="#1-execute-program이-computejob이-되기까지-코드로-확인된-부분과-추정의-경계">1) Execute Program이 ComputeJob이 되기까지 — 코드로 확인된 부분과 추정의 경계</a>
+<a class="toc-level-3" href="#2-opcode-정의가-장치-호스트-사이에서-어떻게-합의-되는가-그리고-어긋나면">2) opcode 정의가 장치/호스트 사이에서 어떻게 &quot;합의&quot;되는가, 그리고 어긋나면?</a>
+<a class="toc-level-3" href="#3-csf-실행이-오래-걸릴-때-인터럽트-완료는-언제-발생하는가">3) CSF 실행이 오래 걸릴 때 인터럽트/완료는 언제 발생하는가</a>
+<a class="toc-level-3" href="#4-여러-csd-multi-csd-는-어디서-처리되는가">4) 여러 CSD(multi-CSD)는 어디서 처리되는가</a>
+<a class="toc-level-2" href="#주요-파일과-역할">주요 파일과 역할</a>
+<a class="toc-level-2" href="#중요한-설계-판단">중요한 설계 판단</a>
+<a class="toc-level-2" href="#읽으면서-주의할-점">읽으면서 주의할 점</a>
+<a class="toc-level-2" href="#더-파볼-질문">더 파볼 질문</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="nvme-csd-커맨드-경로-cemu가-femu에-붙는-지점">NVMe CSD 커맨드 경로 — CEMU가 FEMU에 붙는 지점</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p>CEMU는 FEMU의 기존 커맨드 디스패치 골격(<code>nvme-admin.c</code>/<code>nvme-io.c</code>)을 전혀 건드리지 않고, <code>NvmeNamespace.csi</code>(Command Set Identifier)와 <code>CommandSetOps</code> 함수 포인터 테이블이라는 FEMU의 기존 확장 지점에 <code>NVME_CSI_COMPUTE</code>/<code>NVME_CSI_MEMORY</code>라는 새 네임스페이스 타입을 &quot;끼워 넣는&quot; 방식으로 Computational Storage를 구현한다. 다만 <code>hw/femu/csd/compute.c</code>, <code>sched.c</code>, <code>memory.c</code> — 실제 opcode 스위치문과 <code>ComputeJob</code> 생성 로직이 들어있는 파일들 — 은 이번 분석 대상 경로에 포함되어 있지 않아, 이 문서의 상당 부분은 &quot;CEMU가 FEMU에 붙는 인터페이스&quot;까지만 코드로 직접 확인했고 그 안쪽은 참고 문서와 구조적 추론으로 보완했다.</p>
+<h2 id="분석-범위">분석 범위</h2>
+<p><code>job.json</code>이 지정한 11개 파일만 대상으로 한다: <code>nvme-admin.c</code>, <code>nvme-io.c</code>, <code>nvme.h</code>, <code>nvme-def.h</code>, <code>nvme-util.c</code>, <code>femu.c</code>, <code>param.c</code>/<code>param.h</code>, <code>csd/nvme_csd.h</code>, <code>csd/compute.h</code>, <code>intr.c</code>.</p>
+<p><strong>중요한 제약</strong>: <code>references/text/cemu__repo-map.txt</code>와 <code>cemu__code-structure.txt</code>에 따르면 CSD의 실질적 admin/io 핸들러(<code>program_load</code>, <code>program_execute</code> 등)와 스케줄러(<code>CsfScheduler</code>, <code>ComputeUnit</code>)는 <code>hw/femu/csd/compute.c</code>·<code>sched.c</code>·<code>memory.c</code>에 있는데, 이 파일들은 이번 job의 <code>paths</code>에 없다. 실제로 저장소 전체를 grep해도 <code>program_load</code>, <code>program_execute</code>, <code>ComputeJob</code> 등의 함수 정의는 이번 범위의 파일에는 존재하지 않고 <code>nvme.h</code>의 타입 선언에만 등장한다. 따라서 &quot;Execute Program이 어떻게 실행되는가&quot;의 마지막 구간(실제 스케줄링·CSF 실행)은 코드로 확인하지 못했고, 구조체 설계(<code>compute.h</code>)와 참고 문서로부터의 추론임을 본문에서 명확히 구분한다.</p>
+<p>호스트 측 정의(<code>linux-cemu</code>의 <code>include/linux/nvme.h</code>, <code>drivers/nvme/host/cemu.c</code>)도 이 저장소에는 없으므로, 호스트 관련 서술은 전부 참고 문서(<code>cemu__repo-map.txt</code>, <code>cemu__application-development.txt</code>) 기반이다.</p>
+<h2 id="전체-구조">전체 구조</h2>
+<p>CEMU가 FEMU 위에 얹는 구조는 두 개의 독립적인 &quot;모드 축&quot;이 공존하는 형태다.</p>
+<ul><li><strong>레거시 축 — <code>femu_mode</code></strong> (<code>nvme.h:1384-1392</code>): <code>FEMU_OCSSD_MODE(0)</code>/<code>BBSSD(1)</code>/<code>NOSSD(2)</code>/<code>ZNSSD(3)</code>/<code>FEMU_CSD_MODE(4)</code>. 기존 FEMU가 &quot;이 드라이브 전체가 어떤 SSD 종류인가&quot;를 나타내던 전역 스위치다. 이번 분석 범위 안에서는 <code>nvme-util.c:134</code>(<code>OCSSD(n)</code> 체크 하나)와 <code>femu.c:112</code>(ZNS 컨트롤러 시작), <code>init_nvm_backend</code>(백엔드에 태그로 전달)에서만 참조된다. <strong>CSD 전용 분기(<code>if (CSD(n))</code>)는 이번 범위 파일 어디에도 없다</strong> — <code>FEMU_CSD_MODE</code>는 정의만 되어 있고 opcode 라우팅에는 관여하지 않는다.</li><li><strong>신규 축 — <code>NvmeNamespace.csi</code></strong> (<code>nvme.h:125-132</code>): <code>NVM(0)</code>/<code>ZONED(2)</code>/<code>MEMORY(3)</code>/<code>COMPUTE(4)</code>. 실제 커맨드 디스패치는 전부 이 축으로 이루어진다. <code>nvme-admin.c</code>의 <code>nvme_admin_cmd</code>와 <code>nvme-io.c</code>의 <code>nvme_io_cmd</code>는 모두 마지막에 <code>ns-&gt;ops-&gt;admin_cmd</code>/<code>ns-&gt;ops-&gt;io_cmd</code>로 위임하고, <code>ns-&gt;ops</code>는 <code>command_set_ops[csi]</code>(전역 배열, <code>nvme.h:1046</code>)에서 온다.</li><li>각 CSI 구현체는 <code>nvme_register(csi, ops)</code> 매크로(<code>nvme.h:1048-1051</code>, <code>__attribute__((constructor))</code>)로 자기 CSI 슬롯을 스스로 등록한다. bbssd/zns/ocssd와 compute/memory는 이 지점에서 완전히 대칭이며 서로의 존재를 모른다 — 이것이 &quot;CEMU가 기존 SSD 모드와 공존하는 방식&quot;의 핵심이다.</li><li>네임스페이스가 실제로 어떤 CSI인지는 <strong>커맨드라인이 아니라 JSON 설정 파일</strong>에서 온다. <code>femu_props</code>(<code>femu.c:701-704</code>)에는 <code>config_file</code> 문자열 property 하나만 있고, <code>param.c</code>의 <code>parse_config()</code>가 이 JSON을 읽어 <code>ns-&gt;csi = nvme_csi_from_str(...)</code>, <code>ns-&gt;ops = command_set_ops[ns-&gt;csi]</code>를 설정한다. <code>fdm_size</code>, <code>nr_cu</code>, <code>nr_thread</code>, <code>csf_runtime_scale</code>, <code>time_slice</code> 같은 CSD 파라미터도 <code>ns-&gt;ops-&gt;decode_params(param, ns)</code> 콜백(compute.c/memory.c 안, 범위 밖)으로 네임스페이스별 JSON <code>parameters</code> 객체에서 파싱된다.</li></ul>
+<h2 id="먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</h2>
+<ol><li><strong><code>hw/femu/nvme.h</code>의 <code>NvmeNamespace</code>, <code>CommandSetOps</code>, <code>command_set_ops[]</code>, <code>nvme_register</code> 매크로 (1033~1103행)</strong> — CSD가 FEMU에 꽂히는 유일한 인터페이스이므로 가장 먼저 봐야 전체 그림이 잡힌다.</li><li><strong><code>hw/femu/param.c</code>의 <code>parse_config()</code> (313~393행)</strong> — 네임스페이스가 어떻게 <code>csi</code>/<code>ops</code>를 부여받는지, CSD 파라미터가 JSON에서 어떻게 흘러들어오는지 여기서 확정된다. README의 <code>-device femu,femu_mode=4,...</code> CLI 예시와 실제 코드가 다르다는 것도 여기서 확인된다.</li><li><strong><code>hw/femu/nvme-def.h</code>의 opcode enum들 (7~57행, 376~474행)</strong> — 상단의 <code>NvmeIoCommands</code>(레거시 <code>0xa1~0xf8</code> CSD 오퍼레이션)와 하단의 <code>NvmeComputeAdminCommands</code>/<code>NvmeComputeIoCommands</code>(CSI별 opcode, <code>0x01</code>/<code>0x21~0x23</code>)가 서로 다른 세대의 설계임을 비교해서 봐야 한다.</li><li><strong><code>hw/femu/csd/compute.h</code></strong> — <code>Program</code>, <code>ComputeJob</code>, <code>MemoryRangeSet</code>, <code>ComputeNamespace</code> 구조체. 실제 구현(<code>compute.c</code>)은 없지만 이 헤더만으로 CSF 수명주기와 잡 모델을 파악할 수 있다.</li><li><strong><code>hw/femu/nvme-io.c</code>의 <code>nvme_process_sq_io</code> → <code>nvme_io_cmd</code> (44~113행, 534~588행)</strong> — SQE를 꺼내서 <code>ns-&gt;ops-&gt;io_cmd</code>로 넘기고, 반환값(<code>finished</code>)에 따라 즉시 완료할지 미룰지 갈리는 지점. 비동기 완료의 시작점이다.</li><li><strong><code>hw/femu/nvme-io.c</code>의 <code>nvme_process_cq_cpl</code> (158~275행)</strong> — <code>expire_time</code> 기반 우선순위 큐(<code>pqueue</code>)로 완료를 지연시키는 메커니즘. CSF 실행 시간이 긴 경우의 완료/인터럽트 타이밍이 여기서 결정된다.</li><li><strong><code>hw/femu/intr.c</code>의 <code>nvme_isr_notify_io</code>/<code>nvme_isr_notify_admin</code> (183~200행)</strong> — 완료 큐 갱신 후 실제로 게스트에 인터럽트를 쏘는 마지막 단계.</li><li><strong><code>hw/femu/femu.c</code>의 <code>nvme_start_ctrl</code> 안 <code>csd_memory_region</code> 등록 로직 (69~82행)</strong> — multi-CSD/P2P의 실체.</li></ol>
+<h2 id="로직-다이어그램">로직 다이어그램</h2>
+<div class="mermaid">flowchart TD
+ A[&quot;호스트 앱 - ioctl IOCTL_CEMU_EXECUTE 또는 io_uring uring_cmd, dev nvme0c3&quot;] --&gt; B[&quot;게스트 NVMe 드라이버가 NvmeProgramExecuteCmd 필드로 opcode 0x01 SQE 작성 - linux-cemu, 범위 밖&quot;]
+ B --&gt; C[&quot;SQ 도어벨 write - femu.c nvme_process_db_io&quot;]
+ C --&gt; D[&quot;nvme_process_sq_io - nvme-io.c 44행&quot;]
+ D --&gt; E[&quot;nvme_io_cmd - nvme-io.c 534행&quot;]
+ E --&gt; F{&quot;ns.csi == COMPUTE 또는 MEMORY 인가&quot;}
+ F --&gt;|예| G[&quot;ns.ops.io_cmd 호출 - CommandSetOps, nvme.h 1040행&quot;]
+ G --&gt; H[&quot;compute.c의 io_cmd 핸들러 - 범위 밖, 코드 미확인&quot;]
+ H --&gt; I[&quot;program_get으로 Program 조회 - compute.h 116행&quot;]
+ I --&gt; J[&quot;ComputeJob 생성 후 스케줄러에 전달 - sched.c, 범위 밖 추정&quot;]
+ J --&gt; K{&quot;io_cmd 반환값 finished&quot;}
+ K --&gt;|1 즉시 완료| L[&quot;femu_ring_enqueue to_poller - nvme-io.c 104행&quot;]
+ K --&gt;|0 완료 보류| M[&quot;req.job 포인터로 추적, 컴퓨트 스레드가 실행 - 범위 밖 추정&quot;]
+ M --&gt; N[&quot;CSF 실행 종료 후 동일하게 to_poller에 enqueue - 추정&quot;]
+ L --&gt; O[&quot;nvme_process_cq_cpl - nvme-io.c 158행, pqueue expire_time 대기&quot;]
+ N --&gt; O
+ O --&gt; P[&quot;nvme_post_cqe로 CQE 기록 - nvme-io.c 115행&quot;]
+ P --&gt; Q[&quot;nvme_isr_notify_io - intr.c 188행, MSI-X/irqfd 발화&quot;]
+ Q --&gt; R[&quot;게스트 완료 큐 폴링, ioctl/io_uring 대기자 깨어남&quot;]</div>
+<p>각 화살표의 근거: <code>D→E</code>는 <code>nvme-io.c:99</code>의 <code>nvme_io_cmd(n, &amp;cmd, req)</code> 호출, <code>E→F→G</code>는 <code>nvme-io.c:538</code>(<code>if (ns-&gt;csi == NVME_CSI_MEMORY || ns-&gt;csi == NVME_CSI_COMPUTE) return ns-&gt;ops-&gt;io_cmd(...)</code>), <code>K→L</code>은 <code>nvme-io.c:103-105</code>(<code>if (finished) femu_ring_enqueue(...)</code>)이다. <code>H</code>부터 <code>N</code>까지(회색 지대)는 <code>compute.h</code>의 <code>ComputeJob</code>/<code>ComputeNamespace</code> 구조체와 <code>NvmeRequest.job</code> 필드(<code>nvme.h:937</code>)가 존재한다는 사실만으로 구조를 추론한 것이며, 실제 스위치문·스케줄링 코드는 확인하지 못했다. <code>O→P→Q</code>는 <code>nvme-io.c:216-256</code>의 <code>now &gt;= req-&gt;stat.expire_time</code> 검사와 <code>nvme_post_cqe</code>, <code>n-&gt;should_isr[sq-&gt;sqid] = true</code> 후 루프 종료 시 <code>nvme_isr_notify_io</code> 호출(<code>nvme-io.c:264,269</code>)로 확인된다.</p>
+<h2 id="모듈-객체-관계도">모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+ FemuCtrl[&quot;FemuCtrl - nvme.h femu.c, PCI 디바이스 1개당 1개&quot;] --&gt; NS[&quot;NvmeNamespace 배열 - nvme.h&quot;]
+ NS --&gt; Ops[&quot;CommandSetOps - nvme.h 1033행&quot;]
+ Ops -.등록.-&gt; Table[&quot;command_set_ops csi 테이블 - femu.c 13행&quot;]
+ NS --&gt;|csi COMPUTE| ComputeNS[&quot;ComputeNamespace - compute.h, private 필드로 연결&quot;]
+ ComputeNS --&gt; ProgSlab[&quot;Program Slab - compute.h Slab programs&quot;]
+ ComputeNS --&gt; MrsSlab[&quot;MemoryRangeSet Slab - compute.h Slab mrs&quot;]
+ ComputeNS --&gt; ToCsd[&quot;rte_ring to_csd - compute.h, 컴퓨트 스레드로 잡 전달 추정&quot;]
+ ProgSlab --&gt; Job[&quot;ComputeJob - compute.h, 범위 밖 compute.c가 생성&quot;]
+ Job --&gt; Req[&quot;NvmeRequest.job 포인터 - nvme.h 937행&quot;]
+ Req --&gt; SQ[&quot;NvmeSQueue / NvmeCQueue - nvme.h&quot;]
+ FemuCtrl --&gt; Region[&quot;csd_memory_region 전역 테이블 - femu.c 16-19행, multi-CSD P2P&quot;]
+ FemuCtrl --&gt;|femu_mode 태그만 전달| Backend[&quot;SsdBackend - init_nvm_backend, nvme.h 계열, 범위 밖&quot;]</div>
+<p><code>FemuCtrl</code>은 여러 <code>NvmeNamespace</code>를 소유하고(<code>nvme.h:1283</code> <code>namespaces</code> 배열), 각 네임스페이스는 <code>csi</code>에 따라 <code>command_set_ops[]</code>에서 채워진 <code>CommandSetOps</code>를 가리킨다(<code>param.c:358</code>). <code>NvmeNamespace.private</code>(<code>nvme.h:1075</code>)가 <code>compute.h</code>의 <code>ComputeNamespace*</code>로 캐스팅되어 사용된다는 것은 <code>compute.h:106-109</code>의 인라인 헬퍼(<code>program_slab</code>, <code>memory_range_set_get</code> 등이 <code>ns-&gt;private</code>를 <code>ComputeNamespace*</code>로 캐스팅)로 확인된다. <code>NvmeRequest.job</code>(<code>nvme.h:937</code>)이 비동기 실행 중인 <code>ComputeJob</code>과 원래의 NVMe 요청을 잇는 유일한 끈이다. <code>csd_memory_region[64]</code>(<code>nvme.h:1069-1070</code> extern 선언, <code>femu.c:16-19</code> 정의)는 프로세스 내 여러 <code>FemuCtrl</code> 인스턴스(=여러 CSD)가 서로를 찾기 위한 전역 레지스트리다.</p>
+<h2 id="핵심-흐름">핵심 흐름</h2>
+<h3 id="1-execute-program이-computejob이-되기까지-코드로-확인된-부분과-추정의-경계">1) Execute Program이 ComputeJob이 되기까지 — 코드로 확인된 부분과 추정의 경계</h3>
+<p><strong>확인됨</strong>: 게스트가 opcode <code>NVME_CMD_COMPUTE_EXEC (0x01)</code>(<code>nvme-def.h:377</code>, <code>NvmeComputeAdminCommands</code>가 아니라 <code>NvmeComputeIoCommands</code>이므로 I/O SQ로 제출)를 담은 <code>NvmeProgramExecuteCmd</code>(<code>nvme-def.h:390-408</code>, <code>pind</code>/<code>rsid</code>/<code>numr</code>/<code>cparam1,2</code>/<code>group</code>/<code>chunk_nlb</code>/<code>runtime</code> 필드)를 IO 서브미션 큐에 넣으면, <code>nvme_process_sq_io</code>(<code>nvme-io.c:44</code>)가 이를 꺼내 <code>req-&gt;ns</code>를 nsid로 확정하고 <code>nvme_io_cmd(n, &amp;cmd, req)</code>(<code>nvme-io.c:534</code>)를 호출한다. <code>nvme_io_cmd</code>는 <code>ns-&gt;csi == NVME_CSI_COMPUTE</code>이면 다른 어떤 스위치도 거치지 않고 곧바로 <code>ns-&gt;ops-&gt;io_cmd(ns, cmd, req)</code>로 위임한다(<code>nvme-io.c:538-539</code>). 이 반환값이 함수 시그니처 주석(<code>nvme.h:1040</code> <code>// return 1 when the command is finished after function call</code>)대로 완료 여부를 결정한다.</p>
+<p><strong>추정(compute.c 미확인)</strong>: 그 이후 <code>compute.h</code>에 정의된 <code>program_get(ns, pind)</code>(<code>compute.h:116-119</code>, <code>slab_at</code>로 인덱싱)로 <code>Program*</code>을 찾고, 상태가 <code>PROGRAM_STATE_ACTIVATED</code>인지 확인한 뒤 <code>ComputeJob</code>(<code>compute.h:106-115</code> 근방에 정의는 없지만 <code>code-structure.md</code>에 구조가 나와 있음: <code>jit_fn</code>, <code>in</code>/<code>out</code>, <code>req</code> 백포인터, <code>program</code>, <code>ce</code>)을 만들어 스케줄러(<code>sched.c</code>, 범위 밖)로 넘길 것으로 보인다. 이 과정은 <code>code-structure.md</code> 참고 문서와 <code>compute.h</code>의 타입 정의만으로 추론한 것이며, 실제 스위치문·<code>program_execute()</code> 함수 본문은 이번 분석에서 읽지 못했다.</p>
+<h3 id="2-opcode-정의가-장치-호스트-사이에서-어떻게-합의-되는가-그리고-어긋나면">2) opcode 정의가 장치/호스트 사이에서 어떻게 &quot;합의&quot;되는가, 그리고 어긋나면?</h3>
+<p><code>nvme_csd.h</code>는 실제 opcode 값을 전혀 담고 있지 않다 — 순수한 전방 선언(<code>struct NvmeCmdLoadProgram;</code> 등)과 <code>nvme_pit_t</code>/<code>nvme_pid_t</code> 같은 typedef만 있다(<code>csd/nvme_csd.h:1-49</code>). 실제 opcode·구조체는 <code>nvme-def.h</code>에 있고, 이것이 참고 문서(<code>repo-map.txt</code>)가 말하는 호스트 쪽 <code>linux-cemu/include/linux/nvme.h</code>(88 LOC diff)와 &quot;손으로&quot; 대응되어야 하는 대상이다. <strong>이 저장소에는 호스트 헤더가 없어 필드 단위 diff는 확인 불가능</strong>하다. 구조적으로 확인된 사실은:</p>
+<ul><li>두 저장소 사이에 공유 IDL이나 코드 생성기가 없다 — 완전히 독립된 두 C 헤더를 사람이 동기화한다.</li><li>장치 쪽 방어는 <code>static_assert(sizeof(...) == 64, ...)</code>(예: <code>nvme-def.h:194,209,255</code> 등) 뿐이며, 이는 &quot;총 크기가 64바이트인가&quot;만 검증할 뿐 필드 순서·오프셋 불일치는 잡지 못한다.</li><li>어긋났을 때의 실제 실패 모드는 두 갈래로 보인다. (a) opcode 값 자체가 어긋나면 <code>ns-&gt;ops-&gt;io_cmd</code>/<code>admin_cmd</code> 내부의 opcode 스위치(compute.c, 범위 밖)가 default 분기로 빠져 에러 상태 코드를 반환할 것으로 추정된다 — <code>nvme-admin.c:1118-1123</code>의 전역 admin 디스패치가 보여주는 것과 같은 패턴(<code>ns-&gt;ops-&gt;admin_cmd</code>가 없거나 실패하면 <code>NVME_INVALID_OPCODE | NVME_DNR</code>). (b) opcode는 맞는데 이후 필드(<code>pind</code>, <code>rsid</code> 등)가 어긋나면 더 위험하다 — <code>compute.h:116-124</code>의 <code>program_get</code>/<code>memory_range_set_get</code>은 <code>slab_at(slab, pind - 1)</code> 형태로 <strong>범위 체크 없이</strong> 인덱싱하는 것으로 보인다(이 헬퍼 함수들 안에는 bound check 코드가 없다). 실제 bound check가 <code>compute.c</code>에 별도로 있는지는 확인하지 못했으므로 &quot;확인 필요&quot;로 남긴다.</li></ul>
+<h3 id="3-csf-실행이-오래-걸릴-때-인터럽트-완료는-언제-발생하는가">3) CSF 실행이 오래 걸릴 때 인터럽트/완료는 언제 발생하는가</h3>
+<p><code>nvme-io.c</code>의 완료 경로는 CSD 전용 로직이 아니라 FEMU가 이미 갖고 있던 <strong>지연 시뮬레이션 공용 경로</strong>를 그대로 재사용한다.</p>
+<ol><li><code>nvme_process_sq_io</code>(44행)는 <code>finished</code>가 1일 때만 <code>femu_ring_enqueue(n-&gt;to_poller[req-&gt;poller], ...)</code>로 완료 큐 후보에 올린다(103-105행). CSD Execute Program처럼 오래 걸리는 커맨드는 <code>io_cmd</code>가 0을 반환해 이 시점에는 큐에 올라가지 않을 것으로 추정된다(compute.c 미확인).</li><li><code>nvme_process_cq_cpl</code>(158행)은 <code>to_poller</code> 링에서 요청을 꺼내 <code>pqueue</code>(우선순위 큐, 우선순위 = <code>req-&gt;stat.expire_time</code>)에 넣고, <code>now &gt;= req-&gt;stat.expire_time</code>인 것만 순서대로 꺼내 <code>nvme_post_cqe</code>로 CQE를 기록한다(216-238행). 220-229행의 주석 처리된 코드가 <code>NVME_CMD_CSD_EXEC</code> opcode에 대해 <code>req-&gt;stat.exec.runtime</code>/<code>queueing_time</code>/<code>nr_context_switch</code> 같은 필드를 로깅하려 했던 흔적을 남기고 있다 — 이는 CSD 요청도 이 동일한 <code>expire_time</code> 지연 모델을 통과하도록 설계되었음을 강하게 시사한다.</li><li>큐가 빈 시점까지 처리한 뒤(259-274행) <code>nvme_isr_notify_io(n-&gt;cq[index_poller])</code>(intr.c:188)를 호출해 실제 인터럽트를 쏜다. <code>intr.c:188-200</code>을 보면 <code>cq-&gt;irq_enabled &amp;&amp; cq-&gt;virq</code>이면 irqfd(<code>event_notifier_set</code>)로 KVM에 직접 알리고, 아니면 MSI-X/MSI/legacy PCI 인터럽트로 폴백한다.</li></ol>
+<p>즉 <strong>인터럽트는 SQE가 디큐된 시점이 아니라, <code>req-&gt;stat.expire_time</code>(장치가 시뮬레이션한 CSF 완료 시각)에 도달한 뒤 폴러 스레드가 다음 <code>nvme_process_cq_cpl</code> 반복에서 그 요청을 발견했을 때</strong> 발생한다. 이 <code>expire_time</code>을 CSF의 실제/시뮬레이션 런타임으로 설정하는 코드(<code>csf_runtime_scale</code> 적용 지점)는 <code>compute.c</code>/<code>sched.c</code>에 있을 것으로 추정되며 이번 범위에서 직접 확인하지 못했다. <code>csd-README.txt</code>가 설명하는 &quot;기능 시뮬레이션과 성능(타이밍) 시뮬레이션의 분리&quot;가 바로 이 <code>expire_time</code> 필드를 통해 기존 I/O 지연 모델에 접목되는 구조로 보인다.</p>
+<h3 id="4-여러-csd-multi-csd-는-어디서-처리되는가">4) 여러 CSD(multi-CSD)는 어디서 처리되는가</h3>
+<p><code>femu.c:69-82</code>의 <code>nvme_start_ctrl</code> 안에서, 네임스페이스 수가 3개(NVM+Memory+Compute, 즉 하나의 완전한 CSD 구성)일 때 전역 배열 <code>csd_memory_region[64]</code>(<code>femu.c:19</code>, <code>nvme.h:1061-1070</code>에 타입/extern 선언)에 자신의 BAR2(<code>slm_mem</code>) DMA 주소, 백엔드 메모리 주소·크기, <code>FemuCtrl*</code> 자기 자신을 스핀락(<code>csd_memory_region_lock</code>)으로 보호하며 등록한다. <code>FemuCtrl.drive_id</code>는 <code>nvme_init_ctrl_str</code>(<code>femu.c:491-500</code>)에서 전역 원자 카운터로 부여되어 여러 CSD 인스턴스를 구분한다. 그리고 <code>nvme-io.c:202-213</code>의 <code>nvme_process_cq_cpl</code> 안에서 <code>req-&gt;p2p_req</code>가 참이면 &quot;memory copy p2p request, the request is finished in another drive&quot;라는 주석과 함께 이 폴러는 PCIe 지연만 더하고 실제 CQE 게시는 <strong>다른 드라이브</strong>에서 일어난다고 명시하고 있다. 즉 multi-CSD 간 P2P 메모리 복사는 이 전역 <code>csd_memory_region</code> 테이블을 조회해 목적지 드라이브의 백엔드에 직접 접근하고, 완료 처리는 그 목적지 드라이브 자신의 폴러 스레드가 담당하는 구조로 보인다(실제 조회/디스패치 코드는 memory.c/backend 쪽, 범위 밖).</p>
+<h2 id="주요-파일과-역할">주요 파일과 역할</h2>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>역할</th></tr></thead><tbody><tr><td><code>nvme.h</code></td><td><code>NvmeNamespace</code>, <code>CommandSetOps</code>, <code>command_set_ops[]</code>/<code>nvme_register</code> 매크로, <code>FemuCtrl</code>, <code>femu_mode</code> enum, <code>NVME_CSI_*</code> enum — CSD가 FEMU에 붙는 유일한 공식 인터페이스</td></tr><tr><td><code>nvme-def.h</code></td><td>opcode enum 2세대(레거시 flat opcode <code>0xa1~0xf8</code>, 신규 CSI-scoped opcode <code>0x01</code>/<code>0x21~0x23</code>), 모든 CSD 커맨드 구조체, CSD 전용 status code</td></tr><tr><td><code>nvme-admin.c</code></td><td>전역 Admin 커맨드 디스패처. CSD 전용 admin 로직은 없고 <code>default: if (ns-&gt;ops-&gt;admin_cmd) ...</code>(1118-1123행)로 위임만 한다</td></tr><tr><td><code>nvme-io.c</code></td><td>I/O SQ 폴링, <code>ns-&gt;csi</code>에 따른 <code>ns-&gt;ops-&gt;io_cmd</code> 위임, <code>expire_time</code> 기반 완료 지연 큐(<code>pqueue</code>), multi-CSD P2P 완료 분기</td></tr><tr><td><code>femu.c</code></td><td><code>femu_realize</code>(디바이스 초기화), <code>nvme_init_namespaces</code>, <code>csd_memory_region</code> 등록(multi-CSD), <code>command_set_ops[]</code> 전역 정의</td></tr><tr><td><code>param.c</code></td><td>JSON 설정 파일 파싱. <code>ns-&gt;csi</code>/<code>ns-&gt;ops</code> 결정, CSD 네임스페이스별 파라미터를 <code>ns-&gt;ops-&gt;decode_params</code>로 위임</td></tr><tr><td><code>csd/compute.h</code></td><td><code>Program</code>(수명주기), <code>MemoryRangeSet</code>, <code>ComputeNamespace</code>, <code>ComputeParams</code>(nr_cu/nr_thread/csf_runtime_scale) 타입 정의. 구현은 없음</td></tr><tr><td><code>csd/nvme_csd.h</code></td><td>전방 선언·typedef 전용 헤더. opcode 없음</td></tr><tr><td><code>intr.c</code></td><td>MSI-X/irqfd/legacy 인터럽트 발화. CSD 전용 코드는 없고 기존 <code>nvme_isr_notify_io</code>를 그대로 재사용</td></tr><tr><td><code>nvme-util.c</code></td><td>SQ/CQ 초기화, PRP 리스트 셋업 등 CSD와 무관한 저수준 유틸리티</td></tr></tbody></table></div>
+<h2 id="중요한-설계-판단">중요한 설계 판단</h2>
+<ul><li><strong>CSD를 &quot;opcode 스위치문 추가&quot;가 아니라 &quot;새 CSI 네임스페이스 타입 추가&quot;로 구현했다.</strong> 기존 FEMU 코드(<code>nvme-admin.c</code>/<code>nvme-io.c</code>)를 한 줄도 침습하지 않고 <code>ns-&gt;csi</code>/<code>CommandSetOps</code> 확장점만 사용한 것은, ocssd/bbssd/zns와 정확히 동일한 패턴을 재사용한 것이며 코드 충돌 위험이 구조적으로 낮다.</li><li><strong>완료 지연(latency) 모델을 새로 만들지 않고 기존 <code>expire_time</code>/<code>pqueue</code> 메커니즘에 얹었다.</strong> CSF 실행이 아무리 길어도 인터럽트 처리 경로 자체는 일반 read/write와 동일한 코드를 탄다 — 이는 &quot;기능 시뮬레이션과 성능 시뮬레이션의 분리&quot;(<code>repo-map.txt</code>)라는 CEMU의 핵심 철학이 코드 레벨에서 어떻게 구현되는지 보여주는 지점이다.</li><li><strong>런타임 설정이 CLI property가 아니라 JSON 파일 기반이다.</strong> <code>femu_props</code>에 <code>config_file</code> 하나만 등록돼 있다는 사실은, README에 나온 <code>-device femu,fdm_size=...,nr_cu=...</code> 같은 커맨드라인 예시가 실제로는 동작하지 않거나(최소한 이 코드 버전 기준으로는) 문서가 오래되었음을 시사한다. 아래 &quot;읽으면서 주의할 점&quot;에서 별도로 다룬다.</li><li><strong><code>femu_mode</code>와 <code>csi</code>라는 두 개의 독립된 축을 유지한 것</strong>은 하위호환을 위한 최소 침습 설계로 보인다 — 기존 NVM 네임스페이스의 백엔드 선택은 여전히 <code>femu_mode</code>가 담당하고, CSD의 커맨드 라우팅은 전적으로 <code>csi</code>가 담당한다. 다만 이 때문에 <code>FEMU_CSD_MODE</code> 값 자체는 이번 범위 코드에서 거의 아무 역할도 하지 않는 &quot;의미상 마커&quot;에 가깝다.</li></ul>
+<h2 id="읽으면서-주의할-점">읽으면서 주의할 점</h2>
+<ul><li><strong>문서-코드 불일치 (1): CLI 파라미터 vs JSON 설정.</strong> <code>csd-README.txt</code>는 <code>-device femu,devsz_mb=...,femu_mode=4,fdm_size=...</code> 형태의 QEMU 커맨드라인 예시를 보여주지만, <code>femu.c:701-704</code>의 <code>femu_props</code>에는 <code>config_file</code> 문자열 property 하나만 정의돼 있다. <code>fdm_size</code>, <code>nr_cu</code>, <code>nr_thread</code>, <code>csf_runtime_scale</code>, <code>time_slice</code>는 실제로는 <code>param.c</code>의 <code>parse_config()</code>가 읽는 JSON 파일의 <code>parameters</code>/네임스페이스별 <code>parameters</code> 객체에서 온다. README가 오래된 CLI 인터페이스를 설명하고 있거나, <code>-device</code> 프로퍼티 파싱이 QEMU 표준 property 시스템이 아닌 다른 경로(확인 못함)로 이루어지는 것일 수 있다 — 실행 방법을 그대로 따라 하기 전에 실제 <code>run-csd.sh</code>와 JSON 설정 파일을 함께 확인해야 한다.</li><li><strong>문서-코드 불일치 (2): 레거시 flat opcode의 생존.</strong> <code>nvme-def.h</code> 상단의 <code>NVME_CMD_CSD_DOWNLOAD(0xa1)</code>~<code>NVME_CMD_CSD_DELETE_GROUP(0xf8)</code>는 CSI 도입 이전의 초기 설계로 보이며, <code>nvme-io.c:220</code>의 <code>if (req-&gt;cmd.opcode == NVME_CMD_CSD_EXEC)</code> 분기 내부가 통째로 주석 처리돼 있어 사실상 죽은 코드다. 신규 CSI-scoped opcode(<code>NvmeComputeAdminCommands</code>/<code>NvmeComputeIoCommands</code>, <code>0x01</code>/<code>0x21~0x23</code>)와 혼동하지 말 것 — 새 커맨드를 추가할 때는 후자를 기준으로 삼아야 한다.</li><li><strong><code>compute.h</code>의 슬랩 인덱싱 헬퍼에 범위 체크가 안 보인다.</strong> <code>program_get</code>/<code>memory_range_set_get</code>(116-124행)은 호스트가 보낸 <code>pind</code>/<code>rsid</code>를 그대로 <code>slab_at(slab, id - 1)</code>에 넘긴다. <code>compute.c</code>에서 별도로 검증하는지 확인하지 못했으므로, 이 헬퍼만 보고 &quot;안전하다&quot;고 단정하면 안 된다.</li><li><strong>핵심 구현 파일이 이번 분석 범위 밖이다.</strong> <code>compute.c</code>/<code>sched.c</code>/<code>memory.c</code>를 읽지 않고서는 opcode 스위치문, <code>ComputeJob</code> 생성/스케줄링, MRS 관리의 실제 동작을 확정할 수 없다. 이 문서의 3장·4장 상당 부분은 <code>compute.h</code> 타입 정의 + <code>code-structure.md</code>/<code>repo-map.txt</code> 참고 문서로 재구성한 것이다.</li></ul>
+<h2 id="더-파볼-질문">더 파볼 질문</h2>
+<ul><li><code>hw/femu/csd/compute.c</code>의 <code>io_cmd</code>/<code>admin_cmd</code> 스위치문을 읽고, <code>NVME_CMD_COMPUTE_EXEC</code> 처리부에서 정말 <code>finished=0</code>을 반환하는지, <code>req-&gt;stat.expire_time</code>을 어디서 설정하는지 확인한다.</li><li><code>hw/femu/csd/sched.c</code>의 <code>CsfScheduler</code> 구현체(fifo/rr/grouped)가 <code>to_csd</code> 링(<code>compute.h</code>)과 어떻게 상호작용하는지, 컴퓨트 스레드가 몇 개 뜨는지(<code>nr_thread</code>) 확인한다.</li><li><code>hw/femu/csd/memory.c</code>에서 <code>NVME_CSI_MEMORY</code>용 <code>CommandSetOps.io_cmd</code>가 Memory Read/Write/Copy/Fill을 어떻게 처리하는지, <code>fdm_size</code>가 여기서 어떻게 소비되는지 본다.</li><li>linux-cemu 저장소(<code>/home/sam/cemu/linux-cemu</code>, 이번 저장소 밖)의 <code>include/linux/nvme.h</code>를 CEMU의 <code>nvme-def.h</code>와 실제로 필드 단위 diff해서, &quot;어긋나면 어떻게 되는가&quot;에 대한 구체적 사례(현재 어긋난 곳이 있는지)를 찾아본다.</li><li><code>param.c</code>의 <code>ns-&gt;ops-&gt;decode_params</code>가 실제로 호출되는 시점(<code>parse_config</code> 353-388행)과 <code>femu_realize</code>(femu.c:623-657) 순서상, JSON의 <code>femu_mode</code>가 <code>FEMU_CSD_MODE(4)</code>가 아닐 때도 <code>csi=compute</code> 네임스페이스가 정상 동작하는지 — 즉 <code>femu_mode</code>가 정말 완전히 무시되는지 실행해서 검증해볼 가치가 있다.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

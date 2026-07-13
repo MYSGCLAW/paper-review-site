@@ -1,0 +1,80 @@
+{
+  "title": "컴퓨트 유닛 스케줄러와 QoS",
+  "summary": "hw/femu/csd/sched.c와 스케줄러 4종 구현을 읽고, CSD의 컴퓨트 유닛에 잡이 배치되는 방식과 JobGroup 기반 QoS, 그리고 타이밍 모델과의 연결을 분석한다.",
+  "type": "코드 분석",
+  "topic": null,
+  "scope": null,
+  "parent_slug": "cemu",
+  "generated_from_plan": null,
+  "project": {
+    "slug": "cemu",
+    "title": "CEMU",
+    "summary": "Computational Storage Drive(CSD) 풀시스템 에뮬레이션 플랫폼 — QEMU/FEMU 기반 장치 에뮬레이터, Linux 소프트웨어 스택(FDMFS/NVMe/io_uring), uBPF 실행 환경"
+  },
+  "tags": [
+    "CEMU",
+    "CSD",
+    "scheduler",
+    "QoS",
+    "timing-model",
+    "computational-storage"
+  ],
+  "updated": "2026-07-13",
+  "source": {
+    "repo_url": null,
+    "local_path": "/home/sam/cemu/CEMU",
+    "branch": null,
+    "paths": [
+      "hw/femu/csd/sched.c",
+      "hw/femu/csd/sched.h",
+      "hw/femu/csd/sched_fifo.c",
+      "hw/femu/csd/sched_rr.c",
+      "hw/femu/csd/sched_grouped_fifo.c",
+      "hw/femu/csd/sched_grouped_rr.c",
+      "hw/femu/csd/compute.h",
+      "hw/femu/timing-model",
+      "hw/femu/statistics"
+    ],
+    "reference_dir": "references/code-analysis/cemu",
+    "docs": []
+  },
+  "analysis": {
+    "model": "sonnet",
+    "effort": "high",
+    "max_turns": 35,
+    "analysis_style": null,
+    "sections": []
+  },
+  "references": [
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/CEMU-README.md",
+      "raw": "references/raw/cemu/CEMU-README.md",
+      "text": "references/text/cemu__CEMU-README.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/application-development.md",
+      "raw": "references/raw/cemu/application-development.md",
+      "text": "references/text/cemu__application-development.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/code-structure.md",
+      "raw": "references/raw/cemu/code-structure.md",
+      "text": "references/text/cemu__code-structure.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/csd-README.md",
+      "raw": "references/raw/cemu/csd-README.md",
+      "text": "references/text/cemu__csd-README.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/repo-map.md",
+      "raw": "references/raw/cemu/repo-map.md",
+      "text": "references/text/cemu__repo-map.txt"
+    },
+    {
+      "source": "/home/sam/paper-review/references/code-analysis/cemu/ubpf-README.md",
+      "raw": "references/raw/cemu/ubpf-README.md",
+      "text": "references/text/cemu__ubpf-README.txt"
+    }
+  ]
+}

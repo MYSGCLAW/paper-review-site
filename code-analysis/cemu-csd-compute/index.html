@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSF 실행 엔진 — 프로그램 수명주기와 실행 모델</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">코드 분석</p>
+      <h1>CSF 실행 엔진 — 프로그램 수명주기와 실행 모델</h1>
+      <p class="summary">hw/femu/csd/compute.c를 읽고 Computational Storage Function이 로드·활성화·실행되는 전 과정과, eBPF/shared library 두 실행 백엔드를 분석한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-13</span>
+        <span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">CSF</span><span class="tag">eBPF</span><span class="tag">uBPF</span><span class="tag">computational-storage</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#분석-범위">분석 범위</a>
+<a class="toc-level-2" href="#전체-구조">전체 구조</a>
+<a class="toc-level-2" href="#먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</a>
+<a class="toc-level-2" href="#로직-다이어그램">로직 다이어그램</a>
+<a class="toc-level-2" href="#모듈-객체-관계도">모듈/객체 관계도</a>
+<a class="toc-level-2" href="#핵심-흐름">핵심 흐름</a>
+<a class="toc-level-3" href="#1-로드-입력-상태-변경">1. 로드 (입력 → 상태 변경)</a>
+<a class="toc-level-3" href="#2-ebpf-vs-shared-library-로딩-차이">2. eBPF vs Shared Library 로딩 차이</a>
+<a class="toc-level-3" href="#3-활성화와-실행-검증-computejob-생성-스케줄러-스레드-위임">3. 활성화와 실행 (검증 → ComputeJob 생성 → 스케줄러/스레드 위임)</a>
+<a class="toc-level-3" href="#4-indirect-모델-lba-장치-메모리-매핑과-chunk-처리">4. Indirect 모델: LBA → 장치 메모리 매핑과 chunk 처리</a>
+<a class="toc-level-3" href="#5-runtime-측정과-용도">5. Runtime 측정과 용도</a>
+<a class="toc-level-3" href="#6-여러-csd-구분-pid-nsid-pind">6. 여러 CSD 구분: pid / nsid / pind</a>
+<a class="toc-level-2" href="#주요-파일과-역할">주요 파일과 역할</a>
+<a class="toc-level-2" href="#중요한-설계-판단">중요한 설계 판단</a>
+<a class="toc-level-2" href="#읽으면서-주의할-점">읽으면서 주의할 점</a>
+<a class="toc-level-2" href="#더-파볼-질문">더 파볼 질문</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="csf-실행-엔진-프로그램-수명주기와-실행-모델-hw-femu-csd-compute-c">CSF 실행 엔진 — 프로그램 수명주기와 실행 모델 (<code>hw/femu/csd/compute.c</code>)</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p><code>compute.c</code>는 NVMe Computational Storage 커맨드(Load Program / Program Activation / Program Execute)를 받아 <code>Program</code> 구조체를 INVALID → LOADING → LOADED → ACTIVATED로 전이시키고, eBPF(uBPF VM)와 shared library(dlopen) 두 백엔드 중 하나로 <code>ComputeJob</code>을 만들어 direct/indirect 두 실행 모델에 따라 스케줄러(<code>sched.h</code>)와 compute thread에 위임하는 CSD 에뮬레이션의 핵심 디스패처다.</p>
+<h2 id="분석-범위">분석 범위</h2>
+<ul><li><code>repo/hw/femu/csd/compute.c</code> (전체, 1338줄) — 프로그램 로드/활성화/실행/언로드 핸들러, 실행 스레드, indirect 파이프라인</li><li><code>repo/hw/femu/csd/compute.h</code> — <code>Program</code>, <code>ComputeNamespace</code>, <code>MemoryRangeSet</code> 등 상태를 소유하는 타입</li><li><code>repo/hw/femu/csd/sched.h</code> — <code>ComputeJob</code>, <code>ComputeEngine</code>, <code>CsfScheduler</code> 인터페이스 선언 (구현체 <code>sched.c</code>는 분석 범위 밖)</li><li><code>repo/hw/femu/csd/nvme_csd.h</code> — NVMe CS 커맨드용 타입 별칭 (<code>nvme_pind_t</code> 등, 구조체 정의는 없고 전방선언만 존재)</li><li><code>repo/hw/femu/csd/memory.h</code> — FDM(Functional Data Memory) 로컬 메모리 I/O 커맨드 정의</li><li><code>repo/hw/femu/csd/README.md</code> — 실행 방법, CSF 런타임 시뮬레이션 방식 설명</li></ul>
+<p>참고자료(<code>references/</code>)의 <code>code-structure.md</code>, <code>application-development.md</code>와 대조하며 분석했다. <code>sched.c</code>, <code>memory.c</code>, <code>fuse/</code>(FDMFS) 구현은 이번 분석 대상에 포함되지 않으므로, 그 내부 동작은 헤더에 선언된 인터페이스 수준에서만 다룬다.</p>
+<h2 id="전체-구조">전체 구조</h2>
+<p>CEMU는 FEMU(QEMU 기반 SSD 에뮬레이터)에 <code>femu_mode=4</code>로 CSD 확장을 얹은 것이다(<code>README.md</code>). NVMe 네임스페이스 하나가 <code>ComputeNamespace</code>(<code>compute.h:95</code>)를 <code>ns-&gt;private</code>로 소유하며, 이 구조체가 프로그램 슬랩(<code>Slab programs</code>), 메모리 레인지 셋 슬랩(<code>Slab mrs</code>), 스케줄러(<code>ComputeEngine *ce</code>), 그리고 nr_thread개의 <code>compute_thread</code>를 묶는다. <code>compute_ns_ops</code>(<code>compute.c:1325</code>)가 FEMU의 커맨드셋 등록 지점이며 <code>nvme_register(NVME_CSI_COMPUTE, &amp;compute_ns_ops)</code>(<code>compute.c:1337</code>)로 CS 커맨드 셋이 연결된다.</p>
+<h2 id="먼저-볼-코드-리딩-순서">먼저 볼 코드 리딩 순서</h2>
+<ol><li><strong><code>compute.h</code>의 <code>Program</code>/<code>ComputeNamespace</code>/<code>enum ProgramState</code>/<code>enum ProgramType</code></strong> — 이 파일이 다루는 모든 상태가 이 두 구조체에 모여 있으므로, 필드 이름을 먼저 눈에 익혀야 이후 함수를 읽을 때 헤맨다.</li><li><strong><code>compute.c:57 compute_init()</code></strong> — 네임스페이스 초기화 시 프로그램 슬랩과 <code>nr_thread</code>개의 <code>to_csd</code> 링, compute thread, <code>sched_init()</code>이 어떻게 생성되는지 보여주는 진입점이다.</li><li><strong><code>compute.c:338 load_program()</code></strong> — 프로그램 상태 전이(INVALID→LOADING→LOADED)의 유일한 진입점이므로 수명주기 이해의 핵심이다.</li><li><strong><code>compute.c:224 load_shared_lib()</code> / <code>compute.c:257 load_ubpf()</code></strong> — 두 실행 백엔드의 로딩 경로 차이(dlopen/dlsym vs uBPF VM + JIT)가 명확히 갈리는 지점이다.</li><li><strong><code>compute.c:468 program_activation()</code></strong> — LOADED→ACTIVATED 전이와, 실행 중 잡을 고려하지 않는(TODO로 남은) deactivate 로직을 확인한다.</li><li><strong><code>compute.c:513 program_execute()</code></strong> — <code>is_indirect</code> 분기가 시작되는 지점이며, <code>ComputeJob</code>이 생성되어 <code>sched_alloc_job</code>/<code>sched_enqueue_job</code>으로 넘어가는 실제 코드다. 이 함수가 가장 길고 복잡하므로 direct 경로(else 블록, <code>compute.c:730</code>)부터 먼저 읽고 indirect 블록(<code>compute.c:593</code>)을 나중에 읽는 것을 권한다.</li><li><strong><code>compute.c:856 run_functional_modeling()</code></strong> — eBPF/shared lib 실행 시점의 실제 분기와 runtime 측정 로직이 있는 함수다.</li><li><strong><code>compute.c:1218 compute_thread()</code></strong> — direct 잡은 동기 실행, indirect 잡은 별도 스레드(<code>indirect_main</code>)로 위임하는 디스패치 지점이다.</li><li><strong><code>compute.c:1005 indirect_main()</code></strong> — indirect 모델의 청크 단위 I/O-compute-I/O 상태 머신. 가장 복잡하므로 마지막에 읽는다.</li></ol>
+<h2 id="로직-다이어그램">로직 다이어그램</h2>
+<div class="mermaid">sequenceDiagram
+ participant Host as &quot;Host NVMe Driver&quot;
+ participant LP as &quot;load_program()&quot;
+ participant PA as &quot;program_activation()&quot;
+ participant PE as &quot;program_execute()&quot;
+ participant Sched as &quot;sched_alloc_job / sched_enqueue_job&quot;
+ participant Ring as &quot;to_csd ring&quot;
+ participant CT as &quot;compute_thread()&quot;
+ participant RFM as &quot;run_functional_modeling()&quot;
+ participant IM as &quot;indirect_main() thread&quot;
+
+ Host-&gt;&gt;LP: &quot;NVME_CMD_COMPUTE_LOAD (sel=0, loff=0..N)&quot;
+ LP-&gt;&gt;LP: &quot;state = LOADING, dma_write_prp(code)&quot;
+ LP-&gt;&gt;LP: &quot;load_size == size 이면 load_shared_lib / load_ubpf&quot;
+ LP--&gt;&gt;LP: &quot;state = LOADED&quot;
+ Host-&gt;&gt;PA: &quot;NVME_CMD_COMPUTE_ACTIVATE (sel=1)&quot;
+ PA--&gt;&gt;PA: &quot;state = ACTIVATED&quot;
+ Host-&gt;&gt;PE: &quot;NVME_CMD_COMPUTE_EXEC&quot;
+ PE-&gt;&gt;PE: &quot;state==ACTIVATED 검증, is_indirect 분기&quot;
+ PE-&gt;&gt;Sched: &quot;sched_alloc_job(req) → req-&gt;job 생성&quot;
+ alt &quot;direct (is_indirect=false)&quot;
+ PE-&gt;&gt;Sched: &quot;sched_enqueue_job(req) → CU 스케줄러 등록&quot;
+ PE-&gt;&gt;Ring: &quot;femu_ring_enqueue(to_csd[thread], req)&quot;
+ PE-&gt;&gt;PE: &quot;jobs_running++&quot;
+ Ring-&gt;&gt;CT: &quot;compute_thread dequeue&quot;
+ CT-&gt;&gt;RFM: &quot;run_functional_modeling(job) 동기 호출&quot;
+ RFM--&gt;&gt;CT: &quot;res64, CQE 완료&quot;
+ else &quot;indirect (is_indirect=true)&quot;
+ PE-&gt;&gt;Ring: &quot;femu_ring_enqueue(to_csd[thread], req)&quot;
+ Ring-&gt;&gt;CT: &quot;compute_thread dequeue&quot;
+ CT-&gt;&gt;IM: &quot;qemu_thread_create(indirect_main, req)&quot;
+ IM-&gt;&gt;IM: &quot;청크별 req_dup → sched_alloc_job/enqueue_job&quot;
+ IM-&gt;&gt;IM: &quot;stage 0 input I/O → stage 1 compute → stage 2 output I/O&quot;
+ IM-&gt;&gt;RFM: &quot;run_functional_modeling(job) (stage 1마다)&quot;
+ IM--&gt;&gt;CT: &quot;INDIRECT_THREAD_FINISH → to_csd[0]&quot;
+ CT-&gt;&gt;CT: &quot;qemu_thread_join, to_poller[1]에 최종 CQE&quot;
+ end</div>
+<ul><li><code>LP</code>는 <code>load_program()</code>(<code>compute.c:338</code>)이며, <code>loff==0</code>일 때 <code>program-&gt;state = PROGRAM_STATE_LOADING</code>(<code>compute.c:395</code>)을, 전송이 끝나면 <code>program-&gt;state = PROGRAM_STATE_LOADED</code>(<code>compute.c:447</code>)를 설정한다.</li><li><code>PA</code>는 <code>program_activation()</code>(<code>compute.c:468</code>)이며 <code>sel==1</code>일 때만 <code>PROGRAM_STATE_LOADED → PROGRAM_STATE_ACTIVATED</code>로 전이한다(<code>compute.c:496-501</code>).</li><li><code>PE</code>는 <code>program_execute()</code>(<code>compute.c:513</code>)이고, <code>sched_alloc_job</code>/<code>sched_enqueue_job</code>은 <code>sched.h:319-320</code>에 선언된 외부(스케줄러 모듈) 함수를 호출하는 지점(<code>compute.c:755,767</code>)이다.</li><li><code>CT</code>는 <code>compute_thread()</code>(<code>compute.c:1218</code>), <code>RFM</code>은 <code>run_functional_modeling()</code>(<code>compute.c:856</code>), <code>IM</code>은 <code>indirect_main()</code>(<code>compute.c:1005</code>)이다.</li></ul>
+<h2 id="모듈-객체-관계도">모듈/객체 관계도</h2>
+<div class="mermaid">flowchart LR
+ subgraph NS[&quot;ComputeNamespace compute.h:95&quot;]
+ PSlab[&quot;Slab programs&quot;]
+ MSlab[&quot;Slab mrs&quot;]
+ ToCsd[&quot;to_csd rte_ring array&quot;]
+ CThreads[&quot;compute_threads&quot;]
+ end
+
+ PSlab --&gt;|&quot;program_get(ns, pind)&quot;| Program[&quot;Program compute.h:58&quot;]
+ Program --&gt;|&quot;union ebpf&quot;| Ubpf[&quot;ubpf_vm + ubpf_jit_fn&quot;]
+ Program --&gt;|&quot;union shared_lib&quot;| So[&quot;so_handle + jit_fn (dlsym)&quot;]
+
+ MSlab --&gt;|&quot;memory_range_set_get(ns, rsid)&quot;| MRS[&quot;MemoryRangeSet compute.h:19&quot;]
+ MRS --&gt;|&quot;backend_addr(ns-&gt;backend, sb)&quot;| FDM[&quot;FDM host memory&quot;]
+
+ ToCsd --&gt; CThreads
+ CThreads --&gt;|&quot;job_is_indirect(job)&quot;| IndirectThr[&quot;indirect_main thread&quot;]
+ CThreads --&gt;|&quot;else&quot;| RFM2[&quot;run_functional_modeling&quot;]
+
+ subgraph CE[&quot;ComputeEngine sched.h:129&quot;]
+ CU[&quot;ComputeUnit[]&quot;]
+ Sched[&quot;CsfScheduler (fifo/rr/grouped)&quot;]
+ JobSlab[&quot;Slab job_slab&quot;]
+ end
+
+ JobSlab --&gt;|&quot;sched_alloc_job&quot;| Job[&quot;ComputeJob sched.h:35&quot;]
+ Job --&gt; Program
+ Job --&gt;|&quot;job-&gt;req&quot;| Req[&quot;NvmeRequest&quot;]
+ Sched --&gt; CU
+ CU --&gt;|&quot;pick_next_job&quot;| Job</div>
+<ul><li><code>Program</code>(<code>compute.h:58</code>)은 <code>pind</code>로 슬랩에서 조회되며(<code>program_get</code>, <code>compute.h:116</code>), <code>union</code> 필드로 eBPF(<code>ubpf_vm</code>, <code>ubpf_jit_fn</code>)와 shared library(<code>so_handle</code>, <code>jit_fn</code>) 상태를 배타적으로 보관한다.</li><li><code>MemoryRangeSet</code>(<code>compute.h:19</code>)은 <code>memory_range_set_management()</code>(<code>compute.c:92</code>)에서 생성되며, 각 <code>MemoryRange</code>의 <code>addr</code>은 <code>backend_addr(mns-&gt;backend, sb)</code>(<code>compute.c:141</code>)로 실제 FDM/NVM 백엔드 호스트 메모리 포인터로 변환된다. 이 매핑은 실행 시점이 아니라 <strong>MRS 생성 시점에 1회</strong> 수행된다.</li><li><code>ComputeEngine</code>/<code>ComputeUnit</code>/<code>CsfScheduler</code>는 <code>sched.h</code>에 인터페이스만 선언되어 있고 구현(<code>sched.c</code>, <code>sched_fifo.c</code> 등)은 이번 분석 범위 밖이다. <code>compute.c</code>는 이 인터페이스를 <code>sched_alloc_job</code>/<code>sched_enqueue_job</code>/<code>sched_enqueue_indirect</code>/<code>sched_job_finish_indirect</code>(모두 <code>sched.h:319-322</code>)를 통해서만 호출한다.</li></ul>
+<h2 id="핵심-흐름">핵심 흐름</h2>
+<h3 id="1-로드-입력-상태-변경">1. 로드 (입력 → 상태 변경)</h3>
+<p><code>load_program()</code>(<code>compute.c:338</code>)은 <code>sel==0</code>(load)/그 외(unload)로 나뉜다. load 경로는 <code>loff</code>(load offset)로 청크 전송을 구분한다.</p>
+<ul><li><code>loff==0</code>(최초 청크): <code>program-&gt;type/size/state=LOADING/runtime/runtime_scale/is_indirect</code>를 커맨드 필드에서 채운다(<code>compute.c:381-398</code>). <strong>주목할 점</strong>: <code>program-&gt;code</code>에 DMA로 쓰여지는 것은 실제 바이너리가 아니라, <code>so_name</code>/<code>ebpf_path</code>와 <code>program_name</code>을 널문자로 구분한 <strong>경로 문자열</strong>이다(주석 <code>compute.c:220-223 &quot;user data format for shared library: | so_name | csf_name |&quot;</code>). <code>load_ubpf()</code>(<code>compute.c:257</code>)도 이 경로 문자열을 <code>parse_program()</code>으로 파싱한 뒤 <code>open()</code>/<code>read()</code>로 <strong>호스트 파일시스템에서 직접</strong> eBPF ELF를 읽는다(<code>compute.c:267-280</code>). 즉 실제 CSF 바이너리 전송은 에뮬레이트하지 않고, &quot;호스트가 이미 접근 가능한 파일 경로&quot;를 device가 열어보는 방식으로 단순화되어 있다 — 이는 원문 코드에서 직접 확인한 사실이며, 실제 NVMe 장치라면 있을 수 없는 지름길이다.</li><li>전송이 끝나면(<code>program-&gt;load_size == program-&gt;size</code>) <code>program-&gt;type</code>에 따라 <code>load_shared_lib()</code>(<code>compute.c:224</code>) 또는 <code>load_ubpf()</code>(<code>compute.c:257</code>)를 호출하고 성공 시 <code>state = PROGRAM_STATE_LOADED</code>(<code>compute.c:447</code>)로 전이한다.</li><li>재로드는 <code>jobs_running != 0</code>이면 <code>NVME_PROGRAM_IN_USE</code>로 거부된다(<code>compute.c:370-374</code>).</li></ul>
+<h3 id="2-ebpf-vs-shared-library-로딩-차이">2. eBPF vs Shared Library 로딩 차이</h3>
+<div class="table-wrap"><table><thead><tr><th></th><th>Shared Library (<code>PROGRAM_TYPE_SHARED_LIB</code>)</th><th>eBPF (<code>PROGRAM_TYPE_EBPF</code>)</th></tr></thead><tbody><tr><td>로더</td><td><code>load_shared_lib()</code> (<code>compute.c:224</code>)</td><td><code>load_ubpf()</code> (<code>compute.c:257</code>)</td></tr><tr><td>메커니즘</td><td><code>dlopen(so_name, RTLD_NOW)</code> + <code>dlsym(handle, program_name)</code></td><td><code>ubpf_create()</code> + <code>ubpf_load_elf()</code></td></tr><tr><td>JIT</td><td>없음. dlsym으로 얻은 함수 포인터를 <code>shared_lib.jit_fn</code>에 그대로 저장(이름은 <code>jit_fn</code>이지만 실제로는 네이티브 함수)</td><td><code>load-&gt;jit</code> 플래그가 참이면 <code>ubpf_compile()</code> 호출, 실패 시 <code>NVME_INVALID_PROGRAM_DATA</code> (<code>compute.c:296-302</code>)</td></tr><tr><td>언로드</td><td><code>dlclose()</code> (<code>compute.c:308</code>)</td><td><code>ubpf_destroy()</code> (<code>compute.c:325</code>)</td></tr></tbody></table></div>
+<p><strong>JIT 판단 지점</strong>은 호스트가 Load Program 커맨드에 실어 보내는 <code>load-&gt;jit</code> 정수 필드이며(<code>compute.c:345, 434</code>), 전송이 완료되어 <code>load_ubpf()</code>가 호출되는 시점에 1회 결정된다. shared library는 애초에 네이티브 코드이므로 JIT 여부 개념 자체가 없다.</p>
+<p><strong>실행 시점 차이</strong>는 <code>run_functional_modeling()</code>(<code>compute.c:856</code>)의 <code>switch (program-&gt;type)</code>에서 갈린다(<code>compute.c:879-895</code>).</p>
+<ul><li><code>PROGRAM_TYPE_SHARED_LIB</code>: <code>program-&gt;shared_lib.jit_fn(&amp;job-&gt;args)</code> 직접 호출.</li><li><code>PROGRAM_TYPE_EBPF</code>: <code>program-&gt;ebpf.jit_fn == NULL</code>이면 <code>ubpf_exec(vm, args, &amp;res)</code>(인터프리터), 아니면 <code>program-&gt;ebpf.jit_fn(&amp;job-&gt;args)</code>(JIT 네이티브 함수) 직접 호출.</li></ul>
+<h3 id="3-활성화와-실행-검증-computejob-생성-스케줄러-스레드-위임">3. 활성화와 실행 (검증 → ComputeJob 생성 → 스케줄러/스레드 위임)</h3>
+<p><code>program_execute()</code>(<code>compute.c:513</code>)는 먼저 <code>program-&gt;state == PROGRAM_STATE_ACTIVATED</code>를 검증하고(<code>compute.c:544</code>), <code>is_indirect</code> 여부에 따라 필수 파라미터(<code>numr</code>, <code>rsid</code>, <code>dlen</code>)를 서로 다르게 검증한다(<code>compute.c:548-567</code>).</p>
+<p>메모리 레인지 확보 후, <code>sched_alloc_job(compute_ns(req-&gt;ns), req)</code>(<code>compute.c:755</code>)로 <code>req-&gt;job</code>(<code>ComputeJob</code>)을 얻고 <code>job-&gt;program</code>, <code>job-&gt;args.{numr,mr_addr,mr_len,cparam1,cparam2,data_buffer,buffer_len}</code>, <code>job-&gt;user_runtime</code>을 채운다(<code>compute.c:756-765</code>).</p>
+<p>여기서 <strong>direct/indirect 분기</strong>가 명확히 갈린다(<code>compute.c:766-776</code>):</p>
+<pre><code class="language-c">if (!program-&gt;is_indirect) {
+    sched_enqueue_job(compute_ns(req-&gt;ns), req);   // CU 스케줄러에 즉시 등록
+}
+femu_ring_enqueue(...to_csd[thread]..., &amp;req, 1);   // 두 경우 모두 실행 스레드로 전달
+if (!program-&gt;is_indirect) {
+    qatomic_inc(&amp;program-&gt;jobs_running);            // direct만 여기서 refcount 증가
+}</code></pre>
+<p>indirect job은 이 시점에는 스케줄러에 등록되지 않고, 청크별 하위 job이 <code>indirect_main()</code> 내부에서 <code>req_dup()</code>(<code>compute.c:969</code>, 내부에서 <code>sched_alloc_job</code>+<code>sched_enqueue_job</code> 호출)을 통해 개별적으로 스케줄러에 등록된다.</p>
+<p><code>compute_thread()</code>(<code>compute.c:1218</code>)는 <code>to_csd</code> 링에서 request를 꺼내 <code>job_is_indirect(job)</code>(<code>sched.h:309</code>)로 분기한다: direct는 <code>run_functional_modeling()</code>을 스레드 안에서 <strong>동기</strong> 실행하고, indirect는 <code>indirect_thread_pool</code>(최대 <code>MAX_INDIRECT_JOBS=16</code>, <code>compute.h:10</code>)에서 슬롯을 할당받아 <code>indirect_main</code>을 <strong>별도 조인 가능 스레드</strong>로 기동한다(<code>compute.c:1256-1263</code>).</p>
+<h3 id="4-indirect-모델-lba-장치-메모리-매핑과-chunk-처리">4. Indirect 모델: LBA → 장치 메모리 매핑과 chunk 처리</h3>
+<p>indirect 모델은 항상 <code>rsid</code>(MemoryRangeSet)를 요구하며(<code>compute.c:552-555</code>), LBA(sre: slba/nlb 리스트, <code>NvmeCopyFormat</code>)와 실제 FDM/NVM 백엔드 주소 사이의 매핑은 <strong>두 단계</strong>로 이뤄진다.</p>
+<ol><li><strong>주소 매핑</strong>: <code>memory_range_set_management()</code>(<code>compute.c:92</code>)가 MRS 생성 시점에 각 <code>MemoryRange</code>의 <code>addr</code>를 <code>backend_addr(mns-&gt;backend, sb)</code>(<code>compute.c:141</code>)로 미리 계산해 <code>mrs-&gt;mr_addr[i]</code>에 저장한다. 이건 compute.c가 직접 수행하며 sched.c에는 위임하지 않는다.</li><li><strong>청크 단위 I/O 생성</strong>: <code>indirect_main()</code>(<code>compute.c:1005</code>)이 <code>task-&gt;iter_in[i]</code>/<code>iter_out[i]</code>(<code>struct sre_iter</code>)를 순회하며 <code>next_sres()</code>(<code>compute.c:942</code>)로 한 번에 처리할 <code>NvmeCopyFormat</code>(slba/nlb) 목록을 뽑아 <code>n-&gt;to_ftl[1]</code>에 실제 I/O 요청을 넣는다(<code>compute.c:1068, 1156, 1176</code>). 이 I/O는 FTL(FEMU의 기존 flash 시뮬레이션 계층, 분석 범위 밖)이 처리하고, 완료되면 <code>indirect_task.ring</code>을 통해 <code>indirect_main</code>으로 통지된다.</li></ol>
+<p><strong>chunk size(<code>chunk_nlb</code>)</strong>는 <code>program_execute()</code>가 처리하는 <code>NvmeProgramExecuteCmd.chunk_nlb</code>(+1, <code>compute.c:525</code>)로, <strong>호스트 애플리케이션이 매 실행 커맨드마다 지정</strong>한다(READM/<code>application-development.md</code>의 <code>prep_nvme_uring_program_execute(... chunk_nlb ...)</code> 참고). 다만 무한정 크게 잡을 수는 없고, <code>chunk_nlb * 512 &gt; mr_len[1]</code>이면 거부된다(<code>compute.c:723-726</code>) — 즉 청크 크기는 MRS 생성 시 준비해 둔 입력 버퍼(<code>mr[1]</code>) 용량 내로 제한된다. <code>nr_concurrent_chunks</code>(동시 처리 스트림 수)는 <code>data_buffer</code>의 raw 정수로 전달되며(<code>compute.c:603</code>), <code>mrs-&gt;numr</code>이 이 값으로 나누어떨어져야 한다(<code>compute.c:631-634</code>) — 각 스트림이 동일한 개수의 메모리 레인지를 나눠 갖는 구조다.</p>
+<p>각 청크는 <code>stage 0</code>(input I/O) → <code>stage 1</code>(compute, <code>run_functional_modeling()</code> 재사용) → <code>stage 2</code>(output I/O, <code>destination==1</code>일 때만) 상태를 순환하며, 우선순위 큐(<code>pqueue</code>, <code>expire_time</code> 기준)로 I/O·compute 완료 시각을 시뮬레이션한다(<code>compute.c:1073-1186</code>).</p>
+<h3 id="5-runtime-측정과-용도">5. Runtime 측정과 용도</h3>
+<p><code>run_functional_modeling()</code>(<code>compute.c:856</code>)은 두 개의 타이머를 쓴다.</p>
+<ul><li><code>enter_compute_section()</code> 진입 대기 시간(<code>time_cost</code>)을 실제 호출 전에 빼서 <code>runtime</code>(사용자가 지정했거나 <code>program-&gt;runtime</code>으로 물려받은 기대 실행시간)을 보정한다(<code>compute.c:869-877</code>).</li><li>실제 CSF 함수 호출(<code>shared_lib.jit_fn</code>/<code>ubpf_exec</code>/<code>ebpf.jit_fn</code>) 전후로 <code>realtime</code>(호스트 wall-clock 실측)을 측정한다(<code>compute.c:878-897</code>).</li><li>만약 보정된 <code>runtime</code>이 0(=호스트/프로그램이 명시적 runtime을 지정하지 않음)이면, <code>runtime = realtime * program-&gt;runtime_scale</code>로 실측치를 스케일링해 시뮬레이션 값을 만든다(<code>compute.c:898-902</code>). <code>program-&gt;runtime_scale</code>은 로드 시 <code>runtime_scale/10.0</code>으로 설정되며, README의 <code>csf_runtime_scale</code>(기본 3) 파라미터와 연결된다.</li><li>최종 <code>runtime</code>은 <code>set_sched_runtime(job, runtime)</code>(<code>sched.h:300</code>)으로 <code>job-&gt;stat.exec_time</code>에 기록되고, <code>job_has_finished()</code>(<code>sched.h:257</code>, <code>job-&gt;runtime &gt;= job_exec_time(job)</code>)를 통해 스케줄러가 &quot;이 job이 CU를 얼마나 점유하는지&quot; 판단하는 데 쓰인다. 즉 실제 호스트 실행은 항상 실측 wall-clock 만큼 빠르게 끝나지만, 스케줄러 관점의 &quot;논리적 점유 시간&quot;은 이 계산된 <code>runtime</code>으로 재구성되어 에뮬레이션 정확도를 만든다.</li><li><code>enter_compute_section</code>/<code>leave_compute_section</code>(<code>compute.c:804-832</code>)은 첫 진입 스레드가 <code>pause_all_vcpus()</code>+<code>cpu_disable_ticks()</code>로 게스트 VM 클럭을 멈추고, 마지막으로 빠져나가는 스레드가 재개한다 — nr_thread개의 compute thread가 동시에 실행돼도 게스트 타이머가 실제 wall-clock 실행 시간만큼 앞서가지 않도록 하는 QEMU 타이밍 보정 장치다(코드 자체의 주석과 구조로부터 확인; 정확한 설계 의도는 &quot;추정&quot;).</li></ul>
+<h3 id="6-여러-csd-구분-pid-nsid-pind">6. 여러 CSD 구분: pid / nsid / pind</h3>
+<ul><li><strong><code>pind</code></strong>(program index, <code>compute.h:59</code>): 네임스페이스 내부 프로그램 슬랩 슬롯 번호(1..<code>MAX_PIND=1024</code>). <code>program_get(ns, pind) = slab_at(program_slab(ns), pind-1)</code>(<code>compute.h:116-119</code>)로 조회하며, 호스트가 Load 커맨드에서 직접 지정한다(동적 할당 아님).</li><li><strong><code>nsid</code></strong>(<code>compute.h:60</code>): <code>init_program_slab()</code>(<code>compute.c:37</code>)에서 네임스페이스 초기화 시 <code>ns-&gt;id</code>로 고정 설정된다. 프로그램 슬랩 자체가 <code>ComputeNamespace</code> 소유이므로 <strong>pind 공간은 네임스페이스별로 독립</strong>이다 — 서로 다른 네임스페이스(=서로 다른 &quot;CSD&quot; 개념)의 동일 <code>pind</code> 번호는 완전히 다른 슬롯을 가리킨다.</li><li><strong><code>pid</code></strong>(program identifier, <code>compute.h:59</code>, uint64_t): <code>load-&gt;pit</code>(program identifier type) 플래그가 참일 때만 의미를 가진다. 최초 청크(<code>loff==0</code>)에서 <code>pit==1</code>이면 <code>program-&gt;pid = pid</code>를 기록하고(<code>compute.c:383-385</code>), 후속 청크(<code>loff!=0</code>)에서 <code>pit==1 &amp;&amp; pid != program-&gt;pid</code>면 mismatch 에러를 낸다(<code>compute.c:406-410</code>). 즉 pid는 주소 지정용이 아니라 <strong>여러 DMA 청크로 나뉜 로드 요청이 같은 논리적 프로그램에 속하는지 검증하는 식별 태그</strong>다.</li></ul>
+<p>정리하면 <code>nsid</code>가 CSD(네임스페이스) 경계, <code>pind</code>가 그 안의 슬롯 핸들, <code>pid</code>가 슬롯에 적재된 프로그램의 논리적 신원 확인용이라는 3단 구조다.</p>
+<h2 id="주요-파일과-역할">주요 파일과 역할</h2>
+<div class="table-wrap"><table><thead><tr><th>파일</th><th>역할</th></tr></thead><tbody><tr><td><code>compute.c</code></td><td>Load/Activate/Execute/Unload NVMe 커맨드 핸들러, compute thread, indirect 파이프라인 — 이 문서의 분석 대상 핵심</td></tr><tr><td><code>compute.h</code></td><td><code>Program</code>, <code>ComputeNamespace</code>, <code>MemoryRange(Set)</code>, <code>ProgramState/Type</code> enum — 상태 소유 타입 정의</td></tr><tr><td><code>sched.h</code></td><td><code>ComputeJob</code>, <code>ComputeEngine</code>, <code>ComputeUnit</code>, <code>CsfScheduler</code> 인터페이스 — 실제 스케줄링 알고리즘은 <code>sched.c</code>/<code>sched_{fifo,rr,grouped_*}.c</code>(분석 범위 밖)에 구현</td></tr><tr><td><code>nvme_csd.h</code></td><td>NVMe CS 스펙 타입 별칭(<code>nvme_pind_t</code> 등)과 전방선언만 존재, 실제 커맨드 구조체(<code>NvmeLoadProgramCmd</code> 등)는 다른 헤더(예상: <code>nvme-def.h</code>, 확인 필요)에 정의됨</td></tr><tr><td><code>memory.h</code></td><td>FDM 로컬 메모리 I/O 커맨드(<code>NVME_CMD_MEMORY_{FILL,COPY,READ,WRITE}</code>) 정의 — <code>compute.c</code>에서 직접 다루지는 않고 <code>memory.c</code>(분석 범위 밖)가 처리하는 것으로 추정</td></tr><tr><td><code>README.md</code></td><td>실행법(<code>femu_mode=4</code>), CSF runtime 시뮬레이션 방식(scale vs ARM 서버), FDMFS 빌드 절차</td></tr></tbody></table></div>
+<h2 id="중요한-설계-판단">중요한 설계 판단</h2>
+<ul><li><strong>CSF 바이너리 전송을 경로 문자열 전달로 대체.</strong> <code>parse_program()</code>(<code>compute.c:185</code>)이 파싱하는 것은 실제 코드가 아니라 파일 경로/심볼 이름 문자열이며, <code>load_ubpf()</code>는 호스트 파일시스템을 <code>open()</code>으로 직접 읽는다(<code>compute.c:267</code>). 실제 NVMe 장치라면 불가능한 방식으로, 에뮬레이션 편의를 위한 명시적 단순화로 보인다(원문 코드에서 확인, 설계 의도는 추정).</li><li><strong>direct/indirect가 스케줄러 등록 타이밍부터 다르다.</strong> direct는 <code>program_execute()</code> 시점에 한 번에 <code>sched_enqueue_job</code> + <code>jobs_running++</code>이 이뤄지지만, indirect는 최초 job이 스케줄러를 거치지 않고 <code>indirect_main</code>이 청크마다 <code>req_dup()</code>으로 새 job을 만들어 개별적으로 등록한다(<code>compute.c:766-776</code>, <code>969-978</code>). 이는 indirect 모델이 &quot;하나의 execute 커맨드 = 여러 개의 실제 I/O+compute 사이클&quot;이라는 근본적으로 다른 실행 단위를 가진다는 것을 반영한다.</li><li><strong>runtime 측정을 실측+스케일링 하이브리드로 설계.</strong> 호스트가 명시적 <code>runtime</code>을 주면 그대로(약간의 락 대기 보정만) 쓰고, 안 주면 실제 wall-clock 실행시간에 <code>runtime_scale</code>을 곱한다(<code>compute.c:856-910</code>). 이는 정확한 CSF 성능 프로파일이 없어도 합리적인 시뮬레이션 타이밍을 만들기 위한 절충으로 보인다(추정).</li><li><strong>compute thread 진입 시 vCPU를 일시정지.</strong> <code>enter_compute_section</code>/<code>leave_compute_section</code>(<code>compute.c:804-832</code>)이 nr_thread개의 동시 실행 스레드를 refcount로 관리하며 게스트 타이머를 멈춘다 — CSF 실제 실행이 게스트 관점에서 &quot;순간적&quot;으로 보이도록 만드는 타이밍 정합성 장치로 추정된다.</li></ul>
+<h2 id="읽으면서-주의할-점">읽으면서 주의할 점</h2>
+<ul><li><strong>언로드 시 실행 중 job 보호가 불완전하다.</strong> <code>load_program()</code>의 unload 경로(<code>compute.c:449-463</code>)는 <code>program-&gt;state == PROGRAM_STATE_ACTIVATED</code>면 <code>femu_err()</code>로 로그만 남기고 <strong>그대로 진행</strong>해 <code>program-&gt;code</code>를 <code>free()</code>하고 <code>unload_ubpf()</code>/<code>unload_shared_lib()</code>로 VM/so 핸들을 파괴한다. <code>jobs_running</code> 체크가 아예 없으며 주석으로 <code>// TODO add jobs_running check</code>(<code>compute.c:451</code>)가 명시돼 있다 — 실행 중인 <code>compute_thread</code>나 <code>indirect_main</code>이 동시에 <code>program-&gt;ebpf.vm</code>/<code>program-&gt;shared_lib.jit_fn</code>을 참조하면 use-after-free 가능성이 있다. 재로드(<code>sel==0</code>)는 <code>jobs_running != 0</code>을 검사해 거부하는 것과 대비된다(<code>compute.c:370-374</code>) — 로드/언로드 간 보호 수준이 비대칭이다.</li><li><strong>비활성화(deactivate)도 실행 중 job을 막지 않는다.</strong> <code>program_activation()</code>의 <code>sel==0</code> 분기는 <code>jobs_running</code> 체크 코드가 주석처리돼 있다(<code>compute.c:486-491</code>, <code>// TODO fix jobs_running when cu&gt;1</code>). 즉 활성 job이 있어도 무조건 <code>state = PROGRAM_STATE_LOADED</code>로 내려간다.</li><li><strong><code>jobs_running</code> 감소 지점이 이 파일에 없다.</strong> <code>qatomic_inc(&amp;program-&gt;jobs_running)</code>은 확인되지만(<code>compute.c:775, 1070</code>), 감소(decrement)는 <code>sched.c</code>의 job 완료 처리(주석 <code>compute.c:572 &quot;free in sched.c:job_finish()&quot;</code>가 힌트)에서 이뤄지는 것으로 보이며 이번 분석 범위 밖이라 직접 확인하지 못했다 — <strong>확인 필요</strong>.</li><li><strong>indirect job의 <code>jobs_running</code> 증가 시점이 청크마다 분산돼 있다.</strong> <code>compute.c:1070</code>에서 청크별로 증가하므로, <code>program_execute()</code> 리턴 시점에는 아직 <code>jobs_running</code>이 0일 수 있다. <code>load_program()</code>의 재로드 가드(<code>jobs_running != 0</code> 체크)가 indirect job 생성 초기 타이밍에 이 값을 정확히 반영하는지는 레이스 조건 관점에서 재검토가 필요해 보인다(추정, 확인 필요).</li><li><strong><code>nvme_csd.h</code>에는 실제 커맨드 구조체 정의가 없다.</strong> <code>NvmeLoadProgramCmd</code>, <code>NvmeProgramExecuteCmd</code>, <code>NvmeMemoryRangeSetManageCmd</code> 등은 전방선언만 있고 실 정의는 다른 파일(예: <code>nvme-def.h</code>)에 있을 것으로 추정되며, 이번 분석 경로에는 포함되지 않아 필드 의미 일부(<code>cdft</code>, <code>pit</code> 등 세부 인코딩)는 헤더만으로는 완전히 검증하지 못했다.</li></ul>
+<h2 id="더-파볼-질문">더 파볼 질문</h2>
+<ul><li><code>sched.c</code>의 <code>sched_alloc_job</code>/<code>sched_enqueue_job</code>/<code>sched_job_finish_indirect</code> 구현을 봐야 <code>jobs_running</code> 감소 시점과 <code>job_slab</code> 회수 로직, 그리고 <code>ComputeJob-&gt;stat</code>이 스케줄러 알고리즘(fifo/rr/grouped)에서 실제로 어떻게 소비되는지 확인할 수 있다.</li><li><code>memory.c</code>가 <code>memory.h</code>의 <code>NVME_CMD_MEMORY_{READ,WRITE,COPY,FILL}</code>을 어떻게 처리하며, 이것이 <code>compute.c</code>의 MRS/FDM 접근과 어떤 관계인지(같은 <code>backend_addr</code> 경로를 공유하는지) 확인이 필요하다.</li><li>언로드/비활성화 시 <code>jobs_running</code>/<code>state</code> 경쟁 조건이 실제로 트리거 가능한지(예: <code>program_execute()</code>가 <code>state==ACTIVATED</code> 검증을 통과한 직후, 다른 스레드가 unload를 수행하는 TOCTOU) 실제 재현 테스트로 검증할 가치가 있다.</li><li>README의 &quot;Run CSF on ARM 서버&quot; 옵션(<code>arm_server_url</code>)이 <code>run_functional_modeling()</code>의 실측 경로와 어떻게 스위칭되는지는 <code>compute.c</code>에서 직접 보이지 않는다 — 별도 조건부 컴파일 코드(<code>--enable-femu-arm-server</code>)를 확인해야 한다.</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

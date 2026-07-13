@@ -673,13 +673,13 @@
 
         <a class="tab-link" href="#paper-discovery">
           <span>논문 추천</span>
-          <small>1</small>
+          <small>0</small>
         </a>
         
 
         <a class="tab-link" href="#code-analysis">
           <span>코드 분석</span>
-          <small>6</small>
+          <small>14</small>
         </a>
         
 
@@ -723,7 +723,7 @@
 
       <div class="statistics">
         <span class="stat">논문 14편</span>
-        <span class="stat">전체 항목 27개</span>
+        <span class="stat">전체 항목 34개</span>
       </div>
     </div>
   </header>
@@ -741,14 +741,14 @@
     <a href="#paper-discovery" class="category-card">
       <h2>Research &amp; Analysis <span>논문 추천</span></h2>
       <p>오늘 검색된 논문 후보만 표시합니다. 이전 날짜 추천 목록은 홈페이지에 노출하지 않습니다.</p>
-      <small>1개 문서</small>
+      <small>0개 문서</small>
     </a>
     
 
     <a href="#code-analysis" class="category-card">
       <h2>Research &amp; Analysis <span>코드 분석</span></h2>
       <p>라이브러리, 프레임워크, 코드베이스를 프로젝트 단위로 묶어 구조와 설계 판단을 정리합니다.</p>
-      <small>6개 문서</small>
+      <small>14개 문서</small>
     </a>
     
 
@@ -784,13 +784,13 @@
 
         <a class="tab-link" href="#paper-discovery">
           <span>논문 추천</span>
-          <small>1</small>
+          <small>0</small>
         </a>
         
 
         <a class="tab-link" href="#code-analysis">
           <span>코드 분석</span>
-          <small>6</small>
+          <small>14</small>
         </a>
         
 
@@ -1387,34 +1387,15 @@
           <h2>Today&#x27;s Paper Recommendations</h2>
           <p>오늘 검색된 논문 후보만 표시합니다. 이전 날짜 추천 목록은 홈페이지에 노출하지 않습니다.</p>
         </div>
-        <span class="section-count">1개</span>
+        <span class="section-count">0개</span>
       </div>
 
       <div class="library-grid">
         
-    <article class="library-card">
-      <div class="card-header">
-        <h2>
-          <a href="paper-discovery/2026-07-13/">
-            Daily Paper Discovery - 2026-07-13
-          </a>
-        </h2>
-
-        <span class="status-badge status-unverified">
-          오늘
-        </span>
-      </div>
-
-      <p class="metadata">2026-07-13 · 추천 후보 12개</p>
-
-      <p class="summary">
-        오늘 추천 후보 12개: Toward Real-Time Sentence-Level Sign Language Translation, StreamDQ: Near-Memory Weight DeQuantization in Custom HBM for Scalable AI Inference Acceleration, ATLAS: Efficient Out-of-Core Inference for Billion-Scale Graph Neural Networks
-      </p>
-
-      <a class="open-link" href="paper-discovery/2026-07-13/">
-        추천 문서 열기 →
-      </a>
-    </article>
+    <section class="empty-state">
+      <h2>오늘 생성된 논문 추천 목록이 없습니다.</h2>
+      <p>daily_paper_discovery.sh가 오늘 날짜 discovery JSON을 만들면 이곳에 표시됩니다.</p>
+    </section>
     
       </div>
     </section>
@@ -1426,11 +1407,234 @@
           <h2>Code Analysis</h2>
           <p>라이브러리, 프레임워크, 코드베이스를 프로젝트 단위로 묶어 구조와 설계 판단을 정리합니다.</p>
         </div>
-        <span class="section-count">6개</span>
+        <span class="section-count">14개</span>
       </div>
 
       <div class="library-grid">
         
+            <section class="project-group">
+              <div class="project-heading">
+                <div>
+                  <p class="section-eyebrow">PROJECT</p>
+                  <h3>CEMU</h3>
+                  <p>Computational Storage Drive(CSD) 풀시스템 에뮬레이션 플랫폼 — QEMU/FEMU 기반 장치 에뮬레이터, Linux 소프트웨어 스택(FDMFS/NVMe/io_uring), uBPF 실행 환경</p>
+                  <div class="tag-row project-tags"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">computational-storage</span><span class="tag">FEMU</span><span class="tag">QEMU</span><span class="tag">NVMe</span><span class="tag">eBPF</span><span class="tag">CSF</span><span class="tag">uBPF</span><span class="tag">Linux</span></div>
+                </div>
+                <span class="section-count">8개 문서</span>
+              </div>
+              <div class="library-grid">
+                
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-overview/">
+            CEMU 전체 구조와 CSD 실행 경로
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-13</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">computational-storage</span><span class="tag">FEMU</span><span class="tag">QEMU</span><span class="tag">NVMe</span><span class="tag">eBPF</span></div>
+
+      <p class="summary">
+        CEMU가 세 저장소(장치 에뮬레이터/Linux 스택/uBPF)로 나뉜 이유와, 호스트 애플리케이션의 요청이 CSD에서 실제로 계산되기까지의 end-to-end 경로를 잡는다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-overview/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-csd-compute/">
+            CSF 실행 엔진 — 프로그램 수명주기와 실행 모델
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-13</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">CSF</span><span class="tag">eBPF</span><span class="tag">uBPF</span><span class="tag">computational-storage</span></div>
+
+      <p class="summary">
+        hw/femu/csd/compute.c를 읽고 Computational Storage Function이 로드·활성화·실행되는 전 과정과, eBPF/shared library 두 실행 백엔드를 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-csd-compute/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-fdmfs-iouring/">
+            FDMFS 파일시스템과 io_uring copy_file_range 오프로드
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-14</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">Linux</span><span class="tag">filesystem</span><span class="tag">FDMFS</span><span class="tag">io_uring</span><span class="tag">copy_file_range</span></div>
+
+      <p class="summary">
+        linux-cemu의 fs/fdmfs/와 io_uring/copy_file_range.c를 읽고, 장치 메모리를 파일로 노출하는 파일시스템과 비동기 오프로드 경로를 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-fdmfs-iouring/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-kernel-driver/">
+            Linux NVMe CSD 드라이버와 UAPI
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-14</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">Linux</span><span class="tag">NVMe</span><span class="tag">driver</span><span class="tag">p2pdma</span><span class="tag">ioctl</span></div>
+
+      <p class="summary">
+        linux-cemu의 drivers/nvme/host/cemu.c와 cemu_ioctl UAPI를 읽고, 사용자 공간이 CSD를 제어하는 계약과 P2P DMA·multi-CSD 지원을 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-kernel-driver/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-nvme-command-path/">
+            NVMe CSD 커맨드 경로 — CEMU가 FEMU에 붙는 지점
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-14</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">NVMe</span><span class="tag">FEMU</span><span class="tag">QEMU</span><span class="tag">computational-storage</span></div>
+
+      <p class="summary">
+        hw/femu/nvme-admin.c와 nvme-io.c를 읽고 NVMe Computational Storage 커맨드가 장치에서 디스패치되는 경로, 그리고 CEMU가 FEMU 인프라에 통합되는 방식(femu_mode=4)을 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-nvme-command-path/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-ubpf/">
+            uBPF 실행 환경과 CEMU의 확장
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-14</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">eBPF</span><span class="tag">uBPF</span><span class="tag">JIT</span><span class="tag">computational-storage</span></div>
+
+      <p class="summary">
+        ubpf-cemu를 읽고 eBPF 프로그램이 장치에서 실행되는 구조를 파악한 뒤, CEMU가 upstream uBPF에 가한 in_mem/out_mem 시그니처 확장이 왜 필요했는지 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-ubpf/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-csd-memory/">
+            장치 메모리(FDM)와 Memory Range Set
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-14</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">FDM</span><span class="tag">memory-range-set</span><span class="tag">NVMe</span><span class="tag">computational-storage</span></div>
+
+      <p class="summary">
+        hw/femu/csd/memory.c를 읽고 Functional Data Memory 네임스페이스와 Memory Range Set 추상화를 분석한다. FDMFS와 P2P DMA가 올라타는 토대다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-csd-memory/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="code-analysis/cemu-csd-scheduler/">
+            컴퓨트 유닛 스케줄러와 QoS
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">코드 분석 · 2026-07-13</p>
+      <div class="tag-row"><span class="tag">CEMU</span><span class="tag">CSD</span><span class="tag">scheduler</span><span class="tag">QoS</span><span class="tag">timing-model</span><span class="tag">computational-storage</span></div>
+
+      <p class="summary">
+        hw/femu/csd/sched.c와 스케줄러 4종 구현을 읽고, CSD의 컴퓨트 유닛에 잡이 배치되는 방식과 JobGroup 기반 QoS, 그리고 타이밍 모델과의 연결을 분석한다.
+      </p>
+
+      <a class="open-link" href="code-analysis/cemu-csd-scheduler/">
+        열기 →
+      </a>
+    </article>
+    
+              </div>
+            </section>
+            
+
             <section class="project-group">
               <div class="project-heading">
                 <div>
