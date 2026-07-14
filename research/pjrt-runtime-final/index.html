@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PJRT 런타임 최종 정리</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">정보 수집</p>
+      <h1>PJRT 런타임 최종 정리</h1>
+      <p class="summary">PJRT에서 컴파일러, 런타임, 디바이스 드라이버/벤더 백엔드의 책임 경계와 인터페이스 타입을 실제 xla/pjrt 소스 근거로 정리한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-14</span>
+        <span class="tag">PJRT</span><span class="tag">OpenXLA</span><span class="tag">runtime</span><span class="tag">compiler-runtime-boundary</span><span class="tag">driver-backend</span><span class="tag">C API</span><span class="tag">PjRtClient</span><span class="tag">PjRtBuffer</span><span class="tag">PjRtLoadedExecutable</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#3줄-요약">3줄 요약</a>
+<a class="toc-level-2" href="#수집-범위">수집 범위</a>
+<a class="toc-level-2" href="#핵심-요약">핵심 요약</a>
+<a class="toc-level-2" href="#정보-지도">정보 지도</a>
+<a class="toc-level-2" href="#part-1-컴파일러-런타임-드라이버의-역할-구분">Part 1 — 컴파일러 · 런타임 · 드라이버의 역할 구분</a>
+<a class="toc-level-3" href="#1-1-계층별-책임-표">1.1 계층별 책임 표</a>
+<a class="toc-level-3" href="#1-2-데이터-흐름-sequencediagram-compile-execute-결과">1.2 데이터 흐름 sequenceDiagram (Compile → Execute → 결과)</a>
+<a class="toc-level-3" href="#1-3-벤더가-구현해야-하는-raw-boundary">1.3 벤더가 구현해야 하는 raw boundary</a>
+<a class="toc-level-2" href="#part-2-계층-간-인터페이스의-데이터-타입-형식-분석">Part 2 — 계층 간 인터페이스의 데이터 타입·형식 분석</a>
+<a class="toc-level-3" href="#2-1-입력-타입-표-프레임워크-런타임">2.1 입력 타입 표 (프레임워크 → 런타임)</a>
+<a class="toc-level-3" href="#2-2-출력-타입-표-위로-주는-것-과-아래로-내리는-것-의-분리">2.2 출력 타입 표 — &quot;위로 주는 것&quot;과 &quot;아래로 내리는 것&quot;의 분리</a>
+<a class="toc-level-3" href="#2-3-execute-한-번의-타입-변환-전달-다이어그램">2.3 Execute 한 번의 타입 변환·전달 다이어그램</a>
+<a class="toc-level-3" href="#2-4-future-와-ready-event-prepare-launch-분리">2.4 `Future&lt;&gt;`와 ready event, Prepare/Launch 분리</a>
+<a class="toc-level-3" href="#2-5-pjrt-c-api-pjrt_api-와-opaque-struct">2.5 PJRT C API — `PJRT_Api`와 opaque struct</a>
+<a class="toc-level-2" href="#part-3-pjrt-객체별-api-정의">Part 3 — PJRT 객체별 API 정의</a>
+<a class="toc-level-3" href="#3-1-객체-관계도">3.1 객체 관계도</a>
+<a class="toc-level-3" href="#3-2-객체별-api-표">3.2 객체별 API 표</a>
+<a class="toc-level-2" href="#세부-두-대표-경로의-인터페이스-구현-분리-요약">세부: 두 대표 경로의 인터페이스/구현 분리 요약</a>
+<a class="toc-level-2" href="#쟁점과-불확실성">쟁점과 불확실성</a>
+<a class="toc-level-3" href="#쟁점-해석이-갈릴-수-있는-지점">쟁점 (해석이 갈릴 수 있는 지점)</a>
+<a class="toc-level-3" href="#확인-필요-checkout에-없는-파일에-정의가-있음">확인 필요 (checkout에 없는 파일에 정의가 있음)</a>
+<a class="toc-level-3" href="#추정-코드에서-직접-확인-못-했으나-정황이-강함">추정 (코드에서 직접 확인 못 했으나 정황이 강함)</a>
+<a class="toc-level-3" href="#버전-드리프트-참고-문서-통념-vs-이-커밋의-코드">버전 드리프트 (참고 문서·통념 vs 이 커밋의 코드)</a>
+<a class="toc-level-2" href="#읽는-순서-조사-로드맵">읽는 순서 / 조사 로드맵</a>
+<a class="toc-level-2" href="#후속-질문">후속 질문</a>
+<a class="toc-level-2" href="#참고-자료">참고 자료</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <p>확인 결과가 명확해졌습니다. <code>analysis.md</code>는 현재 비어 있고(파이프라인이 이 출력물로 대체), 검증기는 <code>## 쟁점과 불확실성</code>·<code>## 후속 질문</code> H2 헤더를 정확히 요구하며, Mermaid 블록 2(1.2 sequenceDiagram)의 25행 <code>RT--&gt;&gt;FW: vector&lt;vector&lt;unique_ptr&gt;&gt; + Future&lt;&gt;</code>의 raw 꺾쇠괄호가 HTML 태그로 파싱되는 것이 문제입니다. 기존 <code>## 확인 필요 / 추정 / 버전 드리프트</code>와 <code>## 더 파볼 질문</code> 섹션을 요구 헤더로 재구조화(쟁점 소절 신설 포함)하고, 해당 다이어그램 라벨에서 꺾쇠괄호를 제거한 완성본을 출력합니다.</p>
+<h1 id="pjrt-런타임의-역할과-인터페이스-최종-정리">PJRT 런타임의 역할과 인터페이스 최종 정리</h1>
+<blockquote>기준 소스: OpenXLA <code>openxla/xla</code> 저장소, commit <code>82d89744a3b</code> (로컬 sparse checkout <code>repo/</code>).</blockquote>
+<blockquote>분석 대상: <code>xla/pjrt/pjrt_client.{h,cc}</code>, <code>pjrt_compiler.h</code>, <code>pjrt_executable.h</code>, <code>common_pjrt_client.{h,cc}</code>, <code>pjrt_device_description.h</code>, <code>xla/pjrt/c/pjrt_c_api.h</code>.</blockquote>
+<blockquote>아래 모든 <code>파일:라인</code>은 이 커밋 기준이며, 라인이 흔들릴 수 있는 곳은 클래스/함수명을 함께 적었다.</blockquote>
+<h2 id="3줄-요약">3줄 요약</h2>
+<ul><li><strong>컴파일러</strong>: StableHLO/MLIR 모듈 또는 <code>XlaComputation</code>을 받아 디바이스 코드와 실행 메타데이터(shape·layout·sharding·memory kind·alias)를 담은 <strong><code>PjRtExecutable</code>(아직 로드되지 않은 아티팩트)</strong> 까지만 만들어 런타임에 넘긴다 (<code>PjRtCompiler::Compile</code>, pjrt_compiler.h:447-460).</li><li><strong>런타임(PJRT)</strong>: 그 아티팩트를 디바이스에 <code>Load</code>하고, 디바이스/메모리 스페이스/버퍼 수명/H2D·D2H 전송/인자 검증/출력 할당/OOM 재시도/two-phase launch/비동기 이벤트를 오케스트레이션하여, 프레임워크에는 <strong><code>PjRtBuffer</code> 핸들과 <code>Future&lt;&gt;</code></strong> 를 돌려준다 (<code>PjRtClient</code> 계약 pjrt_client.h:546-1113, 공통 구현 <code>CommonPjRtClient</code>/<code>CommonPjRtLoadedExecutable</code> common_pjrt_client.h:62-755).</li><li><strong>드라이버/벤더 백엔드</strong>: 런타임이 정해준 크기의 raw 메모리 할당(<code>AllocateRawBuffer</code>), 호스트 데이터의 디바이스 레이아웃 기록(<code>LinearizeInto</code>), 실행 상태 재구성(<code>LoadRawExecutable</code>), 실제 커맨드 제출(<code>PjRtRawLoadedExecutable::Execute</code>)만 구현하며, <strong><code>PjRtRawBufferRef</code>와 <code>PjRtDeviceEventRef</code>라는 raw 타입으로만</strong> 런타임과 대화한다 (common_pjrt_client.h:141-172, 453-471, 684-687).</li></ul>
+<p>---</p>
+<h2 id="수집-범위">수집 범위</h2>
+<ul><li><strong>포함</strong>: 위 8개 파일의 실제 선언/구현을 근거로 한 (1) 컴파일러–런타임–드라이버 책임 경계, (2) 계층 간 데이터 타입, (3) 핵심 객체별 public API 카탈로그, (4) C API ABI 구조. 참고 문서 7건(PJRT Plugin Mechanism, ABI versioning ×2, optional/experimental features, AcquireExternalReference C API, dynamic shapes, Next Pluggable Device)은 배경과 버전 드리프트 확인에 사용.</li><li><strong>제외</strong>: 특정 벤더 구현(<code>pjrt_stream_executor_client</code>, CPU/GPU/TPU client)의 내부, StableHLO 자체, 분산 런타임(coordination service) 상세. sparse checkout에 없는 헤더(<code>raw_buffer.h</code>, <code>device_event.h</code>, <code>abstract_tracked_device_buffer.h</code>, <code>future.h</code> 등)의 내부 정의는 &quot;쟁점과 불확실성&quot;의 확인 필요 표로 분리.</li><li><strong>자료 유형</strong>: 소스 코드(진실의 원천), 설계 문서 텍스트(2022–2023년 작성, 드리프트 존재), 원본 요청문(<code>references/text/pasted-text.txt</code>).</li></ul>
+<h2 id="핵심-요약">핵심 요약</h2>
+<ol><li>PJRT는 2계층 구조다: <code>pjrt_client.h</code>는 <strong>순수 가상 계약</strong>(프레임워크가 보는 것), <code>common_pjrt_client.{h,cc}</code>는 raw buffer 기반 클라이언트들의 <strong>공통 파이프라인 구현</strong>이다 (common_pjrt_client.h:61-62 &quot;A common base class for Pjrt clients based on raw buffers&quot;).</li><li>컴파일 산출물 <code>PjRtExecutable</code>은 실행 기능이 없고 <strong>메타데이터 조회와 직렬화만</strong> 제공한다 (pjrt_executable.h:356-449). 실행 가능해지는 것은 <code>PjRtClient::Load</code>/<code>CompileAndLoad</code>가 만드는 <code>PjRtLoadedExecutable</code>부터다 (pjrt_client.h:677-732).</li><li>버퍼 생성(H2D)의 공통 파이프라인은 5단계다: <code>MakeDefaultShapeForMemorySpace</code>(shape·layout 정규화) → <code>GetOnDeviceBytesCount</code> → <code>AllocateRawBuffer</code> → <code>LinearizeInto</code>/<code>LinearizeHostBufferInto</code>(H2D 전송, definition event 반환) → <code>DefineBuffer</code>(핸들 조립) (<code>CommonPjRtClient::BufferFromHostLiteral</code>, common_pjrt_client.cc:277-304).</li><li>실행은 <strong>Prepare(실패 가능·재시도 가능)와 Launch(성공 보장)로 분리</strong>된다: &quot;Execute is split into Prepare and Launch. Prepare can fail and be retried, while Launch is guaranteed to succeed.&quot; (common_pjrt_client.h:658-659).</li><li>멀티 디바이스 Execute는 gang scheduling + two-phase launch로 동작한다: 모든 코어가 Prepare를 마칠 때까지 barrier로 기다렸다가, 하나라도 실패하면 전체를 포기하고, 전원 성공 시에만 Launch에 들어간다 (<code>CommonPjRtLoadedExecutable::Execute</code>, common_pjrt_client.cc:1969-2005).</li><li>런타임→프레임워크 출력과 런타임→드라이버 출력은 타입부터 다르다: 위로는 <code>std::vector&lt;std::vector&lt;std::unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;</code>와 <code>Future&lt;&gt;</code>, 아래로는 <code>absl::Span&lt;const PjRtRawBufferRef&gt;</code>(입력·출력 자리)와 <code>PjRtDeviceEventRefVector</code>(의존성)이다 (pjrt_client.h:1470-1473 vs common_pjrt_client.h:464-470).</li><li>출력 버퍼 메모리는 <strong>드라이버가 아니라 런타임이 Prepare 단계에서 미리 할당</strong>해 드라이버에 내려보낸다. 드라이버의 <code>Execute</code>는 결과를 쓸 자리(<code>results</code>)를 받는다 (<code>AllocateOutputBuffersWithInputReuse</code> common_pjrt_client.cc:981-1153, <code>ExecuteLaunch</code> cc:1704-1735).</li><li>OOM 처리도 런타임 책임이다: 출력 할당은 <code>retry_on_oom=false</code>로 즉시 실패시키고(cc:1071-1073), 상위 <code>ExecutePrepareWithOomRetries</code>가 <code>ShouldRetryOnOom</code> 정책에 따라 Prepare 전체를 재시도한다 (cc:1737-1762).</li><li>C API(<code>pjrt_c_api.h</code>)는 이 C++ 계약을 <strong>함수 포인터 테이블 하나(<code>PJRT_Api</code>, pjrt_c_api.h:3026-3218)와 불투명 구조체들</strong>로 감싼 ABI 경계이며, <code>struct_size</code> 필드와 MAJOR 0/MINOR 113 버전(106, 121행)으로 전방 호환을 관리한다.</li><li>이 커밋에는 <code>PjRtFuture&lt;&gt;</code>가 <strong>한 번도 등장하지 않는다</strong>. 비동기 반환 타입은 전부 <code>xla::Future&lt;&gt;</code>/<code>tsl::Future&lt;&gt;</code>다 — 기존 문서·블로그와 비교할 때 가장 큰 버전 드리프트.</li></ol>
+<h2 id="정보-지도">정보 지도</h2>
+<div class="mermaid">flowchart TB
+ subgraph FW[&quot;프레임워크 (JAX / TF / PyTorch-XLA)&quot;]
+ JAX[&quot;StableHLO / XlaComputation 생성&quot;]
+ end
+ subgraph IFACE[&quot;인터페이스 계층 (계약)&quot;]
+ PC[&quot;PjRtClient (pjrt_client.h)&quot;]
+ PLE[&quot;PjRtLoadedExecutable&quot;]
+ PB[&quot;PjRtBuffer&quot;]
+ PCOMP[&quot;PjRtCompiler (pjrt_compiler.h)&quot;]
+ PE[&quot;PjRtExecutable (pjrt_executable.h)&quot;]
+ end
+ subgraph COMMON[&quot;공통 구현 계층 (파이프라인)&quot;]
+ CPC[&quot;CommonPjRtClient&quot;]
+ CPLE[&quot;CommonPjRtLoadedExecutable&quot;]
+ CPB[&quot;CommonPjRtBufferImpl&quot;]
+ end
+ subgraph RAW[&quot;raw 경계 (벤더 구현 지점)&quot;]
+ ARB[&quot;AllocateRawBuffer / LinearizeInto&quot;]
+ LRE[&quot;LoadRawExecutable&quot;]
+ RLE[&quot;PjRtRawLoadedExecutable::Execute&quot;]
+ end
+ subgraph CAPI[&quot;ABI 경계&quot;]
+ API[&quot;PJRT_Api 함수 포인터 테이블 (pjrt_c_api.h)&quot;]
+ end
+ JAX --&gt; PC
+ PC --&gt;|구현| CPC
+ PLE --&gt;|구현| CPLE
+ PB --&gt;|구현| CPB
+ PCOMP --&gt;|산출| PE
+ PC --&gt;|Load| PLE
+ CPC --&gt; ARB
+ CPLE --&gt; LRE --&gt; RLE
+ API -.-&gt;|플러그인이 구현, 프레임워크가 호출| PC</div>
+<ul><li>관련 계층 파일 대응: 계약=<code>pjrt_client.h</code>/<code>pjrt_executable.h</code>/<code>pjrt_compiler.h</code>/<code>pjrt_device_description.h</code>, 공통 구현=<code>common_pjrt_client.{h,cc}</code>, ABI=<code>c/pjrt_c_api.h</code>.</li><li>참고 문서와의 관계: 플러그인 로딩(<code>dlopen</code> + <code>GetPjrtApi</code> 심볼)은 &quot;PJRT Plugin Mechanism&quot; 문서, <code>struct_size</code>/버전 정책은 &quot;Device PJRT API ABI versioning&quot; 문서가 배경이다.</li></ul>
+<p>---</p>
+<h2 id="part-1-컴파일러-런타임-드라이버의-역할-구분">Part 1 — 컴파일러 · 런타임 · 드라이버의 역할 구분</h2>
+<h3 id="1-1-계층별-책임-표">1.1 계층별 책임 표</h3>
+<div class="table-wrap"><table><thead><tr><th>계층</th><th>입력</th><th>하는 일</th><th>출력</th><th>대표 코드</th></tr></thead><tbody><tr><td><strong>컴파일러</strong></td><td><code>CompileOptions</code> + <code>XlaComputation</code> 또는 <code>MaybeOwningMlirModule</code> + <code>PjRtTopologyDescription</code>(+선택적 <code>PjRtClient*</code>)</td><td>HLO 최적화·코드 생성·layout/sharding/alias 결정. 디바이스 실물 없이(AoT) topology만으로도 가능</td><td><code>std::unique_ptr&lt;PjRtExecutable&gt;</code> — &quot;must be loaded by a compatible client before execution&quot;</td><td><code>PjRtCompiler::Compile</code> (pjrt_compiler.h:453-460), free function <code>PjRtCompile</code> (497-504), <code>PjRtClient::Compile</code> (pjrt_client.h:672-676, 684-688)</td></tr><tr><td><strong>런타임 (인터페이스)</strong></td><td>프레임워크의 호출: 프로그램, host 데이터 포인터/<code>LiteralSlice</code>, <code>PjRtBuffer*</code> 핸들, <code>ExecuteOptions</code></td><td>계약 정의: 디바이스/메모리 열거, 버퍼 생성·복사·해제, 실행, 비동기 future</td><td><code>PjRtLoadedExecutable</code>, <code>PjRtBuffer</code>, <code>Future&lt;&gt;</code></td><td><code>PjRtClient</code>/<code>PjRtBuffer</code>/<code>PjRtLoadedExecutable</code> 순수 가상 (pjrt_client.h:546-1667)</td></tr><tr><td><strong>런타임 (공통 구현)</strong></td><td>위 계약의 인자들</td><td>shape 정규화, 바이트 수 계산, 할당 순서 결정, donation/hold 관리, 인자·크기·메모리 스페이스 검증, 출력 buffer 사전 할당(+alias 재사용, arena), OOM 재시도, gang scheduling, two-phase launch, 이벤트 배선</td><td>위와 동일한 타입을 실제로 조립해 반환</td><td><code>CommonPjRtClient::BufferFromHostLiteral</code> (cc:277-304), <code>CommonPjRtLoadedExecutable::ExecutePrepare/ExecuteLaunch/Execute</code> (cc:1555-2051)</td></tr><tr><td><strong>드라이버 / 벤더 백엔드</strong></td><td><code>PjRtMemorySpace*</code> + 바이트 수, <code>LiteralSlice</code>+device <code>Shape</code>+<code>PjRtRawBufferRef</code>, <code>ExecuteOptions</code>+raw 입력/출력 버퍼+이벤트 의존성</td><td>실제 디바이스 메모리 할당, DMA/linearize 수행, 커맨드 버퍼 제출, 완료 이벤트 시그널</td><td><code>PjRtRawBufferRef</code>, <code>PjRtDeviceEventRef</code>, <code>RawExecuteResult{future, primary_execute_event, inline_status}</code></td><td><code>AllocateRawBuffer</code> (h:141-145), <code>LinearizeInto</code> (h:168-172), <code>LoadRawExecutable</code> (h:684-687), <code>PjRtRawLoadedExecutable::Execute</code> (h:464-470)</td></tr></tbody></table></div>
+<h3 id="1-2-데이터-흐름-sequencediagram-compile-execute-결과">1.2 데이터 흐름 sequenceDiagram (Compile → Execute → 결과)</h3>
+<div class="mermaid">sequenceDiagram
+ participant FW as 프레임워크
+ participant RT as 런타임 (PjRtClient / CommonPjRt*)
+ participant CP as 컴파일러 (PjRtCompiler)
+ participant DRV as 드라이버/백엔드 (raw boundary 구현)
+
+ FW-&gt;&gt;RT: CompileAndLoad(mlir::Module, CompileOptions)
+ RT-&gt;&gt;CP: Compile(options, module, topology, client)
+ CP--&gt;&gt;RT: unique_ptr(PjRtExecutable) — 코드 + shape/layout/alias 메타데이터
+ RT-&gt;&gt;RT: Load(executable) → DispatchInfo 추출 (parameter_device_shapes, output_device_shape, parameters_that_must_be_donated ...)
+ RT--&gt;&gt;FW: unique_ptr(PjRtLoadedExecutable)
+
+ FW-&gt;&gt;RT: Execute(argument_handles: PjRtBuffer*[][], ExecuteOptions)
+ Note over RT: ── Prepare (실패 가능, OOM 재시도) ──
+ RT-&gt;&gt;RT: PrepareArguments: 검증 + ScopedHold(kUsage/kDonation) + PjRtBuffer → PjRtRawBufferRef 추출
+ RT-&gt;&gt;DRV: AllocateRawBufferForExecute(memory_space, bytes, retry_on_oom=false)
+ DRV--&gt;&gt;RT: PjRtRawBufferRef (출력 자리)
+ RT-&gt;&gt;DRV: LoadRawExecutable(options, run_id, device, attempt)
+ DRV--&gt;&gt;RT: unique_ptr(PjRtRawLoadedExecutable) — 1회용 launch state
+ Note over RT: ── (멀티 디바이스면 전원 Prepare 완료 barrier) ──
+ Note over RT: ── Launch (성공 보장) ──
+ RT-&gt;&gt;DRV: PjRtRawLoadedExecutable::Execute(options, inputs/results: Span(PjRtRawBufferRef), extra_deps/control_deps: PjRtDeviceEventRefVector)
+ DRV--&gt;&gt;RT: RawExecuteResult{future, primary_execute_event, inline_status}
+ RT-&gt;&gt;RT: CreateOutputs: 출력 raw buffer + execute_event → PjRtBuffer 핸들 조립
+ RT--&gt;&gt;FW: PjRtBuffer 핸들의 2차원 vector + returned_futures(Future)</div>
+<h3 id="1-3-벤더가-구현해야-하는-raw-boundary">1.3 벤더가 구현해야 하는 raw boundary</h3>
+<p><code>CommonPjRtClient</code>에서 하드웨어 동작이 필요한 가상 함수(기본 구현이 <code>Unimplemented</code>이거나 순수 가상):</p>
+<div class="table-wrap"><table><thead><tr><th>함수</th><th>역할</th><th>근거</th></tr></thead><tbody><tr><td><code>AllocateRawBuffer(memory_space, bytes, retry_on_oom, allocate_after)</code></td><td>디바이스 메모리 할당 → <code>PjRtRawBufferRef</code></td><td>common_pjrt_client.h:141-145</td></tr><tr><td><code>AllocateRawBufferForExecute(...)</code></td><td>실행 출력용 할당 특화(기본은 위로 위임)</td><td>h:151-156</td></tr><tr><td><code>ImportForeignMemory(device_ptr, on_delete, bytes, memory_space, is_mutable)</code></td><td>외부 소유 디바이스 메모리를 raw buffer로 import (zero-copy/dlpack)</td><td>h:159-164</td></tr><tr><td><code>LinearizeInto(literal, device_shape, semantics, raw_buffer)</code></td><td>Literal을 디바이스 레이아웃으로 기록(H2D), 완료 <code>PjRtDeviceEventRef</code> 반환</td><td>h:168-172</td></tr><tr><td><code>LinearizeHostBufferInto(data, type, dims, byte_strides, ...)</code></td><td>strided host 배열 버전의 H2D</td><td>h:316-323</td></tr><tr><td><code>CreateLinkedEventPromise</code> / <code>CreateDeviceEvent</code></td><td>디바이스 이벤트 promise/ref 생성</td><td>h:195-201, 238-241</td></tr><tr><td><code>GetOnDeviceBytesCount(kind_id, shape)</code> / <code>GetMemorySpaceKindForShape</code></td><td>shape→바이트/메모리 종류 계산</td><td>h:122-136</td></tr><tr><td><code>CreateRawBufferChannel</code>, <code>CrossHostReceiveBuffersInto</code>, <code>CrossHostTransferBuffers</code>, <code>ScheduleRemoteSend</code></td><td>alias 채널·cross-host DMA</td><td>h:287-292, 345-351, 377-382, cc:773-784</td></tr><tr><td><code>GetDeviceAddressAlignment()</code> (protected)</td><td>arena 슬라이싱용 정렬</td><td>h:435-438</td></tr><tr><td><code>CommonPjRtLoadedExecutable::LoadRawExecutable(...)</code> <strong>(순수 가상)</strong></td><td>실행마다 launch state 재구성</td><td>h:684-687</td></tr><tr><td><code>CommonPjRtLoadedExecutable::input_output_alias_config()</code> <strong>(순수 가상)</strong></td><td>컴파일러가 정한 alias 정보 노출</td><td>h:693-694</td></tr><tr><td><code>PjRtRawLoadedExecutable::Execute(...) &amp;&amp;</code> <strong>(순수 가상, rvalue 한정)</strong></td><td>실제 디바이스 커맨드 제출</td><td>h:464-470</td></tr></tbody></table></div>
+<p>인터페이스 계층(<code>PjRtDevice</code>)에도 하드웨어 위임 지점이 있다: <code>TransferToInfeed</code>/<code>TransferFromOutfeed</code>(pjrt_client.h:248-251), <code>CreateAsyncTrackingEvent</code>(244-245), <code>memory_spaces()</code>/<code>default_memory_space()</code>(262-265).</p>
+<blockquote><strong>이 파트에서 발표할 핵심 한 문장</strong>: 컴파일러는 &quot;로드되기 전의 코드 아티팩트(<code>PjRtExecutable</code>)&quot;까지만 책임지고, 런타임은 그것을 메모리·검증·스케줄링·이벤트로 감싸며, 하드웨어를 실제로 만지는 일은 <code>AllocateRawBuffer</code> · <code>LinearizeInto</code> · <code>LoadRawExecutable</code> · <code>PjRtRawLoadedExecutable::Execute</code> 네 개의 raw 경계에서 전부 벤더에게 넘어간다.</blockquote>
+<p>---</p>
+<h2 id="part-2-계층-간-인터페이스의-데이터-타입-형식-분석">Part 2 — 계층 간 인터페이스의 데이터 타입·형식 분석</h2>
+<h3 id="2-1-입력-타입-표-프레임워크-런타임">2.1 입력 타입 표 (프레임워크 → 런타임)</h3>
+<div class="table-wrap"><table><thead><tr><th>경로</th><th>실제 시그니처 (요약)</th><th>비고</th></tr></thead><tbody><tr><td>컴파일</td><td><code>Compile(const XlaComputation&amp;, CompileOptions)</code> → <code>StatusOr&lt;unique_ptr&lt;PjRtExecutable&gt;&gt;</code> / <code>Compile(MaybeOwningMlirModule, CompileOptions)</code> (pjrt_client.h:672-688)</td><td><code>CompileAndLoad</code> 동일 인자, 반환만 <code>PjRtLoadedExecutable</code> (677-681, 689-693)</td></tr><tr><td>컴파일 옵션</td><td><code>struct CompileOptions{ optional&lt;vector&lt;Shape&gt;&gt; argument_layouts; bool parameter_is_tupled_arguments; ExecutableBuildOptions executable_build_options; bool compile_portable_executable; env_option_overrides; optional&lt;GpuTargetConfig&gt;; ... }</code> (pjrt_executable.h:86-152)</td><td><code>ToProto()/FromProto()</code> 지원 → C API에서는 serialized <code>CompileOptionsProto</code>로 넘어감</td></tr><tr><td>AoT 컴파일</td><td><code>PjRtCompile(CompileOptions, const XlaComputation&amp;, const PjRtTopologyDescription&amp;, PjRtClient* = nullptr)</code> (pjrt_compiler.h:497-504)</td><td>client가 nullptr여도 됨 = 디바이스 없는 크로스 컴파일</td></tr><tr><td>H2D (버퍼 생성)</td><td><code>BufferFromHostBuffer(const void* data, PrimitiveType type, Span&lt;int64_t const&gt; dims, optional&lt;Span&lt;int64_t const&gt;&gt; byte_strides, HostBufferSemantics, AnyInvocable&lt;void()&amp;&amp;&gt; on_done_with_host_buffer, PjRtMemorySpace*, const Layout* device_layout)</code> (pjrt_client.h:980-990)</td><td><code>HostBufferSemantics</code> 4단계: <code>kImmutableOnlyDuringCall</code>/<code>kImmutableUntilTransferCompletes</code>/<code>kImmutableZeroCopy</code>/<code>kMutableZeroCopy</code> (933-969)</td></tr><tr><td>H2D (Literal)</td><td><code>BufferFromHostLiteral(const LiteralSlice&amp;, PjRtMemorySpace*, const Layout*)</code> (pjrt_client.h:1007-1014)</td><td></td></tr><tr><td>실행</td><td><code>Execute(absl::Span&lt;const std::vector&lt;PjRtBuffer*&gt;&gt; argument_handles, const ExecuteOptions&amp;, std::optional&lt;std::vector&lt;Future&lt;&gt;&gt;&gt;&amp; returned_futures)</code> (pjrt_client.h:1470-1473)</td><td><code>argument_handles</code>는 <code>[num_devices, num_args]</code>; 단일 디바이스는 <code>ExecuteSharded</code>/<code>ExecutePortable</code> (1492-1528)</td></tr><tr><td>실행 옵션</td><td><code>struct ExecuteOptions{ int32_t launch_id; const ExecuteContext*; bool strict_shape_checking; send/recv/hlo_output callbacks; ExecutionMode; flat_hash_set&lt;int&gt; non_donatable_input_indices; int64_t execution_stream_id; string call_location; int64_t seed; bool use_output_arena; ... }</code> (pjrt_executable.h:242-354)</td><td>역시 <code>ToProto()/FromProto()</code> 지원</td></tr></tbody></table></div>
+<h3 id="2-2-출력-타입-표-위로-주는-것-과-아래로-내리는-것-의-분리">2.2 출력 타입 표 — &quot;위로 주는 것&quot;과 &quot;아래로 내리는 것&quot;의 분리</h3>
+<p><strong>(A) 런타임 → 프레임워크 (핸들 + future 세계)</strong></p>
+<div class="table-wrap"><table><thead><tr><th>함수</th><th>반환 타입</th><th>근거</th></tr></thead><tbody><tr><td><code>Compile</code></td><td><code>absl::StatusOr&lt;std::unique_ptr&lt;PjRtExecutable&gt;&gt;</code></td><td>pjrt_client.h:672</td></tr><tr><td><code>CompileAndLoad</code> / <code>Load</code></td><td><code>absl::StatusOr&lt;std::unique_ptr&lt;PjRtLoadedExecutable&gt;&gt;</code></td><td>pjrt_client.h:677, 728</td></tr><tr><td><code>BufferFromHost*</code> / <code>CreateUninitializedBuffer</code> 등</td><td><code>absl::StatusOr&lt;std::unique_ptr&lt;PjRtBuffer&gt;&gt;</code></td><td>pjrt_client.h:980, 736</td></tr><tr><td><code>PjRtLoadedExecutable::Execute</code></td><td><code>absl::StatusOr&lt;std::vector&lt;std::vector&lt;std::unique_ptr&lt;PjRtBuffer&gt;&gt;&gt;&gt;</code> + out-param <code>std::optional&lt;std::vector&lt;Future&lt;&gt;&gt;&gt;&amp;</code></td><td>pjrt_client.h:1470-1473</td></tr><tr><td><code>PjRtBuffer::GetReadyFuture</code> / <code>ToLiteral</code> / <code>CopyRawToHost</code></td><td><code>Future&lt;&gt;</code> (<code>xla::Future</code>, <code>xla/future.h</code>)</td><td>pjrt_client.h:1394, 1224, 1261</td></tr><tr><td><code>PjRtBuffer::ToLiteral()</code> (편의 오버로드)</td><td><code>xla::Future&lt;std::shared_ptr&lt;Literal&gt;&gt;</code></td><td>pjrt_client.h:1248, pjrt_client.cc:224-251</td></tr></tbody></table></div>
+<p><strong>(B) 런타임 → 드라이버 (raw 세계)</strong></p>
+<div class="table-wrap"><table><thead><tr><th>지점</th><th>내려가는 것 / 돌려받는 것</th><th>근거</th></tr></thead><tbody><tr><td>메모리 할당</td><td>↓ <code>PjRtMemorySpace*</code> + <code>size_t on_device_bytes_count</code> + <code>bool retry_on_oom</code> / ↑ <code>PjRtRawBufferRef</code> (shape를 모르는 순수 바이트 버퍼 참조)</td><td>common_pjrt_client.h:141-145</td></tr><tr><td>H2D 기록</td><td>↓ <code>LiteralSlice</code> + device <code>xla::Shape</code> + <code>HostBufferSemantics</code> + <code>PjRtRawBufferRef</code> / ↑ <code>PjRtDeviceEventRef</code> (definition event)</td><td>h:168-172</td></tr><tr><td>실행 준비</td><td>↓ <code>ExecuteOptions</code>, <code>RunId</code>, <code>DeviceAndAssignment</code>, <code>attempt</code> / ↑ <code>unique_ptr&lt;PjRtRawLoadedExecutable&gt;</code> — &quot;launch state ... must be reconstructed each time we want to launch&quot;</td><td>h:684-687, 451-453</td></tr><tr><td>커맨드 제출</td><td>↓ <code>Execute(const ExecuteOptions&amp;, Span&lt;const PjRtRawBufferRef&gt; inputs, Span&lt;const PjRtRawBufferRef&gt; results, PjRtDeviceEventRefVector extra_deps, PjRtDeviceEventRefVector control_deps, bool is_predetermined_error, bool fill_future) &amp;&amp;</code> / ↑ <code>RawExecuteResult{ std::optional&lt;tsl::Future&lt;&gt;&gt; future; PjRtDeviceEventRef primary_execute_event; absl::Status inline_status; }</code></td><td>h:459-470</td></tr><tr><td>D2H</td><td>↓ <code>CopyRawDeviceToHostAndReturnEvent(dst, offset, size)</code> (raw buffer 메서드) / ↑ device event</td><td>cc:649-659, 2726-2732</td></tr></tbody></table></div>
+<p>핵심 대비: 위로는 <strong>shape을 아는 <code>PjRtBuffer</code><strong>, 아래로는 </strong>shape을 모르는 <code>PjRtRawBufferRef</code></strong>. shape·layout·바이트 수 계산은 전부 런타임이 소화하고, 드라이버는 바이트와 이벤트만 다룬다.</p>
+<h3 id="2-3-execute-한-번의-타입-변환-전달-다이어그램">2.3 Execute 한 번의 타입 변환·전달 다이어그램</h3>
+<div class="mermaid">flowchart LR
+ subgraph FWs[&quot;프레임워크 타입&quot;]
+ A[&quot;PjRtBuffer* (인자 핸들)&quot;]
+ Z1[&quot;unique_ptr&amp;lt;PjRtBuffer&amp;gt; (결과)&quot;]
+ Z2[&quot;Future&amp;lt;&amp;gt; (완료 통지)&quot;]
+ end
+ subgraph RTs[&quot;런타임 내부 상태 (ExecuteLaunchArgs, h:660-670)&quot;]
+ B[&quot;CommonPjRtBuffer::ScopedHold / (kUsage / kDonation)&quot;]
+ C[&quot;input_buffers: / InlinedVector&amp;lt;PjRtRawBufferRef,4&amp;gt;&quot;]
+ D[&quot;extra_deps / control_deps: / PjRtDeviceEventRefVector&quot;]
+ E[&quot;output_leaf_buffers: / InlinedVector&amp;lt;PjRtRawBufferRef,4&amp;gt;&quot;]
+ F[&quot;unique_ptr&amp;lt;PjRtRawLoadedExecutable&amp;gt;&quot;]
+ end
+ subgraph DRVs[&quot;드라이버 반환&quot;]
+ G[&quot;RawExecuteResult{future, / primary_execute_event, inline_status}&quot;]
+ end
+ A --&gt;|&quot;PrepareArguments (cc:786-979)&quot;| B
+ B --&gt;|&quot;hold.buffer()-&gt;raw_buffer()&quot;| C
+ B --&gt;|&quot;definition_events → extra_deps / donation usage_events → control_deps (cc:917-953)&quot;| D
+ B --&gt;|&quot;alias면 입력 재사용, 아니면 AllocateRawBufferForExecute (cc:981-1153)&quot;| E
+ C &amp; D &amp; E &amp; F --&gt;|&quot;ExecuteLaunch: move(executable).Execute(...) (cc:1707-1712)&quot;| G
+ G --&gt;|&quot;CreateOutputs: execute_event가 출력의 definition event (cc:1728-1734, 1482-1521)&quot;| Z1
+ G --&gt;|&quot;results.future&quot;| Z2
+ B --&gt;|&quot;ConvertUsageHold(execute_event) / ConfirmDonation (cc:1716-1723)&quot;| Z1</div>
+<h3 id="2-4-future-와-ready-event-prepare-launch-분리">2.4 <code>Future&lt;&gt;</code>와 ready event, Prepare/Launch 분리</h3>
+<ul><li><strong>두 개의 비동기 어휘</strong>가 공존한다. 프레임워크 경계는 <code>xla::Future&lt;&gt;</code>(값/에러가 한 번 fulfil되는 future), 디바이스 경계는 <code>PjRtDeviceEventRef</code>/<code>PjRtDeviceEventPromiseRef</code>(디바이스 이벤트 참조; 상태는 C API enum <code>PJRT_DeviceEvent_State_{Error,Unavailable,Ready}</code>로 판별 — common_pjrt_client.cc:919-928). 이 둘을 잇는 어댑터가 <code>CommonPjRtClient::MakeTrackedReadyFuture(device_event, ...) → tsl::Future&lt;&gt;</code> (cc:615-628)와 <code>CreateLinkedEventPromise</code>(h:195-201)다.</li><li><strong>버퍼의 ready</strong>: <code>PjRtBuffer</code>는 생성 즉시 반환되고(값은 아직 없음), definition event들이 완료되면 <code>GetReadyFuture()</code>가 fulfil된다. 구현은 tracked buffer의 이벤트에서 future를 파생한다 (<code>CommonPjRtBufferImpl::GetReadyFuture</code>, cc:3075-3087).</li><li><strong>Prepare vs Launch (타입 관점)</strong>: <code>ExecutePrepare(...) -&gt; absl::Status</code> — 검증·할당·<code>LoadRawExecutable</code>까지 전부 실패 가능 경로이고 상태만 반환한다 (cc:1555-1610). 반면 <code>ExecuteLaunch(...) -&gt; absl::StatusOr&lt;Result&gt;</code>는 이미 채워진 <code>ExecuteLaunchArgs</code>를 소비할 뿐이라 설계상 실패하지 않는 단계로 취급되며(&quot;Phase 2: Launch. It cannot fail.&quot; cc:1999), 드라이버 쪽 실패는 status가 아니라 <strong>error 상태의 event/버퍼로 전파</strong>된다(<code>RawExecuteResult.inline_status</code>와 <code>is_predetermined_error</code>, error buffer 경로 h:92-93).</li><li><strong>OOM 재시도</strong>: Prepare가 <code>ResourceExhausted</code>로 실패하면 <code>ShouldRetryOnOom(attempts, device, executable, status)</code>가 허락하는 동안 <code>ExecuteLaunchArgs</code>를 새로 만들어 재시도한다 (cc:1737-1762). 출력 할당이 <code>retry_on_oom=false</code>인 이유가 이것이다 — 낱개 할당에서 기다리지 않고 Prepare 전체 단위로 재시도한다 (cc:1071-1073).</li><li><strong>two-phase가 주는 보장</strong>: 멀티 디바이스에서 한 코어라도 Prepare에 실패하면 아무 코어도 Launch하지 않으므로, &quot;일부 디바이스만 실행된&quot; 상태가 생기지 않는다 (cc:1969-1996; <code>supports_two_phase_launch()</code> h:75).</li></ul>
+<h3 id="2-5-pjrt-c-api-pjrt_api-와-opaque-struct">2.5 PJRT C API — <code>PJRT_Api</code>와 opaque struct</h3>
+<ul><li><strong>엔트리포인트</strong>: 플러그인 <code>.so</code>는 <code>GetPjrtApi()</code> 심볼 하나로 <code>PJRT_Api*</code>를 노출한다 (참고 문서 &quot;PJRT Plugin Mechanism&quot;: <code>dlsym(library_handle, &quot;GetPjrtApi&quot;)</code>).</li><li><strong><code>PJRT_Api</code></strong> (pjrt_c_api.h:3026-3218): <code>struct_size</code> + <code>extension_start</code> + <code>PJRT_Api_Version</code> 뒤에, <code>PJRT_Error_Destroy</code>부터 <code>PJRT_TopologyDescription_GetMemorySpaceKindIds</code>까지 전 메서드가 <strong>함수 포인터 필드</strong>로 나열된 단일 vtable이다. 새 필드는 끝에만 추가한다 (&quot;Always add new fields to the end of the struct&quot;, 3142-3143).</li><li><strong>불투명 구조체</strong>: <code>PJRT_Client</code>, <code>PJRT_Device</code>, <code>PJRT_Memory</code>, <code>PJRT_Executable</code>, <code>PJRT_LoadedExecutable</code>, <code>PJRT_Buffer</code>, <code>PJRT_Event</code>, <code>PJRT_Error</code>, <code>PJRT_TopologyDescription</code> 등은 forward 선언만 있다 (141, 308, 408-435행). C++ 객체의 소유는 플러그인 내부에 있고, 프레임워크는 포인터만 쥔다. C++ 클래스와 1:1 대응: <code>PjRtClient↔PJRT_Client</code>, <code>PjRtBuffer↔PJRT_Buffer</code>, <code>PjRtLoadedExecutable↔PJRT_LoadedExecutable</code>, <code>Future/DeviceEvent↔PJRT_Event</code>.</li><li><strong>호출 규약</strong>: 모든 메서드는 <code>PJRT_Error* PJRT_Foo(PJRT_Foo_Args*)</code> 형태. Args 구조체마다 <code>struct_size</code>가 있어 호출자와 구현체가 서로 아는 필드 범위를 협상한다(<code>PJRT_DEFINE_STRUCT_TRAITS</code>, 27-47행). 버전은 <code>PJRT_API_MAJOR 0</code> / <code>PJRT_API_MINOR 113</code> (106, 121행)이고, 참고 문서 기준 minor 추가에 6→12주 전방 호환 윈도우를 둔다.</li><li><strong>컴파일·실행의 C 형식</strong>: 프로그램은 <code>PJRT_Program{ char* code; const char* format; }</code>로, format은 <code>&quot;hlo&quot;</code>/<code>&quot;hlo_with_config&quot;</code>/<code>&quot;mlir&quot;</code> (739-754). 옵션은 serialized <code>CompileOptionsProto</code> 바이트 (765-766). <code>PJRT_Client_Compile</code>은 곧바로 <code>PJRT_LoadedExecutable*</code>을 내고(767), 토폴로지 기반 <code>PJRT_Compile</code>은 unloaded <code>PJRT_Executable*</code>을 내며(3012), <code>PJRT_Client_Load</code>가 둘을 잇는다(775-788). 실행은 <code>PJRT_LoadedExecutable_Execute_Args{ argument_lists[num_devices][num_args]; output_lists(호출자 할당); device_complete_events; execute_device; }</code> (2047-2080) — C++의 <code>returned_futures</code>가 <code>PJRT_Event**</code>로 바뀐 모습이다.</li><li><strong>확장</strong>: 코어 테이블에 없는 기능(RawBuffer, PhaseCompile, FFI 등)은 <code>PJRT_Extension_Base</code> 연결 리스트로 붙는다 (61-97행). 이는 참고 문서 &quot;optional and experimental features&quot;의 Proposal A가 채택된 형태다.</li><li><strong>역방향 연동(신규)</strong>: 이 커밋에서는 C++ 쪽 <code>PjRtMemorySpace</code>가 <code>ToCApiPtr()</code>/<code>FromC()</code>를 갖고 <code>PJRT_Memory_FunctionTable</code> vtable(<code>get_user_data</code>/<code>set_user_data</code>)로 C 객체를 직접 들고 다닌다 (pjrt_client.h:93-95, 124-146; pjrt_client.cc:50-118; pjrt_c_api.h:413-427). C++ 인터페이스와 C API가 단방향 래핑이 아니라 상호 참조로 얽히기 시작한 신호다.</li></ul>
+<blockquote><strong>이 파트에서 발표할 핵심 한 문장</strong>: 런타임은 위(프레임워크)로는 <code>PjRtBuffer</code>와 <code>Future&lt;&gt;</code>라는 &quot;핸들 언어&quot;로, 아래(드라이버)로는 <code>PjRtRawBufferRef</code>와 <code>PjRtDeviceEventRef</code>라는 &quot;바이트·이벤트 언어&quot;로 말하며, PJRT C API는 그 핸들 언어를 함수 포인터 테이블 하나(<code>PJRT_Api</code>)와 불투명 포인터들로 직렬화한 ABI다.</blockquote>
+<p>---</p>
+<h2 id="part-3-pjrt-객체별-api-정의">Part 3 — PJRT 객체별 API 정의</h2>
+<h3 id="3-1-객체-관계도">3.1 객체 관계도</h3>
+<div class="mermaid">flowchart TB
+ Client[&quot;PjRtClient / (중앙 관리자, 모든 객체의 수명 책임)&quot;]
+ Device[&quot;PjRtDevice&quot;]
+ Mem[&quot;PjRtMemorySpace&quot;]
+ Buf[&quot;PjRtBuffer&quot;]
+ LE[&quot;PjRtLoadedExecutable&quot;]
+ Exe[&quot;PjRtExecutable (unloaded)&quot;]
+ Comp[&quot;PjRtCompiler&quot;]
+ Topo[&quot;PjRtTopologyDescription&quot;]
+ DD[&quot;PjRtDeviceDescription&quot;]
+ MSD[&quot;PjRtMemorySpaceDescription&quot;]
+
+ Client -- &quot;owns: devices() / memory_spaces()&quot; --&gt; Device
+ Client -- owns --&gt; Mem
+ Device -- &quot;client() ↩ raw backpointer&quot; --&gt; Client
+ Mem -- &quot;client() ↩&quot; --&gt; Client
+ Device -- &quot;memory_spaces() / default_memory_space()&quot; --&gt; Mem
+ Mem -- &quot;devices() (다대다)&quot; --&gt; Device
+ Buf -- &quot;memory_space() (1차 소속)&quot; --&gt; Mem
+ Buf -. &quot;device() = memory_space()-&gt;devices()[0] (deprecated 경유)&quot; .-&gt; Device
+ Buf -- &quot;client() ↩&quot; --&gt; Client
+ Client -- &quot;BufferFromHost* 가 생성 (unique_ptr로 호출자 소유)&quot; --&gt; Buf
+ Client -- &quot;Compile → &quot; --&gt; Exe
+ Client -- &quot;Load / CompileAndLoad →&quot; --&gt; LE
+ LE -- &quot;GetExecutable() (forwarder)&quot; --&gt; Exe
+ LE -- &quot;client() ↩&quot; --&gt; Client
+ LE -- &quot;addressable_devices()&quot; --&gt; Device
+ Comp -- &quot;Compile(topology) →&quot; --&gt; Exe
+ Topo -- &quot;DeviceDescriptions()&quot; --&gt; DD
+ Device -- &quot;description()&quot; --&gt; DD
+ DD -- &quot;memory_spaces()&quot; --&gt; MSD</div>
+<p>소유·수명 근거:</p>
+<ul><li>&quot;It is the responsibility of the client of this API to keep the PjRtClient alive as long as any of the other runtime objects are alive.&quot; (pjrt_client.h:494-495) — client가 최상위.</li><li>버퍼가 디바이스가 아니라 <strong>메모리 스페이스에 소속</strong>됨: <code>CommonPjRtBufferImpl::device()</code>는 <code>ABSL_DEPRECATED(&quot;Buffers are associated with memories. Use memory_space() instead...&quot;)</code>이고 구현이 <code>memory_space_-&gt;devices()[0]</code>이다 (common_pjrt_client.h:789-792, cc:3003-3006). <code>PjRtDevice</code>에는 버퍼를 열거하는 API 자체가 없다.</li><li><code>PjRtBuffer</code>/<code>PjRtLoadedExecutable</code>은 <code>unique_ptr</code>로 호출자(프레임워크)가 소유하되, 내부 디바이스 메모리 수명은 이벤트가 관리한다 (pjrt_client.h:1115-1121, 1278-1287).</li></ul>
+<h3 id="3-2-객체별-api-표">3.2 객체별 API 표</h3>
+<p>아래 표는 실제 헤더에서 확인된 메서드만 담았다(요청문 예시 중 헤더에 없는 것은 제외, 있는 것은 보완).</p>
+<p><strong><code>PjRtClient</code></strong> — 플랫폼 세션의 중앙 관리자 (pjrt_client.h:546-1113)</p>
+<div class="table-wrap"><table><thead><tr><th>분류</th><th>메서드 (시그니처 요약)</th><th>설명</th></tr></thead><tbody><tr><td>토폴로지</td><td><code>process_index()</code>, <code>device_count()</code>, <code>addressable_device_count()</code>, <code>devices()</code>, <code>addressable_devices()</code>, <code>LookupDevice(GlobalDeviceId)</code>, <code>LookupAddressableDevice(LocalDeviceId)</code>, <code>memory_spaces()</code></td><td>디바이스/메모리 열거·조회 (561-603)</td></tr><tr><td>신원</td><td><code>platform_id()</code>, <code>platform_name()</code>, <code>platform_version()</code>, <code>plugin_attributes()</code>, <code>RuntimeAbiVersion()</code>, <code>key_value_store()</code></td><td>플랫폼 식별 (605-631)</td></tr><tr><td>컴파일</td><td>`Compile(XlaComputation\</td><td>MaybeOwningMlirModule, CompileOptions) → PjRtExecutable<code>, </code>CompileAndLoad(...) → PjRtLoadedExecutable<code>, </code>DeserializeExecutable<code>, </code>LoadSerializedExecutable<code>, </code>Load(shared_ptr&lt;PjRtExecutable&gt;, LoadOptions)`</td><td>컴파일·로드 (671-732)</td></tr><tr><td>버퍼 생성</td><td><code>CreateUninitializedBuffer(Shape, PjRtMemorySpace*)</code>, <code>CreateAliasBuffer</code>, <code>CreateErrorBuffer</code>, <code>BufferFromHostBuffer(...)</code>, <code>BufferFromHostLiteral(...)</code>, <code>CreateViewOfDeviceBuffer(...)</code>, <code>CreateBuffersForAsyncHostToDevice(...)</code> (<code>AsyncHostToDeviceTransferManager</code> 반환)</td><td>H2D 진입점 (734-1034)</td></tr><tr><td>배치/레이아웃</td><td><code>GetDefaultDeviceAssignment(num_replicas, num_partitions)</code>, <code>GetDefaultLayout(type, dims)</code>, <code>GetTopologyDescription()</code>, <code>GetHloCostAnalysis()</code></td><td>컴파일 준비 정보 (633-669, 757-763)</td></tr><tr><td>전송·기타</td><td><code>UnsafeBufferPointer(PjRtBuffer*)</code>, <code>MakeCrossHostReceiveBuffers</code>, <code>CrossHostSendBuffers</code>, <code>CrossHostReceiveBuffers</code>, <code>DmaMap</code>/<code>DmaUnmap</code>, <code>GetHostMemoryAllocator()</code>, <code>GetPjRtHostMemoryForDeviceManager()</code></td><td>(1036-1108)</td></tr></tbody></table></div>
+<p><strong><code>PjRtDevice</code></strong> — 개별 디바이스, 명령 발행 가능 여부와 메모리 접근 (pjrt_client.h:148-303)</p>
+<div class="table-wrap"><table><thead><tr><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td><code>client()</code></td><td>소유 client backpointer (153)</td></tr><tr><td><code>IsAddressable()</code></td><td>이 client가 명령을 낼 수 있는가 (156)</td></tr><tr><td><code>description()</code></td><td><code>PjRtDeviceDescription&amp;</code> (158-161)</td></tr><tr><td><code>id()</code> <em>(deprecated)</em>, <code>global_device_id()</code>, <code>local_device_id()</code>, <code>local_hardware_id()</code></td><td>3종 ID 체계; <code>id()</code>는 <code>ABSL_DEPRECATED(&quot;Use global_device_id() instead&quot;)</code> (166-199)</td></tr><tr><td><code>process_index()</code>, <code>device_kind()</code>, <code>DebugString()</code>, <code>ToString()</code>, <code>Attributes()</code></td><td>description 위임 (206-236)</td></tr><tr><td><code>CreateAsyncTrackingEvent(desc)</code></td><td>비동기 작업 추적 이벤트 (244-245)</td></tr><tr><td><code>TransferToInfeed(LiteralSlice)</code>, <code>TransferFromOutfeed(MutableBorrowingLiteral)</code></td><td>infeed/outfeed (248-251)</td></tr><tr><td><code>memory_spaces()</code>, <code>default_memory_space()</code>, <code>memory_space_by_kind(kind)</code></td><td>메모리 스페이스 접근 (262-270)</td></tr><tr><td><code>GetAllocatorStats()</code>, <code>ClearMemoryStats()</code>, <code>GetStreamForExternalReadyEvents()</code>, <code>PoisonExecution(launch_id, error)</code></td><td>통계·dlpack·실행 포이즌 (256-302)</td></tr></tbody></table></div>
+<p><strong><code>PjRtMemorySpace</code></strong> — 메모리 종류(HBM, host pinned 등) 단위의 소속처 (pjrt_client.h:89-121)</p>
+<div class="table-wrap"><table><thead><tr><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td><code>client()</code> / <code>devices()</code></td><td>소유 client, 이 메모리가 붙은 디바이스들 (98-101)</td></tr><tr><td><code>id()</code>, <code>kind()</code>, <code>kind_id()</code></td><td>전역 유일 id, 종류 문자열, client 내 종류 id (103-113)</td></tr><tr><td><code>DebugString()</code>, <code>ToString()</code></td><td>(115-120)</td></tr><tr><td><code>FromC(PJRT_Memory*)</code> <em>(static)</em> / <code>ToCApiPtr()</code></td><td>C API 객체와 상호 변환 (93-95)</td></tr></tbody></table></div>
+<p><strong><code>PjRtBuffer</code></strong> — 디바이스 메모리 블록의 핸들(값은 비동기 준비) (pjrt_client.h:1122-1398)</p>
+<div class="table-wrap"><table><thead><tr><th>분류</th><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td>메타</td><td><code>element_type()</code>, <code>dimensions()</code>, <code>layout()</code>, <code>IsTuple()</code>, <code>on_device_shape()</code>(순수 가상), <code>has_dynamic_dimensions()</code>, <code>is_dynamic_dimension()</code>, <code>logical_dimensions()</code>, <code>logical_on_device_shape()</code>, <code>GetOnDeviceSizeInBytes()</code></td><td>정적 shape vs 런타임 논리 shape 구분 (1126-1186, 1251)</td></tr><tr><td>소속</td><td><code>memory_space()</code>, <code>device()</code>(마이그레이션 후 제거 예정, TODO b/277820585), <code>client()</code></td><td>(1188-1191)</td></tr><tr><td>D2H</td><td><code>ToLiteral(MutableLiteralBase*) → Future&lt;&gt;</code>, <code>LazyToLiteral(generator)</code>, <code>ToLiteralSync</code>, <code>ToLiteral() → Future&lt;shared_ptr&lt;Literal&gt;&gt;</code>, <code>HostShape()</code>, <code>CopyRawToHost(dst, offset, size) → Future&lt;&gt;</code>, <code>CopyRawToHostFuture(Future&lt;void*&gt;, ...)</code></td><td>(1219-1276)</td></tr><tr><td>수명</td><td><code>Delete()</code>, <code>IsDeleted()</code>, <code>ReleaseDeviceMemoryOwnership(bool)</code>, <code>AcquireExternalReference() → ExternalReference{OpaqueDeviceMemoryDataPointer()}</code></td><td>삭제는 lazy free (1200-1309)</td></tr><tr><td>복사·변형</td><td><code>CopyToMemorySpace(PjRtMemorySpace*)</code>, <code>CopyToMemorySpace(PjRtBuffer* donated_dst)</code>, <code>CopyToRemoteDevice(Future&lt;string&gt;, RemoteSendCallback)</code>, <code>Bitcast(type, dims, layout)</code>, <code>DonateWithControlDependency(Future&lt;&gt;)</code></td><td>(1311-1383)</td></tr><tr><td>동기화</td><td><code>GetReadyFuture() → Future&lt;&gt;</code>, <code>IsOnCpu()</code></td><td>(1385-1397)</td></tr></tbody></table></div>
+<p><strong><code>PjRtLoadedExecutable</code></strong> — 디바이스에 로드된 실행 객체 (pjrt_client.h:1404-1667)</p>
+<div class="table-wrap"><table><thead><tr><th>분류</th><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td>소속</td><td><code>client()</code>, <code>device_assignment()</code>, <code>addressable_device_logical_ids()</code>, <code>addressable_devices()</code></td><td>(1412-1440)</td></tr><tr><td>실행</td><td><code>Execute(Span&lt;const vector&lt;PjRtBuffer*&gt;&gt;, ExecuteOptions, optional&lt;vector&lt;Future&lt;&gt;&gt;&gt;&amp;)</code>, <code>ExecuteSharded(Span&lt;PjRtBuffer* const&gt;, PjRtDevice*, ...)</code>, <code>ExecutePortable(...)</code> + 편의 오버로드</td><td>donation 트랜잭션 의미론 주석 포함 (1442-1544)</td></tr><tr><td>수명</td><td><code>Delete()</code>, <code>IsDeleted()</code></td><td>마지막 실행 후 자원 해제 (1546-1550)</td></tr><tr><td>메타 (forwarding)</td><td><code>num_replicas()</code>, <code>num_partitions()</code>, <code>SizeOfGeneratedCodeInBytes()</code>, <code>name()</code>, <code>GetHloModules()</code>, <code>GetOutputShapes()</code>, <code>GetOutputElementTypes()</code>, <code>GetOutputDimensions()</code>, <code>GetParameterShardings()</code>, <code>GetOutputShardings()</code>, <code>GetCompiledMemoryStats()</code>, <code>SerializeExecutable()</code>, <code>FingerprintExecutable()</code>, <code>GetParameterLayouts()</code>, <code>GetOutputLayouts()</code>, <code>GetParameterMemoryKinds()</code>, <code>GetOutputMemoryKinds()</code>, <code>GetCompileOptions()</code>, <code>GetCostAnalysis()</code></td><td>전부 <code>GetExecutable()</code>(= <code>PjRtExecutableForwarder</code>)로 위임 (1552-1648; forwarder 1674-1752, pjrt_client.cc:189-191)</td></tr><tr><td>ABI</td><td><code>GetAbiVersion()</code></td><td>(1650-1654)</td></tr></tbody></table></div>
+<p><strong><code>PjRtExecutable</code><strong> — 로드되지 않은 컴파일 아티팩트: 실행 API가 </strong>없다</strong> (pjrt_executable.h:356-449)</p>
+<div class="table-wrap"><table><thead><tr><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td><code>num_replicas()</code>, <code>num_partitions()</code>, <code>SizeOfGeneratedCodeInBytes()</code>, <code>name()</code></td><td>순수 가상 기본 메타 (360-367)</td></tr><tr><td><code>GetHloModules()</code></td><td>최적화된 HLO per partition (370-371)</td></tr><tr><td><code>GetOutputShapes()/GetOutputElementTypes()/GetOutputDimensions()</code></td><td>출력 서술 (375-385)</td></tr><tr><td><code>GetParameterLayouts()/GetOutputLayouts()</code></td><td>입출력 layout (388-393)</td></tr><tr><td><code>GetParameterMemoryKinds()/GetOutputMemoryKinds()</code> <em>(순수 가상)</em></td><td>입출력 메모리 종류 <code>[num_programs, num_*]</code> (399-407)</td></tr><tr><td><code>GetParameterShardings()/GetOutputShardings()</code></td><td><code>OpSharding</code> proto (410-413)</td></tr><tr><td><code>GetCompiledMemoryStats()</code>, <code>GetCostAnalysis()</code></td><td>메모리/비용 추정 (417-428)</td></tr><tr><td><code>SerializeExecutable()</code>, <code>FingerprintExecutable()</code>, <code>GetCompileOptions()</code>, <code>GetAbiVersion()</code></td><td>직렬화·캐시 키 (431-448)</td></tr></tbody></table></div>
+<p><strong><code>PjRtCompiler</code></strong> — 등록형 컴파일러 인터페이스 (pjrt_compiler.h:447-479)</p>
+<div class="table-wrap"><table><thead><tr><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td><code>Compile(CompileOptions, const XlaComputation&amp;, const PjRtTopologyDescription&amp;, PjRtClient*)</code> <em>(순수 가상)</em></td><td>HLO 입력 컴파일 (453-455)</td></tr><tr><td><code>Compile(CompileOptions, MaybeOwningMlirModule, ...)</code> <em>(순수 가상)</em></td><td>MLIR 입력 컴파일 (458-460)</td></tr><tr><td><code>DeserializePjRtTopologyDescription(string)</code></td><td>토폴로지 역직렬화 (462-466)</td></tr><tr><td><code>GetTargetRuntimeAbiVersion()</code></td><td>산출물이 호환될 런타임 ABI (470-474)</td></tr><tr><td><code>AsPhaseCompiler()</code></td><td><code>PjRtPhaseCompiler</code>(다단계 컴파일: <code>RunPhases</code>, <code>RegisterAllPhases</code>, <code>PjRtPartialProgramProto</code> 교환)로의 다운캐스트 (477-478, 538-596)</td></tr><tr><td>주변 장치</td><td><code>PjRtCompilerRegistry</code>(platform×variant별 등록/팩토리, 134-182), <code>GetDefaultPjRtCompiler</code>/<code>PjRtCompile</code> free functions (187-212, 497-504)</td></tr></tbody></table></div>
+<p><strong><code>PjRtDeviceDescription</code></strong> — 디바이스 실물 없이 쓸 수 있는 정적 서술(AoT 컴파일용) (pjrt_device_description.h:51-100)</p>
+<div class="table-wrap"><table><thead><tr><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td><code>id()</code>, <code>process_index()</code>, <code>device_kind()</code>, <code>DebugString()</code>, <code>ToString()</code>, <code>Attributes()</code></td><td>전부 cross-compile 시점에 확정 가능한 정보 (58-86)</td></tr><tr><td><code>memory_spaces()</code>, <code>default_memory_space()</code></td><td><code>PjRtMemorySpaceDescription</code> 반환 (90-99)</td></tr></tbody></table></div>
+<p><strong><code>PjRtMemorySpaceDescription</code></strong> — 메모리 종류의 정적 서술 (pjrt_device_description.h:32-49)</p>
+<div class="table-wrap"><table><thead><tr><th>메서드</th><th>설명</th></tr></thead><tbody><tr><td><code>kind()</code>, <code>kind_id()</code></td><td>종류 문자열과 id. 구체 클래스(가상 아님) (39-44)</td></tr></tbody></table></div>
+<blockquote><strong>이 파트에서 발표할 핵심 한 문장</strong>: <code>PjRtClient</code>가 디바이스·메모리 스페이스를 소유하는 유일한 중앙 관리자이고 나머지 객체는 전부 <code>client()</code> backpointer를 가진 파생물이며, 버퍼의 1차 소속은 디바이스가 아니라 <code>PjRtMemorySpace</code>다(<code>device()</code>는 deprecated, <code>memory_space()-&gt;devices()[0]</code> 경유).</blockquote>
+<p>---</p>
+<h2 id="세부-두-대표-경로의-인터페이스-구현-분리-요약">세부: 두 대표 경로의 인터페이스/구현 분리 요약</h2>
+<div class="table-wrap"><table><thead><tr><th>단계</th><th>인터페이스 (계약)</th><th>공통 구현 (파이프라인)</th><th>raw 경계 (벤더)</th></tr></thead><tbody><tr><td>H2D</td><td><code>PjRtClient::BufferFromHostLiteral</code> (pjrt_client.h:1007)</td><td><code>CommonPjRtClient::BufferFromHostLiteral</code>: shape 정규화 <code>MakeDefaultShapeForMemorySpace</code>(topology의 <code>GetDefaultLayout</code> 사용, cc:584-613) → <code>GetOnDeviceBytesCount</code> → 할당 → 전송 → <code>DefineBuffer</code>(cc:195-215, <code>CommonPjRtBufferImpl</code>+<code>AbstractTrackedDeviceBuffer</code> 조립)</td><td><code>AllocateRawBuffer</code>(retry_on_oom=true), <code>LinearizeInto</code> → definition event</td></tr><tr><td>H2D zero-copy</td><td><code>HostBufferSemantics::k*ZeroCopy</code> (pjrt_client.h:949-968)</td><td><code>BufferFromHostBufferSupportsZeroCopy</code> 판단 후 이벤트 없는 <code>DefineBuffer</code> (cc:435-459)</td><td><code>ImportForeignMemory</code></td></tr><tr><td>D2H</td><td><code>PjRtBuffer::ToLiteral</code> (pjrt_client.h:1224)</td><td><code>CommonPjRtBufferImpl::ToLiteralImpl</code>: raw buffer hold → definition events 대기(<code>ExecuteWhenReady</code>) → 직행 전송 또는 staging+<code>DelinearizeAsync</code>(transpose/unpack은 호스트에서, cc:138-193, 2580-2775)</td><td><code>CopyRawDeviceToHostAndReturnEvent</code></td></tr><tr><td>실행</td><td><code>PjRtLoadedExecutable::Execute</code> (pjrt_client.h:1470)</td><td><code>CommonPjRtLoadedExecutable::Execute</code>: gang scheduling(<code>gang_scheduler()</code> mutex + <code>LaunchOnDevice</code>) → <code>ExecutePrepareWithOomRetries</code> → barrier → <code>ExecuteLaunch</code> → <code>CreateOutputs</code> (cc:1876-2051)</td><td><code>LoadRawExecutable</code>, <code>PjRtRawLoadedExecutable::Execute</code></td></tr></tbody></table></div>
+<p>---</p>
+<h2 id="쟁점과-불확실성">쟁점과 불확실성</h2>
+<p>코드만으로 단정할 수 없거나 발표에서 반론이 나올 수 있는 지점을 <strong>쟁점(해석이 갈리는 것) → 확인 필요(정의를 못 본 것) → 추정(정황만 강한 것) → 버전 드리프트(문서와 코드가 다른 것)</strong> 네 층위로 분리했다.</p>
+<h3 id="쟁점-해석이-갈릴-수-있는-지점">쟁점 (해석이 갈릴 수 있는 지점)</h3>
+<ol><li><strong><code>ExecuteLaunch</code>의 &quot;성공 보장&quot;은 어디까지 유효한가.</strong> 코드 주석은 &quot;Phase 2: Launch. It cannot fail.&quot; (cc:1999)라고 단언하지만, 드라이버 반환 타입에는 <code>RawExecuteResult::inline_status</code>(h:462)와 <code>is_predetermined_error</code> 인자가 존재한다. 즉 &quot;실패하지 않는다&quot;는 호스트 측 오케스트레이션 상태 코드 경로에 한정된 진술로 읽는 것이 자연스럽고, 디바이스 측 실패는 error event/error buffer로 비동기 전파된다고 보이지만, <code>inline_status</code>가 non-OK가 되는 실제 조건은 이 checkout으로 확정할 수 없다 (후속 질문 3과 연결).</li><li><strong>C++ 인터페이스와 C API의 레이어링 역전.</strong> 통념(그리고 Next Pluggable Device 문서의 &quot;C++/C/C++ 샌드위치&quot;)은 C API를 C++ 계약 위의 얇은 단방향 래퍼로 그리지만, 이 커밋에서는 <code>pjrt_client.h</code>가 <code>c/pjrt_c_api.h</code>를 직접 include하고(73행), <code>PjRtMemorySpace</code>가 <code>ToCApiPtr()</code>/<code>FromC()</code>를 요구하며(93-95행), device event 상태 판별이 C enum <code>PJRT_DeviceEvent_State</code>로 이뤄진다(common_pjrt_client.cc:919-928). 이것이 일시적 마이그레이션 상태인지 의도된 최종 구조인지는 공개 설계 문서가 없어 판단을 보류한다.</li><li><strong>버퍼 소속 모델의 이중성(디바이스 vs 메모리 스페이스).</strong> <code>PjRtBuffer::device()</code>는 deprecated(TODO b/277820585)이고 구현은 <code>memory_space_-&gt;devices()[0]</code>이지만(common_pjrt_client.h:789-792, cc:3003-3006), API 표면에는 <code>device()</code>가 여전히 남아 두 모델이 공존한다. 발표에서는 &quot;버퍼는 memory space 소속&quot;으로 말해야 하나, 다대다 매핑에서 <code>devices()[0]</code>을 대표로 고르는 것이 규약인지 임시 편의인지는 코드 주석만으로 확정되지 않는다.</li><li><strong><code>common_pjrt_client.*</code> 파이프라인의 일반화 가능성.<strong> 이 계층은 Copyright 2025의 신설 코드이며 &quot;raw buffers 기반 클라이언트의 공통 베이스&quot;(h:61-62)라고만 선언한다. CPU/GPU/TPU 실물 클라이언트가 sparse checkout에 없어, 본 문서 Part 1·2의 Prepare/Launch·5단계 H2D 서술이 </strong>모든 백엔드에 적용된다고 일반화할 수 없다</strong> — 이 계층을 채택한 클라이언트에 한정된 설명으로 읽어야 한다.</li><li><strong>문서와 코드 중 무엇을 진실로 삼는가.</strong> 참고 문서 7건은 전부 2022–2023년 설계 시점 자료이고, 명칭 수준의 드리프트가 실측된다(<code>PjRtFuture</code> 등장 0회 등). 본 문서는 커밋 <code>82d89744a3b</code>의 코드를 진실의 원천으로 삼았으며, 문서에만 있는 주장은 아래 버전 드리프트 표에 격리했다.</li></ol>
+<h3 id="확인-필요-checkout에-없는-파일에-정의가-있음">확인 필요 (checkout에 없는 파일에 정의가 있음)</h3>
+<div class="table-wrap"><table><thead><tr><th>항목</th><th>무엇을 모르는가</th><th>확정에 필요한 파일/함수</th></tr></thead><tbody><tr><td><code>PjRtRawBuffer</code>/<code>PjRtRawBufferRef</code>의 전체 계약</td><td><code>CopyRawHostToDeviceAndReturnEvent</code>, <code>MultiSlice</code>, <code>is_mutable</code>, <code>GetRawBufferAsyncValue</code> 등 메서드 시그니처 (호출부로만 확인: cc:640, 1138-1139, 1030, 1192)</td><td><code>xla/pjrt/raw_buffer.h</code></td></tr><tr><td><code>PjRtDeviceEventRef</code>/<code>PjRtDeviceEventPromiseRef</code>/<code>PjRtDeviceEventPtr</code> 정의와 <code>PJRT_DeviceEvent_State</code>와의 관계</td><td>ref counting·AndThen 의미</td><td><code>xla/pjrt/device_event.h</code>, <code>c/pjrt_c_api_device_event.h</code></td></tr><tr><td><code>CommonPjRtBuffer</code>·<code>ScopedHold</code>(kUsage/kDonation/kExternalReference)·<code>AbstractTrackedDeviceBuffer</code>의 상태 기계</td><td>hold 충돌·donation 트랜잭션의 정확한 규칙</td><td><code>xla/pjrt/abstract_tracked_device_buffer.h</code></td></tr><tr><td><code>xla::Future</code>/<code>tsl::Future</code>/<code>Promise</code>의 정확한 정의와 <code>PjRtFuture</code>와의 관계(별칭인지 대체인지)</td><td></td><td><code>xla/future.h</code>, <code>xla/pjrt/pjrt_future.h</code>(존재 여부 포함)</td></tr><tr><td>실제 벤더 클라이언트 중 어떤 것이 <code>CommonPjRtClient</code>를 상속하는가 (CPU/GPU/TPU 각각)</td><td>h:61 주석(&quot;raw buffers 기반 클라이언트 공통 베이스&quot;)만으로는 채택 범위 불명</td><td><code>xla/pjrt/cpu/</code>, <code>xla/pjrt/gpu/</code>, <code>pjrt_stream_executor_client.h</code>의 상속 선언</td></tr><tr><td><code>PjRtCApiClient</code>가 <code>PJRT_Api</code>를 감싸 <code>PjRtClient</code>를 되돌려주는 방식 (&quot;C++/C/C++ 샌드위치&quot;, Next Pluggable Device 문서)</td><td></td><td><code>xla/pjrt/c/pjrt_c_api_client.{h,cc}</code>, <code>pjrt_c_api_wrapper_impl.{h,cc}</code></td></tr><tr><td><code>AsyncWorkRunner</code>, <code>TransposePlan</code>, <code>PjRtStagingBuffer</code> 세부</td><td></td><td><code>xla/pjrt/async_work_runner.h</code>, <code>transpose.h</code>, <code>staging_buffer.h</code></td></tr></tbody></table></div>
+<h3 id="추정-코드에서-직접-확인-못-했으나-정황이-강함">추정 (코드에서 직접 확인 못 했으나 정황이 강함)</h3>
+<ul><li><code>PjRtRawLoadedExecutable::Execute</code>가 rvalue 한정(<code>&amp;&amp;</code>)인 것은 &quot;launch state는 1회용이며 매 실행마다 <code>LoadRawExecutable</code>로 재구성한다&quot;(h:451-453 주석)를 타입으로 강제하기 위한 설계로 <strong>추정</strong>.</li><li><code>ExecuteLaunch</code>의 &quot;성공 보장&quot;은 <em>호스트 측 제출 로직</em>에 한정되고, 디바이스 측 실패는 event/error buffer로 비동기 전파된다고 <strong>추정</strong> (<code>inline_status</code>가 존재하므로 완전한 no-fail은 아님, h:462).</li><li>C API의 <code>PJRT_Client_Compile</code>이 <code>PJRT_LoadedExecutable*</code>을 내는 것은 C++의 <code>CompileAndLoad</code>에 대응된다고 <strong>추정</strong> (C API에는 client-compile-unloaded 경로가 없고 <code>PJRT_Compile</code>(topology)만 unloaded를 반환).</li></ul>
+<h3 id="버전-드리프트-참고-문서-통념-vs-이-커밋의-코드">버전 드리프트 (참고 문서·통념 vs 이 커밋의 코드)</h3>
+<div class="table-wrap"><table><thead><tr><th>문서/통념</th><th>현재 코드</th><th>근거</th></tr></thead><tbody><tr><td><code>PjRtFuture&lt;&gt;</code> 반환 (원본 요청문, 다수 블로그)</td><td><code>xla::Future&lt;&gt;</code> / <code>tsl::Future&lt;void&gt;</code> — 8개 파일에서 <code>PjRtFuture</code> 등장 0회</td><td>pjrt_client.h:44 include &quot;xla/future.h&quot;; grep 결과 0건</td></tr><tr><td><code>PjRtClient::Compile</code>이 곧바로 실행 가능 객체 반환 (구 API)</td><td><code>Compile → PjRtExecutable</code>(unloaded), <code>CompileAndLoad → PjRtLoadedExecutable</code>로 분리</td><td>pjrt_client.h:672-693</td></tr><tr><td>&quot;PJRT = Pluggable JAX Runtime&quot; (원본 요청문)</td><td>코드 주석은 &quot;PjRt stands for &#x27;Pretty much Just another RunTime&#x27;&quot;</td><td>pjrt_client.h:70-71</td></tr><tr><td><code>PJRT_Structure_Base</code>/<code>PJRT_Structure_Type</code> (optional features 문서, 2023)</td><td><code>PJRT_Extension_Base</code>/<code>PJRT_Extension_Type</code>으로 개명·확장(25종)</td><td>pjrt_c_api.h:61-97</td></tr><tr><td><code>PJRT_Buffer_IncreaseReference</code>/<code>DecreaseReference</code> (AcquireExternalReference 문서 초안)</td><td><code>PJRT_Buffer_IncreaseExternalReferenceCount</code>/<code>PJRT_Buffer_DecreaseExternalReferenceCount</code>/<code>PJRT_Buffer_OpaqueDeviceMemoryDataPointer</code>로 정식화</td><td>pjrt_c_api.h:3117-3122</td></tr><tr><td>dynamic shapes 문서의 &quot;필요하면 추가&quot; 항목</td><td><code>PJRT_Buffer_Dimensions</code>/<code>UnpaddedDimensions</code>/<code>DynamicDimensionIndices</code> 모두 코어 테이블에 존재</td><td>pjrt_c_api.h:3103-3105</td></tr><tr><td><code>PjRtDevice::id()</code> 사용</td><td><code>ABSL_DEPRECATED(&quot;Use global_device_id() instead&quot;)</code></td><td>pjrt_client.h:166-167</td></tr><tr><td>C++ 인터페이스와 C API의 완전 분리</td><td><code>pjrt_client.h</code>가 <code>pjrt_c_api.h</code>를 직접 include, <code>PjRtMemorySpace::ToCApiPtr()</code> 요구, device event 상태가 C enum</td><td>pjrt_client.h:73, 93-95; common_pjrt_client.cc:920-928</td></tr><tr><td><code>common_pjrt_client.*</code>는 오래된 파일이라는 인상</td><td>Copyright 2025의 <strong>신설 계층</strong>이며 Prepare/Launch·raw boundary가 여기로 집약됨</td><td>common_pjrt_client.h:1</td></tr></tbody></table></div>
+<p>---</p>
+<h2 id="읽는-순서-조사-로드맵">읽는 순서 / 조사 로드맵</h2>
+<ol><li><strong><code>pjrt_executable.h</code></strong> — <code>CompileOptions</code>/<code>ExecuteOptions</code>/<code>PjRtExecutable</code>부터. 계층 간에 오가는 &quot;화폐&quot;를 먼저 익힌다.</li><li><strong><code>pjrt_client.h</code></strong> — <code>PjRtClient</code> → <code>PjRtBuffer</code> → <code>PjRtLoadedExecutable</code> 순서로 계약만 읽는다 (구현 없음에 유의).</li><li><strong><code>common_pjrt_client.h</code></strong> — raw boundary 가상 함수 목록과 <code>PjRtRawLoadedExecutable</code>, <code>ExecuteLaunchArgs</code>(658-670행 주석 필독).</li><li><strong><code>common_pjrt_client.cc</code></strong> — <code>BufferFromHostLiteral</code>(277) → <code>PrepareArguments</code>(786) → <code>ExecutePrepare</code>(1555) → <code>ExecuteLaunch</code>(1704) → <code>Execute</code>(1877) 순서로 두 경로를 추적.</li><li><strong><code>pjrt_compiler.h</code> + <code>pjrt_device_description.h</code></strong> — AoT 컴파일과 topology 세계.</li><li><strong><code>c/pjrt_c_api.h</code></strong> — 마지막에 <code>PJRT_Api</code>(3026)와 <code>PJRT_LoadedExecutable_Execute_Args</code>(2047)만 골라 읽고 C++ 계약과 1:1 대응을 확인.</li><li><strong>다음 확장</strong>: <code>raw_buffer.h</code>/<code>device_event.h</code>/<code>abstract_tracked_device_buffer.h</code>(런타임-드라이버 경계의 타입 확정) → <code>cpu/</code> 또는 <code>gpu/</code> 클라이언트 하나(raw boundary 구현 예) → <code>c/pjrt_c_api_wrapper_impl.cc</code>(C++→C 래핑 실물).</li></ol>
+<h2 id="후속-질문">후속 질문</h2>
+<p>다음 스터디 세션에서 이어갈 질문 다섯 개. 각 질문은 위 &quot;쟁점과 불확실성&quot;의 미확정 항목을 닫는 것을 목표로 한다.</p>
+<ol><li><strong><code>PjRtRawBuffer</code>의 전체 계약은 무엇인가?</strong> <code>raw_buffer.h</code>를 열어 <code>CopyRawHostToDeviceAndReturnEvent</code>/<code>MultiSlice</code>/<code>CopyTo</code>/<code>GetRawBufferAsyncValue</code>의 시그니처를 확인하고, RawBuffer C API 확장(<code>PJRT_Extension_Type_RawBuffer</code>)과 어떻게 연결되는지 추적한다.</li><li><strong>실제 백엔드는 raw boundary를 어떻게 채우는가?</strong> CPU 클라이언트(<code>xla/pjrt/cpu/</code>)와 GPU 클라이언트에서 <code>AllocateRawBuffer</code>/<code>LinearizeInto</code>/<code>LoadRawExecutable</code>/<code>PjRtRawLoadedExecutable::Execute</code> 구현을 각각 찾아, &quot;커맨드 제출&quot;이 CPU 스레드풀과 GPU 스트림에서 어떻게 다르게 생겼는지 비교한다. 아울러 어떤 클라이언트가 <code>CommonPjRtClient</code>를 실제로 상속하는지 확인해 쟁점 4(일반화 가능성)를 닫는다.</li><li><strong><code>ExecuteLaunch</code>의 &quot;성공 보장&quot;의 정확한 경계는?</strong> <code>RawExecuteResult::inline_status</code>가 non-OK가 되는 실제 케이스와, 디바이스 측 비동기 실패가 error event → error buffer → <code>GetReadyFuture()</code> 에러로 전파되는 전체 체인을 구현 코드에서 확인한다.</li><li><strong>donation 트랜잭션의 동시성 규칙은?</strong> <code>CommonPjRtBuffer::ScopedHold</code>(abstract_tracked_device_buffer.h)에서 kDonation hold 중 kUsage 요청이 블록되는지 실패하는지, <code>ConvertUsageHold</code>/<code>ConfirmDonation</code>의 원자성을 확인한다 (pjrt_client.h:1442-1452의 TODO(chky)와 연결).</li><li><strong>C API 래퍼의 왕복 비용과 계층 통과 방식은?</strong> <code>PjRtCApiClient</code>(프레임워크 쪽 C++)와 <code>pjrt_c_api_wrapper_impl</code>(플러그인 쪽 C++)이 <code>PJRT_Buffer</code>/<code>PJRT_Event</code>를 사이에 두고 어떻게 소유권·이벤트를 넘기는지, 특히 <code>PJRT_LoadedExecutable_Execute_Args.device_complete_events</code>가 C++ <code>Future&lt;&gt;</code>로 복원되는 지점을 따라가며 쟁점 2(레이어링 역전)의 방향성도 함께 판정한다.</li></ol>
+<h2 id="참고-자료">참고 자료</h2>
+<p><strong>소스 (commit <code>82d89744a3b</code>, <code>repo/</code> sparse checkout)</strong>: <code>xla/pjrt/pjrt_client.h</code>(1757행), <code>pjrt_client.cc</code>(253행), <code>pjrt_compiler.h</code>(607행), <code>pjrt_executable.h</code>(466행), <code>common_pjrt_client.h</code>(875행), <code>common_pjrt_client.cc</code>(3089행), <code>pjrt_device_description.h</code>(105행), <code>xla/pjrt/c/pjrt_c_api.h</code>(3231행, MAJOR 0 / MINOR 113).</p>
+<p><strong>참고 문서 (<code>references/text/</code>)</strong>:</p>
+<ul><li><code>OpenXLA folder EXTERNAL PJRT Plugin Mechanism.txt</code> — 플러그인 로딩(<code>GetPjrtApi</code>), 디스커버리 (2022-12)</li><li><code>Device PJRT API change to support versioning and compatibility.txt</code>, <code>OpenXLA folder Device PJRT API ABI versioning and compatibility.txt</code> — major/minor 정책, 6→12주 호환 윈도우 (2023-09)</li><li><code>PJRT C API_ optional and experimental features.txt</code> — extension 메커니즘 채택 배경 (2023-12)</li><li><code>C API for AcquireExternalReference.txt</code> — external reference C API 초안 (2023-07)</li><li><code>Representing dynamic array shapes in the PJRT C API.txt</code> — Dimensions/UnpaddedDimensions 설계 (2023-06)</li><li><code>05.2023 Next Pluggable Device Mechanism.txt</code> — TF NextPluggableDevice + PjRtCApiClient 샌드위치 구조</li><li><code>pasted-text.txt</code> — 원본 요청 프롬프트 (본 문서의 요구사항 원천)</li></ul>
+<blockquote>참고 문서는 모두 2022–2023년 설계 시점 문서이므로 세부 명칭은 코드(2026, 커밋 <code>82d89744a3b</code>)를 진실의 원천으로 삼았다. 문서에만 있고 코드로 확인 못 한 내용은 위 &quot;쟁점과 불확실성&quot; 절(확인 필요/추정 표)에 분리했다.</blockquote>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>
