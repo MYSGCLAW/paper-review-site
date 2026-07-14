@@ -497,6 +497,75 @@
       }
 
     }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
   </style>
 
 <!-- PENDING_QUEUE_STYLE_START -->
@@ -658,7 +727,25 @@
 
 </head>
 
-<body>
+<body class="auth-locked">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
   <header class="site-header">
     <div class="page-shell header-inner">
       <a class="brand" href="/">Research &amp; Analysis Library</a>
@@ -685,7 +772,7 @@
 
         <a class="tab-link" href="#research">
           <span>정보 수집</span>
-          <small>4</small>
+          <small>5</small>
         </a>
         
 
@@ -723,7 +810,7 @@
 
       <div class="statistics">
         <span class="stat">논문 21편</span>
-        <span class="stat">전체 항목 31개</span>
+        <span class="stat">전체 항목 32개</span>
       </div>
     </div>
   </header>
@@ -755,7 +842,7 @@
     <a href="#research" class="category-card">
       <h2>Research &amp; Analysis <span>정보 수집</span></h2>
       <p>특정 주제에 대한 문서, 링크, 메모를 모아 쟁점과 조사 로드맵으로 정리합니다.</p>
-      <small>4개 문서</small>
+      <small>5개 문서</small>
     </a>
     
 
@@ -796,7 +883,7 @@
 
         <a class="tab-link" href="#research">
           <span>정보 수집</span>
-          <small>4</small>
+          <small>5</small>
         </a>
         
 
@@ -1517,11 +1604,37 @@
           <h2>Research Collections</h2>
           <p>특정 주제에 대한 문서, 링크, 메모를 모아 쟁점과 조사 로드맵으로 정리합니다.</p>
         </div>
-        <span class="section-count">4개</span>
+        <span class="section-count">5개</span>
       </div>
 
       <div class="library-grid">
         
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="research/cuda-runtime-api-modules/">
+            CUDA Runtime API 주요 모듈과 API 정리
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          Codex 검증 전
+        </span>
+      </div>
+
+      <p class="metadata">정보 수집 · 2026-07-14</p>
+      <div class="tag-row"><span class="tag">CUDA</span><span class="tag">NVIDIA</span><span class="tag">Runtime API</span><span class="tag">GPU runtime</span><span class="tag">device management</span><span class="tag">memory management</span><span class="tag">stream</span><span class="tag">event</span><span class="tag">kernel launch</span><span class="tag">graph</span></div>
+
+      <p class="summary">
+        NVIDIA CUDA Runtime API 공식 문서를 기준으로 주요 module, 대표 API, 데이터 타입, 동기화/메모리/실행 흐름을 런타임 설계 관점에서 정리한다.
+      </p>
+
+      <a class="open-link" href="research/cuda-runtime-api-modules/">
+        열기 →
+      </a>
+    </article>
+    
+
     <article class="library-card">
       <div class="card-header">
         <h2>
@@ -1747,5 +1860,35 @@
       AI 생성 분석은 원문, 코드, 실행 결과 및 독립 검증 결과와 함께 확인해야 합니다.
     </div>
   </footer>
+  
+  <script>
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+  </script>
+
 </body>
 </html>

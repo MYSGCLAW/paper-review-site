@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>기존 가속기 Runtime 구조 정보 수집</title>
+  <title>CUDA Runtime API 주요 모듈과 API 정리</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <style>
     :root {
@@ -466,11 +466,11 @@
         <span class="meta-pill validation-pending">Codex 검증 전</span>
       </div>
       <p class="eyebrow">정보 수집</p>
-      <h1>기존 가속기 Runtime 구조 정보 수집</h1>
-      <p class="summary">CHAMP SIM이나 제안서 설계 연결을 제외하고 CUDA, Level Zero, PJRT, UPMEM 같은 기존 런타임 시스템의 객체, 프로토콜 흐름, 메모리/실행/동기화 모델을 공식 문서와 공개 코드 중심으로 스터디한다.</p>
+      <h1>CUDA Runtime API 주요 모듈과 API 정리</h1>
+      <p class="summary">NVIDIA CUDA Runtime API 공식 문서를 기준으로 주요 module, 대표 API, 데이터 타입, 동기화/메모리/실행 흐름을 런타임 설계 관점에서 정리한다.</p>
       <div class="meta-row">
-        <span class="meta-pill">업데이트 2026-07-11</span>
-        <span class="tag">runtime</span><span class="tag">accelerator</span><span class="tag">CUDA</span><span class="tag">Level Zero</span><span class="tag">PJRT</span><span class="tag">UPMEM</span><span class="tag">existing systems</span>
+        <span class="meta-pill">업데이트 2026-07-14</span>
+        <span class="tag">CUDA</span><span class="tag">NVIDIA</span><span class="tag">Runtime API</span><span class="tag">GPU runtime</span><span class="tag">device management</span><span class="tag">memory management</span><span class="tag">stream</span><span class="tag">event</span><span class="tag">kernel launch</span><span class="tag">graph</span>
       </div>
     </div>
   </header>
@@ -485,7 +485,7 @@
     
     <div class="article-width">
       <article>
-        
+        <p>Execution error</p>
       </article>
     </div>
   </main>
