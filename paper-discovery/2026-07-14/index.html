@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Paper Discovery - 2026-07-14</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-hover: #252b3d;
+      --border: #2d3548;
+      --text: #e1e4eb;
+      --muted: #8892a4;
+      --accent: #58a6ff;
+      --max-width: 1100px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+    .page-shell { width: min(calc(100% - 32px), var(--max-width)); margin: 0 auto; }
+    header { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .back-link { color: var(--accent); font-weight: 700; }
+    .eyebrow {
+      margin: 28px 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.2; }
+    .summary { max-width: 760px; color: var(--muted); }
+    main { padding: 32px 0 80px; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .library-card {
+      display: flex;
+      min-height: 320px;
+      flex-direction: column;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .library-card:hover { background: var(--surface-hover); }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+    h2 a:hover, .open-link { color: var(--accent); }
+    .status-badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(174, 184, 198, 0.13);
+      color: #aeb8c6;
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .authors { margin: 14px 0 0; font-size: 0.92rem; }
+    .metadata { margin: 4px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .card-summary { margin: 22px 0; color: var(--muted); font-size: 0.94rem; }
+    .open-link { margin-top: auto; font-weight: 700; font-size: 0.9rem; }
+    @media (max-width: 640px) {
+      .library-grid { grid-template-columns: 1fr; }
+      .library-card { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-shell">
+      <a class="back-link" href="../../">← 홈페이지</a>
+      <p class="eyebrow">Paper Discovery</p>
+      <h1>Daily Paper Discovery - 2026-07-14</h1>
+      <p class="summary">오늘 추천 후보 12개: ARMOR-IMC: Adaptive Resource Mapping for Operational Robustness via Secure In-Memory Computing, Annotation-Free Furniture Codes: What They Encode, and How Far They Transfer, Infrared Organization and Critical Cognitive Field Formation in Transformer Dynamics</p>
+    </div>
+  </header>
+  <main class="page-shell">
+    <div class="library-grid">
+      
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10938v1">
+            ARMOR-IMC: Adaptive Resource Mapping for Operational Robustness via Secure In-Memory Computing
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Muhtasim Alam Chowdhury, Ramtin Zand, Soheil Salehi</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 5</p>
+      <div class="tag-row"><span class="tag">data movement</span></div>
+
+      <p class="summary">
+        The massive data-movement overhead in traditional architectures has led to the adoption of In-Memory Computing (IMC) for energy-efficient Deep Neural Network (DNN) processing. By leveraging emerging devices like Spin-Orbit Torque Magnetic Tunnel Junctions (SOT-MTJs), IMC bypasses the &quot;memory wall&quot; and reduces leakage power inherent in traditional CMOS. However, this shift introduces dual hardware threats: manufacturing Process Variation (PV) degrades reliability and increases vulnerability to fault injection, while power Side-Channel Attacks (SCAs) compromise security. Existing defenses address these threats in isolation. This work presents a posttraining framework that simultaneously hardens analog IMC accelerators against both threats without retraining the model. Implemented in the IMAC-Sim simulator, our approach uses the proposed Variation Impact Score (VIS) to guide the mapping of Fault Observation Windows (FOWs) and introduces the Leakage Per Inference (LPI) metric to quantify input-dependent power variability under stochastic injection and the resulting reduction in effective signal-to-noise ratio. Experiments show that PV-induced faults can degrade accuracy by over 50%, while our method restores near-baseline accuracy and mitigates the threat of correlation-based power analysis attacks.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10938v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10461v1">
+            Annotation-Free Furniture Codes: What They Encode, and How Far They Transfer
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Benjamin Friedman</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 4</p>
+      <div class="tag-row"><span class="tag">Chamfer</span><span class="tag">quantization</span></div>
+
+      <p class="summary">
+        Layout-based 3D scene synthesizers place each object using two human-annotated channels: a categorical class label and a canonical-pose convention. We ask whether a single self-supervised token derived from object geometry can replace both, and study such tokens directly as a representation, decoupled from any synthesizer. A Finite Scalar Quantization (FSQ) point-cloud autoencoder is chamfer-trained on placed 3D-FUTURE furniture with no labels or pose annotations. Diagnostic probes recover fine-category (62.6 +/- 0.5%), super-category (85.6 +/- 1.3%), and yaw (52.7 +/- 0.5 deg) from the codes alone. Swapping the chamfer target from the rotated to the un-rotated point cloud collapses the yaw signal while raising class recovery, showing the codes&#x27; rotation content can be set by the training objective. Scaling across asset libraries needs codes that transfer; on an unseen dataset (ShapeNet), alignment is category-dependent: box-like furniture transfers, organically-shaped furniture does not, and a target-blind augmentation partly closes the gap.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10461v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10923v1">
+            Infrared Organization and Critical Cognitive Field Formation in Transformer Dynamics
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Byung Gyu Chae</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        Large language models exhibit remarkable emergent behaviors, yet the physical mechanism governing their collective dynamics remains poorly understood. Cognitive Field Theory predicts that learning reorganizes the time-scale density of states (TDOS) through the infrared accumulation of slow relaxation modes, thereby enhancing the memory self-energy, reducing the cognitive forgetting gap, and strengthening the collective susceptibility. Using publicly available Pythia language models, we extract relaxation spectra directly from Transformer layer Jacobians throughout training, network depth, and model scale, allowing the TDOS, memory self-energy, forgetting gap, memory kernel, and infrared critical exponent to be measured quantitatively. The measurements reveal progressive infrared accumulation of slow relaxation modes, producing an approximately flat infrared TDOS with \( ρ(λ)\simλ^{-0.1} \) and scale-free memory kernels \( K(t)\sim t^{-1}. \) The memory self-energy exhibits a pronounced transient maximum during early optimization before relaxing toward a metastable near-critical regime, corresponding to the smallest cognitive forgetting gap and the largest collective susceptibility predicted by Cognitive Field Theory. These observations provide quantitative experimental evidence that Transformer dynamics are governed by infrared collective organization. The reproducibility of the same dynamical behavior across training, network depth, and model scales suggests that infrared slow-mode organization represents a universal collective principle of Transformer dynamics.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10923v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10932v1">
+            LLM-Enhanced Dynamic Financial Knowledge Graphs for Cross-Entity Signal Propagation and alpha discovery
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Lin Zhang</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        Financial information rarely affects a single company in isolation. Earnings surprises, capital expenditure changes, supply constraints, and guidance revisions can propagate through networks of suppliers, customers, competitors, and technology ecosystems. Traditional financial NLP primarily measures document-level sentiment for the directly mentioned company and often ignores cross-entity information diffusion. This paper develops an LLM-based financial measurement and signal propagation framework. The LLM converts unstructured financial documents into structured economic state-change events and extracts explicit and implicit corporate relationships to construct a dynamic financial knowledge graph. Event signals are then propagated through the estimated network using a community-aware mechanism, allowing information to diffuse more strongly within dynamically detected economic communities than across community boundaries. We introduce Community Information Surprise, CIS, and Propagated Information Surprise, PIS, as network-based financial signals and develop corresponding econometric tests. Controlled simulations with time-varying economic communities show that the framework accurately recovers latent network structure, detects the emergence of new investment ecosystems, and generates propagated signals with incremental predictive power beyond sentiment and direct LLM event signals. Across repeated simulations, community-aware propagation achieves the strongest rank information coefficient and long-short Sharpe ratio among five nested benchmarks.A second Russell 1000 calibrated simulation confirms that the main results persist under sparser networks, heterogeneous news coverage, realistic large-cap volatility, and smaller effect sizes.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10932v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10894v1">
+            Precision masses of neutron-rich platinum and gold nuclei reveal enhanced $N=126$ shell strength below doubly-magic $^{208}$Pb
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">David Freire-Fernández, Rui-Jiu Chen, Usama Ahmed, Helena M. Albers, Jelena Bardak, Carsten Brandau, Jeroen P. Bormans, R. Burcu Cakirli, et al.</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        The heaviest stable nuclei in the universe owe their existence to quantum shell structure, the grouping of protons and neutrons into discrete energy levels separated by gaps. The largest known neutron shell gap in stable nuclei, at $N=126$, stabilizes doubly-magic $^{208}$Pb and is responsible for the characteristic abundance peak of heavy elements near gold and platinum produced by the rapid neutron-capture process (r-process). Whether this shell gap persists as protons are removed from lead is a question central to both nuclear structure and the modeling of heavy-element synthesis, yet it has remained unanswered due to the extraordinary difficulty of producing the relevant neutron-rich nuclei. Direct experimental knowledge in this region was essentially absent. Here we report the first precision mass measurements of $^{203,204}$Pt and $^{204,205,206}$Au, performed at GSI using a novel combination of Schottky and isochronous mass spectrometry in a heavy-ion storage ring. The $N=126$ isotones $^{204}$Pt and $^{205}$Au are more strongly bound than the extrapolated trend of the previously known mass surface by 403 and 464~keV, respectively, revealing an unexpectedly enhanced $N=126$ shell strength below doubly-magic $^{208}$Pb. Furthermore, the proton-neutron interaction strength exhibits a hitherto unobserved bifurcation at $N=126$ as protons are removed from $^{208}$Pb. Our results redefine the nuclear mass surface in the neutron-rich heavy-element region and provide direct experimental benchmarks for theoretical models whose extrapolations toward more exotic nuclei are essential for r-process nucleosynthesis calculations.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10894v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10885v1">
+            Faster Closest-Point Algorithms for the $E_6^*$ and $E_7^*$ Lattices
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yuriy A. Reznik</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">quantization</span></div>
+
+      <p class="summary">
+        The dual lattices $E_6^*$ and $E_7^*$ are of particular interest in source coding and data compression applications. Among all known lattices in dimensions six and seven they attain the smallest normalized second moments, i.e., the smallest average quantization error. Their use in practice requires fast closest-point (nearest-lattice-point) algorithms. The known approach, due to Conway and Sloane and completed for $E_6$ and $E_6^*$ by Takizawa, Yagi, and Kawabata (TYK), decodes these lattices as unions of cosets of root lattices $A_n$: each coset is decoded separately, and the best result is kept. This requires four coset decodings for $E_7^*$ and six for $E_6^*$, together with explicit distance computations. This paper shows that all these coset decodings can be collapsed into a single sweep. Reformulated in terms of glue vectors, the TYK decompositions state that $E_7^*$ is the union of the even glue classes of $A_7^*$, and that $E_6^*$ is a parity-matched sublattice of $A_1^*\oplus A_5^*$. The candidate chain constructed by the closest-point algorithm of McKilliam, Clarkson, and Quinn (MCQ) for $A_n^*$ visits every glue class of $A_n$ exactly once and is optimal within each class. Consequently, one sorted sweep per coordinate block yields the closest points of all glue cosets simultaneously, and $E_6^*$ and $E_7^*$ are decoded at roughly the cost of a single $A_5^*$ or $A_7^*$ quantization. Rough operation counts indicate a $4$--$6\times$ reduction for $E_6^*$ and $3$--$4\times$ for $E_7^*$ relative to coset-by-coset decoding. We also discuss further constant-factor improvements available from recent refinements of the $A_n^*$ algorithms, and an open question concerning sort-free linear-time decoding.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10885v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10925v1">
+            Mapping Pamir: Multi-Session Visual-Inertial SLAM and 3D Reconstruction of an Underwater Shipwreck
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Michalis Chatzispyrou, Luke Horgan, Hyunkil Hwang, Harish Sathishchandra, Chinmay Burgul, Monika Roznere, Alberto Quattrini Li, Philippos Mordohai, et al.</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        This paper presents a framework for multi-session mapping of underwater environments utilizing an affordable action camera. The Visual-Inertial data are augmented by water depth recordings from a dive computer. SVIn2, an open-source VI-SLAM framework, is utilized to generate a trajectory and a sparse reconstruction for each session. Utilizing the keyframes extracted from SVIn2 and the estimated camera poses, a Structure-from-Motion (SfM) framework, COLMAP, is employed for global optimization and to produce a dense reconstruction of the target environment. The presence of calibration targets at fixed locations, when available, is used to estimate the coordinate transformation between different data collection sessions, thus transforming the different sessions into the same coordinate frame. The proposed pipeline is employed for the mapping of a shipwreck off the coast of Barbados. For the first time, both the exterior and the accessible interior parts of the wreck were mapped in two sessions, while a third session employed two cameras with different fields of view.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10925v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10864v1">
+            Multilevel Preconditioning Strategies for Convex Optimization Methods in Image Deblurring
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Stefano Aleotti, Claudia Binda, Marco Donatelli, Rolf Krause</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        Proximal gradient methods are widely used in imaging, and their speed of convergence can be accelerated by incorporating variable metrics and/or extrapolation steps. Recent works have shown that preconditioning strategies can significantly enhance this acceleration, in particular, for image deblurring problems. In parallel, a multilevel framework has been introduced to speed up inertial and inexact forward-backward schemes for image restoration problems. In this paper, we combine preconditioning and multilevel strategies to design a robust and consistent acceleration framework for both standard and inexact forward-backward schemes applied to regularized convex optimization problems. Numerical experiments in image deblurring confirm that our approach yields a substantial improvement in convergence speed compared to standard methods.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10864v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10280v1">
+            Scaling Adaptive Non-Local Observable Quantum Super-Resolution via Matrix Product States
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Shih-Lung Yu, Ming-Kang Ho, Tai-Yue Li, Sheng Yun Wu</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 3</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        This work presents a matrix product state (MPS) simulation framework for adaptive non-local observable variational quantum circuits (ANO-VQCs) in image super-resolution (SR) beyond the practical limits of statevector simulation. Runtime benchmarks on a single NVIDIA RTX 4070 GPU show that, under the tested shallow-circuit setting, MPS completes ANO-VQC forward feature extraction for individual inputs up to 16 x 16 pixels (256 qubits), whereas statevector simulation encounters a memory bottleneck at 6 x 6 inputs (36 qubits) and exact tensor-network (Exact TN) contraction becomes computationally impractical beyond 12 x 12 inputs (144 qubits). For a fixed 7 x 7 input (49 qubits), a bond-dimension sweep over depths L = 1 to L = 4 shows that the required MPS bond dimension increases with circuit depth. Using Exact TN contraction as the reference, the bond dimension required for near-exact agreement increases from chi = 2 at L = 1 to chi = 16 at L = 4. Finally, 7 x 7 to 28 x 28 Fashion-MNIST SR training with chi = 16 shows that the shallow L = 1 model achieves the lowest loss and best LPIPS, PSNR, and SSIM among the tested depths. These results highlight MPS as a scalable and controllable simulation backend for ANO-VQC image SR and as a practical tool for studying large-scale quantum algorithms.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10280v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://openalex.org/W7167981128">
+            TF-Engram: A Train-Free Engram with SSD-Backed Memory for Large Language Models
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yutang Ma, Kecheng Huang, X. Jiang, Zili Shao</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv (Cornell University) · OpenAlex · Score 2</p>
+      <div class="tag-row"><span class="tag">SSD</span></div>
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://openalex.org/W7167981128">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://openalex.org/W7167747014">
+            From Tensor Buffer to Distributed Memory Hierarchy: A Survey of KV Cache Management for LLM Serving
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Jie Li, Tongyang Wang, Yong Chen</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv (Cornell University) · OpenAlex · Score 2</p>
+      <div class="tag-row"><span class="tag">cache</span></div>
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://openalex.org/W7167747014">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2607.10933v1">
+            Rigidity-Based Multi-UAV Trajectory Optimization for Rapid Cooperative Emergency Target Localization
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Halim Lee, Jiwon Seo</p>
+      <p class="metadata">2026-07-14 · 2026 · arXiv · Score 2</p>
+      
+
+      <p class="summary">
+        Reducing the response time for accurate emergency-caller localization is critical in vehicular and public-safety networks. Although mobile devices commonly use GNSS, Wi-Fi, or cellular positioning, their accuracy and availability can degrade because of poor signal reception, limited infrastructure, and regulatory constraints. UAV-based localization offers a promising alternative by using airborne sensors to cooperatively estimate the target position. However, existing Fisher information matrix (FIM)-based trajectory optimization methods depend on the current target estimate and can perform poorly in the early mission stage, when measurements are limited and uncertainty is high. We propose a rigidity-based UAV trajectory optimization method that maximizes the smallest nonzero singular value of the rigidity matrix associated with the UAV-target sensing graph, improving geometric conditioning and reducing position ambiguity. We also introduce a pruning-based matrix reduction strategy for efficient real-time implementation. Simulations show that the proposed method reduces search time by 32.9% compared with FIM-based methods and satisfies the FCC horizontal emergency-localization requirement sooner. Further results demonstrate scalability, robustness to UAV positioning errors and NLOS path loss, low sensitivity to heading parameters, practical computation and communication costs, and more stable degradation than PPO-based baselines under severe sensing and navigation perturbations.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2607.10933v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+    </div>
+  </main>
+</body>
+</html>
