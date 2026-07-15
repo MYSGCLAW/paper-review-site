@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>ModernVBERT: Towards Smaller Visual Document Retrievers</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>ModernVBERT: Towards Smaller Visual Document Retrievers</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Paul Teiletche, Quentin Macé, Max Conti, Antonio Loison, Gautier Viaud, Pierre Colombo, Manuel Faysse</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2510.01149v3, cs.IR) — 정식 학회/저널 게재 명시 없음</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 또는 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 시각 문서 검색(Visual Document Retrieval, VDR) 모델을 대형 생성형 vision-language decoder를 재활용(repurposing)해 만드는 관행이 검색 성능과 효율을 병목시킨다는 점을 지적하고, 언어모델 modality alignment 단계부터 대조학습까지 전체 학습 파이프라인을 통제된 실험(controlled ablation)으로 재검토한다. 핵심 결론은 (1) causal attention은 문서 검색에 최적이 아니며 bidirectional masking이 multi-vector late interaction 세팅에서 큰 이득(+10.6 nDCG@5)을 주고, (2) token 수준 언어모델 목표가 단순히 강한 이미지 임베딩이 아니라 image-text token alignment를 강화해 검색을 돕고, (3) 이미지 해상도와 데이터 mix가 성능에 중요하다는 것이다. 이 통찰을 바탕으로 저자들은 사전학습된 텍스트 bidirectional encoder를 MLM(Masked Language Modeling)으로 vision encoder와 정렬한 250M 규모 소형 multimodal encoder ModernVBERT와 late-interaction 검색 모델 ColModernVBERT를 공개한다. ColModernVBERT는 10배 이상 큰 ColPali(2.92B)와 ViDoRe 평균 nDCG@5에서 0.6점 차이(68.6 vs 69.2)에 불과하면서 CPU 쿼리 인코딩 지연을 20ms로 7배 이상 단축한다.</p>
+        <span class="source-ref">PDF p. 1, 2, 8, 9</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>생성형 VLM을 검색용으로 재활용하는 관행은 비용 효율적이지만 검색 성능과 효율을 병목시키며, 검색 전용으로 처음부터 설계한 소형 encoder가 더 나은 성능-크기 trade-off를 낼 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Bidirectional attention은 multi-vector late interaction 세팅에서 causal attention 대비 ViDoRe 평균 +10.6 nDCG@5의 큰 이득을 주지만, single-vector에서는 +1.6에 그쳐 두 요소의 시너지가 핵심이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ColModernVBERT(0.25B)는 10배 이상 큰 ColPali(2.92B)와 ViDoRe 평균 nDCG@5에서 0.6점 차이(68.6 vs 69.2)에 불과하면서 CPU 쿼리 인코딩 지연을 20ms로 7배 이상 줄였다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>이미지 해상도 상향과 텍스트/자연이미지 데이터 mix 조정은 과제별로 상반된 효과를 내므로(문서 검색↑, 자연 이미지 과제↓), 문서 검색과 자연 이미지 검색은 서로 다른 메커니즘으로 최적화해야 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>텍스트 전용 쿼리-문서 쌍을 대조학습에 섞으면 cross-modal transfer를 통해 시각 문서 검색이 +1.7 nDCG@5 향상되어, 데이터 부족을 다른 모달리티의 저렴한 코퍼스로 완화할 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>대규모 문서 검색과 RAG의 핵심 병목</h3>
+      <p>대규모 문서 코퍼스에서 원하는 정보를 빠르게 찾는 검색(retrieval)은 RAG(Retrieval-Augmented Generation)를 포함한 현대 AI 시스템의 핵심 구성요소이다. 1단계 검색 모듈의 recall은 생성된 답변 품질의 상한(upper-bound)을 결정하고, latency와 인덱싱 비용은 시스템 전체 효율을 좌우한다. 따라서 PDF·과학 논문·보고서처럼 길고 복잡한 문서에 대한 검색 성능 향상은 산업용 RAG 배포를 더 정확하고 비용 효율적으로 만드는 핵심 수단이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>생성형 VLM 재활용의 한계와 핵심 질문</h3>
+      <p>현재 대부분의 VDR 시스템은 대형 생성형 vision-language decoder를 post-hoc contrastive fine-tuning으로 재활용해 만들어진다. 그러나 모델 크기, attention 패턴, 이미지 해상도, 학습 목표가 모두 검색이 아니라 생성(generation)을 위해 설계된 것이어서 검색 성능과 효율에 병목이 된다. 논문은 이를 배경으로 &#x27;Which design choices best boost performance in modern visual document retrievers?(현대 시각 문서 검색기에서 어떤 설계 선택이 성능을 가장 잘 높이는가?)&#x27;라는 중심 질문에 답하고자 한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>텍스트 기반 문서 검색 파이프라인의 취약성</h3>
+      <p>전통적 문서 검색은 OCR(Optical Character Recognition), 레이아웃 분석, 휴리스틱 passage segmentation을 포함한 무거운 전처리 파이프라인을 거친다. OCR과 레이아웃 파싱은 불안정(brittle)하고 느리며, 표·그림·타이포그래피 같은 복잡한 시각 요소를 잘 포착하지 못하고, 전처리에서 발생한 오류나 편향이 검색기로 그대로 전파된다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>생성 목적으로 설계된 모델의 검색 최적성 부족</h3>
+      <p>생성형 vision-language decoder를 재활용하는 방식은 비용 효율적이지만, 모델 크기·attention 패턴·이미지 해상도·학습 목표가 생성 용도로 설계되어 검색에는 최적이 아니다(suboptimal). 이는 텍스트 모델 연구에서 이미 밝혀진 바이며, 특히 causal attention은 표현 효율을 제한한다. 또한 임베딩 모델에서는 scaling trend(크기 확장에 따른 성능 향상)가 덜 뚜렷하여 소형 모델로도 강력한 검색 성능을 얻는 것이 가능하다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>고품질 대조 데이터의 부족</h3>
+      <p>시각 검색기가 직면한 심각한 한계는 대규모·고품질의 (document image, query) contrastive pair 부족이다. 기존 연구는 재활용된 VQA 데이터셋과 외부 LLM으로 합성한 쿼리에 의존해 왔는데, 이를 모두 합쳐도 이 분야는 아직 1년 정도밖에 되지 않아 데이터셋 규모가 작고 품질이 낮은 경우가 많다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Contribution 1: 시각 검색기 설계 원칙 재정립</h3>
+      <p>시각 검색기 설계의 핵심 가정을 통제된 실험으로 재검토하여, token 수준 학습 목표가 단순히 더 강한 이미지 임베딩을 만드는 것이 아니라 image-text token alignment를 강화함으로써 검색기를 돕는다는 것을 보였다. Causal attention은 문서 검색에 최적이 아니며 bidirectional masking이 multi-vector 세팅에서 뚜렷한 개선을 주고, 이미지 해상도와 데이터 mix 같은 파라미터도 학습 파이프라인에서 간과되어서는 안 됨을 확인했다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Contribution 2: ModernVBERT / ColModernVBERT 공개</h3>
+      <p>위 통찰을 바탕으로 사전학습된 언어 encoder를 MLM 목표로 vision encoder와 정렬한 250M 규모 소형 multimodal encoder ModernVBERT와, 문서 검색용으로 파인튜닝한 late-interaction 모델 ColModernVBERT를 공개한다. ColModernVBERT는 작은 크기와 제한된 학습 예산에도 표준 시각 문서 검색 벤치마크에서 10배 큰 모델과 맞먹는 성능을 보이며, 모델·중간 체크포인트·학습 코드를 함께 공개한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Early Fusion MLM 아키텍처</h3>
+      <p>제안 구조는 early fusion 방식으로, vision encoder가 만든 시각 patch 임베딩을 언어모델 입력 임베딩 공간으로 투영(projection)한 뒤 텍스트 토큰 임베딩과 concat하여 언어모델이 함께 처리한다(Figure 2). 큰 이미지는 512×512 픽셀 타일로 분할하고, 전체 이미지의 축소본도 함께 처리해 타일 간 일관성과 전역 이해를 높인다. 학습 손실은 causal(CLM)과 masked(MLM) 언어모델 목표 모두에서 작동하도록 일반화되어, 최종 encoder 모델은 end-to-end bidirectional attention 구조로 sequence 및 token 수준 표현 과제에 적합하다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>표준 biphasic 학습 절차</h3>
+      <p>전체 구조는 표준 biphasic 학습 절차를 따른다. 먼저 (1) modality alignment 단계에서 사전학습된 텍스트 언어모델이 language modeling 목표(CLM 또는 MLM)를 통해 시각 입력을 이해하도록 학습하고, 이어 (2) contrastive post-training 단계에서 text-image 대조학습으로 효율적인 이미지 표현을 학습한다. 이 결과를 종합해 base encoder인 ModernVBERT와, late-interaction 검색 모델 ColModernVBERT, single-vector 변형 BiModernVBERT를 구축한다.</p>
+      <span class="source-ref">PDF p. 2, 4, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 Modality Alignment</h3>
+      <p>사전학습된 텍스트 언어모델과 SigLIP2 vision encoder를 The Cauldron 2 + Docmatix 기반 코퍼스로 정렬한다(ablation 모델 3.5B 토큰, 최종 ModernVBERT 10B 토큰). Decoder 기반 모델은 CLM loss, encoder 기반 모델은 masking ratio 0.5의 MLM loss를 사용한다. 이미지 embedding projection layer를 학습하고 언어모델은 LoRA(rank 32)로 함께 파인튜닝해 단일 모달 성능 붕괴 위험을 줄인다. WSD 스케줄러(warmup 5%, decay 20%)와 최대 학습률 1e-4를 적용한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 High-Resolution Cooldown (ModernVBERT 전용)</h3>
+      <p>modality alignment 마지막 단계에서 입력 이미지 해상도를 1024px에서 2048px로 높여 2B 토큰 동안 추가 학습하여 문서 이해력을 강화한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 Contrastive Post-Training</h3>
+      <p>InfoNCE loss로 이미지·텍스트 표현을 정제한다. ablation 출발점은 ColPali corpus의 118k document-query 쌍과 MSCOCO의 118k natural image-caption 쌍으로 구성된다. 배치 다양성이 검색 엔트로피에 중요하므로 task-aware batching으로 출처별로 문서를 묶어 배치 구성을 동질화한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 Document-Focused Contrastive Scaling</h3>
+      <p>문서-쿼리 쌍(hard negative 1개)과 텍스트 전용 쌍(hard negative 2개)을 2:1(text:image) 비율로 결합한 mix로 대조학습을 확장하여 late interaction 모델 ColModernVBERT와 single-vector 모델 BiModernVBERT를 생성한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 Evaluation</h3>
+      <p>ViDoRe/ViDoRe v2(nDCG@5, 문서 검색), MIEB 기반 MSCOCO/Flickr30k(nDCG@10, 이미지·캡션 검색), Stanford Cars/Food101(파인튜닝 분류), FER2013/EuroSAT(zero-shot 분류)로 end-to-end 평가한다. 모든 평가는 최종 신호(final evaluation signal)에서 end-to-end로 수행된다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Late Interaction (MaxSim) 매칭</h3>
+      <p>ColModernVBERT는 multi-vector late interaction 메커니즘을 사용한다. 쿼리와 문서의 각 토큰 임베딩을 pooling 없이 모두 유지하고, MaxSim 연산으로 쿼리 토큰마다 가장 유사한 문서 토큰과의 유사도를 취해 합산함으로써 세밀한(fine-grained) 매칭 점수를 계산한다. 이는 추가 저장 비용과 매칭 시 약간의 연산 오버헤드를 대가로 이미지·쿼리 토큰 간 더 정밀한 상호작용을 가능하게 한다. Single-vector 변형은 causal 모델의 경우 마지막(EOS) 토큰, bidirectional encoder의 경우 전체 시퀀스 토큰의 mean pooling을 사용한다.</p>
+      <span class="source-ref">PDF p. 5, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MLM/CLM으로 일반화된 정렬 손실과 InfoNCE</h3>
+      <p>정렬 단계 손실은 두 목표로 일반화된다. Decoder 모델은 위치 t의 토큰을 이전 토큰들로 예측하는 CLM loss를, encoder 모델은 마스킹된 위치 집합 M의 토큰을 나머지 문맥으로 예측하는 MLM loss를 텍스트 토큰에 적용한다. 대조 단계에서는 positive와 in-batch/hard negative에 대해 유사도 함수 Φ를 쓰는 InfoNCE loss를 사용하며, 일반 도메인에서는 대칭적으로(symmetrically) 계산한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Pixel Shuffling 토큰 압축</h3>
+      <p>vision tower는 512×512 타일마다 (512/16)^2 = 1024개 patch representation을 만든다. 이를 압축 비율 r=4의 pixel shuffling으로 타일당 64개 토큰으로 압축해 시퀀스 길이를 줄인다. 이미지 해상도는 시각 토큰 수를 결정하는 핵심 파라미터이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>벤치마크와 과제</h3>
+      <p>주 평가는 문서 검색으로, ViDoRe(v1)과 ViDoRe v2(영어 splits)의 nDCG@5를 집계한다. 일반 이미지 검색 능력은 MIEB에서 선정한 MSCOCO/Flickr30k retrieval(nDCG@10)로, 분류 능력은 Stanford Cars/Food101(로지스틱 회귀 헤드 파인튜닝 정확도)과 FER2013/EuroSAT(zero-shot)로 평가한다. 부록에서는 NanoBEIR 텍스트 검색으로 텍스트 능력도 측정한다. 학습에는 The Cauldron 2/Docmatix(정렬), ColPali corpus·MSCOCO·NatCap(333k)·RLHN(대조 post-training) 등이 쓰인다.</p>
+      <span class="source-ref">PDF p. 5, 26</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>통제된 ablation과 비교군</h3>
+      <p>attention mask의 영향을 격리하기 위해 Gisserot-Boukhlef et al.(2025)이 공개한 210M Llama 계열 체크포인트(동일 데이터·크기·스케줄, masking 전략만 상이)를 사용한다: enc(bidirectional, MLM), dec(causal, CLM), dec-enc(학습 말미에 causal mask 제거 후 MLM 전환). vision tower는 siglip2-base-16b-512의 86M vision 구성요소를 쓴다. 비교군은 MoCa-3B, VLM2Vec, GME-Qwen2, E5-V, ColPali, ColQwen2.5, Jina-v4, NemoRetriever-3B, ColFlor, SigLIP2-L-512/16, 그리고 자체 학습 dual encoder SigLIP2-FT/Large 등을 포함한다.</p>
+      <span class="source-ref">PDF p. 3, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성 측정 조건</h3>
+      <p>지연시간은 NanoBEIR 쿼리(평균 23.4단어, 147.5자)의 인코딩 시간을 배치 크기 1로 평균해 산출하며, RAM 병목을 피하기 위해 매우 큰 RAM(2TB) CPU 클라우드에서 측정한다. GPU 처리량, 파라미터 수, 탄소 배출량(Green Algorithms 방법론) 등도 함께 보고한다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>소형 모델로 대형 모델에 근접</h3>
+      <p>ColModernVBERT(0.25B)는 ViDoRe(v1) 81.2, ViDoRe(v2,eng) 56.0, 평균 68.6 nDCG@5를 기록해 10배 이상 큰 ColPali(2.92B, 69.2)보다 단 0.6점 낮다. 가장 유사한 크기의 late interaction 모델 ColFlor(0.17B, 55.9)보다는 12.7점 높다. 다만 수십억 토큰으로 학습된 대형 decoder VLM 기반 최상위 모델(예: NemoRetriever-3B 78.7)에는 미치지 못한다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Bidirectional attention과 Late Interaction의 시너지</h3>
+      <p>multi-vector late interaction 세팅에서 bidirectional encoder(enc/MLM)는 causal decoder(dec/CLM)보다 ViDoRe 평균 nDCG@5가 +10.6점 높았다(64.8 vs 54.2). 반면 single-vector 세팅에서는 격차가 +1.6점에 그쳤다. Causal 디코더는 시퀀스 앞부분의 이미지·텍스트 토큰을 제대로 문맥화하지 못하며, 학습 후 causal mask를 제거하는 것만으로는 enc의 late interaction 성능을 회복하지 못한다. 이는 처음부터 encoder를 학습하는 편이 검색에 유리함을 시사한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>해상도와 데이터 mix의 과제별 효과</h3>
+      <p>이미지 해상도를 512→1024→2048px로 높이면 문서 검색이 30.7→42.2→43.8 nDCG@5로 상승하고, HR cooldown을 더하면 45.8까지 오른다. 반대로 이미지 분류는 41.4→37.2→33.9→33.7로 하락해 과제별로 효과가 다르다. 텍스트 전용 쌍을 대조학습에 추가하면 문서 검색이 +1.7(43.9→45.6)로 향상되지만 이미지·캡션 검색은 57.2→53.2로 하락하고, NatCap의 image→caption 쌍을 추가하면 이미지 분류가 36.1→49.9로 크게 오르며 문서 검색도 소폭(+0.2) 상승한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성</h3>
+      <p>ColModernVBERT의 CPU 쿼리 인코딩 지연은 20ms로, 유사 성능 모델(ColPali 175ms, ColQwen2.5/Jina-v4 158ms) 대비 7배 이상 빠르다. Nvidia H100에서 배치 추론 시 초당 5000개 쿼리를 인코딩한다. 최종 학습에는 약 2,000 H100 GPU-hour(약 41kg CO2e)가 들었고 프로젝트 전체는 약 18,000 H100-hour를 사용했다. 텍스트 전용으로 최적화하지 않았음에도 NanoBEIR에서 평균 NDCG@5 0.589로 BM25s(0.559)를 능가한다.</p>
+      <span class="source-ref">PDF p. 9, 10, 26</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>핵심 메시지</h3>
+      <p>논문은 VLM 기반 검색 모델의 설계 결정을 재검토하여, early-fusion vision encoder 학습에서 무엇이 중요한지에 대한 통찰을 제공한다. 이 모델들은 자연 이미지 과제에서는 dual encoder 대비 개선을 못 보이지만, 문서 중심 검색에는 강한 vision-language alignment가 필수적이다. Bidirectional attention과 late-interaction 검색 사이의 긴밀한 시너지는 생성형 decoder VLM을 검색에 재활용하는 방식의 근본적 한계를 드러낸다. 데이터 부족은 다른 모달리티의 더 크고 저렴한 코퍼스로 보강할 수 있다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실용적 기여</h3>
+      <p>이 통찰을 종합해 250M 규모의 컴팩트하면서도 강력한 multimodal encoder ColModernVBERT를 학습했으며, 이는 10배 큰 모델의 시각 검색 성능에 필적한다. 저자들은 실무자가 시각 검색기 배포 시 비용과 지연을 줄이고 효율적 multimodal 임베딩 연구를 촉진하도록 모델과 학습 코드를 공개한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4, 8</span>
+              </div>
+              <p>ModernVBERT의 biphasic 학습 파이프라인과 late interaction 검색 흐름. 이미지는 타일 분할·pixel shuffling으로 토큰화되어 early fusion으로 언어모델에 입력되고, modality alignment(+HR cooldown)와 contrastive post-training을 거쳐 ColModernVBERT/BiModernVBERT가 생성된다.</p>
+              <div class="mermaid">
+flowchart TD
+    A[문서 페이지 이미지] --&gt; B[512x512 타일 분할]
+    B --&gt; C[SigLIP2 Vision Tower&lt;br/&gt;타일당 1024 patch]
+    C --&gt; D[Pixel Shuffling r=4&lt;br/&gt;64 토큰 압축]
+    D --&gt; E[Linear Projection]
+    F[텍스트 토큰 임베딩] --&gt; G[Early Fusion Concat]
+    E --&gt; G
+    G --&gt; H[언어모델 backbone&lt;br/&gt;bidirectional encoder]
+    H --&gt; I[1단계 Modality Alignment&lt;br/&gt;MLM/CLM loss + LoRA]
+    I --&gt; J[2단계 HR Cooldown&lt;br/&gt;2048px]
+    J --&gt; K[3단계 Contrastive Post-Training&lt;br/&gt;InfoNCE]
+    K --&gt; L[4단계 Document-Focused Scaling&lt;br/&gt;text:image 2:1]
+    L --&gt; M[ColModernVBERT&lt;br/&gt;Late Interaction MaxSim]
+    L --&gt; N[BiModernVBERT&lt;br/&gt;Single-vector]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 제안 방식 비교</h3>
+                <span class="source-ref">PDF p. 2, 6, 9</span>
+              </div>
+              <p>기존 VDR은 대형 생성형 causal decoder VLM을 post-hoc으로 검색에 재활용하는 반면, ModernVBERT는 사전학습된 bidirectional 텍스트 encoder를 vision encoder와 MLM으로 정렬해 처음부터 검색 중심으로 설계한다.</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph 기존방식[기존 VDR 방식]
+        A1[대형 생성형&lt;br/&gt;Decoder VLM] --&gt; A2[Causal Attention]
+        A2 --&gt; A3[Post-hoc&lt;br/&gt;Contrastive Fine-tuning]
+        A3 --&gt; A4[검색기&lt;br/&gt;GPU 필요, 고지연]
+    end
+    subgraph 제안방식[ModernVBERT]
+        B1[소형 Bidirectional&lt;br/&gt;Text Encoder] --&gt; B2[MLM Modality Alignment&lt;br/&gt;+ Vision Encoder]
+        B2 --&gt; B3[Bidirectional Attention&lt;br/&gt;+ Late Interaction]
+        B3 --&gt; B4[검색기&lt;br/&gt;CPU 가능, 저지연]
+    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>ViDoRe 평균 nDCG@5: 모델별 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · ViDoRe(v1)+ViDoRe(v2,eng) 평균 nDCG@5
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>CPU 쿼리 인코딩 지연시간</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · NanoBEIR 쿼리 평균(23.4단어), batch size 1, 2TB RAM CPU 클라우드
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>이미지 해상도가 과제별 성능에 미치는 영향</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 1 · Contrastive training 시 해상도 변화, HR Cooldown 유무
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>attention/객체별 Multi-vector 문서 검색 성능</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6, 7 · Figure 5 · Multi-vector late interaction, ColPali corpus post-training, ViDoRe 영어 splits
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>대조학습 데이터 mix가 과제별 성능에 미치는 영향</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · Baseline CL Mix 대비 Text→Text, Image→Caption(NatCap) 순차 추가
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>attention mask 등 단일 요인을 격리하기 위해 데이터·크기·스케줄이 동일한 통제된 체크포인트(enc/dec/dec-enc)를 사용한 iso-data controlled ablation은 인과적 주장을 뒷받침하는 방법론적으로 견고한 설계이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>모델·중간 체크포인트·학습 코드·데이터를 MIT 라이선스로 공개하고 탄소 배출까지 보고하여 재현성과 재사용성을 크게 높였다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>CPU에서 20ms 쿼리 인코딩과 소형(0.25B) 크기로 대형 모델급 검색 성능을 달성해, GPU 의존도가 높던 시각 검색을 로컬·저비용 환경으로 확장할 실용적 경로를 제시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>텍스트 전용 쌍의 cross-modal transfer를 실증하여, 고비용의 document-query 쌍에 대한 의존을 낮추고 데이터 수집 비용을 줄이는 방향을 제시한 점이 유용하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>분석이 상대적으로 작은 모델에 한정되어 있어 관찰된 패턴, 특히 late interaction과 bidirectional attention의 상호작용이 더 큰 규모에서도 유지되는지 검증이 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>연구가 영어에만 초점을 맞춰, 다국어로 확장할 때 추가 언어 파라미터 배정이 vision modality 이해와 어떻게 trade-off되고 영어 검색 성능이 얼마나 저하되는지 불분명하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>검색과 sequence 수준 zero-shot 분류에만 집중하여 OCR 오류 탐지, token-level classification, visual NER, token-level object detection, contextual embedding 등 modality-aligned encoder가 가능한 다양한 token 수준 작업은 다루지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>ColModernVBERT는 수십억 토큰의 텍스트·이미지로 사전학습·정렬된 더 큰 decoder VLM 기반 최상위 모델의 ViDoRe 성능에는 미치지 못한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>결과가 주로 ViDoRe/ViDoRe v2 영어 splits와 MIEB 일부 과제에 근거하므로, 도메인·언어·문서 유형이 다른 실사용 환경으로의 일반화 여부는 논문 범위에서 직접 검증되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>bidirectional attention과 late interaction의 시너지가 수십억 파라미터 규모의 대형 encoder에서도 유지되는가, 아니면 소형 모델 특유의 현상인가?</h3>
+              </div>
+              <p>저자가 소형 모델 한정 분석임을 명시하고 대규모 검증을 다음 단계로 지목함.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>다국어로 파라미터를 확장할 때 vision modality 이해와 영어 검색 성능이 어느 지점까지 유지되며, 언어 수 증가에 따른 성능 저하는 어떻게 나타나는가?</h3>
+              </div>
+              <p>저자가 영어 전용 한계와 다국어 확장 시 trade-off의 불확실성을 언급함.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>modality-aligned encoder를 OCR 오류 탐지, visual NER, token-level 분류 등 token 수준 작업에 적용하면 어느 정도 성능을 낼 수 있는가?</h3>
+              </div>
+              <p>저자가 token 수준 작업을 미탐구 영역으로 명시하고 base model 공개로 탐색을 장려함.</p>
+              <span class="source-ref">PDF p. 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>학습 후 causal mask를 제거하는 방식(dec-enc)이 enc의 late interaction 성능을 회복하지 못하는 근본 원인은 무엇이며, 더 큰 데이터 regime에서는 이 격차가 좁혀지는가?</h3>
+              </div>
+              <p>논문이 dec-enc가 enc 성능을 회복하지 못한다고 관찰했으나 그 원리와 데이터 규모 의존성은 완전히 규명하지 않음.</p>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Visual Document Retrieval (VDR)</dt>
+              <dd>
+                OCR로 텍스트를 추출하지 않고 페이지 스크린샷 자체를 이미지로 임베딩해, 쿼리와 페이지 이미지 표현을 매칭하여 관련 문서를 검색하는 방식.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Modality Alignment</dt>
+              <dd>
+                사전학습된 텍스트 언어모델이 시각 입력을 언어모델 임베딩 공간에서 이해하도록 image projection layer(및 LoRA)를 언어모델링 목표로 학습하는 단계.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late Interaction (MaxSim)</dt>
+              <dd>
+                쿼리·문서의 모든 토큰 임베딩을 유지하고 MaxSim으로 토큰 간 세밀한 매칭 점수를 계산하는 multi-vector 검색 메커니즘.
+                <span class="source-ref">PDF p. 5, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Early Fusion</dt>
+              <dd>
+                vision encoder의 patch 임베딩을 언어모델 입력 공간으로 투영해 텍스트 토큰 임베딩과 concat한 뒤 함께 처리하는 멀티모달 아키텍처.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Bidirectional / Causal Attention</dt>
+              <dd>
+                bidirectional attention은 모든 토큰이 서로를 참조하는 방식(MLM encoder)이고, causal attention은 각 토큰이 이전 토큰만 참조하는 방식(생성형 decoder)이다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MLM / CLM</dt>
+              <dd>
+                MLM(Masked Language Modeling)은 마스킹된 토큰을 문맥으로 예측하는 encoder 목표, CLM(Causal Language Modeling)은 다음 토큰을 예측하는 decoder 목표.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Pixel Shuffling</dt>
+              <dd>
+                vision tower가 만든 다수의 patch 토큰을 압축 비율 r로 줄여(예: 1024→64) 시퀀스 길이를 단축하는 토큰 압축 기법.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>InfoNCE / Contrastive Post-Training</dt>
+              <dd>
+                positive와 in-batch/hard negative 간 유사도를 대조하여 출력 임베딩의 의미 표현을 강화하는 대조학습 손실 및 단계.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@k</dt>
+              <dd>
+                상위 k개 검색 결과의 순위 품질을 이상적 순위 대비 정규화해 측정하는 검색 평가 지표.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>HR Cooldown (High-Resolution Cooldown)</dt>
+              <dd>
+                modality alignment 말미에 입력 해상도를 2048px로 높여 추가 학습함으로써 문서 이해력을 강화하는 단계.
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Figure 1(Pareto efficiency scatter plot)의 각 모델 (Model Size, ViDoRe Score) 정확 좌표는 수치 라벨이 없어 그래프에서 확인 불가.</li><li>Figure 4 및 Appendix Figure 8, 9, 10의 학습 곡선상 각 지점의 정확한 수치는 라벨 없는 선 그래프로 제공되어 확인 불가.</li><li>정식 게재 학회/저널 명칭은 본문에서 확인되지 않으며 표지에는 arXiv preprint(arXiv:2510.01149v3, cs.IR, 2025-12-16) 식별자만 명시됨.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe 평균 nDCG@5: 모델별 비교", "labels": ["NemoRetriever-3B (4.40B)", "GME-Qwen2 (8.29B)", "ColQwen2.5 (3.75B)", "Jina-v4 (3.75B)", "ColPali (2.92B)", "ColModernVBERT (0.25B)", "MoCa-3B (3.75B)", "E5-V (8.36B)", "ColFlor (0.17B)", "BiModernVBERT (0.25B)", "VLM2Vec (4.15B)", "SigLIP2-L-512/16 (0.88B)"], "values": [78.7, 75.8, 75.5, 75.2, 69.2, 68.6, 66.9, 56.1, 55.9, 49.7, 43.1, 35.4], "unit": "nDCG@5", "xLabel": "모델 (파라미터 수)", "yLabel": "ViDoRe 평균 nDCG@5"}, {"canvasId": "chart-1", "type": "bar", "title": "CPU 쿼리 인코딩 지연시간", "labels": ["E5-V", "GME-Qwen2", "VLM2Vec", "ColPali", "ColQwen2.5", "Jina-v4", "MoCa-3B", "NemoRetriever-3B", "BGE Visualized M3", "SigLIP2-L-512/16", "ColModernVBERT", "BiModernVBERT", "ColFlor", "Jina CLIP"], "values": [434, 412, 211, 175, 158, 158, 158, 155, 38, 25, 20, 20, 17, 14], "unit": "ms", "xLabel": "모델", "yLabel": "CPU 쿼리 인코딩 지연"}, {"canvasId": "chart-2", "type": "bar", "title": "이미지 해상도가 과제별 성능에 미치는 영향", "labels": ["문서검색 512px", "문서검색 1024px", "문서검색 2048px", "문서검색 2048px+HR", "이미지분류 512px", "이미지분류 1024px", "이미지분류 2048px", "이미지분류 2048px+HR"], "values": [30.7, 42.2, 43.8, 45.8, 41.4, 37.2, 33.9, 33.7], "unit": "nDCG@5 / Accuracy (집계)", "xLabel": "해상도 / HR Cooldown", "yLabel": "점수"}, {"canvasId": "chart-3", "type": "bar", "title": "attention/객체별 Multi-vector 문서 검색 성능", "labels": ["enc (MLM, bidirectional)", "dec (CLM, causal)"], "values": [64.8, 54.2], "unit": "nDCG@5", "xLabel": "모델 (attention/objective)", "yLabel": "ViDoRe 평균 nDCG@5 (multi-vector)"}, {"canvasId": "chart-4", "type": "bar", "title": "대조학습 데이터 mix가 과제별 성능에 미치는 영향", "labels": ["문서검색 Baseline", "문서검색 +Text→Text", "문서검색 +Image→Caption", "이미지캡션검색 Baseline", "이미지캡션검색 +Text→Text", "이미지캡션검색 +Image→Caption", "이미지분류 Baseline", "이미지분류 +Text→Text", "이미지분류 +Image→Caption"], "values": [43.9, 45.6, 45.8, 57.2, 53.2, 54.4, 36.1, 35.7, 49.9], "unit": "nDCG@5 / Accuracy (집계)", "xLabel": "데이터 mix / 과제", "yLabel": "점수"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
