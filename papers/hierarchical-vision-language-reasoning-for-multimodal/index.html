@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Hierarchical Vision-Language Reasoning for Multimodal Multiple-Choice Question Answering</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Hierarchical Vision-Language Reasoning for Multimodal Multiple-Choice Question Answering</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Ao Zhou, Zebo Gu, Tenghao Sun, Jiawen Chen, Mingsheng Tu, Zifeng Cheng, Yafeng Yin, Zhiwei Jiang, Qing Gu</span>
+        <span><strong>출처</strong> · Proceedings of the 33rd ACM International Conference on Multimedia (MM &#x27;25), Dublin, Ireland</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 또는 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 복잡한 레이아웃과 방대한 분량을 가진 일본어 PDF 문서에서, 10개의 선택지 중 정답을 고르는 ten-choice 질의응답(multiple-choice QA) 과제를 푸는 프레임워크를 제안한다. 핵심 아이디어는 (1) ColQwen2(ColPali 계열)를 이용한 vision-language 검색으로 전체 PDF에서 질의와 가장 관련 있는 상위 3개 페이지 이미지를 찾고 QwenVL2.5로 재필터링한 뒤, (2) 대규모 언어모델과 정교한 프롬프트로 원 질문을 여러 sub-question으로 분해(sub-question decomposition)하고 그 답을 검증하는 계층적(hierarchical) 추론을 수행하며, (3) bounding box 기반 crop 모듈로 검색 결과를 보정하는 것이다. 프롬프트는 언어 편향을 줄이기 위해 1단계는 영어·일본어 이중언어로, 2단계는 일본어 전용으로 설계되고, think/answer 필드를 가진 구조화된 JSON으로 추론 과정을 함께 출력한다. 저자들은 task-specific fine-tuning 없이 여러 최신 MLLM을 zero-shot으로 Public Score 지표에서 비교하였고, Qwen2.5-VL-72B·Kimi-VL-A3B-Thinking·GLM-4.1-9B-Thinking을 결합한 fusion이 0.59로 최고 성능을 기록했다. 실패 사례 분석에서는 retrieval precision이 주요 병목임을 확인하였다.</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 5, 6</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ColQwen2 기반 late interaction 검색 + QwenVL2.5 재필터링 + 2단계 sub-question decomposition + bounding box crop 보정을 결합한 zero-shot 계층적 추론 프레임워크를 제안한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>1단계 영어·일본어 이중언어 프롬프트와 2단계 일본어 전용 프롬프트를 사용해 언어 편향을 완화하고, think/answer 필드를 가진 구조화된 JSON으로 추론 과정을 보존한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Qwen2.5-VL-72B + Kimi-VL-A3B-Thinking + GLM-4.1-9B-Thinking fusion이 Public Score 0.59로 최고 성능을 기록했고, 단일 모델 최고는 0.57(Qwen2.5-VL-72B / -Instruct)이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>실패 사례 분석 결과 retrieval precision이 주요 성능 병목이며, 핵심 영역을 1개에서 3개로 늘리면 정확도가 50%에서 80~90%로 향상된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>긴 PDF 문서에 대한 ten-choice 질의응답</h3>
+      <p>MLLM(Multimodal Large Language Model)은 시각·텍스트 정보를 통합해 VQA(Visual Question Answering)에서 뛰어난 능력을 보였으나, 10개 선택지 중 정답을 고르는 어려운 ten-choice 평가 방식 하에서 수십~수백 페이지에 이르는 방대한 분량과 표·차트·다이어그램 등 비선형적이고 복잡한 레이아웃을 가진 PDF 문서를 처리할 때 여전히 유의미한 한계를 보인다. 이러한 문서 처리 능력은 상업적 배포의 핵심 장벽으로 지적된다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비영어권(일본어) 언어 격차</h3>
+      <p>현재 주류 모델들은 영어 학습 데이터에 강하게 편중되어 있어 일본어를 비롯한 비영어권 언어 시나리오에서 최적 이하의 성능을 보인다. 특히 일본어 문서 수준 VQA는 JDocQA가 유일하게 공개된 벤치마크일 정도로 연구가 부족한 영역이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>OCR·순수 텍스트 모델의 파싱 한계</h3>
+      <p>전통적인 OCR(Optical Character Recognition) 기법과 순수 텍스트 기반 언어모델은 표·차트 등 구조화된 문서 콘텐츠를 효과적으로 파싱하는 데 어려움을 겪으며, 종합적인 문서 이해는 요소 간 의미적 상관관계를 확립해야 하는 경우가 많다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>문서 특화·범용 모델의 잔존 한계</h3>
+      <p>mPLUG-DocOwl, Docopilot 같은 문서 이해 특화 VLM과 GPT-4, GLM4.1, Qwen-VL, Kimi-VL 등 범용 MLLM이 문서 이미지 처리에서 점차 향상된 적응력을 보여왔음에도, 어려운 ten-choice 평가 방식 하에서 복잡한 레이아웃과 긴 콘텐츠의 PDF를 처리할 때 여전히 유의미한 한계를 남기고 있으며, 일본어 문서 수준 VQA는 특히 연구가 부족하다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ColQwen 최적화 검색 + 계층적 추론 프레임워크</h3>
+      <p>ColQwen에 최적화된 검색 기법과 멀티모달 계층적(hierarchical) 추론 메커니즘을 결합한 새로운 일본어 PDF 문서 이해 프레임워크를 제안한다. ColQwen을 사용해 전체 PDF 문서에서 질의와 가장 의미적으로 관련성이 높은 상위 3개 페이지를 식별한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>sub-question decomposition 기반 semantic verification</h3>
+      <p>대규모 언어모델과 정교하게 설계된 프롬프트로 원 질문을 일련의 sub-question으로 분해하고, semantic drift를 완화하는 semantic verification 메커니즘을 도입하여 검색 결과의 정확성과 견고성을 향상시킨다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구조화된 추론 출력과 zero-shot 평가</h3>
+      <p>완전한 추론 과정(reasoning trace)을 보존하는 구조화된 출력 형식을 prompt engineering으로 생성하고, 이 프레임워크를 이용해 다수의 최신 MLLM에 대해 task-specific fine-tuning 없이 zero-shot 평가를 수행하여 일반화 능력을 Public Score 지표로 공정하게 비교한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>3개 핵심 단계 + 보조 모듈</h3>
+      <p>프레임워크는 (1) ColQwen2 기반 vision-language 검색으로 질의 관련 PDF 페이지 이미지를 식별한 뒤 QwenVL2.5로 재필터링하는 검색 단계, (2) 이미지·질문·참고자료를 바탕으로 원 질문을 하위 질문들로 분해하고 답을 검증하는 2단계 sub-question decomposition 및 prompt design 단계, (3) QwenVL2.5로 정답 관련 영역의 bounding box를 추정·crop하여 검색 결과를 보정하는 보조 모듈로 구성된다(Figure 1).</p>
+      <span class="source-ref">PDF p. 3, 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구조화된 JSON 출력</h3>
+      <p>최종적으로 think(추론 과정)와 answer(최종 답) 필드를 포함하는 구조화된 JSON 형태로 추론 과정과 최종 답을 함께 출력하여 추론 추적성과 시스템 통합을 향상시킨다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계: 페이지 이미지화와 top-3 검색</h3>
+      <p>PDF 문서를 개별 페이지로 분할하고 각 페이지를 PNG 이미지로 변환한 뒤, 주어진 질의에 대해 ColQwen2 모델이 유사도 점수 기준 상위 3개 페이지 이미지를 검색한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계: QwenVL2.5 재필터링</h3>
+      <p>QwenVL2.5 모델이 검색된 상위 3개 이미지를 다시 검토해 관련 없는 페이지를 필터링하며, 이 과정에서 1~3개의 관련 이미지가 유지되고 최소 1개의 이미지는 항상 보존된다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계: 1단계 sub-question 생성(영·일 이중언어)</h3>
+      <p>1단계 프롬프트(영어+일본어 버전)로 이미지와 질문을 분석하여 여러 sub-question과 각각의 답, 그리고 참고자료(reference)를 생성한다. sub-question은 관련 데이터 위치 파악, 수치 추출, 추세 식별, 비교 분석 등 다단계 추론 유형을 포괄한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계: 2단계 통합 추론(일본어 전용)</h3>
+      <p>2단계 프롬프트(일본어 전용)로 원본 이미지, 질문, 1단계에서 생성된 참고자료 및 sub-question-답변 쌍을 결합하여 추가 sub-question과 답을 생성하고, 최종적으로 원 질문에 대한 최종 답을 도출한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계(보조): bounding box crop 보정</h3>
+      <p>QwenVL2.5로 정답에 필요한 최소 bounding rectangle 좌표 [x1,y1,x2,y2]∈[0,1]^4와 신뢰도 점수 α를 추정해 이미지를 crop하고, ColQwen으로 crop 이미지와 기존 top-3 이미지의 유사도를 비교해 crop 이미지가 더 높으면 검색 집합의 해당 이미지를 crop 이미지로 교체한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계: voting 기반 최종 결정</h3>
+      <p>추론 시 질문당 3회의 독립적인 reasoning trial을 수행하며 매번 선택지 순서를 섞고, 최소 2표를 얻은 답을 최종 답으로 선택한다. 각 답이 1표씩인 동점의 경우 모든 후보 선택지를 유지한 채 2차 질의를 수행하고 1회 추가 추론으로 최종 결정을 내린다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ColBERT 스타일 late interaction 검색 (Eq.1)</h3>
+      <p>ColPali는 문서 페이지 스크린샷을 patch로 나눠 ViT로 인코딩하고, patch 임베딩을 언어모델의 soft token으로 취급하여 128차원 공간으로 투영한 multi-vector 표현을 만든다. 검색은 ColBERT 스타일 late interaction으로 계산되며, LI(q,d) = Σ_{i=1}^{N_q} max_{j∈[1,N_d]} ⟨E_q^(i), E_d^(j)⟩ 로 질의 토큰마다 문서 토큰과의 최대 내적을 합산한다. 학습은 in-batch negative sampling과 softplus contrastive loss(Eq.2)를 사용한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColQwen2의 개선점</h3>
+      <p>ColQwen2는 ColPali 위에 종횡비를 보존하는 동적 이미지 해상도 지원, LoRA·8-bit optimizer를 이용한 효율적 학습을 더해 다양한 레이아웃에 대한 견고성을 높이면서 ColBERT 스타일 multi-vector late interaction을 유지하여 질의-문서 patch 간 fine-grained 매칭을 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>sub-question decomposition 로직</h3>
+      <p>이미지(차트·표·다이어그램), 질문, 참고자료를 입력받아 이미지 인식과 텍스트 추출을 결합해 구조화된 데이터를 얻고, 질문을 데이터 위치 파악·수치 추출·추세 식별·비교 분석 등의 논리적 단계로 의미적으로 분해한다. 각 sub-question에 일관된 답을 부여하지만 모듈의 최종 출력은 원 질문에 대한 단일 결론적 답이다. Figure 2의 예에서는 환경 문제 인식 조사 차트에 대해 &#x27;2014년 동의 비율은?&#x27;(81.3%) 등의 sub-question이 생성된다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>평가는 JDocQA corpus를 기반으로 구축된 도메인 특화 일본어 PDF 문서 이해 벤치마크에서 수행되며, 10개 선택지 중 정답을 고르는 ten-choice 형식이다. 본문에서는 challenge dataset / challenge public dataset로 지칭된다. 다만 정식 명칭, 총 질문 수, 문서 수 등 구체적 규모 통계는 본문에 명시되지 않았다.</p>
+      <span class="source-ref">PDF p. 2, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상 모델과 지표</h3>
+      <p>GPT-4o, Gemini-1.5, Claude-3.5, Llama-3.2-V-90B-Instruct, InternVL3-8B/9B/78B, Qwen2.5-VL-7B, Kimi-VL-A3B, GLM-4.1-9B, Qwen2.5-VL-72B(-Instruct) 등 단일 MLLM과 이들의 fusion 조합을 Public Score 지표로 비교한다. 모든 평가는 task-specific fine-tuning 없이 zero-shot으로 수행되며, 질문당 3회 reasoning trial과 선택지 셔플링을 포함한 voting mechanism으로 결과를 얻는다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation 및 사례 연구</h3>
+      <p>Figure 5는 GLM-4.1 기반 ablation으로 검색 필터링·decomposition·다국어 프롬프트·2단계 프롬프트·추가 모듈의 기여를 분석한다. Figure 6은 10개 오답 사례에 대해 사람이 지정한 핵심 영역 수를 1→3개로 늘렸을 때 정확도 변화를 보는 사례 연구다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Fusion이 최고 성능</h3>
+      <p>Qwen2.5-VL-72B, Kimi-VL-A3B-Thinking, GLM-4.1-9B-Thinking을 결합한 fusion이 Public Score 0.59로 전체 최고 성능을 달성했다. 단일 모델 중에서는 Qwen2.5-VL-72B와 Qwen2.5-VL-72B-Instruct가 각각 0.57로 최고였다. 두 값이 같아 instruction tuning이 본 과제에서 유의미한 향상을 주지 못함을 시사한다(Table 1).</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>규모보다 아키텍처·데이터 품질</h3>
+      <p>Qwen2.5-VL-7B(0.56)와 Kimi-VL-A3B(0.56) 같은 소규모 모델이 InternVL3-78B(0.54)나 Llama-3.2-V-90B-Instruct(0.53) 같은 더 큰 모델보다 높은 점수를 기록하여, 파라미터 규모보다 모델 아키텍처와 학습 데이터 품질이 더 중요함을 시사한다. 한편 InternVL3 계열(8B+9B+78B) 앙상블은 계열 내 최고 단일 성능 0.54를 0.56으로 끌어올렸으나, Qwen2.5-VL-72B+Kimi(0.58)에 Qwen2.5-VL-72B-Instruct를 더해도 0.58로 유지되는 한계 효과(threshold effect)가 관찰됐다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 ablation</h3>
+      <p>GLM-4.1 기준 ColQwen 검색+Qwen2.5-VL 필터링만 사용한 baseline은 0.52, sub-question decomposition 추가 시 0.53, 1단계 다국어(영·일) 프롬프트 추가 시 0.54로 향상됐다. 2단계 프롬프트 개선과 추가 모듈은 이 peak를 유지하여, 성능 향상이 주로 retrieval filtering·decomposition·다국어 프롬프트 설계의 시너지에서 발생함을 시사한다(Figure 5).</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색 정밀도가 병목</h3>
+      <p>10개 대표 오답 사례에서 사람이 지정한 핵심 영역(key region) 수를 1개에서 3개로 늘리자 시스템 정확도가 50%에서 80~90%로 크게 향상됐다. 이는 기존 모델이 관련 시각 정보가 주어지면 충분히 추론할 수 있으나, 현재 자동 검색 시스템이 핵심 영역을 스스로 찾아내는 데 결함이 있음을 드러낸다(Figure 6).</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>요약과 시사점</h3>
+      <p>본 연구는 새로 구축한 벤치마크를 기반으로 멀티모달 정보 처리와 계층적 추론을 통합한 일본어 PDF 문서 이해 프레임워크를 설계했다. ColQwen을 이용한 정밀한 image-text 검색과 sub-question 기반 semantic verification으로 문서 레이아웃 복잡성과 장거리 의존성을 다루며, 복잡한 질의를 분해하고 구조화된 추론 과정을 생성한다. 실험은 프레임워크의 효과성과 해석 가능성을 보였고, 향후 개선 방향으로 검색 정밀도가 지목된다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>PDF를 페이지 이미지로 변환한 뒤 ColQwen2 top-3 검색 → QwenVL2.5 재필터링 → 1단계(영·일) sub-question 생성 → 2단계(일본어) 통합 추론 → voting으로 최종 답을 산출하며, bounding box crop 보정 모듈이 검색 집합을 개선한다(Figure 1 기반).</p>
+              <div class="mermaid">
+flowchart TB
+  A[PDF를 페이지 PNG로 변환] --&gt; B[ColQwen2 late interaction 검색\ntop-3 페이지]
+  B --&gt; C[QwenVL2.5 재필터링\n1~3개 유지, 최소 1개]
+  C --&gt; D[1단계 프롬프트: 영어+일본어\nsub-question+답+참고자료 생성]
+  D --&gt; E[2단계 프롬프트: 일본어 전용\n통합 추론, 최종 답 도출]
+  E --&gt; F[3회 reasoning + 선택지 셔플\nvoting으로 최종 답]
+  G[QwenVL2.5 bounding box 추정\ncrop 후 ColQwen 유사도 비교] -.검색집합 보정.-&gt; C
+  F --&gt; H[구조화 JSON 출력\nthink + answer]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 제안 방식 비교</h3>
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </div>
+              <p>OCR·순수 텍스트 모델이나 단순 MLLM 직접 질의 대비, 제안 방식은 검색+재필터링+계층적 sub-question 분해+다국어 프롬프트를 결합한다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph 기존[기존 방식]
+    P1[OCR/순수 텍스트 파싱] --&gt; P2[MLLM 직접 질의]
+    P2 --&gt; P3[영어 편향\n긴 PDF/일본어 취약]
+  end
+  subgraph 제안[제안 방식]
+    Q1[ColQwen 검색+필터링] --&gt; Q2[sub-question 분해\nsemantic verification]
+    Q2 --&gt; Q3[영·일 이중언어 프롬프트\n구조화 추론]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>단일 MLLM Public Score 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 1 · challenge public dataset, zero-shot 단일 모델 Single Score
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Fusion 조합별 Public Score</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Table 1 · challenge public dataset, zero-shot fusion 조합별 Score
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>GLM-4.1 구성요소 ablation (본문 명시 수치)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Figure 5 · GLM-4.1 ablation, 본문에 명시된 0.52/0.53/0.54만 사용(2단계 프롬프트·추가 모듈 수치는 본문 미명시)
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>검색(retrieval)과 계층적 추론(decomposition)을 명확히 분리·결합하고 bounding box crop 보정까지 더해, ablation에서 각 구성요소의 기여를 단계적으로 검증한 점이 방법의 설득력을 높인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>영어·일본어 이중언어 프롬프트로 언어 편향을 다루는 접근은 비영어권 문서 VQA라는 저연구 영역에 대한 실용적 대응으로, ablation에서 0.53→0.54 향상으로 효과가 뒷받침된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>task-specific fine-tuning 없이 여러 최신 MLLM을 동일 프레임워크로 zero-shot 평가하여, 모델 간 일반화 능력을 상대적으로 공정하게 비교할 수 있게 했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>think/answer JSON 출력과 sub-question 추적으로 추론 과정의 투명성·해석 가능성을 확보한 점은 실무 통합과 답변 근거 추적에 유리하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>저자들은 competition 학습 데이터가 풍부하고 고품질임에도 의도적으로 instruction tuning을 피하고 zero-shot을 채택했다. 실제 instruction tuning을 시도했으나 성능이 zero-shot보다 낮았으며, 원인으로 (1) 후보 답안 수가 많아 과제 난이도가 높은 점, (2) fine-tuning 데이터가 제한적인 점, (3) 전체 PDF 기반 질문과 학습용 PNG 이미지 간 불일치를 제시했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>10개 실패 사례 분석 결과 retrieval precision이 주요 성능 병목으로 확인됐다. 핵심 영역을 1→3개로 늘리면 정확도가 50%→80~90%로 향상된다는 점은, 모델의 추론 능력은 충분하나 자동 검색 시스템이 핵심 영역을 스스로 찾는 데 결함이 있음을 드러낸다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>평가 데이터셋의 정식 명칭·질문 수·문서 수 등 규모 통계와 Public Score의 정확한 계산 방식이 본문에 제시되지 않아, 결과의 절대적 수준과 재현성을 판단하기 어렵다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>본문 서술의 모델명(예: Kimi-VL-A3B-Thinking)과 Table 1 헤더(Kimi-VL-A3B)가 일치하지 않고, Figure 5 baseline(0.52)과 Table 1의 GLM-4.1-9B 단일 점수(0.55)가 달라, 실험 조건 간 정합성이 본문만으로는 명확하지 않다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>검색 정밀도(retrieval precision)가 병목이라면, ColQwen 검색과 QwenVL2.5 필터링을 넘어서는 자동 key-region 위치 지정 기법(예: 학습형 region proposal)이 정확도를 사람 수준(80~90%)에 근접시킬 수 있는가?</h3>
+              </div>
+              <p>핵심 영역을 수동으로 1→3개로 늘리면 50%→80~90%로 향상된다는 Figure 6 결과</p>
+              <span class="source-ref">PDF p. 6</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>본 과제에서 instruction tuning이 zero-shot보다 낮았던 원인 중 &#x27;PDF 질문 vs PNG 학습 이미지 불일치&#x27;를 해소하도록 학습 데이터를 정렬하면 fine-tuning이 zero-shot을 능가할 수 있는가?</h3>
+              </div>
+              <p>저자가 제시한 instruction tuning 성능 저하 원인 (3)</p>
+              <span class="source-ref">PDF p. 6</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>이중언어(영·일) 프롬프트 전략이 일본어 외 다른 비영어권 언어 문서 VQA에도 일반화되는가, 그리고 언어별로 최적 프롬프트 구성이 달라지는가?</h3>
+              </div>
+              <p>1단계 다국어 프롬프트가 언어 편향을 완화(0.53→0.54)한다는 ablation 결과</p>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>fusion에서 관찰된 한계 효과(threshold effect)를 감안할 때, 어떤 모델 상호보완성(complementarity) 지표가 0.59를 넘는 조합을 예측할 수 있는가?</h3>
+              </div>
+              <p>Qwen72B+Kimi(0.58)에 Qwen72B-Instruct를 더해도 0.58로 유지되는 threshold effect</p>
+              <span class="source-ref">PDF p. 6</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>ten-choice question / multiple-choice QA</dt>
+              <dd>
+                10개의 후보 선택지 중에서 정답 하나를 고르는 질의응답 평가 방식으로, 후보 수가 많아 과제 난이도가 높다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ColPali / ColQwen2</dt>
+              <dd>
+                문서 페이지 스크린샷을 patch로 나눠 ViT로 인코딩하고 이를 언어모델의 soft token으로 다루는 vision-language 검색 모델. ColQwen2는 동적 해상도, LoRA·8-bit optimizer 등으로 개선된 변형이다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>late interaction (ColBERT-style)</dt>
+              <dd>
+                질의와 문서를 각각 다중 벡터로 표현한 뒤, 질의 토큰마다 문서 토큰과의 최대 내적을 구해 합산하는 fine-grained 매칭 방식(Eq.1).
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>sub-question decomposition</dt>
+              <dd>
+                원 질문을 데이터 위치 파악·수치 추출·추세 식별·비교 분석 등의 논리적 하위 질문으로 분해하고 각각에 답한 뒤 단일 결론 답을 도출하는 계층적 추론 전략.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>semantic verification / semantic drift</dt>
+              <dd>
+                sub-question과 참고자료를 지식 앵커로 삼아 검색·추론 과정에서 의미가 원 질문에서 벗어나는 현상(semantic drift)을 완화하고 검색 결과의 정확성·견고성을 높이는 메커니즘.
+                <span class="source-ref">PDF p. 1, 2, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Public Score</dt>
+              <dd>
+                challenge (public) dataset에서 모델을 비교하는 데 사용된 성능 지표. 구체적 계산 방식은 본문에 명시되지 않음(확인되지 않음).
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>voting mechanism</dt>
+              <dd>
+                질문당 3회 독립 추론을 선택지 순서를 섞어 수행하고 최소 2표를 얻은 답을 채택하며, 동점 시 2차 질의와 추가 추론으로 최종 결정하는 방식.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>bounding box 사전 고정 모듈</dt>
+              <dd>
+                QwenVL2.5로 정답에 필요한 최소 경계 사각형 좌표와 신뢰도 α를 산출해 이미지를 crop하고, ColQwen 유사도가 더 높으면 검색 이미지를 교체해 정합성을 높이는 보조 모듈.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>평가 데이터셋(&#x27;challenge dataset&#x27; / &#x27;challenge public dataset&#x27;)의 정식 명칭, 총 질문 수, 문서(페이지) 수 등 규모 통계는 본문에 명시되지 않음.</li><li>본문(Section 4.2)의 &#x27;Kimi-VL-A3B-Thinking&#x27;, &#x27;GLM-4.1-9B-Thinking&#x27;, &#x27;Qwen2.5-VL-7B-Instruct&#x27;와 Table 1 헤더(&#x27;Kimi-VL-A3B&#x27;, &#x27;GLM-4.1-9B&#x27;, &#x27;Qwen2.5-VL-7B&#x27;)가 동일 변형인지 본문만으로 확인 불가.</li><li>Figure 5 ablation의 7개 지점 중 본문에는 0.52/0.53/0.54만 명시되어 EN Prompt·2단계 프롬프트·추가 모듈 등 나머지 지점의 정확한 수치는 확정 불가.</li><li>&#x27;Public Score&#x27; 지표의 구체적 계산 방식·정의는 본문에 없음.</li><li>Figure 6에서 모델별(InternVL3-9B, Qwen2.5-VL-7B, Kimi-VL-A3B, GLM-4.1-9B) base/top1~3 지점별 정확 수치는 그래프에만 있고 본문은 &#x27;50%→80~90%&#x27; 범위만 서술.</li><li>Figure 5 캡션의 GLM-4.1 baseline(0.52)과 Table 1의 GLM-4.1-9B 단일 점수(0.55)가 달라 두 실험 간 관계가 본문에서 명확히 설명되지 않음.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "단일 MLLM Public Score 비교", "labels": ["GPT-4o", "Gemini-1.5", "Claude-3.5", "Llama-3.2-V-90B-I", "InternVL3-8B", "InternVL3-9B", "InternVL3-78B", "Qwen2.5-VL-7B", "Kimi-VL-A3B", "GLM-4.1-9B", "Qwen2.5-VL-72B-I", "Qwen2.5-VL-72B"], "values": [0.52, 0.53, 0.53, 0.53, 0.5, 0.49, 0.54, 0.56, 0.56, 0.55, 0.57, 0.57], "unit": "Public Score", "xLabel": "모델", "yLabel": "Public Score"}, {"canvasId": "chart-1", "type": "bar", "title": "Fusion 조합별 Public Score", "labels": ["InternVL3-8B+9B+78B", "Qwen72B+Kimi", "Qwen72B+Kimi+Qwen72B-I", "Qwen72B+Kimi+GLM4.1"], "values": [0.56, 0.58, 0.58, 0.59], "unit": "Public Score", "xLabel": "모델 조합", "yLabel": "Public Score"}, {"canvasId": "chart-2", "type": "bar", "title": "GLM-4.1 구성요소 ablation (본문 명시 수치)", "labels": ["ColQwen 검색+Qwen2.5-VL 필터링", "+ sub-question decomposition", "+ 1단계 다국어(영·일) 프롬프트"], "values": [0.52, 0.53, 0.54], "unit": "Public Score", "xLabel": "누적 구성요소", "yLabel": "Public Score"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
