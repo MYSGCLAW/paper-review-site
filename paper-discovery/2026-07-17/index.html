@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Paper Discovery - 2026-07-17</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-hover: #252b3d;
+      --border: #2d3548;
+      --text: #e1e4eb;
+      --muted: #8892a4;
+      --accent: #58a6ff;
+      --max-width: 1100px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+    .page-shell { width: min(calc(100% - 32px), var(--max-width)); margin: 0 auto; }
+    header { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .back-link { color: var(--accent); font-weight: 700; }
+    .eyebrow {
+      margin: 28px 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.2; }
+    .summary { max-width: 760px; color: var(--muted); }
+    main { padding: 32px 0 80px; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .library-card {
+      display: flex;
+      min-height: 320px;
+      flex-direction: column;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .library-card:hover { background: var(--surface-hover); }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+    h2 a:hover, .open-link { color: var(--accent); }
+    .status-badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(174, 184, 198, 0.13);
+      color: #aeb8c6;
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .authors { margin: 14px 0 0; font-size: 0.92rem; }
+    .metadata { margin: 4px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .card-summary { margin: 22px 0; color: var(--muted); font-size: 0.94rem; }
+    .open-link { margin-top: auto; font-weight: 700; font-size: 0.9rem; }
+    @media (max-width: 640px) {
+      .library-grid { grid-template-columns: 1fr; }
+      .library-card { min-height: auto; }
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+  </style>
+</head>
+<body class="auth-locked">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header>
+    <div class="page-shell">
+      <a class="back-link" href="../../">← 홈페이지</a>
+      <p class="eyebrow">Paper Discovery</p>
+      <h1>Daily Paper Discovery - 2026-07-17</h1>
+      <p class="summary">오늘 추천 후보 12개: Reproduction Beyond Benchmarks: ConstBERT and ColBERT-v2 Across Backends and Query Distributions, Compact Models for Structured Argument and Stance Analysis: A Framing-Aware, Retrieval-Augmented Pipeline, Comparison of Lower-Extremity Coordination Patterns During Countermovement Jumps Between Dancers and Nondancers</p>
+    </div>
+  </header>
+  <main class="page-shell">
+    <div class="library-grid">
+      
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://doi.org/10.1145/3805712.3808561">
+            Reproduction Beyond Benchmarks: ConstBERT and ColBERT-v2 Across Backends and Query Distributions
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Utshab Kumar Ghosh, Ashish David, Shubham Chatterjee</p>
+      <p class="metadata">2026-07-17 · 2026 · OpenAlex · Score 2</p>
+      <div class="tag-row"><span class="tag">ColBERT</span></div>
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://doi.org/10.1145/3805712.3808561">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://doi.org/10.3390/make8070203">
+            Compact Models for Structured Argument and Stance Analysis: A Framing-Aware, Retrieval-Augmented Pipeline
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Antonis Charalampous, Constantinos Djouvas</p>
+      <p class="metadata">2026-07-17 · 2026 · Machine Learning and Knowledge Extraction · OpenAlex · Score 2</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://doi.org/10.3390/make8070203">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://openalex.org/W7167986134">
+            Comparison of Lower-Extremity Coordination Patterns During Countermovement Jumps Between Dancers and Nondancers
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Danielle Joseph</p>
+      <p class="metadata">2026-07-17 · 2026 · Aquila Digital Community (University of Southern Mississippi) · OpenAlex · Score 2</p>
+      <div class="tag-row"><span class="tag">XTR</span></div>
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://openalex.org/W7167986134">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://doi.org/10.1145/3718958.3750488">
+            CEIO: A Cache-Efficient Network I/O Architecture for NIC-CPU Data Paths
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Bowen Liu, X. T. Huang, Qijing Li, Zhuobin Huang, Yijun Sun, Wenxue Li, Junxue Zhang, Ping Yin, et al.</p>
+      <p class="metadata">2026-07-17 · 2025 · OpenAlex · Score 2</p>
+      <div class="tag-row"><span class="tag">cache</span></div>
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://doi.org/10.1145/3718958.3750488">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2409.12308v1">
+            Robust DOA Estimation Based on Dual Lawson Norm for RIS-Aided Wireless Communication Systems
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Canping Yu, Yingsong Li, Liping Li, Zhixiang Huang, Qingqing Wu, Rodrigo C. de Lamare</p>
+      <p class="metadata">2026-07-17 · 2024 · arXiv · Score 2</p>
+      
+
+      <p class="summary">
+        Reconfigurable intelligent surfaces (RIS) can actively perform beamforming and have become a crucial enabler for wireless systems in the future. The direction-of-arrival (DOA) estimates of RIS received signals can help design the reflection control matrix and improve communication quality. In this paper, we design a RIS-assisted system and propose a robust Lawson norm-based multiple-signal-classification (LN-MUSIC) DOA estimation algorithm for impulsive noise, which is divided into two parts. The first one, the non-convex Lawson norm is used as the error criterion along with a regularization constraint to formulate the optimization problem. Then, a Bregman distance based alternating direction method of multipliers is used to solve the problem and recover the desired signal. The second part is to use the multiple signal classification (MUSIC) to find out the DOAs of targets based on their sparsity in the spatial domain. In addition, we also propose a RIS control matrix optimization strategy that requires no channel state information, which effectively enhances the desired signals and improves the performance of the LN-MUSIC algorithm. A Cramer-Rao-lower-bound (CRLB) of the proposed DOA estimation algorithm is presented and verifies its feasibility. Simulated results show that the proposed robust DOA estimation algorithm based on the Lawson norm can effectively suppress the impact of large outliers caused by impulsive noise on the estimation results, outperforming existing methods.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2409.12308v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2304.00594v1">
+            Convergence analysis of the Monte Carlo method for random Navier--Stokes--Fourier system
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Maria Lukacova -- Medvidova, Bangwei She, Yuhuan Yuan</p>
+      <p class="metadata">2026-07-17 · 2023 · arXiv · Score 2</p>
+      
+
+      <p class="summary">
+        In the present paper we consider the initial data, external force, viscosity coefficients, and heat conductivity coefficient as random data for the compressible Navier--Stokes--Fourier system. The Monte Carlo method, which is frequently used for the approximation of statistical moments, is combined with a suitable deterministic discretisation method in physical space and time. Under the assumption that numerical densities and temperatures are bounded in probability, we prove the convergence of random finite volume solutions to a statistical strong solution by applying genuine stochastic compactness arguments. Further, we show the convergence and error estimates for the Monte Carlo estimators of the expectation and deviation. We present several numerical results to illustrate the theoretical results.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2304.00594v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2106.02448v1">
+            High-resolution extinction map in the direction of the strongly obscured bulge fossil fragment Liller 1
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Cristina Pallanca, Francesco R. Ferraro, Barbara Lanzoni, Chiara crociati, Sara Saracino, Emanuele Dalessandro, Livia Origlia, Michael R. Rich, et al.</p>
+      <p class="metadata">2026-07-17 · 2021 · arXiv · Score 2</p>
+      
+
+      <p class="summary">
+        We used optical images acquired with the Wide Field Camera of the Advanced Camera for Surveys onboard the Hubble Space Telescope and near-infrared data from GeMS/GSAOI to construct a high-resolution extinction map in the direction of the bulge stellar system Liller 1. In spite of its appearance of a globular cluster, Liller 1 has been recently found to harbor two stellar populations with remarkably different ages, and it is the second complex stellar system with similar properties (after Terzan5) discovered in the bulge, thus defining a new class of objects: the Bulge Fossil Fragments. Because of its location in the inner bulge of the Milky Way, very close to the Galactic plane, Liller 1 is strongly affected by large and variable extinction. The simultaneous study of both the optical and the near-infrared color-magnitude diagrams revealed that the extinction coefficient R$_V$ in the direction of Liller 1 has a much smaller value than commonly assumed for diffuse interstellar medium (R$_V=2.5$, instead of 3.1), in agreement with previous findings along different light paths to the Galactic bulge. The derived differential reddening map has a spatial resolution ranging from $1&#x27;&#x27;$ to $3&#x27;&#x27;$ over a field of view of about $90&#x27;&#x27;$X$90&#x27;&#x27;$. We found that the absorption clouds show patchy sub-structures with extinction variations as large as $δ{\rm E}(B-V)\sim0.9$ mag.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2106.02448v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="http://arxiv.org/abs/2104.09362v1">
+            A new identity card for the bulge globular cluster NGC 6440 from resolved star counts
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Cristina Pallanca, Barbara Lanzoni, Francesco R. Ferraro, Luca Casagrande, Sara Saracino, Bhavana Purohith Bhaskar Bhat, Silvia Leanza, Emanuele Dalessandro, et al.</p>
+      <p class="metadata">2026-07-17 · 2021 · arXiv · Score 2</p>
+      
+
+      <p class="summary">
+        We present a new identity card for the cluster NGC 6440 in the Galactic Bulge. We have used a combination of high-resolution Hubble Space Telescope images, wide-field ground-based observations performed with the ESO-FORS2, and the public survey catalog Pan-STARRS, to determine the gravitational center, projected density profile and structural parameters of this globular from resolved star counts. The new determination of the cluster center differs by ~ 2&quot; (corresponding to 0.08 pc) from the previous estimate, which was based on the surface brightness peak. The star density profile, extending out to 700&quot; from the center and suitably decontaminated from the Galactic field contribution, is best-fitted by a King model with significantly larger concentration ($c=1.86\pm0.06$) and smaller core radius ($r_c=6.4&quot;\pm0.3&quot;$) with respect to the literature values. By taking advantage of high-quality optical and near-infrared color-magnitude diagrams, we also estimated the cluster age, distance and reddening. The luminosity of the RGB-bump was also determined. This study indicates that the extinction coefficient in the bulge, in the direction of the cluster has a value ($R_V=2.7$) that is significantly smaller than that traditionally used for the Galaxy ($R_V=3.1$). The corresponding best-fit values of the age, distance and color excess of NGC 6440 are 13 Gyr, 8.3 kpc and $E(B-V)\sim 1.27$, respectively. These new determinations also allowed us to update the values of the central ($t_{rc}=2.5\ 10^7$ yr) and half-mass ($t_{rh}=10^9$ yr) relaxation times, suggesting that NGC 6440 is in a dynamically evolved stage.
+      </p>
+
+      <a class="open-link" href="http://arxiv.org/abs/2104.09362v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://openalex.org/W7112546092">
+            On the Analysis of Potential Games: From Constraints, Price of Anarchy and Reinforcement Learning to Contrastive Learning
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Stavroulakis, Stelios Andrew</p>
+      <p class="metadata">2026-07-17 · 2027 · eScholarship (California Digital Library) · OpenAlex · Score 1</p>
+      
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://openalex.org/W7112546092">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://openalex.org/W7160726889">
+            Retrieval from Within: An Intrinsic Capability of Attention-Based Models
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Elad Hoffer, Yochai Blau, Ron Banner, Daniel Soudry, Boris Ginsburg, Boris Ginsburg</p>
+      <p class="metadata">2026-07-17 · 2026 · arXiv (Cornell University) · OpenAlex · Score 1</p>
+      
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://openalex.org/W7160726889">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://doi.org/10.21203/rs.3.rs-9866179/v1">
+            IRA: An Interpretable Hybrid Chatbot for Emotion-Aware Intent Classification with Generative Response Fallback
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Nilima Dongre, Amey Kulkarni</p>
+      <p class="metadata">2026-07-17 · 2026 · Research Square · OpenAlex · Score 1</p>
+      
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://doi.org/10.21203/rs.3.rs-9866179/v1">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://doi.org/10.3390/electronics15143102">
+            A Low-Cost IoT Architecture for Micro-Zone Climate Prediction and Meteorological Forecasting
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">César A. G. Mateus, Darlan Noetzold, Juan M. B. Skolik, Valderi R. Q. Leithardt, Juan F. De Paz</p>
+      <p class="metadata">2026-07-17 · 2026 · Electronics · OpenAlex · Score 1</p>
+      
+
+      <p class="summary">
+        오늘 추천 후보로 수집된 논문입니다.
+      </p>
+
+      <a class="open-link" href="https://doi.org/10.3390/electronics15143102">
+        논문 링크 열기 →
+      </a>
+    </article>
+    
+    </div>
+  </main>
+  
+  <script>
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+  </script>
+
+</body>
+</html>
