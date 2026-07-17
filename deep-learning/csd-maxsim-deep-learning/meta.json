@@ -1,0 +1,14 @@
+{
+  "title": "CSD MaxSim document locality와 GPU/CSD break-even 딥러닝 확장",
+  "summary": "Claude와 Codex가 번갈아 자료를 확장하며 매 턴의 변화와 응답 누적을 저장하는 실제 실행 로그입니다.",
+  "type": "딥러닝",
+  "topic": "CSD MaxSim document locality와 GPU/CSD break-even 딥러닝 확장",
+  "scope": "# CSD MaxSim Deep Learning Seed\n\n이 deep-learning loop는 선행 research 두 개를 요약한 뒤, CSD 기반 ColBERT/PLAID MaxSim offload 연구 아이디어를 더 깊게 확장한다.\n\n## 가장 중요한 중심 질문\n\n1. 기존 retrieval workload 하나를 기준으로 document/passage embedding locality와 활용도를 어떻게 측정할 것인가?\n2. GPU에서 수행하는 MaxSim과 CSD에서 수행하는 MaxSim의 end-to-end 성능을 어떻게 비교하고, CSD가 필요한 MAC unit/PE/FLOPS 조건을 어떻게 도출할 것인가?\n\n## 매 턴 규칙\n\n- 첫 턴은 아래 두 research 결과를 각각 5-8줄로 요약한 뒤, 둘 사이의 연결고리를 정리한다.\n- 이후 턴은 document locality, PCIe traffic reduction, MaxSim operation model, GP",
+  "tags": [
+    "Claude",
+    "Codex",
+    "runtime-study",
+    "deep-research-loop"
+  ],
+  "updated": "2026-07-17"
+}
