@@ -546,6 +546,20 @@
 <a class="toc-level-3" href="#저정밀-maxsim-int8-의-area-energy-이득과-경계">저정밀 MaxSim (int8)의 area/energy 이득과 경계</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-3">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-4-codex">Turn 4 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-4">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-3">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-h2-offload의-correctness-constraint-doc-단위-sharding-이-기본이어야-한다">1. H2 offload의 correctness constraint: “doc 단위 sharding”이 기본이어야 한다</a>
+<a class="toc-level-3" href="#2-pipeline-throughput은-latency-합이-아니라-bottleneck-stage로-결정된다">2. Pipeline throughput은 latency 합이 아니라 bottleneck stage로 결정된다</a>
+<a class="toc-level-3" href="#3-query-batching은-t_fix-csd-를-줄이지만-tail-latency를-악화한다">3. Query batching은 `T_fix,csd`를 줄이지만 tail latency를 악화한다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-3">더 구체화한 부분</a>
+<a class="toc-level-3" href="#1-csd-only와-hybrid의-목적함수-분리">1. CSD-only와 hybrid의 목적함수 분리</a>
+<a class="toc-level-3" href="#2-multi-csd-scale-out-조건">2. Multi-CSD scale-out 조건</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-3">관련 맥락 / 배경 설명</a>
+<a class="toc-level-3" href="#h1-gpu-h2-csd-배치의-데이터-계약">H1@GPU / H2@CSD 배치의 데이터 계약</a>
+<a class="toc-level-3" href="#_q-는-h1-이후가-아니라-h2-확정-전-예측값이어야-한다">`ρ̂_q`는 H1 이후가 아니라 H2 확정 전 예측값이어야 한다</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -627,7 +641,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>CSD MaxSim document locality와 GPU/CSD break-even 딥러닝 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 축을 하나의 hybrid 모델로 묶는 통합 가설 3개</strong>를 세우고, ① trace schema에 가변 doclen·byte-LRU 항목을 추가, ② break-even 수식에 <strong>residency 결합항·Amdahl 상한·에너지 축·GPUDirect baseline</strong>을 신규 도입, ③ warm/col</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전의 <code>ρ_q</code> 기반 스케줄링을 <strong>닫힌형 decision rule</strong>로 더 구체화하고, locality trace와 break-even 모델을 연결하는 <strong>trace-driven simulator spec</strong>을 추가한다. 핵심 변화는 세 가지다. 1. <code>ρ_q</code>는 문서 개수 비율이 아니라 **byte-weighted, 가능하면 compute-wei</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 세 가지를 한다. <strong>(1) 구조적 신규 사실</strong>: PLAID stage-1(centroid scoring, H1)의 compute가 <code>Q·n_cent·D</code>로 H2 MaxSim보다 <strong>한 자릿수 이상 크다</strong> — 즉 지금까지의 &quot;MaxSim break-even&quot;은 H1이 같은 device에 얹히면 <strong>틀린 stage를 최적화</strong>한 것이다. 이로부터 &quot;H1</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>CSD MaxSim document locality와 GPU/CSD break-even 딥러닝 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 축을 하나의 hybrid 모델로 묶는 통합 가설 3개</strong>를 세우고, ① trace schema에 가변 doclen·byte-LRU 항목을 추가, ② break-even 수식에 <strong>residency 결합항·Amdahl 상한·에너지 축·GPUDirect baseline</strong>을 신규 도입, ③ warm/col</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전의 <code>ρ_q</code> 기반 스케줄링을 <strong>닫힌형 decision rule</strong>로 더 구체화하고, locality trace와 break-even 모델을 연결하는 <strong>trace-driven simulator spec</strong>을 추가한다. 핵심 변화는 세 가지다. 1. <code>ρ_q</code>는 문서 개수 비율이 아니라 **byte-weighted, 가능하면 compute-wei</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 세 가지를 한다. <strong>(1) 구조적 신규 사실</strong>: PLAID stage-1(centroid scoring, H1)의 compute가 <code>Q·n_cent·D</code>로 H2 MaxSim보다 <strong>한 자릿수 이상 크다</strong> — 즉 지금까지의 &quot;MaxSim break-even&quot;은 H1이 같은 device에 얹히면 <strong>틀린 stage를 최적화</strong>한 것이다. 이로부터 &quot;H1</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>H1@GPU / H2@CSD 배치</strong>를 더 현실적인 end-to-end 파이프라인으로 바꾸고, 이전 턴에서 아직 분리되지 않은 <strong>정확성 제약, batching 고정비, multi-CSD sharding</strong>을 추가한다. 핵심은 다음이다. 1. latency는 query 단위로는 <code>encoder → H1 → H2 → merge</code>의 합이지만, throug</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -896,8 +910,131 @@ admit to CSD  ⇔  λ_csd 가 ρ_u &lt; ρ_max(p99) 를 유지  (ρ_max에 4.6·
 <ol><li><strong>H1 배치 결정을 break-even에 정식 통합</strong>: <code>MAC_H1</code>(centroid scoring)을 GPU/CSD 각각에 얹었을 때의 end-to-end latency·PCIe·에너지를 <code>n_cent</code>, round-trip <code>T_fix</code>, 파이프라인 overlap(H1과 이전 query의 H2를 겹칠 수 있는가) 함수로 표현하고, &quot;H1@GPU/H2@CSD&quot; 배치가 우월해지는 <code>n_cent</code>·QPS 경계를 닫힌형으로 유도한다.</li></ol>
 <ol><li><strong>CSD-only vs hybrid 설계의 통합 목적함수</strong>: §더구체화-2의 두 residency 의미 분리를 받아, <code>min (host PCIe GB/s) s.t. p99 ≤ Λ</code>를 목적으로 두고 (a) CSD-only(PCIe=0, 내부 DRAM sizing으로 p99 관리) vs (b) doc-split hybrid(PCIe=(1−HR)로 p99 완화) 중 어느 쪽이 각 regime(cold/warm/capacity)에서 우월한지를 §p99 M/G/1 admission rule과 결합해 판정하는 결정도(decision map)를 그린다.</li></ol>
 <ol><li><strong>PQ-residual ADC MaxSim의 정량 설계</strong>: residual을 m-subquantizer PQ로 바꿨을 때의 <code>I_mac</code> 감소량, ADC 테이블(Q×n_sub×2^bits) 크기·resident 비용, 그리고 top-k 순위 오차(재현율@k)를 subquantizer 수 m과 bit 예산의 함수로 sweep하는 실험 프로토콜을 정의한다 — CSD PE 예산을 낮추는 유일한 알고리즘 경로의 타당성을 수치로 검증.</li></ol>
+<h3 id="turn-4-codex">Turn 4 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-4">이번 턴의 확장 요약</h2>
+<p>이번 턴은 <strong>H1@GPU / H2@CSD 배치</strong>를 더 현실적인 end-to-end 파이프라인으로 바꾸고, 이전 턴에서 아직 분리되지 않은 <strong>정확성 제약, batching 고정비, multi-CSD sharding</strong>을 추가한다. 핵심은 다음이다.</p>
+<ol><li>latency는 query 단위로는 <code>encoder → H1 → H2 → merge</code>의 합이지만, throughput은 stage pipeline의 <code>max(stage time)</code>로 결정된다.</li><li>CSD가 top-k만 반환해도 되는 조건은 <strong>문서 전체 MaxSim score를 한 장치가 완결 계산할 때</strong>다. 문서 token이 여러 장치/블록에 쪼개지면 partial-max vector merge가 필요해 egress 모델이 달라진다.</li><li><code>T_fix,csd</code>가 수십-수백 µs라면 H2 자체가 작을 때는 CSD 이득을 먹어버리므로, query batching과 admission rule이 필수 설계 변수가 된다.</li></ol>
+<h2 id="새로-추가한-사실-3">새로 추가한 사실</h2>
+<h3 id="1-h2-offload의-correctness-constraint-doc-단위-sharding-이-기본이어야-한다">1. H2 offload의 correctness constraint: “doc 단위 sharding”이 기본이어야 한다</h3>
+<p>MaxSim score는 다음이다.</p>
+<pre><code class="language-text">score(q,d) = Σ_{i=1..Q} max_{j=1..L_d} &lt;q_i, e_{d,j}&gt;</code></pre>
+<p>따라서 CSD가 어떤 passage <code>d</code>의 모든 token embedding을 갖고 있으면 <code>score(q,d)</code> 하나만 반환하면 된다.</p>
+<pre><code class="language-text">CSD returns: (pid, score)          # O(k) 또는 O(N) scalar</code></pre>
+<p>하지만 passage token이 여러 CSD나 여러 logical shard에 나뉘면 각 shard는 최종 score를 만들 수 없다.</p>
+<pre><code class="language-text">partial_m_s[i] = max_{j in shard s} &lt;q_i, e_{d,j}&gt;
+final score    = Σ_i max_s partial_m_s[i]</code></pre>
+<p>이 경우 반환량은 doc당 scalar 1개가 아니라 <code>Q</code>개 partial max가 된다.</p>
+<pre><code class="language-text">egress_fragmented ≈ N_docs · Q · b_score
+egress_doc_shard  ≈ N_docs · b_score
+ratio             ≈ Q      # Q=32면 32배 증가</code></pre>
+<p>따라서 CSD 설계의 기본 layout 제약은:</p>
+<pre><code class="language-text">all token embeddings of one pid must be co-located on one scoring owner</code></pre>
+<p>multi-CSD scale-out도 passage 단위 sharding이 안전하다. block 단위 read locality만 보고 token-level striping을 하면 top-k egress 절감 주장이 깨진다.</p>
+<h3 id="2-pipeline-throughput은-latency-합이-아니라-bottleneck-stage로-결정된다">2. Pipeline throughput은 latency 합이 아니라 bottleneck stage로 결정된다</h3>
+<p>H1@GPU / H2@CSD 배치에서 단일 query latency는 대략 합이다.</p>
+<pre><code class="language-text">L_q = T_enc,gpu + T_H1,gpu + T_cmd + T_H2,csd + T_merge,gpu</code></pre>
+<p>하지만 충분한 query stream에서는 GPU와 CSD가 서로 다른 query를 처리하므로 steady-state QPS는 다음에 가깝다.</p>
+<pre><code class="language-text">Throughput ≤ 1 / max(
+  E[T_enc + T_H1],
+  E[T_cmd + T_H2],
+  E[T_merge]
+)</code></pre>
+<p>즉 H1 compute가 H2보다 크더라도, GPU stage가 이미 encoder와 묶여 포화되어 있지 않다면 CSD offload는 throughput을 늘릴 수 있다. 반대로 GPU encoder가 이미 병목이면 H2를 CSD로 보내도 QPS 개선은 작고, host PCIe/energy 절감만 남는다.</p>
+<h3 id="3-query-batching은-t_fix-csd-를-줄이지만-tail-latency를-악화한다">3. Query batching은 <code>T_fix,csd</code>를 줄이지만 tail latency를 악화한다</h3>
+<p>CSD command 고정비를 batch size <code>M</code>으로 나누면:</p>
+<pre><code class="language-text">T_fix_per_query ≈ T_fix,csd / M</code></pre>
+<p>하지만 Poisson arrival에서 batch가 찰 때까지 기다리는 평균 시간은 근사적으로:</p>
+<pre><code class="language-text">E[W_batch] ≈ (M - 1) / (2λ)</code></pre>
+<p>따라서 query당 CSD latency는:</p>
+<pre><code class="language-text">L_csd_batch(M)
+≈ (M - 1)/(2λ)
+ + T_fix,csd/M
+ + max(Read_batch/BW_int, MAC_batch/F_csd)/M</code></pre>
+<p><code>M</code>을 키우면 command overhead는 줄지만 p99가 나빠진다. 그래서 scheduler에는 기존 <code>ρ_q</code>, <code>X_q</code>, queue depth 외에 다음 feature가 들어가야 한다.</p>
+<pre><code class="language-text">batch_age      # oldest query wait time
+batch_fill     # current batch size / target M
+SLA_slack_min  # batch 안에서 가장 작은 slack</code></pre>
+<h2 id="더-구체화한-부분-3">더 구체화한 부분</h2>
+<h3 id="1-csd-only와-hybrid의-목적함수-분리">1. CSD-only와 hybrid의 목적함수 분리</h3>
+<p>이제 두 설계는 같은 <code>HR_bytes(B)</code>를 쓰더라도 목적함수가 다르다.</p>
+<pre><code class="language-text">CSD-only:
+  minimize p99 latency
+  subject to PCIe_H2 = 0
+  B controls DRAM/NAND tier hit, not host traffic
+
+Hybrid:
+  minimize PCIe_H2 and GPU load
+  subject to p99 latency ≤ SLA
+  B controls fraction routed to CSD without miss traffic</code></pre>
+<p>각 설계의 per-query 모델은 다음처럼 분리하는 편이 안전하다.</p>
+<pre><code class="language-text"># CSD-only
+T_read_csd(q) =
+  Read_hot(q)/BW_dram_csd
++ Read_cold(q)/BW_nand_csd
+
+PCIe_H2(q) = 0
+
+# doc-split hybrid
+T_hybrid(q) =
+  max(
+    Read_resident(q)/BW_csd_effective,
+    Read_gpu_miss(q)/BW_gpu_link
+  ) + fixed + queue
+
+PCIe_H2(q) = Read_gpu_miss(q)</code></pre>
+<p>따라서 논문 그림도 두 개가 필요하다.</p>
+<div class="table-wrap"><table><thead><tr><th>figure</th><th>x축</th><th>y축</th><th>해석</th></tr></thead><tbody><tr><td>DRAM tier sizing</td><td>CSD DRAM <code>B</code></td><td>p50/p99 <code>T_csd</code></td><td>CSD-only tail 개선</td></tr><tr><td>hybrid traffic</td><td>CSD resident <code>B</code></td><td>PCIe GB/s, p99</td><td>offload/traffic tradeoff</td></tr></tbody></table></div>
+<h3 id="2-multi-csd-scale-out-조건">2. Multi-CSD scale-out 조건</h3>
+<p>CSD가 <code>n</code>개일 때 단순히 bandwidth가 <code>n·BW_int</code>로 늘지는 않는다. query는 모든 CSD에 broadcast되고, 각 CSD는 자기 shard의 candidate만 처리한다.</p>
+<pre><code class="language-text">T_multi(q) =
+  T_broadcast_query
++ max_{s=1..n} T_H2_s(q)
++ T_merge_topk(n)</code></pre>
+<p>균등 sharding이면 평균은 줄지만 tail은 가장 느린 shard가 결정한다.</p>
+<pre><code class="language-text">E[max_s T_s] &gt; E[T_s]</code></pre>
+<p>hot documents가 특정 shard에 몰리면 scale-out이 무너진다. 따라서 layout metric에 shard imbalance를 추가해야 한다.</p>
+<pre><code class="language-text">load_s(q) = Σ_{d∈H2(q), shard(d)=s} bytes(d)
+imbalance(q) = max_s load_s(q) / (Σ_s load_s(q)/n)</code></pre>
+<p>좋은 layout은 block read amplification <code>A_block</code>만 낮추는 것이 아니라 <code>imbalance(q)</code>도 낮춰야 한다.</p>
+<h2 id="관련-맥락-배경-설명-3">관련 맥락 / 배경 설명</h2>
+<h3 id="h1-gpu-h2-csd-배치의-데이터-계약">H1@GPU / H2@CSD 배치의 데이터 계약</h3>
+<p>GPU가 CSD로 보내야 하는 것은 raw text나 embedding corpus가 아니라 작은 command payload다.</p>
+<pre><code class="language-text">command(q):
+  qid
+  query_embedding[Q,D]      # fp16이면 Q·D·2B, Q=32,D=128 → 8KB
+  candidate_pid_list[H2]
+  optional candidate metadata: doclen, block_id, shard_id
+  topk_requested</code></pre>
+<p>CSD 반환은 doc 단위 sharding이면 작다.</p>
+<pre><code class="language-text">result(q):
+  topk list of (pid, score)
+  optional diagnostics: read_bytes, mac_count, service_time</code></pre>
+<p>이 diagnostics를 trace에 다시 붙이면 simulator가 아니라 실제 device prototype에서도 같은 schema로 검증할 수 있다.</p>
+<h3 id="_q-는-h1-이후가-아니라-h2-확정-전-예측값이어야-한다"><code>ρ̂_q</code>는 H1 이후가 아니라 H2 확정 전 예측값이어야 한다</h3>
+<p>실제 dispatch를 H2 확정 뒤에 하면 이미 pruning 계산을 일부 수행한 뒤라 pipeline 유연성이 줄어든다. 따라서 두 값을 분리해야 한다.</p>
+<pre><code class="language-text">ρ̂_q = predicted residency from H1 features
+ρ_q  = actual residency after H2 materialization
+error = ρ_q - ρ̂_q</code></pre>
+<p>추천 feature:</p>
+<pre><code class="language-text">H1_pid_hotness_mean
+H1_pid_hotness_p95
+H1_resident_byte_fraction
+centroid_id_entropy
+estimated_H2_bytes
+query_length_Q</code></pre>
+<p>스케줄러 평가는 <code>ρ_q</code> oracle이 아니라 <code>ρ̂_q</code> 기반으로 해야 한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li>H1 compute가 전체 centroid brute-force인지, centroid ANN/pruning이 있는지 확인해야 한다. 이 값은 H1@GPU/H2@CSD 배치의 필요성을 좌우한다.</li></ol>
+<ol><li>CSD가 candidate pid list를 받는 모델에서는 CSD가 H2 pruning logic을 얼마나 알아야 하는지 불명확하다. GPU가 H2까지 확정하면 CSD는 scoring device이고, CSD가 H1 후보에서 H2를 고르면 CSD 쪽에 PLAID pruning logic 일부가 들어간다.</li></ol>
+<ol><li>top-k merge가 항상 작다는 주장은 doc 단위 sharding에서만 성립한다. token-fragmented layout이나 replicated hot-doc layout에서는 반환 protocol을 다시 계산해야 한다.</li></ol>
+<ol><li>batching은 평균 throughput을 개선하지만 SLA가 짧은 interactive retrieval에서는 p99 손실이 클 수 있다. <code>T_fix,csd</code> 실측 없이는 batch size를 정할 수 없다.</li></ol>
+<ol><li>multi-CSD는 평균 bandwidth보다 shard imbalance와 hot-doc skew가 더 위험할 수 있다. trace에는 반드시 <code>shard_id</code>와 per-query shard byte 분포가 필요하다.</li></ol>
+<h2 id="다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>H1/H2 split protocol 확정</strong>: GPU가 H2 pid까지 확정해서 CSD에 넘기는 방식과, CSD가 H1 candidate를 받아 내부 pruning까지 하는 방식의 latency·PCIe·구현 복잡도 비교.</li></ol>
+<ol><li><strong>doc-shard layout optimizer 설계</strong>: <code>A_block</code>, <code>HR_bytes(B)</code>, <code>imbalance(q)</code>를 동시에 최소화하는 pid 배치 알고리즘과 trace-driven 평가 지표 정의.</li></ol>
+<ol><li><strong>batching + p99 simulator 구체화</strong>: <code>M</code>, <code>T_fix,csd</code>, arrival burstiness, SLA를 sweep해서 CSD admission threshold와 optimal batch size를 함께 산출하는 discrete-event simulator spec 작성.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-17T18:47:53.761342+00:00</li><li>누적 턴 수: 3</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-17T18:48:58.747053+00:00</li><li>누적 턴 수: 4</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
