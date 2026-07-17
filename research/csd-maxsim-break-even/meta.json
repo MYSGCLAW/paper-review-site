@@ -1,0 +1,169 @@
+{
+  "title": "GPU/CSD MaxSim 연산 성능 Break-even 모델 연구",
+  "summary": "ColBERT 계열 MaxSim을 GEMM-like MAC 연산과 max-reduction으로 모델링하고, GPU 실행과 CSD 실행의 end-to-end latency를 비교해 CSD에 필요한 MAC unit/PE/FLOPS 조건을 도출한다.",
+  "type": "집중 성능 모델링",
+  "topic": "CSD MaxSim offload를 위한 GPU 대비 MAC/PE/FLOPS break-even 분석",
+  "scope": "문서 로컬리티 자체 분석은 제외하고, candidate document embedding이 CSD에 resident하거나 PCIe transfer를 줄일 수 있다는 조건 아래에서 MaxSim 연산을 GPU에서 수행하는 경우와 CSD에서 수행하는 경우의 latency equation을 만든다. 핵심은 CSD가 GPU보다 어느 정도의 MAC unit/PE/effective FLOPS를 가져야 PCIe 병목 제거 효과로 match 또는 outperform할 수 있는지 계산하는 것이다.",
+  "parent_slug": null,
+  "generated_from_plan": null,
+  "project": {},
+  "tags": [
+    "CSD",
+    "GPU",
+    "MaxSim",
+    "ColBERT",
+    "MAC units",
+    "processing elements",
+    "FLOPS",
+    "PCIe bottleneck",
+    "performance model"
+  ],
+  "updated": "2026-07-18",
+  "source": {
+    "repo_url": null,
+    "local_path": null,
+    "branch": null,
+    "paths": [],
+    "reference_dir": "references/research/csd-maxsim-break-even",
+    "docs": [
+      {
+        "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT",
+        "url": "https://arxiv.org/abs/2004.12832"
+      },
+      {
+        "title": "ColBERTv2: Efficient and Effective Retrieval via Lightweight Late Interaction",
+        "url": "https://arxiv.org/abs/2112.01488"
+      },
+      {
+        "title": "PLAID: An Efficient Engine for Late Interaction Retrieval",
+        "url": "https://arxiv.org/abs/2205.09707"
+      },
+      {
+        "title": "MS MARCO Passage Ranking Dataset",
+        "url": "https://microsoft.github.io/msmarco/"
+      },
+      {
+        "title": "BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+        "url": "https://arxiv.org/abs/2104.08663"
+      },
+      {
+        "title": "NVIDIA CUDA C++ Programming Guide",
+        "url": "https://docs.nvidia.com/cuda/cuda-c-programming-guide/"
+      },
+      {
+        "title": "PCI Express bandwidth reference",
+        "url": "https://en.wikipedia.org/wiki/PCI_Express"
+      },
+      {
+        "title": "SNIA Computational Storage",
+        "url": "https://www.snia.org/technology-focus/computational-storage"
+      }
+    ]
+  },
+  "analysis": {
+    "model": "claude-fable-5",
+    "effort": "max",
+    "max_turns": 45,
+    "analysis_style": "짧지만 수식 중심으로 깊게 작성한다. 배경 설명은 줄이고 변수 정의, latency equation, break-even condition, MAC unit/PE 계산법, sanity-check 예시를 우선한다. 출력은 한국어 Markdown이며 수식 변수와 시스템 용어는 영어 원문을 유지한다.",
+    "sections": [
+      {
+        "title": "MaxSim Operation Model",
+        "prompt": "MaxSim을 GEMM-like dot product와 max-reduction으로 보고 MAC/FLOP 수식을 정의한다.",
+        "required": [
+          "Q/D/E/N/B 정의",
+          "MACs",
+          "FLOPs",
+          "intermediate matrix",
+          "max-reduction"
+        ]
+      },
+      {
+        "title": "GPU Latency Model",
+        "prompt": "GPU 실행 경로의 PCIe transfer time, GPU compute time, HBM/reduction overhead를 equation으로 정리한다.",
+        "required": [
+          "input bytes",
+          "PCIe bandwidth",
+          "GPU throughput",
+          "HBM constraint",
+          "T_gpu"
+        ]
+      },
+      {
+        "title": "CSD Latency Model",
+        "prompt": "CSD 내부 실행 경로의 read bandwidth, MAC/PE compute, local reduction, result transfer를 equation으로 정리한다.",
+        "required": [
+          "internal read bytes",
+          "MAC units/PEs",
+          "frequency",
+          "utilization",
+          "result bytes",
+          "T_csd"
+        ]
+      },
+      {
+        "title": "Break-even MAC/PE 조건",
+        "prompt": "T_csd <= T_gpu가 되는 required CSD throughput과 MAC unit/PE 수를 유도한다.",
+        "required": [
+          "break-even inequality",
+          "required OPS",
+          "required MAC units",
+          "PCIe bottleneck effect",
+          "sanity-check example"
+        ]
+      },
+      {
+        "title": "Sensitivity와 가능성 판단",
+        "prompt": "어떤 파라미터를 sweep해야 MaxSim offload 가능성을 판단할 수 있는지 정리한다.",
+        "required": [
+          "PCIe Gen sweep",
+          "N/Q/D/E sweep",
+          "precision sweep",
+          "CSD PE sweep",
+          "compute/memory/PCIe-bound regimes"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT",
+      "url": "https://arxiv.org/abs/2004.12832",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "ColBERTv2: Efficient and Effective Retrieval via Lightweight Late Interaction",
+      "url": "https://arxiv.org/abs/2112.01488",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "PLAID: An Efficient Engine for Late Interaction Retrieval",
+      "url": "https://arxiv.org/abs/2205.09707",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "MS MARCO Passage Ranking Dataset",
+      "url": "https://microsoft.github.io/msmarco/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+      "url": "https://arxiv.org/abs/2104.08663",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "NVIDIA CUDA C++ Programming Guide",
+      "url": "https://docs.nvidia.com/cuda/cuda-c-programming-guide/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "PCI Express bandwidth reference",
+      "url": "https://en.wikipedia.org/wiki/PCI_Express",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "SNIA Computational Storage",
+      "url": "https://www.snia.org/technology-focus/computational-storage",
+      "note": "URL only; content was not fetched automatically."
+    }
+  ]
+}

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기존 Retrieval 워크로드 기반 문서 로컬리티 측정 방법 연구</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body class="auth-locked index-hidden">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">집중 연구 설계</p>
+      <h1>기존 Retrieval 워크로드 기반 문서 로컬리티 측정 방법 연구</h1>
+      <p class="summary">ColBERT/PLAID 계열 기존 retrieval 워크로드 하나를 선정해 query stream에서 접근되는 document/passage embedding의 활용도와 로컬리티를 측정하는 방법을 설계한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-18</span>
+        <span class="tag">CSD</span><span class="tag">document locality</span><span class="tag">ColBERT</span><span class="tag">PLAID</span><span class="tag">MS MARCO</span><span class="tag">BEIR</span><span class="tag">trace</span><span class="tag">scheduling</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#수집-범위">수집 범위</a>
+<a class="toc-level-2" href="#핵심-요약">핵심 요약</a>
+<a class="toc-level-2" href="#정보-지도">정보 지도</a>
+<a class="toc-level-2" href="#프로토콜-동작-흐름">프로토콜 / 동작 흐름</a>
+<a class="toc-level-2" href="#세부-정리">세부 정리</a>
+<a class="toc-level-3" href="#1-워크로드-선정">1. 워크로드 선정</a>
+<a class="toc-level-3" href="#2-trace-생성-방법">2. Trace 생성 방법</a>
+<a class="toc-level-3" href="#3-locality-metrics">3. Locality Metrics</a>
+<a class="toc-level-3" href="#4-csd-residency-benefit">4. CSD Residency Benefit</a>
+<a class="toc-level-3" href="#5-scheduling으로-넘길-factor">5. Scheduling으로 넘길 Factor</a>
+<a class="toc-level-2" href="#쟁점과-불확실성">쟁점과 불확실성</a>
+<a class="toc-level-2" href="#읽는-순서-조사-로드맵">읽는 순서 / 조사 로드맵</a>
+<a class="toc-level-2" href="#후속-질문">후속 질문</a>
+<a class="toc-level-2" href="#참고-자료">참고 자료</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <p>웹 도구(WebFetch/WebSearch)와 저장소 루트 접근이 모두 허용되지 않았고, 참고문서 5건은 manifest에 URL 메타데이터만 있는 상태입니다. 따라서 문서 본문은 배경지식 기반으로 작성하되 모든 수치·구조 정보를 &quot;배경지식/추정/확인 필요&quot;로 명시해 정리했습니다. 아래가 최종 결과물입니다.</p>
+<p>---</p>
+<h1 id="csd-resident-embedding을-위한-document-locality-측정-설계-워크로드-선정-trace-생성-지표-정의">CSD Resident Embedding을 위한 Document Locality 측정 설계 — 워크로드 선정, Trace 생성, 지표 정의</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p><strong>PLAID engine + ColBERTv2 index + MS MARCO passage corpus</strong> 조합을 워크로드로 선정하고, query별로 <strong>residual decompression 단계에서 실제 읽히는 passage embedding block 집합</strong>을 trace로 남겨, access frequency / reuse distance / working-set / hot coverage를 계산하면 CSD residency hit ratio와 PCIe traffic 절감량을 곧바로 유도할 수 있다.</p>
+<h2 id="수집-범위">수집 범위</h2>
+<ul><li><strong>포함</strong>: ColBERT/ColBERTv2/PLAID/MS MARCO/BEIR 중 워크로드 선정, query stream → access trace 생성 절차와 record schema, locality metric 수식, CSD residency benefit 추정 절차, scheduling 인계 factor 정의.</li><li><strong>제외</strong>: end-to-end 성능 모델, CSD 하드웨어 설계 자체, retrieval 품질(MRR/nDCG) 분석.</li><li><strong>자료 상태(중요)</strong>: <code>references/manifest.json</code>의 5개 문서는 모두 <code>&quot;URL only; content was not fetched automatically&quot;</code> 상태이고, 이번 세션에서 WebFetch/WebSearch 권한이 거부되어 <strong>원문을 직접 열람하지 못했다</strong>. 따라서 5개 문서는 전부 &quot;URL 메타데이터만 확인&quot;이며, 본문의 기술 내용은 해당 논문·코드베이스에 대한 <strong>배경지식</strong>으로 작성하고 수치는 <strong>추정/확인 필요</strong>로 구분했다. 첨부 repo도 없음(<code>repo-files.txt</code>: &quot;No repository attached&quot;).</li></ul>
+<h2 id="핵심-요약">핵심 요약</h2>
+<ol><li><strong>최종 추천 워크로드</strong>: PLAID(실행 엔진) + ColBERTv2(index 포맷) + MS MARCO v1 passage(약 8.8M passages, 배경지식). BEIR는 query 수가 적어 보조 검증용, ColBERT v1은 index가 비압축이라 CSD 시나리오와 거리가 있다.</li><li><strong>&quot;접근&quot;의 정의가 결과를 좌우한다</strong>: PLAID는 후보를 centroid 점수만으로 걸러내므로, storage에서 실제로 읽는 것은 <strong>최종 단계에서 residual을 decompress하는 passage 집합</strong>뿐이다. 이 집합(이하 H2)을 byte 단위 접근으로 정의하고, 1단계 candidate 집합(H1)은 scheduling feature용으로 별도 기록한다.</li><li><strong>공개 query set은 dedup되어 있다</strong>(배경지식): 동일 query 반복이 없으므로 문서 재사용은 서로 다른 query의 candidate 중복에서만 나온다. 따라서 <strong>S_uniq(고유 query 스트림, locality 하한)</strong> 과 <strong>S_zipf(Zipf 재표집 스트림, 운영 환경 근사)</strong> 두 스트림을 모두 측정해야 주장이 방어된다 — 본 설계의 최대 쟁점.</li><li>지표는 6종으로 충분하다: <code>access frequency</code>, <code>reuse ratio</code>, <code>temporal reuse distance</code>(LRU stack distance), <code>working-set size</code>(Denning WSS + Heaps 지수), <code>hot coverage</code>(Lorenz/CDF), <code>Zipf α</code>. 문서 크기가 token 수에 비례하므로 전 지표를 <strong>byte-weighted 버전과 병행</strong> 계산한다.</li><li><strong>PCIe 절감 주장에 필요한 최소 metric</strong>은 두 개다: baseline bytes/query 분포와 <strong>byte-weighted residency hit ratio HR_bytes(C)</strong>. CSD가 hit을 내부에서 처리하면 절감율 = HR_bytes(C)가 그대로 성립한다.</li><li>규모 감(추정): ColBERTv2 2-bit 압축 시 token embedding당 ~36B, passage당 평균 ~2.5KB. PLAID k=100 설정에서 query당 수백 개 passage를 decompress한다고 알려져 있어 압축 상태로 ~0.6MB/query, fp16 원본 전송이면 ~4.5MB/query 수준 — 1k QPS면 PCIe Gen4 x4 대역폭(~8GB/s, 배경지식)의 상당 부분을 embedding 이동이 차지한다.</li><li>static hot-set 평가는 <strong>trace의 train/test 분할이 필수</strong>다. 전체 trace로 hot set을 뽑아 같은 trace로 hit ratio를 재면 oracle leakage다.</li><li>scheduling에 넘길 핵심 online feature는 <strong>candidate set locality ρ_q(후보 중 CSD resident 비율)</strong> 이다. ρ_q는 stage-1 직후(어떤 residual도 읽기 전에) 계산 가능하므로 GPU/CSD dispatch의 자연스러운 결정점이 된다.</li><li>PLAID의 단계별 파라미터(nprobe, ndocs, 최종 decompress 수)와 index 수치는 원문 미열람 상태의 배경지식이므로, 본문 말미의 <strong>확인 필요 리스트</strong>를 논문·코드로 검증한 뒤 수치를 확정해야 한다.</li></ol>
+<h2 id="정보-지도">정보 지도</h2>
+<div class="mermaid">flowchart LR
+ subgraph DATA[데이터셋]
+ MSM[&quot;MS MARCO v1 passage / ~8.8M passages, query pool 수십만 (추정)&quot;]
+ BEIR[&quot;BEIR 18 datasets / (query 수 적음, 보조 검증용)&quot;]
+ end
+ subgraph ENGINE[엔진 계보]
+ CB1[&quot;ColBERT v1 / late interaction, 비압축 index&quot;] --&gt; CB2[&quot;ColBERTv2 / centroid+residual 압축 index&quot;]
+ CB2 --&gt; PL[&quot;PLAID / staged pruning 실행 엔진&quot;]
+ end
+ subgraph IDX[index 산출물 = CSD에 놓일 객체]
+ CT[&quot;centroid table (수십 MB, 항상 resident)&quot;]
+ IVF[&quot;IVF lists: centroid→pid&quot;]
+ DL[&quot;doclens: pid→token 수&quot;]
+ RES[&quot;residual blocks: pid→압축 embedding / (용량 지배, locality 측정 대상)&quot;]
+ end
+ MSM --&gt; CB2
+ PL --&gt; TR[&quot;access trace / (queries / accesses / docs 테이블)&quot;]
+ CB2 -.-&gt; IDX
+ TR --&gt; MET[&quot;locality metrics / f(d), RR, stack distance, WSS, Cov, α&quot;]
+ MET --&gt; SIM[&quot;residency simulation / HR_bytes(C), saved bytes, miss cost&quot;]
+ SIM --&gt; SCH[&quot;GPU/CSD scheduling features / hotness, Δq, residency state, ρ_q&quot;]</div>
+<p>관계 요점: MS MARCO는 corpus+query pool을, ColBERTv2는 <strong>CSD에 상주시킬 저장 객체(residual blocks)</strong> 를, PLAID는 <strong>어떤 pid의 block이 언제 읽히는지</strong>를 결정하는 접근 패턴 생성기를 제공한다. BEIR는 corpus를 바꿔 같은 파이프라인을 돌리는 민감도 실험 축이다.</p>
+<h2 id="프로토콜-동작-흐름">프로토콜 / 동작 흐름</h2>
+<p>PLAID 한 query의 생애주기와 storage 접근 지점(배경지식 기반 재구성, 함수/단계명은 확인 필요):</p>
+<div class="mermaid">sequenceDiagram
+ participant H as Host (query encoder)
+ participant E as Search engine (PLAID)
+ participant M as CSD DRAM (resident set)
+ participant N as CSD NAND (residual blocks)
+
+ H-&gt;&gt;E: query embedding Q (~32 token x 128 dim fp16 ≈ 8KB)
+ Note over E: S1 candidate generation / Q x centroid table → query token별 top-nprobe centroid
+ E-&gt;&gt;M: IVF lookup(centroid ids)
+ M--&gt;&gt;E: candidate pids = H1 (수만 개 규모, 추정)
+ Note over E: S2/S3 centroid-only 근사 MaxSim / residual 없이 pruning → 수백~수천 pid로 축소
+ E-&gt;&gt;N: residual block read(H2 pids) ← 유일한 대용량 storage 접근
+ N--&gt;&gt;E: 압축 residual (pid당 ~2.5KB, 추정)
+ Note over E: S4 decompress + exact MaxSim
+ E--&gt;&gt;H: top-k (pid, score) 수 KB</div>
+<ul><li><strong>상태/객체 순서</strong>: query handle(qid, q_idx) → centroid score 행렬(임시) → H1 candidate pid 리스트 → pruning 후 H2 pid 리스트 → residual block read 요청(pid→(chunk, offset, len) 변환은 doclens 누적합) → decompress된 embedding(임시) → top-k 결과로 완료.</li><li><strong>CSD 경계</strong>: baseline(일반 SSD)에서는 H2 residual bytes가 PCIe를 건너 host/GPU로 간다. CSD 설계에서는 H2 읽기·decompress·MaxSim이 장치 내부에서 끝나고 PCIe에는 Q(내려감)와 top-k(올라옴)만 흐른다. 즉 <strong>H2 집합의 byte 합이 곧 절감 대상 traffic</strong>이다.</li><li>centroid table과 IVF/doclens는 크기가 작아(수십~수백 MB 추정) 무조건 resident로 두고, locality 측정 대상에서 제외한다(쟁점 2 참조).</li></ul>
+<h2 id="세부-정리">세부 정리</h2>
+<h3 id="1-워크로드-선정">1. 워크로드 선정</h3>
+<p><strong>후보 비교</strong> (5개 참고문서는 모두 URL 메타데이터만 확인, 특성 설명은 배경지식):</p>
+<div class="table-wrap"><table><thead><tr><th>후보</th><th>성격</th><th>locality 측정 적합성</th><th>결격/제약</th></tr></thead><tbody><tr><td>ColBERT v1 (arXiv:2004.12832)</td><td>late interaction 검색기, token 단위 ANN + 비압축 fp16 index</td><td>passage embedding 접근 개념은 동일</td><td>index가 ~150GB급(추정)으로 CSD 상주 시나리오와 어긋남. candidate 생성이 외부 ANN 라이브러리 내부에 있어 계측 어려움</td></tr><tr><td>ColBERTv2 (arXiv:2112.01488)</td><td>centroid+quantized residual 압축 index</td><td><strong>CSD에 놓일 저장 객체(residual block)를 정의</strong></td><td>실행 파이프라인 최적화는 PLAID가 대체</td></tr><tr><td>PLAID (arXiv:2205.09707)</td><td>ColBERTv2 index 위의 staged pruning 엔진</td><td><strong>&quot;어떤 pid를 실제로 읽는가&quot;가 단계별로 명시적</strong> — trace hook이 자연스러움. k/nprobe/ndocs 파라미터로 candidate 규모 sweep 가능</td><td>엔진일 뿐 corpus/query는 별도 필요</td></tr><tr><td>MS MARCO passage (microsoft.github.io/msmarco)</td><td>corpus 8.8M + 대규모 query pool (train ~0.5M, dev ~100k, dev.small 6,980 — 추정, 확인 필요)</td><td><strong>긴 query stream을 만들 유일한 후보</strong>. 실제 Bing 질의 유래라 분포가 현실적</td><td>qrels는 sparse지만 locality 측정에는 불필요. query가 dedup되어 반복 없음(쟁점 1)</td></tr><tr><td>BEIR (arXiv:2104.08663)</td><td>18개 이질 도메인 벤치마크</td><td>corpus 다양성 민감도 실험에 유용</td><td>데이터셋당 query 수가 수십~수천 개로 적어(배경지식) 단독으로는 stream이 너무 짧음</td></tr></tbody></table></div>
+<p><strong>최종 추천</strong>: <strong>PLAID engine + ColBERTv2 index + MS MARCO v1 passage corpus</strong> 3층 조합. 넷 중 하나를 고르는 문제가 아니라 엔진(PLAID)·index 포맷(ColBERTv2)·데이터(MS MARCO)가 서로 다른 층이며, 이 조합이 사실상 하나의 워크로드다. BEIR(예: NQ, HotpotQA)는 corpus를 바꾼 반복 실험으로만 사용.</p>
+<p><strong>선정 이유</strong>:</p>
+<ol><li>PLAID의 staged pruning 때문에 &quot;candidate로 잡힘&quot;과 &quot;실제 storage에서 embedding을 읽음&quot;이 분리된다. CSD 논거에 필요한 것은 후자이고, PLAID는 그 집합을 코드 상 명시적으로 만든다(decompress 대상 pid 리스트).</li><li>ColBERTv2 residual block(passage당 ~KB, 추정)은 CSD에 두기에 적절한 크기의, 잘 정의된 저장 객체다. dense single-vector 검색(embedding 1개 = 수백 B)보다 문서당 byte가 커서 residency 효과가 뚜렷하게 나타난다.</li><li>MS MARCO만이 수십만 규모 query pool을 제공해 train/test 분할과 긴 스트림 구성이 가능하다.</li><li>전 구성요소가 공개(코드: stanford-futuredata/ColBERT GitHub repo — 배경지식, URL 미검증)라 계측 hook 삽입이 현실적이다.</li></ol>
+<p><strong>필요 데이터</strong>:</p>
+<ul><li>MS MARCO v1 <code>collection.tsv</code>(~8.8M passages), <code>queries.train.tsv</code> / <code>queries.dev.tsv</code>(스트림 구성용; qrels는 선택),</li><li>ColBERTv2 공개 checkpoint, PLAID index 빌드 산출물: <code>centroids</code>, <code>ivf</code>(centroid→pid), <code>doclens</code>(pid→token 수), <code>residuals</code>(압축 embedding) — 파일명·포맷은 repo 확인 필요,</li><li>(선택) query 반복 모델 근거: ORCAS 등 공개 click/query log 통계(배경지식, 확인 필요),</li><li>자원: index 빌드용 GPU, index 저장 ~20-25GB(2-bit 기준 추정).</li></ul>
+<h3 id="2-trace-생성-방법">2. Trace 생성 방법</h3>
+<p><strong>절차</strong> (①~⑥):</p>
+<p>① <strong>Index 빌드</strong>: MS MARCO에 대해 ColBERTv2/PLAID index를 표준 설정(dim=128, 2-bit residual — 추정)으로 빌드하고, <code>doclens</code> 누적합으로 정적 매핑 <code>pid → (byte_start, byte_len)</code>을 만든다.</p>
+<p>② <strong>Query stream 정의</strong> — 두 개를 만든다:</p>
+<ul><li><code>S_uniq</code>: dev-full(또는 train에서 표본) query를 무작위 순서로 1회씩 재생. 반복이 없으므로 <strong>corpus 내재 locality(후보 중복)만 측정하는 하한</strong>.</li><li><code>S_zipf</code>: query pool에서 Zipf(α_q) 인기 분포로 N개(예: 1M)를 복원추출해 반복이 있는 스트림을 합성. α_q는 공개 검색 로그의 query 빈도 왜도에서 가져오되(배경지식상 0.7~1.0 부근, <strong>확인 필요</strong>) 민감도 sweep(α_q ∈ {0.6, 0.8, 1.0})으로 방어한다.</li><li>각 query에 <code>q_idx</code>(0..N-1, <strong>논리 시간축</strong>)와 합성 <code>t_arrival</code>(Poisson 도착 등)을 부여한다. locality 계산은 q_idx 기준, latency 모델만 t_arrival 사용.</li></ul>
+<p>③ <strong>엔진 계측</strong> — 3개 hook:</p>
+<ul><li><code>H1</code>: stage-1 candidate generation 직후의 candidate pid 집합(+ probed centroid ids).</li><li><code>H2</code>: <strong>residual decompression에 들어가는 pid 집합</strong> — 실제 storage read. 이것이 locality의 1차 접근 정의.</li><li><code>H3</code>: 최종 top-k pid.</li><li>hook 위치는 ColBERT repo의 searcher/index-scorer 경로(배경지식상 <code>Searcher.search</code> → candidate generation → filter → residual lookup 순, 정확한 함수명 <strong>확인 필요</strong>).</li></ul>
+<p>④ <strong>embedding block ID 변환</strong>: 고정 block 크기 <code>BS</code>(4KB와 64KB 두 값으로 모두 산출 권장)에 대해 <code>block_ids(pid) = { floor(byte_start/BS) .. floor((byte_start+byte_len-1)/BS) }</code>. passage(~2.5KB 추정) &lt; 4KB이므로 한 block에 여러 pid가 섞인다 → <strong>pid 단위와 block 단위 지표가 달라진다</strong>(block 단위는 spatial locality·배치 순서 효과 포함). query 내에서 block id는 dedupe한다.</p>
+<p>⑤ <strong>후처리</strong>: 스트림 순서대로 스캔하며 pid별 <code>prev_q_idx</code>, <code>delta_q = q_idx − prev_q_idx</code>, LRU stack distance(아래 §3)를 채운다. 한 query 내 동일 pid 중복 접근은 1회로 접는다(query가 timestep).</p>
+<p>⑥ <strong>저장</strong>: Parquet 3-table.</p>
+<p><strong>Trace schema</strong>:</p>
+<pre><code># queries 테이블 (query당 1행)
+q_idx        int64    # 스트림 내 위치 = 논리 시간
+qid          str      # 원본 query id (S_zipf에서는 반복 등장)
+t_arrival    float64  # 합성 도착시각 (s)
+n_q_tokens   int16
+nprobe, k, ndocs      # PLAID 설정 (sweep 축)
+n_cand_H1    int32    # stage-1 candidate 수
+n_scored_H2  int32    # decompress된 pid 수
+bytes_H2     int64    # Σ byte_len, 해당 query의 storage read 총량
+topk_pids    list&lt;int32&gt;
+
+# accesses 테이블 ((q_idx, pid)당 1행; H2 기준이 기본, stage_max로 H1도 표현)
+q_idx        int64
+pid          int32
+stage_max    enum {H1_CANDIDATE, H2_SCORED, H3_TOPK}   # 도달한 최고 단계
+n_tokens_d   int16
+bytes        int32    # n_tokens_d × B_emb
+block_start  int64
+n_blocks     int16
+prev_q_idx   int64    # 직전 접근 (없으면 -1 = cold)
+delta_q      int64    # temporal gap
+sd_docs      int64    # LRU stack distance (pid 단위)
+sd_bytes     int64    # byte-weighted stack distance
+
+# docs 테이블 (정적, pid당 1행)
+pid, n_tokens, bytes, byte_start, block_start, n_blocks</code></pre>
+<p>이 schema로 §3의 모든 지표가 trace 재스캔 없이 groupby/집계만으로 계산되고, §5의 scheduling feature도 같은 field에서 파생된다.</p>
+<h3 id="3-locality-metrics">3. Locality Metrics</h3>
+<p>표기: 스트림 <code>q_1..q_N</code>, query i의 접근 집합 <code>A_i</code>(기본 = H2 pid 집합), 총 접근 수 <code>T = Σ_i |A_i|</code>, 총 byte <code>T_B = Σ_i Σ_{d∈A_i} bytes(d)</code>, 고유 문서 수 <code>U = |∪ A_i|</code>, corpus 크기 <code>|C|</code>.</p>
+<p><code>f(d) = Σ_{i=1..N} 1[d ∈ A_i]</code>, 정규화 <code>p(d) = f(d)/T</code>. byte 가중: <code>f_B(d) = f(d)·bytes(d)</code>. 파생 — corpus utilization <code>util = U/|C|</code> (전체 corpus 중 한 번이라도 읽힌 비율; CSD에 &quot;전체를 둘 필요가 없다&quot;는 첫 근거).</p>
+<ul><li><strong>access frequency</strong>:</li></ul>
+<p><code>RR = (T − U)/T</code> (전체 접근 중 재접근 비율), byte판 <code>RR_B = (T_B − Σ_{d:f&gt;0} bytes(d))/T_B</code>. 보조 지표: <code>multi = |{d : f(d) ≥ 2}| / U</code> (한 번이라도 재사용된 문서 비율). RR이 낮으면 어떤 캐시도 못 이긴다 — <strong>residency 논거의 관문 지표</strong>.</p>
+<ul><li><strong>reuse ratio</strong>:</li></ul>
+<ul><li><strong>temporal reuse distance</strong> — 두 정의를 모두 기록:</li><li>query-gap: <code>Δq(d, j) = j − prev(d, j)</code> (같은 pid의 연속 접근 간 query 수).</li><li><strong>LRU stack distance</strong>: <code>sd(d, j) = |{ d′ ≠ d : last_access(d′) ∈ (prev(d,j), j) }|</code> — 두 접근 사이에 등장한 <em>고유</em> 문서 수. last-access 위치에 대한 Fenwick tree로 O(T log U)에 계산(Mattson 계열 표준 기법, 배경지식).</li><li>핵심 성질: <strong>LRU 용량 C(문서 수)에서의 hit ratio가 <code>HR_LRU(C) = Pr[sd &lt; C]</code>로 즉시 나온다.</strong> byte 용량 B에 대해서는 <code>sd_bytes</code>(그 구간 고유 문서 byte 합)로 <code>HR_LRU,B(B) = Pr_bytes[sd_bytes &lt; B]</code>를 쓴다(가변 크기 객체라 근사임을 명시; passage 크기 분산이 작아 오차 작음 — 추정).</li><li>그래프: reuse distance CCDF(log-log). 꼬리가 짧을수록 작은 CSD DRAM으로 충분.</li></ul>
+<p><code>WSS(τ) = E_t[ | ∪_{i=t−τ+1..t} A_i | ]</code> — 최근 τ개 query가 건드린 고유 문서 수(byte판 <code>WSS_B(τ)</code> 병행). τ ∈ {10, 100, 1k, 10k, 100k}로 곡선을 그린다. 보조: Heaps&#x27; law 적합 <code>U(n) ≈ K·n^β</code> (스트림 앞 n개 query까지의 누적 고유 문서). <strong>β &lt; 1이 뚜렷할수록 접근이 좁은 집합에 갇힌다</strong>는 뜻으로, S_uniq에서도 성립하는지가 핵심 관찰점.</p>
+<ul><li><strong>working-set size</strong> (Denning, 배경지식):</li></ul>
+<p>f(d) 내림차순 순위 r(d)에 대해 <code>Cov(x) = Σ_{r ≤ x·U} f(d_(r)) / T</code> (byte판은 f_B/T_B). 보고 값: <code>Cov(1%), Cov(5%), Cov(10%)</code>와 90% 접근을 덮는 최소 문서 비율 <code>x_90 = min{x : Cov(x) ≥ 0.9}</code>. <strong>그래프(질문 4의 답)</strong>: ① rank–frequency log-log(Zipf plot), ② <strong>누적 곡선 &quot;top x% 문서가 y% 접근을 커버&quot;</strong>(x 로그축, 1/5/10% 마커 표시, Lorenz curve와 동치) — CSD 스토리에는 ②가 주 그림, ①은 근거 그림. 불평등 요약치로 Gini <code>G = 1 − 2∫₀¹ L(x)dx</code>.</p>
+<ul><li><strong>hot coverage</strong>:</li></ul>
+<p><code>f(r) ∝ r^{−α}</code> 가정 하에 α를 MLE(Clauset-Shalizi-Newman 방식/<code>powerlaw</code> 패키지, 배경지식)로 적합하고 log-log OLS와 병기. tail cutoff(f(d)=1 무리)는 적합에서 제외. 해석: S_zipf의 α는 주입한 query 반복 왜도 α_q에 종속되므로, <strong>S_uniq에서 측정된 α(순수 candidate 중복 유래)를 반드시 따로 보고</strong>하고 두 스트림을 분리 해석한다.</p>
+<ul><li><strong>Zipf/skew</strong>:</li></ul>
+<p>모든 지표는 (a) pid 단위 / block 단위, (b) count / byte-weighted, (c) S_uniq / S_zipf의 세 축 조합으로 계산한다 — 표 하나에 요약 가능한 8~12개 셀이 결과의 뼈대가 된다.</p>
+<h3 id="4-csd-residency-benefit">4. CSD Residency Benefit</h3>
+<p><strong>설정</strong>: 용량 B bytes의 CSD 내부 상주 영역(DRAM 또는 pinned 구역)에 embedding block 일부를 두고, 나머지는 miss로 처리. 세 정책을 시뮬레이션한다 — ① STATIC-HOT: train 구간 f(d) 상위 문서를 byte 예산 B까지 pin, ② LRU(online) — §3의 sd_bytes 분포에서 바로 계산, ③ (상한 참고용) offline optimal 근사.</p>
+<p>스트림을 시간순 50/50으로 나눠 train으로 HotSet(B)를 만들고 <strong>test 구간에서만</strong> 평가한다(oracle leakage 방지 — 필수 절차). <code>HR_doc(B) = Σ_{i∈test} |A_i ∩ HotSet(B)| / Σ_{i∈test} |A_i|</code> <code>HR_bytes(B) = Σ_{i∈test} Σ_{d∈A_i∩HotSet(B)} bytes(d) / Σ_{i∈test} Σ_{d∈A_i} bytes(d)</code> LRU는 <code>HR_LRU,B(B) = Pr[sd_bytes &lt; B]</code>. <strong>PCIe 주장에 쓰는 값은 HR_bytes다.</strong></p>
+<ul><li><strong>residency hit ratio</strong>:</li></ul>
+<p>baseline(embedding이 일반 SSD/host에 있고 scoring 위치로 이동): <code>Base = Σ_{i∈test} bytes_H2(i)</code>. CSD가 hit을 내부에서 scoring하는 설계: PCIe에는 query embedding(≈ <code>n_q·128·2B</code> ≈ 8KB/query, 추정)과 top-k 결과(수 KB)만 흐르므로 <code>Saved(B) = HR_bytes(B) · Base</code>, <code>Reduction(B) = Saved/Base = HR_bytes(B)</code> (+ 고정 metadata 보정). miss를 host로 올려 scoring하는 hybrid 설계면 PCIe bytes/query = <code>(1 − HR_bytes(B)) · E[bytes_H2]</code>.</p>
+<ul><li><strong>traffic saved bytes</strong>:</li></ul>
+<p>miss 1건 비용 모델 — <code>T_miss(d) = bytes(d)/BW_NAND_int + T_NAND_lat + [hybrid: bytes(d)/BW_PCIe + host 처리]</code>, hit은 <code>T_hit(d) = bytes(d)/BW_DRAM_int ≈ 0</code>. query 기대 추가지연: <code>E[ΔT] = (1 − HR_bytes(B)) · E[bytes_H2] / BW_bottleneck + miss 건수 · T_NAND_lat</code>. 절감 주장이 성립할 조건(hybrid 기준): <code>HR_bytes(B) &gt; 1 − BW_PCIe_gain_threshold</code> 형태의 부등식으로 제시하되, BW 상수(PCIe Gen4 x4 ≈ 8GB/s, NAND/내부 DRAM 대역 — 모두 배경지식)는 별도 표로 분리해 가정임을 명시한다.</p>
+<ul><li><strong>cold miss cost</strong>:</li></ul>
+<p><code>B ∈ {0.25, 0.5, 1, 2, 4, 8, 16} GB</code> (index 총량 ~22GB 추정 대비 ~1%→~70%)에서 HR_bytes(B) 곡선과 <code>Saved GB / 1k queries</code>를 그린다. 곡선의 knee <code>B*</code>(한계 이득 &lt; ε 지점)가 CSD DRAM sizing 근거가 된다. 목표 서사: &quot;<strong>index의 x%인 B* GB만 상주시켜도 H2 byte의 y%가 장치 내부에서 끝난다</strong>&quot;.</p>
+<ul><li><strong>hot document capacity sweep</strong>:</li></ul>
+<ul><li><strong>최소 metric 세트(질문 5의 답)</strong>: ① <code>E[bytes_H2/query]</code>(baseline traffic), ② <code>HR_bytes(B)</code> 곡선(정책 1개 이상, train/test 분할), ③ miss 비용 가정 1세트. 이 셋이면 &quot;PCIe traffic이 HR_bytes만큼 줄고 miss 페널티를 감안해도 net win&quot; 주장이 완결된다. 나머지 지표(§3)는 이 곡선이 <em>왜</em> 그렇게 나오는지의 설명 변수다.</li></ul>
+<ul><li>규모 예시(전부 추정, 확인 필요): passage당 68 tokens × 36B ≈ 2.45KB(2-bit). k=100에서 query당 decompress ~256 pid라면 <code>bytes_H2 ≈ 0.63MB/query</code>; GPU에서 fp16으로 scoring하려고 원본을 옮기면 256B/token 기준 ~4.5MB/query. 1k QPS 시 각각 ~0.6GB/s, ~4.5GB/s — 후자는 PCIe Gen4 x4의 절반 이상을 embedding 이동에 소모한다는 계산이 되어 CSD 동기부여의 정량 예시로 쓸 수 있다.</li></ul>
+<h3 id="5-scheduling으로-넘길-factor">5. Scheduling으로 넘길 Factor</h3>
+<p>이 trace 분석의 산출물을 이후 GPU/CSD scheduling 연구의 feature로 인계한다. 결정점은 <strong>stage-1 직후</strong>(candidate pid는 알지만 residual은 아직 안 읽은 시점)다.</p>
+<div class="table-wrap"><table><thead><tr><th>Factor</th><th>정의 (trace field 유래)</th><th>online/offline</th></tr></thead><tbody><tr><td><strong>document hotness</strong></td><td><code>h_d(t) = γ·h_d + (1−γ)·1[access]</code> (EWMA; 초기값 = train f(d) 순위 bucket)</td><td>online (offline seed)</td></tr><tr><td><strong>recent reuse distance</strong></td><td>마지막 접근 이후 경과 <code>q_idx − prev_q_idx</code>, 그리고 pid의 median sd_bytes percentile</td><td>online</td></tr><tr><td><strong>residency state</strong></td><td>pid별 위치 enum {CSD_DRAM, CSD_NAND, HOST_DRAM, GPU_HBM} bitmap — residency 시뮬레이터의 현재 상태</td><td>online</td></tr><tr><td><strong>candidate set locality</strong></td><td><code>ρ_q = Σ_{d∈H1(q)} bytes(d)·1[resident] / Σ_{d∈H1(q)} bytes(d)</code> — query 단위 상주 비율</td><td>online, stage-1 직후 계산 가능</td></tr><tr><td>expected move bytes</td><td>route별 예상 전송량: CSD 실행 시 ≈ 8KB, GPU 실행 시 ≈ <code>(1−ρ_q)·bytes_H1_est + …</code></td><td>online</td></tr><tr><td>정적 프로파일</td><td>Zipf α, Cov(x) 곡선, WSS(τ), HotSet(B) 멤버십 리스트</td><td>offline</td></tr></tbody></table></div>
+<ul><li><strong>online/offline feature 구분 원칙</strong>: offline = index 빌드/프로파일 시점에 고정되어 lookup만 하는 것(HotSet 멤버십, hotness seed, 문서 bytes). online = query 도착 후 갱신되는 것(EWMA hotness, residency bitmap, ρ_q, CSD queue depth). trace schema(§2)의 <code>prev_q_idx / sd_bytes / stage_max / bytes</code>가 이 feature들의 학습·재현 데이터가 된다.</li><li>활용 sketch: <code>route(q) = CSD if ρ_q ≥ θ and csd_queue &lt; L else GPU</code> 같은 threshold 정책의 θ 민감도를 이 trace로 offline 재생 평가할 수 있고, hotness/Δq는 promotion(승격)·eviction 정책의 입력이 된다.</li><li>인계 시 함께 넘길 것: <code>accesses</code>/<code>docs</code> Parquet, HotSet(B) 리스트(각 B), HR_bytes(B) 곡선, ρ_q 분포(스트림별). ρ_q 분포가 bimodal이면 정적 라우팅으로 충분하고, 넓게 퍼져 있으면 동적 scheduling 연구의 여지가 크다는 신호다 — 이 관찰 자체가 다음 단계 연구의 motivation 그림이 된다.</li></ul>
+<h2 id="쟁점과-불확실성">쟁점과 불확실성</h2>
+<ol><li><strong>query 반복성 (최대 쟁점)</strong>: 공개 MS MARCO query set은 dedup되어 있어(배경지식) S_uniq에서는 문서 재사용이 candidate 중복에서만 발생한다. 운영 검색은 query 반복(Zipf)이 강해 locality가 훨씬 크다. S_zipf의 α_q 선택은 결과를 직접 좌우하므로 근거 로그(ORCAS 등) 통계 <strong>확인 필요</strong>, sweep으로 방어. 리뷰어 관점에서 &quot;S_uniq에서도 HR이 의미 있게 나오는가&quot;가 논문의 방어선이다.</li><li><strong>접근 정의(H1 vs H2)</strong>: H1 기준으로 재면 traffic이 수십 배 과대평가된다(대부분 centroid-only로 pruning되어 residual을 안 읽음). 본 설계는 byte 지표를 H2로 고정했지만, IVF list 읽기까지 CSD로 옮기는 설계라면 metadata 접근 스트림을 별도로 측정해야 한다 — 범위 밖으로 명시.</li><li><strong>PLAID 파라미터의 정확한 값 — 확인 필요</strong>: k별 preset(nprobe, ndocs), stage-3 이후 최종 decompress 후보 수(ndocs의 1/4 수준이라는 기억은 미검증), hook을 걸 정확한 함수 위치. 논문 §알고리즘과 repo 코드로 검증 필요.</li><li><strong>수치 전반 — 확인 필요</strong>: 8.8M passages, query set 크기(6,980 / ~101k / ~503k), dim 128·2-bit·36B/embedding, 총 embedding 수 ~600M, index ~22GB, fp16 원본 ~154GB, 평균 doclen ~68 — 모두 배경지식이며 원문 미열람. 본문 채택 전 논문 표에서 재확인할 것.</li><li><strong>granularity</strong>: pid 단위 HR과 block 단위 HR은 다르다(4KB block에 여러 passage 동거). hot passage들이 물리적으로 흩어져 있으면 block HR &lt; doc HR. 반대로 <strong>hot 문서를 모아 재배치(layout reordering)하면 block HR을 끌어올릴 수 있다</strong> — 측정 후 후속 최적화 아이템으로 분리.</li><li><strong>&quot;document&quot; vs &quot;passage&quot;</strong>: MS MARCO passage corpus에서 locality의 단위는 passage다. 같은 원문서(URL)의 passage를 묶으면 spatial locality가 추가로 나올 수 있으나(MS MARCO document corpus 매핑 필요), 1차 범위에서는 passage=document로 둔다.</li><li><strong>LRU byte-weighted stack distance는 근사</strong>: 가변 크기 객체의 정확한 LRU byte hit ratio와 약간 다르다. passage 크기 분산이 작아 오차는 작을 것(추정)이나, 최종 수치는 실제 캐시 시뮬레이션으로 교차 검증 권장.</li><li><strong>참고문서 5건 전부 &quot;URL 메타데이터만 확인&quot;</strong>: 이번 세션에서 WebFetch/WebSearch가 거부되어 본문 검증을 못 했다. 위 확인 필요 항목의 1차 해소 수단이 이 5개 URL이다.</li></ol>
+<h2 id="읽는-순서-조사-로드맵">읽는 순서 / 조사 로드맵</h2>
+<ol><li><strong>PLAID (arXiv:2205.09707)</strong> — 단계별 파이프라인과 k별 preset, decompress 후보 수 확정(쟁점 3 해소). 읽을 곳: 알고리즘/실험 설정 절.</li><li><strong>ColBERTv2 (arXiv:2112.01488)</strong> — residual 압축 포맷과 per-embedding bytes, index 크기 확정(쟁점 4 해소). 읽을 곳: compression 절과 index 크기 표.</li><li><strong>stanford-futuredata/ColBERT repo 코드</strong>(배경지식 포인터, URL 미검증) — searcher → candidate generation → residual lookup 경로에서 H1/H2 hook 위치 확정, index 파일 레이아웃(doclens/ivf/residuals) 확인.</li><li><strong>MS MARCO 공식 페이지</strong> — corpus/query set 크기와 라이선스, dedup 여부 원문 확인(쟁점 1·4).</li><li><strong>BEIR (arXiv:2104.08663)</strong> — 부록의 dataset 크기 표만 확인해 보조 corpus 2개(NQ, HotpotQA 후보) 선정.</li><li>배경 이론(필요 시): Denning working-set, Mattson stack distance 원전, Zipf 적합(powerlaw) — 모두 고전이라 교과서/서베이 수준이면 충분.</li><li>이후 구현 순서: index 빌드 → hook 삽입 → S_uniq 10k query 파일럿(schema 검증) → 전체 스트림 2종 → 지표/HR 곡선 → scheduling feature 인계.</li></ol>
+<h2 id="후속-질문">후속 질문</h2>
+<ul><li>PLAID의 최종 decompress 후보 수는 k와 ndocs에 대해 정확히 어떤 함수인가? (코드 확인)</li><li>S_uniq에서 Heaps β와 Cov(10%)가 얼마나 나오는가 — query 반복 없이도 CSD 논거가 서는가?</li><li>α_q를 정당화할 공개 query log 통계(ORCAS 등)로 무엇을 인용할 수 있는가?</li><li>block 단위 HR이 pid 단위 HR보다 얼마나 낮은가 — hotness 기반 layout reordering의 이득 여지는?</li><li>hot set이 시간에 따라 drift하는가(train/test HR 격차, 시간창별 HotSet Jaccard)? drift가 크면 static pinning 대신 online 정책이 필요하다는 scheduling 연구의 직접 동기가 된다.</li><li>hybrid(miss를 host로 올리는) 설계와 full in-CSD scoring 설계 중 어느 쪽을 기본 시나리오로 둘 것인가?</li><li>BEIR 소형 corpus에서는 utilization과 skew가 MS MARCO와 얼마나 다른가(일반화 주장 범위 설정)?</li></ul>
+<h2 id="참고-자료">참고 자료</h2>
+<p><strong>Job 참고문서 (모두 URL 메타데이터만 확인 — 본문 미열람, <code>references/manifest.json</code> 기준)</strong>:</p>
+<ul><li>ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT — https://arxiv.org/abs/2004.12832</li><li>ColBERTv2: Efficient and Effective Retrieval via Lightweight Late Interaction — https://arxiv.org/abs/2112.01488</li><li>PLAID: An Efficient Engine for Late Interaction Retrieval — https://arxiv.org/abs/2205.09707</li><li>MS MARCO Passage Ranking Dataset — https://microsoft.github.io/msmarco/</li><li>BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models — https://arxiv.org/abs/2104.08663</li></ul>
+<p><strong>배경지식 포인터 (본 문서에서 배경지식으로 사용, URL/수치 미검증)</strong>: stanford-futuredata/ColBERT GitHub repo(PLAID 구현), ORCAS click log(query 반복 통계 후보), Denning working-set 모델, Mattson stack distance 알고리즘, Clauset-Shalizi-Newman power-law 적합(<code>powerlaw</code> 패키지), PCIe Gen4/Gen5 대역폭 일반 수치.</p>
+<p><strong>작업 메타데이터</strong>: <code>job.json</code>(요청 정의), <code>references/manifest.json</code>(URL-only 상태 기록), <code>repo-files.txt</code>(&quot;No repository attached&quot;).</p>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>

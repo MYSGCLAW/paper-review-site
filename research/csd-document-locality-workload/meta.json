@@ -1,0 +1,139 @@
+{
+  "title": "기존 Retrieval 워크로드 기반 문서 로컬리티 측정 방법 연구",
+  "summary": "ColBERT/PLAID 계열 기존 retrieval 워크로드 하나를 선정해 query stream에서 접근되는 document/passage embedding의 활용도와 로컬리티를 측정하는 방법을 설계한다.",
+  "type": "집중 연구 설계",
+  "topic": "CSD resident embedding을 위한 document locality 측정",
+  "scope": "기존 neural retrieval 워크로드 하나를 선택하고, query별 candidate document/passage 접근 trace를 만들어 문서 활용도, hot/cold skew, temporal reuse distance, working-set size, CSD residency hit ratio를 측정하는 방법을 정리한다. 성능 모델 전체가 아니라 CSD에 embedding을 resident하게 둘 근거가 되는 locality 측정 방법에 집중한다.",
+  "parent_slug": null,
+  "generated_from_plan": null,
+  "project": {},
+  "tags": [
+    "CSD",
+    "document locality",
+    "ColBERT",
+    "PLAID",
+    "MS MARCO",
+    "BEIR",
+    "trace",
+    "scheduling"
+  ],
+  "updated": "2026-07-18",
+  "source": {
+    "repo_url": null,
+    "local_path": null,
+    "branch": null,
+    "paths": [],
+    "reference_dir": "references/research/csd-document-locality-workload",
+    "docs": [
+      {
+        "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT",
+        "url": "https://arxiv.org/abs/2004.12832"
+      },
+      {
+        "title": "ColBERTv2: Efficient and Effective Retrieval via Lightweight Late Interaction",
+        "url": "https://arxiv.org/abs/2112.01488"
+      },
+      {
+        "title": "PLAID: An Efficient Engine for Late Interaction Retrieval",
+        "url": "https://arxiv.org/abs/2205.09707"
+      },
+      {
+        "title": "MS MARCO Passage Ranking Dataset",
+        "url": "https://microsoft.github.io/msmarco/"
+      },
+      {
+        "title": "BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+        "url": "https://arxiv.org/abs/2104.08663"
+      }
+    ]
+  },
+  "analysis": {
+    "model": "claude-fable-5",
+    "effort": "max",
+    "max_turns": 40,
+    "analysis_style": "짧지만 깊게 작성한다. 관련 연구 요약은 최소화하고, 실제로 trace를 어떻게 만들고 어떤 지표를 계산할지 절차와 수식 중심으로 정리한다. 출력은 한국어 Markdown이며 용어와 변수명은 영어 원문을 유지한다.",
+    "sections": [
+      {
+        "title": "워크로드 선정",
+        "prompt": "ColBERT/PLAID/MS MARCO/BEIR 중 locality 측정에 가장 적합한 하나를 추천하고 이유를 정리한다.",
+        "required": [
+          "후보 비교",
+          "최종 추천",
+          "선정 이유",
+          "필요 데이터"
+        ]
+      },
+      {
+        "title": "Trace 생성 방법",
+        "prompt": "query stream에서 candidate document/passage ID와 embedding block 접근 trace를 만드는 절차와 record schema를 제안한다.",
+        "required": [
+          "query stream",
+          "candidate IDs",
+          "embedding block ID",
+          "timestamp/query index",
+          "trace schema"
+        ]
+      },
+      {
+        "title": "Locality Metrics",
+        "prompt": "문서 활용도와 로컬리티 지표를 수식과 함께 정의한다.",
+        "required": [
+          "access frequency",
+          "reuse ratio",
+          "temporal reuse distance",
+          "working-set size",
+          "hot coverage",
+          "Zipf/skew"
+        ]
+      },
+      {
+        "title": "CSD Residency Benefit",
+        "prompt": "문서 embedding을 CSD 내부에 유지했을 때 PCIe transfer가 얼마나 줄어드는지 추정하는 방법을 정리한다.",
+        "required": [
+          "residency hit ratio",
+          "traffic saved bytes",
+          "cold miss cost",
+          "hot document capacity sweep"
+        ]
+      },
+      {
+        "title": "Scheduling으로 넘길 Factor",
+        "prompt": "이 locality 분석 결과가 이후 GPU/CSD scheduling decision에 어떤 feature로 쓰이는지 정리한다.",
+        "required": [
+          "document hotness",
+          "recent reuse distance",
+          "residency state",
+          "candidate set locality",
+          "online/offline feature"
+        ]
+      }
+    ]
+  },
+  "references": [
+    {
+      "title": "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT",
+      "url": "https://arxiv.org/abs/2004.12832",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "ColBERTv2: Efficient and Effective Retrieval via Lightweight Late Interaction",
+      "url": "https://arxiv.org/abs/2112.01488",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "PLAID: An Efficient Engine for Late Interaction Retrieval",
+      "url": "https://arxiv.org/abs/2205.09707",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "MS MARCO Passage Ranking Dataset",
+      "url": "https://microsoft.github.io/msmarco/",
+      "note": "URL only; content was not fetched automatically."
+    },
+    {
+      "title": "BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models",
+      "url": "https://arxiv.org/abs/2104.08663",
+      "note": "URL only; content was not fetched automatically."
+    }
+  ]
+}

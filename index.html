@@ -760,7 +760,7 @@
 
         <a class="tab-link" href="#paper-discovery">
           <span>논문 추천</span>
-          <small>1</small>
+          <small>0</small>
         </a>
         
 
@@ -772,7 +772,7 @@
 
         <a class="tab-link" href="#research">
           <span>정보 수집</span>
-          <small>5</small>
+          <small>7</small>
         </a>
         
 
@@ -810,7 +810,7 @@
 
       <div class="statistics">
         <span class="stat">논문 23편</span>
-        <span class="stat">전체 항목 34개</span>
+        <span class="stat">전체 항목 35개</span>
       </div>
     </div>
   </header>
@@ -828,7 +828,7 @@
     <a href="#paper-discovery" class="category-card">
       <h2>Research &amp; Analysis <span>논문 추천</span></h2>
       <p>오늘 검색된 논문 후보만 표시합니다. 이전 날짜 추천 목록은 홈페이지에 노출하지 않습니다.</p>
-      <small>1개 문서</small>
+      <small>0개 문서</small>
     </a>
     
 
@@ -842,7 +842,7 @@
     <a href="#research" class="category-card">
       <h2>Research &amp; Analysis <span>정보 수집</span></h2>
       <p>특정 주제에 대한 문서, 링크, 메모를 모아 쟁점과 조사 로드맵으로 정리합니다.</p>
-      <small>5개 문서</small>
+      <small>7개 문서</small>
     </a>
     
 
@@ -871,7 +871,7 @@
 
         <a class="tab-link" href="#paper-discovery">
           <span>논문 추천</span>
-          <small>1</small>
+          <small>0</small>
         </a>
         
 
@@ -883,7 +883,7 @@
 
         <a class="tab-link" href="#research">
           <span>정보 수집</span>
-          <small>5</small>
+          <small>7</small>
         </a>
         
 
@@ -1559,34 +1559,15 @@
           <h2>Today&#x27;s Paper Recommendations</h2>
           <p>오늘 검색된 논문 후보만 표시합니다. 이전 날짜 추천 목록은 홈페이지에 노출하지 않습니다.</p>
         </div>
-        <span class="section-count">1개</span>
+        <span class="section-count">0개</span>
       </div>
 
       <div class="library-grid">
         
-    <article class="library-card">
-      <div class="card-header">
-        <h2>
-          <a href="paper-discovery/2026-07-17/">
-            Daily Paper Discovery - 2026-07-17
-          </a>
-        </h2>
-
-        <span class="status-badge status-unverified">
-          오늘
-        </span>
-      </div>
-
-      <p class="metadata">2026-07-17 · 추천 후보 12개</p>
-
-      <p class="summary">
-        오늘 추천 후보 12개: Reproduction Beyond Benchmarks: ConstBERT and ColBERT-v2 Across Backends and Query Distributions, Compact Models for Structured Argument and Stance Analysis: A Framing-Aware, Retrieval-Augmented Pipeline, Comparison of Lower-Extremity Coordination Patterns During Countermovement Jumps Between Dancers and Nondancers
-      </p>
-
-      <a class="open-link" href="paper-discovery/2026-07-17/">
-        추천 문서 열기 →
-      </a>
-    </article>
+    <section class="empty-state">
+      <h2>오늘 생성된 논문 추천 목록이 없습니다.</h2>
+      <p>daily_paper_discovery.sh가 오늘 날짜 discovery JSON을 만들면 이곳에 표시됩니다.</p>
+    </section>
     
       </div>
     </section>
@@ -1656,11 +1637,63 @@
           <h2>Research Collections</h2>
           <p>특정 주제에 대한 문서, 링크, 메모를 모아 쟁점과 조사 로드맵으로 정리합니다.</p>
         </div>
-        <span class="section-count">5개</span>
+        <span class="section-count">7개</span>
       </div>
 
       <div class="library-grid">
         
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="research/csd-document-locality-workload/">
+            기존 Retrieval 워크로드 기반 문서 로컬리티 측정 방법 연구
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">집중 연구 설계 · 2026-07-18</p>
+      <div class="tag-row"><span class="tag">CSD</span><span class="tag">document locality</span><span class="tag">ColBERT</span><span class="tag">PLAID</span><span class="tag">MS MARCO</span><span class="tag">BEIR</span><span class="tag">trace</span><span class="tag">scheduling</span></div>
+
+      <p class="summary">
+        ColBERT/PLAID 계열 기존 retrieval 워크로드 하나를 선정해 query stream에서 접근되는 document/passage embedding의 활용도와 로컬리티를 측정하는 방법을 설계한다.
+      </p>
+
+      <a class="open-link" href="research/csd-document-locality-workload/">
+        열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card">
+      <div class="card-header">
+        <h2>
+          <a href="research/csd-maxsim-break-even/">
+            GPU/CSD MaxSim 연산 성능 Break-even 모델 연구
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          Codex 검증 완료
+        </span>
+      </div>
+
+      <p class="metadata">집중 성능 모델링 · 2026-07-18</p>
+      <div class="tag-row"><span class="tag">CSD</span><span class="tag">GPU</span><span class="tag">MaxSim</span><span class="tag">ColBERT</span><span class="tag">MAC units</span><span class="tag">processing elements</span><span class="tag">FLOPS</span><span class="tag">PCIe bottleneck</span><span class="tag">performance model</span></div>
+
+      <p class="summary">
+        ColBERT 계열 MaxSim을 GEMM-like MAC 연산과 max-reduction으로 모델링하고, GPU 실행과 CSD 실행의 end-to-end latency를 비교해 CSD에 필요한 MAC unit/PE/FLOPS 조건을 도출한다.
+      </p>
+
+      <a class="open-link" href="research/csd-maxsim-break-even/">
+        열기 →
+      </a>
+    </article>
+    
+
     <article class="library-card">
       <div class="card-header">
         <h2>

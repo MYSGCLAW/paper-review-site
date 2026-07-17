@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GPU/CSD MaxSim 연산 성능 Break-even 모델 연구</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body class="auth-locked index-hidden">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">집중 성능 모델링</p>
+      <h1>GPU/CSD MaxSim 연산 성능 Break-even 모델 연구</h1>
+      <p class="summary">ColBERT 계열 MaxSim을 GEMM-like MAC 연산과 max-reduction으로 모델링하고, GPU 실행과 CSD 실행의 end-to-end latency를 비교해 CSD에 필요한 MAC unit/PE/FLOPS 조건을 도출한다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-18</span>
+        <span class="tag">CSD</span><span class="tag">GPU</span><span class="tag">MaxSim</span><span class="tag">ColBERT</span><span class="tag">MAC units</span><span class="tag">processing elements</span><span class="tag">FLOPS</span><span class="tag">PCIe bottleneck</span><span class="tag">performance model</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#수집-범위">수집 범위</a>
+<a class="toc-level-2" href="#핵심-요약">핵심 요약</a>
+<a class="toc-level-2" href="#정보-지도">정보 지도</a>
+<a class="toc-level-2" href="#프로토콜-동작-흐름">프로토콜 / 동작 흐름</a>
+<a class="toc-level-2" href="#세부-정리">세부 정리</a>
+<a class="toc-level-3" href="#1-maxsim-operation-model">1. MaxSim Operation Model</a>
+<a class="toc-level-3" href="#2-gpu-latency-model">2. GPU Latency Model</a>
+<a class="toc-level-3" href="#3-csd-latency-model">3. CSD Latency Model</a>
+<a class="toc-level-3" href="#4-break-even-mac-pe-조건">4. Break-even MAC/PE 조건</a>
+<a class="toc-level-3" href="#5-sensitivity와-가능성-판단">5. Sensitivity와 가능성 판단</a>
+<a class="toc-level-2" href="#쟁점과-불확실성">쟁점과 불확실성</a>
+<a class="toc-level-2" href="#읽는-순서-조사-로드맵">읽는 순서 / 조사 로드맵</a>
+<a class="toc-level-2" href="#후속-질문">후속 질문</a>
+<a class="toc-level-2" href="#참고-자료">참고 자료</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <p>웹 도구(WebFetch/WebSearch)와 작업 디렉터리 외부 읽기가 모두 거부되어, 참고자료는 URL 메타데이터만 확인했습니다. 수치 파라미터(ColBERT 기본값, PCIe 대역폭, GPU/CSD 스펙)는 배경지식으로 명시하고, 요청된 수식 중심 break-even 모델을 작성합니다.</p>
+<h1 id="csd-maxsim-offload의-gpu-대비-mac-pe-flops-break-even-분석">CSD MaxSim Offload의 GPU 대비 MAC/PE/FLOPS Break-even 분석</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p>Candidate embedding이 GPU-resident가 아닌 한 GPU MaxSim은 PCIe-bound이므로, CSD는 GPU의 FLOPS가 아니라 <strong>PCIe 전달률만 이기면 되고</strong>, 그 조건은 <code>N_mac ≥ Q · BW_pcie / (b_e · f_csd · u)</code> — fp16, Q=32, PCIe Gen4 x16 기준 <strong>약 630개 MAC(≈1 TFLOP/s, A100 peak의 0.3%)</strong> 수준이다. 단, 이는 <code>BW_int ≥ BW_pcie</code>(내부 read bandwidth 조건)와 &quot;압축 전송 baseline과의 비교&quot;라는 두 개의 더 어려운 전제를 동반한다.</p>
+<h2 id="수집-범위">수집 범위</h2>
+<ul><li><strong>포함</strong>: MaxSim의 MAC/FLOP 연산 모델, GPU 실행 경로(T_gpu)와 CSD 실행 경로(T_csd)의 latency equation, break-even inequality와 required MAC/PE/OPS 유도, sanity-check 수치 예시, sensitivity sweep 설계.</li><li><strong>제외</strong>: 문서 로컬리티/캐시 히트율 자체 분석(job scope에서 명시적으로 제외), query encoder(BERT forward)의 비용 — 양 경로에 공통이므로 소거, candidate generation(ANN/centroid 단계)의 자체 비용 — 단 배치(placement) 쟁점으로만 언급.</li><li><strong>자료 유형</strong>: manifest의 참고자료 8건(ColBERT/ColBERTv2/PLAID/MS MARCO/BEIR/CUDA Guide/PCIe/SNIA)은 전부 <strong>URL 메타데이터만 확인</strong> — 본문 텍스트가 <code>references/text/</code>에 없고, 이번 세션에서 WebFetch/WebSearch 권한이 거부되어 열람하지 못했다. 따라서 본 문서의 모든 수치 파라미터(Q=32, E=128, PCIe 대역폭 표, GPU 스펙, SmartSSD 스펙 등)는 <strong>배경지식</strong>이며, 불확실한 값은 개별적으로 &quot;확인 필요&quot;로 표시한다. 수식 유도 자체는 first-principles이므로 참조 의존성이 없다.</li></ul>
+<h2 id="핵심-요약">핵심 요약</h2>
+<ol><li><strong>MaxSim은 batched small GEMM + row-wise max</strong>: <code>FLOP_total ≈ 2·B·N·Q·D·E</code>, max-reduction은 GEMM 대비 <code>1/(2E) ≈ 0.4%</code> (E=128)로 무시 가능하다.</li><li><strong>GPU 경로의 arithmetic intensity는 <code>AI = 2Q/b_e</code><strong> (query는 on-chip 상주, fused kernel 가정). fp16·Q=32이면 32 FLOP/B로 A100 ridge(≈153 FLOP/B)에 한참 못 미쳐 </strong>HBM-bound</strong>이고, 데이터가 PCIe를 건너는 순간 <code>BW_pcie ≪ BW_hbm</code>(30~80배)이므로 <strong>항상 PCIe-bound</strong>가 된다.</li><li>따라서 break-even의 본질은 &quot;CSD compute vs GPU compute&quot;가 아니라 <strong>&quot;CSD compute vs PCIe 전달률&quot;</strong>: <code>required OPS = (Q/b_e)·BW_pcie [MAC/s]</code>. 여기서 <strong>B, N, D, E가 전부 소거</strong>된다 — break-even MAC 수는 워크로드 크기와 무관하고 Q, precision, 링크 속도, clock, utilization에만 의존한다.</li><li><strong>필요 MAC 수는 작다</strong>: <code>N_mac* = Q·BW_pcie/(b_e·f·u)</code> → fp16, f=1 GHz, u=0.8일 때 Gen4 x4에서 158개, Gen4 x16에서 630개, Gen5 x16에서 1,260개. SmartSSD급 FPGA(KU15P, DSP slice 약 2천 개 — 배경지식, 확인 필요)로도 도달 가능한 규모다.</li><li><strong>진짜 병목은 두 번째 필요조건 <code>BW_int ≥ BW_pcie</code><strong>: 단일 drive의 NAND 내부 대역폭(~7–16 GB/s)은 GPU x16 링크 유효 대역폭(25–54 GB/s)보다 낮다. 단일 CSD는 warm host DRAM baseline에 지고, </strong>cold data / multi-drive scale-out / HBM·host DRAM capacity 초과 corpus</strong>에서만 이긴다.</li><li><strong>Result traffic은 소거 가능</strong>: score만 반환 시 <code>D·E·b_e/b_s = 8192배</code>, top-k 반환 시 10⁵배까지 egress가 줄어 T_res는 µs 단위가 된다. CSD의 PCIe 비용은 사실상 0으로 모델링해도 된다.</li><li><strong>최강 GPU baseline은 raw fp16 전송이 아니라 압축 전송</strong>(ColBERTv2 residual compression, ~36 B/vector — 배경지식, 확인 필요): 전송량이 ~7배 줄면 required <code>N_mac*</code>도 ~7배(Gen4 x16 기준 ~4.5K MAC) 커진다. CSD 제안의 공정한 비교 대상은 PLAID류 압축 경로다.</li><li>GPU-resident(HBM 상주) baseline을 이기는 것은 불가능에 가깝다(<code>required OPS ≈ 65 TFLOP/s</code> + <code>BW_int ≥ 2 TB/s</code>). CSD 논거는 latency가 아니라 <strong>capacity(fp16 full index ~150+ GB &gt; HBM 80 GB), cost, host 자원 절감</strong>으로 옮겨가야 한다.</li></ol>
+<h2 id="정보-지도">정보 지도</h2>
+<div class="mermaid">flowchart TD
+ W[&quot;MaxSim workload model / FLOP=2BNQDE, Bytes=BNDEb_e / AI=2Q/b_e&quot;] --&gt; G[&quot;GPU path model / T_pcie vs T_comp(roofline)&quot;]
+ W --&gt; C[&quot;CSD path model / T_read vs T_mac, top-k egress&quot;]
+ G --&gt; BE[&quot;Break-even algebra / N_mac* = Q·BW_pcie/(b_e·f·u)&quot;]
+ C --&gt; BE
+ BE --&gt; S[&quot;Sensitivity sweeps / PCIe Gen / precision / n_csd / Q&quot;]
+ B1[&quot;Baseline 선택 쟁점 / cold SSD / warm host / HBM-resident / compressed(PLAID)&quot;] --&gt; G
+ H1[&quot;HW landscape (배경지식) / A100·H100, SmartSSD, SNIA CS model&quot;] --&gt; C
+ R1[&quot;참고자료(URL만 확인) / ColBERT·v2·PLAID·PCIe·SNIA&quot;] -.파라미터 근거.-&gt; W</div>
+<p>관계 구조: (1) workload 모델이 양쪽 latency 모델의 공통 입력이고, (2) break-even 대수는 두 모델의 bottleneck 항끼리의 비교로 환원되며, (3) baseline 선택(어떤 GPU 경로와 비교하는가)이 결론의 부호를 바꾸는 최대 쟁점이다.</p>
+<h2 id="프로토콜-동작-흐름">프로토콜 / 동작 흐름</h2>
+<p>요청·핸들·상태·메모리 객체·명령 제출·완료 신호의 순서를 두 경로로 재구성한다(NVMe/CUDA 동작은 배경지식, SNIA CS command 세부는 확인 필요).</p>
+<div class="mermaid">sequenceDiagram
+ participant H as Host CPU
+ participant S as SSD / CSD
+ participant G as GPU
+
+ Note over H,G: [GPU path] 이동 객체 = doc embeddings (BNDEb_e, MB~GB급)
+ H-&gt;&gt;H: candidate doc-id list (N ids, retriever 출력)
+ H-&gt;&gt;S: NVMe read SQ entries (LBA per doc)
+ S--&gt;&gt;H: DMA → host DRAM staging buffer, CQE 완료
+ H-&gt;&gt;G: cudaMemcpyAsync H2D (stream) 또는 GPUDirect로 S→G 직접
+ H-&gt;&gt;G: MaxSim kernel launch (grid=N docs)
+ G-&gt;&gt;G: HBM read → tensor core GEMM → fused max/sum (smem/reg)
+ G--&gt;&gt;H: score buffer D2H (4N B), CUDA event sync
+
+ Note over H,S: [CSD path] 이동 객체 = query embedding(8 KB) + scores/top-k(≤16 KB)
+ H-&gt;&gt;S: CS command: query emb + candidate id/LBA list 제출
+ S-&gt;&gt;S: FW가 LBA resolve → NAND channel 병렬 read → channel buffer
+ S-&gt;&gt;S: PE array가 stream 소비: dot(E) → Q개 partial-max reg → doc 종료 시 sum
+ S-&gt;&gt;S: on-drive top-k heap (N scores → k)
+ S--&gt;&gt;H: result buffer DMA (k·8 B or N·4 B) + CQE
+ H-&gt;&gt;H: n_csd개 drive의 partial top-k merge</div>
+<p>핵심 차이: GPU path는 <strong>큰 메모리 객체(embedding tensor)가 두 번 hop</strong>(SSD→host DRAM→HBM)하는 구조이고, CSD path는 큰 객체가 device 내부에 머물고 <strong>작은 상태(Q·E query matrix 8 KB, doc당 Q개 partial-max register, k-heap)</strong>만 유지된다. CSD에서는 Q×D score matrix가 아예 materialize되지 않는다(streaming max).</p>
+<h2 id="세부-정리">세부 정리</h2>
+<h3 id="1-maxsim-operation-model">1. MaxSim Operation Model</h3>
+<p><strong>변수 정의</strong> (기본값은 ColBERT 논문 기준 배경지식):</p>
+<div class="table-wrap"><table><thead><tr><th>기호</th><th>의미</th><th>대표값</th></tr></thead><tbody><tr><td><code>Q</code></td><td>query token 수</td><td>32 (ColBERT 고정 padding — 배경지식)</td></tr><tr><td><code>D</code></td><td>candidate doc당 token 수</td><td>60–180 (MS MARCO passage, max 180 — 배경지식; 평균값 확인 필요)</td></tr><tr><td><code>E</code></td><td>embedding dimension</td><td>128</td></tr><tr><td><code>N</code></td><td>query당 re-rank candidate 수</td><td>10³–10⁴ (PLAID ndocs — 확인 필요)</td></tr><tr><td><code>B</code></td><td>query batch size</td><td>1–수십</td></tr><tr><td><code>b_e</code></td><td>element당 byte (precision)</td><td>fp32=4, fp16=2, int8=1, 2-bit residual≈0.28</td></tr><tr><td><code>b_s</code></td><td>score당 byte</td><td>4 (fp32)</td></tr></tbody></table></div>
+<p><strong>연산 정의</strong>: <code>S(q,d) = Σ_{i=1..Q} max_{j=1..D} &lt;q_i, d_j&gt;</code> — candidate당 <code>(Q×E)·(E×D)</code> small GEMM 후 row-wise max, Q개 max의 합.</p>
+<p><strong>MAC / FLOP</strong>:</p>
+<pre><code>MAC_total  = B · N · Q · D · E                    (dot-product 곱셈-누산)
+FLOP_gemm  = 2 · B · N · Q · D · E
+FLOP_red   = B · N · (Q·(D−1) compare + (Q−1) add) ≈ B·N·Q·D
+FLOP_total ≈ 2·B·N·Q·D·E · (1 + 1/(2E)) ≈ 2·B·N·Q·D·E     [E=128 → red 비중 0.4%]</code></pre>
+<p><strong>Intermediate matrix</strong>: candidate당 <code>Q×D</code> score matrix. Materialize 시 <code>B·N·Q·D·b_s</code> bytes (예: N=4096, Q=32, D=128 → 67 MB, 입력의 절반 규모) — fused kernel이면 register/shared memory에서 소거된다. <strong>Max-reduction</strong>은 FLOP으로는 무시 가능하지만, unfused 구현에서는 HBM traffic을 ~2배로 만들 수 있는 memory-side 항이다.</p>
+<p><strong>데이터량과 arithmetic intensity</strong> (query는 on-chip 캐시, fused 가정):</p>
+<pre><code>Bytes_D = B·N·D·E·b_e        (doc embeddings — 지배항)
+Bytes_Q = B·Q·E·b_e          (query, fp16 8 KB/query — 무시)
+AI      = FLOP/Bytes_D = 2Q/b_e   [FLOP/B]   ← N, D, E에 무관, Q와 precision만의 함수</code></pre>
+<p>fp16·Q=32 → AI=32, int8 → 64, fp32 → 16, 2-bit → ~114.</p>
+<h3 id="2-gpu-latency-model">2. GPU Latency Model</h3>
+<p>경로: NAND → (SSD 링크) → host DRAM → (GPU 링크) → HBM → SM → score 반환.</p>
+<pre><code>Bytes_in  = B·N·D·E·b_e + B·Q·E·b_e ≈ Bytes_D
+T_pcie    = Bytes_in / (ε_pcie · BW_pcie),   BW_pcie = min(n_ssd·BW_ssd_link, BW_gpu_link, BW_host)
+T_comp    = max( FLOP_total/(F_gpu·η_gpu),  Bytes_HBM/BW_hbm )      [roofline]
+T_gpu     = T_fix,gpu + T_pcie + T_comp                (non-overlapped)
+T_gpu     ≈ T_fix,gpu + max(T_pcie, T_comp)            (chunked pipeline)</code></pre>
+<ul><li><code>ε_pcie ≈ 0.8–0.9</code> (protocol overhead, 대형 DMA 기준 — 배경지식), <code>T_fix,gpu ≈ 10–30 µs</code> (kernel launch + driver — CUDA Guide 계열 배경지식).</li><li><strong>HBM constraint 두 가지</strong>: (bandwidth) <code>Bytes_HBM ≥ Bytes_D</code> — fused면 1회 read, unfused면 score matrix 왕복이 추가돼 ~2배. (capacity) resident baseline이 성립하려면 <code>index size ≤ C_hbm</code> — fp16 MS MARCO full index ~150+ GB(배경지식, 확인 필요)는 80 GB HBM에 안 들어가고, ColBERTv2 압축 index ~20–36 GB는 들어간다.</li><li><strong>regime 판별</strong>: compute-bound 조건은 <code>AI &gt; F_gpu·η/BW_hbm</code> (A100 fp16 ridge ≈ 153 FLOP/B — 배경지식). Q=32·fp16(AI=32)는 미달 → resident면 HBM-bound. 비-resident면 <code>BW_pcie(≤63 GB/s) ≪ BW_hbm(2–3.35 TB/s)</code>이므로 <strong>무조건 PCIe-bound</strong>: <code>T_gpu ≈ Bytes_D/(ε·BW_pcie)</code>. 이때 GPU의 F_gpu는 1차 근사에서 결과에 등장하지 않는다.</li></ul>
+<h3 id="3-csd-latency-model">3. CSD Latency Model</h3>
+<p>경로: NAND → internal channel → on-drive PE array → local max/top-k → 결과만 PCIe.</p>
+<pre><code>Bytes_int  = B·N·D·E·b_e                       (internal read bytes, GPU 입력과 동일)
+T_read     = Bytes_int / BW_int                 (NAND channel 병렬 read)
+OPS_csd    = N_mac · f_csd · u                  [MAC/s]  (= 2·N_mac·f_csd·u FLOP/s)
+T_mac      = MAC_total / OPS_csd = B·N·Q·D·E / (N_mac·f_csd·u)
+Bytes_res  = B·N·b_s   (전체 score)  또는  B·k·(b_id+b_s) ≈ 8k B  (top-k)
+T_csd      = T_fix,csd + max(T_read, T_mac) + Bytes_res/BW_link</code></pre>
+<ul><li><code>N_mac</code>: MAC unit(PE) 수, <code>f_csd</code>: clock, <code>u</code>: utilization(스트리밍 정렬/뱅크 충돌/tail 포함 유효 계수). local max-reduction은 MAC 뒤 comparator를 파이프라인에 붙이면 추가 cycle이 없고 <code>u</code>에 흡수된다. top-k heap은 <code>O(N log k)</code> scalar 연산으로 무시 가능.</li><li>필요한 on-chip 상태는 query matrix <code>Q·E·b_e = 8 KB</code> + doc당 Q개 partial-max register뿐 — score matrix를 만들지 않는다.</li><li><strong>Result traffic 축소율</strong>: 전체 score 반환 시 <code>R = D·E·b_e/b_s = 8192배</code> (D=E=128, fp16), top-k(k=100, N=4096) 반환 시 134 MB → 800 B ≈ <strong>1.7×10⁵배</strong>. <code>T_res</code>는 Gen4 x4에서도 µs 단위 → 모델에서 소거 가능. 이것이 job 질문 &quot;score/top-k 반환 시 traffic 모델 변화&quot;의 답: CSD egress 항이 상수(≈0)로 바뀌고, break-even은 ingress(BW_int)와 compute(OPS_csd)만의 문제가 된다.</li><li><code>T_fix,csd</code>: NVMe/CS command 왕복 + FW dispatch, 수십~수백 µs 추정(<strong>확인 필요</strong> — SNIA CS API 문서와 실측 필요).</li></ul>
+<h3 id="4-break-even-mac-pe-조건">4. Break-even MAC/PE 조건</h3>
+<p><strong>Break-even inequality</strong> (양쪽 모두 pipelined, 비-resident GPU baseline):</p>
+<pre><code>T_csd ≤ T_gpu
+⇔ max( Bytes_D/BW_int ,  MAC_total/OPS_csd ) ≤ Bytes_D/(ε·BW_pcie)      [+ 고정항 무시]
+⇔ (i)  BW_int ≥ ε·BW_pcie                        …… 대역폭 조건
+   (ii) OPS_csd ≥ MAC_total/Bytes_D · ε·BW_pcie = (Q/b_e)·ε·BW_pcie      …… compute 조건</code></pre>
+<p>(ii)에서 <code>MAC_total/Bytes_D = (B·N·Q·D·E)/(B·N·D·E·b_e) = Q/b_e</code> [MAC/B] — <strong>B, N, D, E가 전부 소거</strong>된다. 전송되는 1 byte당 수행해야 할 MAC이 <code>Q/b_e</code>로 고정되기 때문이다(각 doc token vector가 Q개 dot product에 참여).</p>
+<p><strong>Required OPS / MAC units / FLOPS</strong>:</p>
+<pre><code>required OPS      = (Q/b_e) · BW_pcie                  [MAC/s]
+required N_mac*   = Q · BW_pcie / (b_e · f_csd · u)    [MAC units]
+required F_csd    = 2Q · BW_pcie / b_e                 [FLOP/s]
+내부 BW 활용 설계점: N_mac** = Q · BW_int / (b_e · f_csd · u)   (이 이상은 read-bound라 낭비)</code></pre>
+<p><strong>수치표</strong> (Q=32, fp16 <code>b_e=2</code> → 16 MAC/B; <code>f_csd=1 GHz</code>, <code>u=0.8</code>; PCIe는 nominal — 배경지식):</p>
+<div class="table-wrap"><table><thead><tr><th>GPU 경로 병목 링크</th><th>BW_pcie</th><th>required OPS</th><th>required N_mac*</th><th>= FLOP/s (A100 312 TFLOPS 대비)</th></tr></thead><tbody><tr><td>Gen3 x4</td><td>3.94 GB/s</td><td>63 GMAC/s</td><td><strong>79</strong></td><td>0.13 T (0.04%)</td></tr><tr><td>Gen4 x4</td><td>7.88 GB/s</td><td>126 GMAC/s</td><td><strong>158</strong></td><td>0.25 T (0.08%)</td></tr><tr><td>Gen4 x16</td><td>31.5 GB/s</td><td>504 GMAC/s</td><td><strong>630</strong></td><td>1.0 T (0.32%)</td></tr><tr><td>Gen5 x16</td><td>63.0 GB/s</td><td>1.01 TMAC/s</td><td><strong>1,260</strong></td><td>2.0 T (0.65%)</td></tr><tr><td>Gen6 x16</td><td>121 GB/s</td><td>1.94 TMAC/s</td><td><strong>2,420</strong></td><td>3.9 T (1.2%)</td></tr></tbody></table></div>
+<p><strong>PCIe bottleneck effect</strong>: 위 표가 곧 그 정량화다 — GPU가 312 TFLOP/s를 가져도 비-resident 데이터에는 <code>(Q/b_e)·BW_pcie ≈ 0.25–2 TFLOP/s</code>만큼만 쓸 수 있으므로, CSD는 GPU peak의 <strong>0.1–1%대 compute</strong>로 대등해진다. 32×32 systolic array(1,024 MAC) @1 GHz ≈ 1 TMAC/s면 Gen5 x16급 전달률까지 커버한다. SmartSSD급 FPGA(KU15P DSP ≈ 2K개, 0.3–0.5 GHz — 배경지식, fp16 MAC은 DSP 2개 소요 가능성 있어 확인 필요)로도 Gen4 x16 조건은 충족 가능.</p>
+<p><strong>Sanity-check example</strong> (B=1, Q=32, E=128, D=128, N=4096, fp16):</p>
+<pre><code>Bytes_D = 4096·128·128·2 = 134.2 MB          MAC_total = 2.147 GMAC (FLOP 4.29 G)
+[GPU-A] warm host DRAM, Gen4 x16 (eff 25 GB/s): T_pcie = 5.37 ms
+        T_comp = max(134.2MB/2.0TB/s, 4.29G/(312T·0.5)) = max(67, 27.5) µs = 67 µs
+        → T_gpu ≈ 5.4 ms   (compute는 transfer의 1/80 — PCIe-bound 확인)
+[GPU-B] cold, 단일 SSD Gen4 x4 (eff 6.5 GB/s): T_gpu ≈ 20.6 ms
+[GPU-C] HBM-resident: T_gpu ≈ 67 µs + fix ≈ 0.1 ms
+[CSD]   BW_int=12 GB/s, N_mac=256(16×16), f=1 GHz, u=0.8 → OPS=204.8 GMAC/s
+        T_read = 11.2 ms, T_mac = 10.5 ms, T_res = 16.4 KB → ~2 µs
+        → T_csd ≈ 11.3 ms
+판정: vs GPU-B 1.8배 승리(256 MAC만으로), vs GPU-A 0.48배 패배(BW_int 12 &lt; 25 — 조건(i) 위반),
+      vs GPU-C 100배 이상 패배.
+4-drive CSD array(shard 1024 docs/drive): T ≈ 2.8 ms → GPU-A 대비 1.9배 승리, 8-drive → 3.8배.</code></pre>
+<p>교훈: <strong>compute 조건(ii)은 수백 MAC으로 싸게 충족되고, 승패는 조건(i) <code>BW_int vs BW_pcie</code>와 baseline 선택이 가른다.</strong> 승리 시 speedup은 <code>S ≈ n_csd·BW_int/(ε·BW_pcie)</code>로 대역폭 비에 수렴한다.</p>
+<h3 id="5-sensitivity와-가능성-판단">5. Sensitivity와 가능성 판단</h3>
+<p><strong>Sweep 설계</strong> (offload 가능성 판단에 필요한 축):</p>
+<div class="table-wrap"><table><thead><tr><th>Sweep 축</th><th>범위</th><th>break-even에 미치는 효과</th></tr></thead><tbody><tr><td>PCIe Gen sweep</td><td>Gen3 x4 → Gen6 x16 (3.94→121 GB/s)</td><td><code>N_mac* ∝ BW_pcie</code> (선형). Gen이 오를수록 GPU 경로가 빨라져 CSD 마진 축소 — Gen6에서 CSD가 이기려면 <code>n_csd·BW_int &gt; 100 GB/s</code>급 필요</td></tr><tr><td>N sweep</td><td>10²–10⁴</td><td>절대 latency ∝ N. break-even 조건은 불변. 하한: <code>N &lt; T_fix·ε·BW_pcie/(D·E·b_e)</code> ≈ 76 docs(@25 GB/s, T_fix=100 µs)이면 고정 overhead 지배 → offload 무의미</td></tr><tr><td>Q sweep</td><td>16–128</td><td><code>N_mac* ∝ Q</code>. 긴 query/expansion은 CSD에 불리. GPU는 Q&gt;~153(fp16, A100)이어야 compute-bound 진입 — 현실적 Q에서는 도달 안 함</td></tr><tr><td>D, E sweep</td><td>D 60–180, E 64–256</td><td>절대 latency만 변화(∝ D·E), break-even 불변. 단 D·E·b_e가 NAND page(16 KB)보다 작아지면 read amplification으로 유효 BW_int 하락(압축 시 doc당 4.6 KB — 쟁점 4 참조)</td></tr><tr><td>precision sweep</td><td>fp32→fp16→int8→2-bit</td><td><code>N_mac* ∝ 1/b_e</code>: fp32 315개 → fp16 630개 → int8 1,260개 → 2-bit ~4,500개(Gen4 x16). <strong>압축은 PCIe 병목 자체를 줄이므로 CSD의 존재 이유를 잠식하는 가장 위험한 축</strong></td></tr><tr><td>CSD PE sweep</td><td>64–16K MAC</td><td><code>N_mac &lt; N_mac**=Q·BW_int/(b_e·f·u)</code>이면 compute-bound(PE 부족), 초과면 read-bound(PE 낭비). 설계점은 등호</td></tr><tr><td>n_csd sweep</td><td>1–16 drives</td><td>GPU 경로는 GPU x16 링크에서 포화, CSD는 선형 scale → 대수적으로 <code>n_csd &gt; ε·BW_pcie/BW_int</code>가 승리 조건</td></tr></tbody></table></div>
+<p><strong>Regime map</strong>:</p>
+<pre><code>GPU 경로:  PCIe-bound   ⇔ 데이터가 PCIe를 건넘 (비-resident; BW_pcie ≪ BW_hbm이므로 항상)
+           HBM-bound    ⇔ resident &amp; AI = 2Q/b_e &lt; F_gpu·η/BW_hbm   (Q=32, fp16에서 성립)
+           compute-bound ⇔ resident &amp; Q &gt; ridge·b_e/2 ≈ 153        (비현실적)
+CSD 경로:  compute-bound ⇔ N_mac·f·u &lt; (Q/b_e)·BW_int   (PE 부족 — 증설로 해결)
+           read-bound    ⇔ 그 반대 (설계 목표 regime)
+Offload 유리 ⇔ (비-resident or corpus &gt; C_hbm/host DRAM) ∧ BW_int·n_csd &gt; ε·BW_pcie ∧ Q/b_e가 과대하지 않음</code></pre>
+<p><strong>가능성 판단 요약</strong>: latency 관점의 offload 정당화는 (a) index가 HBM(·host DRAM)에 안 들어가는 규모이고, (b) drive 수가 많아 <code>Σ BW_int</code>가 GPU ingest 한계를 넘고, (c) 비교 대상이 동일 precision일 때 성립한다. (c)가 깨지는 순간(GPU 측이 압축 전송) required MAC이 7배 커지고 대역폭 이점이 7배 줄므로, <strong>CSD 설계는 처음부터 압축 도메인(2-bit residual을 내부에서 decompress + MaxSim)을 전제로 잡는 것이 방어 가능한 포지션</strong>이다 — 이 경우에도 decompress(element당 centroid lookup + add ≈ FLOP의 1/Q)는 저렴하다.</p>
+<h2 id="쟁점과-불확실성">쟁점과 불확실성</h2>
+<ul><li><strong>쟁점 1 — baseline 선택이 결론의 부호를 바꾼다</strong>: cold-SSD(20.6 ms) vs warm-host(5.4 ms) vs HBM-resident(0.07 ms) vs 압축 전송(0.76 ms급) 중 무엇과 비교하느냐에 따라 동일 CSD가 1.8배 승리~100배 패배 사이를 오간다. 공정한 논문/제안이라면 <strong>압축 + host-cache baseline</strong>을 명시해야 한다.</li><li><strong>쟁점 2 — &quot;internal BW &gt; external link&quot;가 실제 CSD에서 성립하는가</strong>: 본 모델의 승리 조건은 <code>BW_int &gt; ε·BW_pcie</code>인데, SmartSSD 1세대류(FPGA가 PCIe switch 뒤에 붙은 구조)는 SSD↔FPGA P2P가 링크 속도로 제한된다는 것이 통설(배경지식, <strong>확인 필요</strong>). 진짜 이점은 controller-integrated CSD(자체 NAND channel 직결)에서만 나온다. 대상 CSD 아키텍처의 실측 BW_int가 이 분석의 최대 미확인 변수다.</li><li><strong>쟁점 3 — random read pattern</strong>: candidate N개는 corpus에 산재하므로 read는 sequential이 아니다. fp16·D=128이면 doc당 33 KB(NAND page 2개)라 효율이 유지되지만, 압축 시 doc당 ~4.6 KB로 page(16 KB)보다 작아져 read amplification이 유효 BW_int를 최대 3~4배 깎을 수 있다(추정). embedding layout(후보 co-location)이 별도 설계 문제로 남는다 — 단 job scope상 로컬리티 분석은 제외.</li><li><strong>쟁점 4 — full-scan은 성립하지 않는다</strong>: candidate generation 없이 corpus 전체(≈180 GB fp16) MaxSim은 8-drive CSD로도 ~1.9 s. CSD offload는 어디까지나 <strong>re-rank 단계</strong>(N ≪ corpus)의 이야기이고, candidate generation(PLAID centroid 단계)의 배치는 미해결 설계 쟁점이다.</li><li><strong>확인 필요 목록</strong>: ColBERT 정확 파라미터(Q=32 padding, D max 180, index 154 GiB 여부), ColBERTv2 per-vector bytes(20/36 B)와 압축률(6–10×), PLAID의 기본 ndocs와 latency 수치, SmartSSD DSP 수·클록·P2P BW, SNIA CS command 오버헤드, GPUDirect Storage 실효 BW. — 전부 이번 세션에서 URL 메타데이터만 확인(웹 도구 권한 거부).</li></ul>
+<h2 id="읽는-순서-조사-로드맵">읽는 순서 / 조사 로드맵</h2>
+<ol><li><strong>ColBERT (arXiv:2004.12832)</strong> §3 — MaxSim 정의와 Q/E/D 기본값, index size를 확정해 1절 변수표의 &quot;확인 필요&quot;를 제거.</li><li><strong>PCI Express (Wikipedia)</strong> — 세대·lane별 대역폭 표를 그대로 4절 표의 nominal 값 검증에 사용.</li><li><strong>ColBERTv2 (arXiv:2112.01488)</strong> §2–3 — residual compression의 bytes/vector를 확정하고 압축 baseline의 <code>b_c</code>를 고정.</li><li><strong>PLAID (arXiv:2205.09707)</strong> — ndocs(N의 현실값), GPU kernel 실측 latency → 본 모델의 T_comp 항 calibration.</li><li><strong>SNIA Computational Storage</strong> — CSD/CSP/CSA 용어와 CS API 실행 모델 → T_fix,csd와 command 흐름 구체화.</li><li><strong>CUDA C++ Programming Guide</strong> — async copy/stream overlap 근거(T_gpu의 pipelined form 정당화).</li><li>이후: 대상 CSD(예: SmartSSD 2세대) 데이터시트로 BW_int·DSP·클록 실측치 확보 → 4절 표를 실제 하드웨어 좌표로 재계산.</li></ol>
+<h2 id="후속-질문">후속 질문</h2>
+<ul><li>대상 CSD의 실측 <code>BW_int</code>(NAND→PE 스트리밍)와 random-read 시 유효값은 얼마인가? (쟁점 2·3의 해소 — 최우선)</li><li>GPU 측 압축 전송 baseline(PLAID)의 실측 end-to-end latency는 본 모델의 <code>Bytes_c/BW_pcie</code> 예측과 얼마나 맞는가?</li><li>2-bit residual decompression을 CSD PE 파이프라인에 넣을 때 LUT/SRAM 비용과 <code>u</code>에 미치는 영향은?</li><li>Latency가 아닌 <strong>throughput(QPS/W, QPS/$)</strong> 기준으로 다시 쓰면 break-even이 어떻게 이동하는가? (PCIe 전송 에너지 ~수 pJ/bit vs MAC ~수 pJ — 에너지 break-even은 CSD에 더 유리할 가능성, 정량화 필요)</li><li>B개 query가 candidate를 공유(dedup)하는 실측 비율은? — 공유율이 높으면 Bytes가 줄어 양쪽 모두 빨라지지만 break-even 공식 자체는 불변임을 실증할 것.</li><li>Candidate generation(centroid interaction)을 host/GPU에 남기고 re-rank만 CSD로 보내는 분할에서, candidate id 리스트 전달 왕복이 T_fix에 더하는 비용은?</li></ul>
+<h2 id="참고-자료">참고 자료</h2>
+<p>이번 세션에서는 WebFetch/WebSearch 권한이 거부되어 아래 8건 모두 <strong>URL 메타데이터만 확인</strong>했다 (<code>references/manifest.json</code>, <code>references/README.md</code> 기준; <code>references/text/</code>, <code>references/raw/</code> 부재). 본문 수치는 배경지식이며 위 &quot;확인 필요&quot; 표시를 따른다.</p>
+<ul><li>ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT — https://arxiv.org/abs/2004.12832</li><li>ColBERTv2: Efficient and Effective Retrieval via Lightweight Late Interaction — https://arxiv.org/abs/2112.01488</li><li>PLAID: An Efficient Engine for Late Interaction Retrieval — https://arxiv.org/abs/2205.09707</li><li>MS MARCO Passage Ranking Dataset — https://microsoft.github.io/msmarco/</li><li>BEIR Benchmark — https://arxiv.org/abs/2104.08663</li><li>NVIDIA CUDA C++ Programming Guide — https://docs.nvidia.com/cuda/cuda-c-programming-guide/</li><li>PCI Express bandwidth reference — https://en.wikipedia.org/wiki/PCI_Express</li><li>SNIA Computational Storage — https://www.snia.org/technology-focus/computational-storage</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>
