@@ -518,6 +518,19 @@
 <a class="toc-level-2" href="#scheduling-factor-decision-rule-초안-산출물-5">Scheduling Factor + Decision Rule 초안 (산출물 5)</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-2-codex">Turn 2 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-2">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-_q-의-올바른-정의">1. `ρ_q`의 올바른 정의</a>
+<a class="toc-level-3" href="#2-압축-residual-baseline의-compute-intensity">2. 압축 residual baseline의 compute intensity</a>
+<a class="toc-level-2" href="#더-구체화한-부분">더 구체화한 부분</a>
+<a class="toc-level-3" href="#1-문턱의-1차-유도">1. `ρ*` 문턱의 1차 유도</a>
+<a class="toc-level-3" href="#2-trace-driven-simulator-출력-스펙">2. Trace-driven simulator 출력 스펙</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명">관련 맥락 / 배경 설명</a>
+<a class="toc-level-3" href="#block-단위-locality와-read-amplification">Block 단위 locality와 read amplification</a>
+<a class="toc-level-3" href="#scheduling-rule-초안-업데이트">Scheduling rule 초안 업데이트</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-2">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -599,7 +612,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>CSD MaxSim document locality와 GPU/CSD break-even 딥러닝 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 축을 하나의 hybrid 모델로 묶는 통합 가설 3개</strong>를 세우고, ① trace schema에 가변 doclen·byte-LRU 항목을 추가, ② break-even 수식에 <strong>residency 결합항·Amdahl 상한·에너지 축·GPUDirect baseline</strong>을 신규 도입, ③ warm/col</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>CSD MaxSim document locality와 GPU/CSD break-even 딥러닝 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 축을 하나의 hybrid 모델로 묶는 통합 가설 3개</strong>를 세우고, ① trace schema에 가변 doclen·byte-LRU 항목을 추가, ② break-even 수식에 <strong>residency 결합항·Amdahl 상한·에너지 축·GPUDirect baseline</strong>을 신규 도입, ③ warm/col</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴에서는 이전의 <code>ρ_q</code> 기반 스케줄링을 <strong>닫힌형 decision rule</strong>로 더 구체화하고, locality trace와 break-even 모델을 연결하는 <strong>trace-driven simulator spec</strong>을 추가한다. 핵심 변화는 세 가지다. 1. <code>ρ_q</code>는 문서 개수 비율이 아니라 **byte-weighted, 가능하면 compute-wei</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -676,8 +689,122 @@ warm baseline을 tie하려면: BW_int≥25GB/s AND N_mac≥500
 <ul><li><strong>[불일치 1]</strong> break-even 문서 <code>E=128</code>(사실상 doc_maxlen) vs locality 문서 평균 <code>L̄≈69</code>. 절대 latency/traffic 수치가 ~1.8× 어긋난다 → 실제 doclen 분포로 통일 필요(ColBERT doclens 파일, <strong>실측 필요</strong>).</li><li><strong>[불일치 2]</strong> break-even의 <code>N=4096</code>(candidate)와 locality의 H2≈256(실제 decompress). Bytes_D·MAC_total이 ~16× 달라진다. break-even MAC 수는 소거로 불변이나 <strong>절대 T_gpu/T_csd·PCIe traffic은 H2 기준으로 재계산</strong>해야 함.</li><li><strong>PLAID 단계 파라미터</strong>(nprobe, ndocs, t_cs, 최종 decompress 수)와 centroid 개수·<code>b_res</code>(≈36B) — 원문/코드 미검증(<strong>확인 필요</strong>).</li><li><strong>에너지 상수</strong>(pJ/bit PCIe·NAND·MAC), <strong>CSD 내부 read BW·<code>T_fix,csd</code><strong>, </strong>GPU MaxSim 유효 효율 η_gpu<strong>(작은 batched GEMM이라 낮을 것) 모두 </strong>실측 필요</strong>.</li><li>warm baseline에서 &quot;단일 drive 불가&quot;는 <strong>BW_int 정의(외부 노출 vs 내부 aggregate)에 민감</strong> — 다채널 enterprise drive는 내부&gt;외부일 수 있어 regime 경계가 이동한다.</li></ul>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <ol><li><strong><code>ρ*</code> 문턱의 정식 유도</strong>: <code>L_csd(q)=L_gpu(q)</code> 두 latency 식을 큐잉(M/M/1 또는 M/G/1)까지 넣어 풀고, <code>ρ*</code>를 <code>(BW_int, BW_pcie, HR_bytes(B), qd)</code>의 닫힌형으로 표현 + tail(p99) 관점의 admission 규칙.</li><li><strong>HR_bytes(B) × break-even 결합 시뮬레이터 스펙</strong>: S_uniq/S_zipf trace → LRU/STATIC-HOT hit → hybrid PCIe·CSD compute·에너지·latency를 한 번에 뽑는 실험 프로토콜과 출력 곡선(B-sweep × Gen-sweep × precision-sweep) 정의.</li><li><strong>doclen 분포와 L̄ 확정 + block 단위 spatial locality</strong>: 실제 ColBERT doclens로 <code>bytes(d)</code> 재계산, pid↔NAND block 매핑에서 오는 read amplification(4KB block에 여러 pid 혼재)과 배치 정렬(hot pid 군집화)이 <code>HR_bytes</code>·<code>BW_int</code> 유효값에 주는 영향 정량화.</li></ol>
+<h3 id="turn-2-codex">Turn 2 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-2">이번 턴의 확장 요약</h2>
+<p>이번 턴에서는 이전의 <code>ρ_q</code> 기반 스케줄링을 <strong>닫힌형 decision rule</strong>로 더 구체화하고, locality trace와 break-even 모델을 연결하는 <strong>trace-driven simulator spec</strong>을 추가한다. 핵심 변화는 세 가지다.</p>
+<ol><li><code>ρ_q</code>는 문서 개수 비율이 아니라 <strong>byte-weighted, 가능하면 compute-weighted residency 비율</strong>이어야 한다.</li><li>압축 residual baseline에서는 break-even compute 강도가 <code>Q/b_e</code>가 아니라 <code>Q·D / b_tok_res</code>로 바뀌어 CSD 필요 MAC 수가 약 7배 증가한다.</li><li>H2 passage 접근을 pid 단위로만 보면 안 되고, 4KB block read amplification과 hot-doc 배치 효과를 별도 계수 <code>A_block</code>으로 모델에 넣어야 한다.</li></ol>
+<h2 id="새로-추가한-사실">새로 추가한 사실</h2>
+<h3 id="1-_q-의-올바른-정의">1. <code>ρ_q</code>의 올바른 정의</h3>
+<p>기존 <code>ρ_q = resident candidate 비율</code>은 문서 개수 기준이면 부정확하다. doclen이 가변이므로 다음처럼 byte 기준으로 정의해야 한다.</p>
+<pre><code class="language-text">X_q      = Σ_{d∈H2(q)} bytes(d)
+R_q(B)   = Σ_{d∈H2(q), d resident under capacity B} bytes(d)
+ρ_q(B)   = R_q(B) / X_q</code></pre>
+<p>MaxSim compute까지 반영하려면 token 기준과 동일해진다.</p>
+<pre><code class="language-text">C_q      = Σ_{d∈H2(q)} L_d · Q · D
+C_res_q  = Σ_{resident d∈H2(q)} L_d · Q · D
+ρ_comp_q = C_res_q / C_q</code></pre>
+<p><code>bytes(d) ∝ L_d</code>이면 <code>ρ_q ≈ ρ_comp_q</code>지만, 압축률이 문서마다 다르거나 block read amplification이 있으면 둘이 달라진다.</p>
+<h3 id="2-압축-residual-baseline의-compute-intensity">2. 압축 residual baseline의 compute intensity</h3>
+<p>raw fp16 기준:</p>
+<pre><code class="language-text">bytes/token = D · b_e
+MAC/token   = Q · D
+MAC/byte    = Q / b_e</code></pre>
+<p>ColBERTv2 residual 압축 기준:</p>
+<pre><code class="language-text">bytes/token = b_tok_res       # 예: ~36B/token, 확인 필요
+MAC/token   = Q · D
+MAC/byte    = Q · D / b_tok_res</code></pre>
+<p>예시:</p>
+<pre><code class="language-text">Q=32, D=128, b_e=2B
+raw fp16:     32 / 2 = 16 MAC/B
+residual 36B: 32·128 / 36 = 113.8 MAC/B</code></pre>
+<p>따라서 공정한 GPU baseline이 “압축 residual을 GPU로 전송 후 decompress/scoring”이면 CSD compute 조건은 약 <code>113.8 / 16 = 7.1×</code> 강해진다.</p>
+<h2 id="더-구체화한-부분">더 구체화한 부분</h2>
+<h3 id="1-문턱의-1차-유도">1. <code>ρ*</code> 문턱의 1차 유도</h3>
+<p>query <code>q</code>의 H2 byte를 <code>X_q</code>, resident 비율을 <code>ρ_q</code>, effective GPU PCIe BW를 <code>BW_g = ε·BW_pcie</code>, CSD 내부 BW를 <code>BW_i</code>, CSD MAC throughput을 <code>F_c = N_mac·f·u</code>라고 둔다.</p>
+<p>Hybrid split 경로:</p>
+<pre><code class="language-text">T_gpu_miss(q) = (1−ρ_q) · X_q / BW_g
+T_csd_hit(q)  = max( ρ_q · X_q / BW_i,
+                     ρ_q · X_q · I_mac / F_c )
+T_hybrid(q)   = T_fix + max(T_gpu_miss, T_csd_hit) + queue</code></pre>
+<p>여기서 <code>I_mac</code>은 전송 byte당 MAC이다.</p>
+<pre><code class="language-text">raw fp16:      I_mac = Q / b_e
+compressed:    I_mac = Q·D / b_tok_res</code></pre>
+<p>CSD hit path가 read-bound이면:</p>
+<pre><code class="language-text">T_csd_hit = ρ_q · X_q / BW_i</code></pre>
+<p>GPU miss와 균형점은:</p>
+<pre><code class="language-text">(1−ρ_q) · X_q / BW_g = ρ_q · X_q / BW_i
+
+ρ*_bw = BW_i / (BW_i + BW_g)</code></pre>
+<p>예시:</p>
+<pre><code class="language-text">BW_i = 12 GB/s, BW_g = 25 GB/s
+ρ*_bw = 12 / 37 = 0.324</code></pre>
+<p>즉 resident byte가 약 32% 이상이면 hit 처리와 miss 처리 시간이 균형을 이룬다. 단, 이것은 hybrid split의 균형점이지, pure GPU 대비 항상 이긴다는 뜻은 아니다.</p>
+<p>CSD compute-bound이면:</p>
+<pre><code class="language-text">T_csd_hit = ρ_q · X_q · I_mac / F_c
+ρ*_comp = F_c / (F_c + BW_g · I_mac)</code></pre>
+<p>최종 문턱:</p>
+<pre><code class="language-text">ρ*_q ≈ max(ρ*_bw, ρ*_comp, ρ*_queue, ρ*_sla)</code></pre>
+<h3 id="2-trace-driven-simulator-출력-스펙">2. Trace-driven simulator 출력 스펙</h3>
+<p>입력 trace는 최소한 query별로 다음 집계를 만들어야 한다.</p>
+<pre><code class="language-text">q_idx
+qid
+H2_pid_count
+bytes_H2_raw_fp16
+bytes_H2_residual
+bytes_H2_block_aligned
+resident_bytes_static_hot_B
+resident_bytes_lru_B
+rho_static_hot_B
+rho_lru_B
+block_read_amp</code></pre>
+<p>용량 sweep마다 출력할 곡선:</p>
+<pre><code class="language-text">B → HR_bytes(B)
+B → PCIe_saved_GB_per_1kq
+B → CSD_MAC_GMAC_per_query
+B → p50/p95/p99 latency under GPU/CSD/HYBRID
+B → CSD queue utilization
+B → energy_saved_J_per_1kq</code></pre>
+<p>스케줄러 비교군은 최소 4개가 필요하다.</p>
+<div class="table-wrap"><table><thead><tr><th>policy</th><th>설명</th></tr></thead><tbody><tr><td>GPU-only</td><td>모든 H2를 GPU로 전송</td></tr><tr><td>CSD-only</td><td>모든 H2를 CSD에서 처리</td></tr><tr><td>STATIC-HOT hybrid</td><td>train hot-set 기준 resident</td></tr><tr><td>ORACLE hybrid</td><td>test trace를 아는 상한선</td></tr></tbody></table></div>
+<p><code>STATIC-HOT</code>과 <code>ORACLE</code> 차이가 크면 locality는 있지만 예측 가능한 locality가 부족하다는 뜻이다.</p>
+<h2 id="관련-맥락-배경-설명">관련 맥락 / 배경 설명</h2>
+<h3 id="block-단위-locality와-read-amplification">Block 단위 locality와 read amplification</h3>
+<p>passage residual은 평균 수 KB 이하일 수 있지만 NAND/SSD 내부 I/O는 보통 page/block 단위로 움직인다. 따라서 pid 단위 byte 절감만 보면 과대평가될 수 있다.</p>
+<pre><code class="language-text">logical_bytes_q = Σ bytes(pid)
+physical_bytes_q = Σ unique_block_bytes(block_id)
+A_block(q) = physical_bytes_q / logical_bytes_q</code></pre>
+<p>CSD 내부 read 모델은 다음처럼 바뀐다.</p>
+<pre><code class="language-text">T_read = A_block(q) · bytes_H2_residual(q) / BW_int</code></pre>
+<p>hot pid를 block-local하게 재배치하면 <code>A_block</code>이 내려간다. 따라서 연구 질문은 “hot documents를 얼마나 많이 pin할 수 있는가”뿐 아니라 “hot documents가 같은 erase/page region에 얼마나 잘 모이는가”까지 확장된다.</p>
+<h3 id="scheduling-rule-초안-업데이트">Scheduling rule 초안 업데이트</h3>
+<pre><code class="language-text">dispatch(q):
+
+1. compute ρ_q(B) after H1/H2 candidate known
+2. estimate:
+   L_gpu    = X_q / BW_g + Q_gpu_wait
+   L_csd    = max(X_q / BW_i, X_q·I_mac/F_c) + Q_csd_wait
+   L_hybrid = max((1−ρ_q)X_q/BW_g,
+                  ρ_q X_q/BW_i,
+                  ρ_q X_q I_mac/F_c) + Q_hybrid_wait
+
+3. choose argmin latency if predicted p99 &lt; SLA
+4. otherwise route to GPU unless GPU queue is already p99-critical</code></pre>
+<p>더 단순한 논문용 rule은 다음 형태가 적절하다.</p>
+<pre><code class="language-text">CSD/HYBRID if ρ_q ≥ ρ*(load) and X_q ≥ X_min
+GPU        otherwise</code></pre>
+<p><code>X_min</code>이 필요한 이유는 작은 query에서는 <code>T_fix,csd</code>가 byte 절감 이득보다 커질 수 있기 때문이다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-2">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li><code>H2≈256</code>인지 <code>H2≈4096</code>인지는 절대 latency를 16배 바꾼다. PLAID에서 실제 residual decompress 대상 수를 코드 hook으로 확정해야 한다.</li></ol>
+<ol><li><code>b_tok_res≈36B/token</code>은 핵심 상수다. 이 값이 residual only인지, codebook/metadata/doclens 포함 amortized byte인지 분리해야 한다.</li></ol>
+<ol><li><code>BW_int</code>는 NAND raw bandwidth, controller-to-FPGA bandwidth, CSD DRAM bandwidth 중 무엇을 뜻하는지 명확히 해야 한다. break-even에는 실제 PE가 지속적으로 공급받는 bandwidth를 넣어야 한다.</li></ol>
+<ol><li><code>ρ_q</code>는 H1 직후 계산 가능하다고 했지만, H2가 pruning 이후에 확정된다면 dispatch 시점이 늦어진다. H1 기반 예측 <code>ρ̂_q</code>와 실제 H2 기반 <code>ρ_q</code>의 오차를 따로 측정해야 한다.</li></ol>
+<ol><li>CSD-only가 항상 PCIe를 줄이는 것은 맞지만 latency를 줄이려면 <code>T_fix,csd</code>와 queueing delay가 작아야 한다. 특히 p99에서는 평균 <code>HR_bytes</code>보다 per-query <code>ρ_q</code> 분산이 더 중요하다.</li></ol>
+<h2 id="다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong><code>ρ̂_q</code> 예측 모델 구체화</strong>: H1 centroid ids, candidate pid hotness, candidate byte sum만으로 H2의 <code>ρ_q</code>를 얼마나 정확히 예측할 수 있는지 feature set과 error metric을 정의한다.</li></ol>
+<ol><li><strong>block-aware layout 실험 설계</strong>: pid 순서 그대로, random layout, hotness-sorted layout, centroid-clustered layout을 비교해 <code>A_block</code>, <code>HR_bytes</code>, <code>T_read</code>가 어떻게 변하는지 모델링한다.</li></ol>
+<ol><li><strong>p99 queueing simulator 추가</strong>: trace arrival process를 Poisson/ bursty 두 가지로 만들고, GPU/CSD/HYBRID policy별 <code>mean, p95, p99, PCIe GB/s, CSD utilization</code>을 동시에 출력하는 discrete-event simulator spec을 작성한다.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-17T18:40:59.192293+00:00</li><li>누적 턴 수: 1</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-17T18:41:58.485545+00:00</li><li>누적 턴 수: 2</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
