@@ -582,6 +582,19 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-5">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-5">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-5">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-6-codex">Turn 6 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-6">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-6">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-scheduler-목적-함수는-latency-단일-최적화가-아니다">1. Scheduler 목적 함수는 latency 단일 최적화가 아니다</a>
+<a class="toc-level-3" href="#2-admission-policy는-hot-문서-가-아니라-순이득-문서-를-pin해야-한다">2. Admission policy는 “hot 문서”가 아니라 “순이득 문서”를 pin해야 한다</a>
+<a class="toc-level-3" href="#3-content-aware-batching이-brf_block-을-직접-제어한다">3. Content-aware batching이 `BRF_block`을 직접 제어한다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-5">더 구체화한 부분</a>
+<a class="toc-level-3" href="#queue-stable-shard-scheduler-v3">Queue-stable shard scheduler v3</a>
+<a class="toc-level-3" href="#pcie-cap-기반-break-even">PCIe cap 기반 break-even</a>
+<a class="toc-level-3" href="#trace-schema-추가-scheduling-outcome까지-기록">Trace schema 추가: scheduling outcome까지 기록</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-6">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-6">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-6">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -663,7 +676,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -1121,8 +1134,150 @@ comp 항  = Σ_{q,d} Q·E / OPS_lut       # Bq에 선형 증가(줄지 않음)
 <ol><li><strong>Trace-driven passage layout 재배치로 <code>π</code> 최소화</strong>: access trace의 co-access 그래프에서 함께 읽히는 pid를 같은 block에 모으는 배치 알고리즘(그래프 파티셔닝/BFS-reordering)을 정의하고, <code>π</code>와 그에 따른 <code>HR*</code>를 재배치 전/후로 <code>S_uniq/S_zipf/S_burst</code> 세 스트림에서 측정하라. &quot;residency 예산 <code>B</code>를 늘리는 것과 layout으로 <code>π</code>를 낮추는 것 중 PCIe 절감 한계이득이 큰 쪽&quot;을 비교하는 것이 목표.</li></ol>
 <ol><li><strong>LUT datapath 하드웨어 sizing 모델</strong>: <code>fp16 reconstruct+MAC</code> vs <code>centroid-add + residual-LUT</code> vs <code>integer dot 근사</code> 세 datapath를 (① fp16 multiplier 수, ② LUT SRAM 뱅크/포트 수, ③ accumulator bitwidth, ④ 단일 token latency)로 비교표를 만들고, SmartSSD급 FPGA(KU15P: DSP ~2K, BRAM/URAM 수 MB — 배경지식, 확인 필요) 예산 안에서 어느 datapath가 <code>BW_int=12 GB/s</code>를 감당하는지 판정하라. accumulator precision이 top-k recall에 주는 영향도 함께.</li></ol>
 <ol><li><strong>one-round vs two-round 프로토콜 시뮬레이터</strong>: 각 CSD의 centroid-approx 점수 반환(R1 egress), host 전역 merge, survivor 회신(R2 ingress), over-provision <code>k_local^prune</code> recall sweep을 discrete-event로 모델링하고, <code>host-prune(1RT) / CSD-prune(2RT) / GDS-block-baseline</code>을 (p50, p99, PCIe GB/s, host centroid-compute, recall)로 비교하라. 왕복 추가 latency와 over-fetch 내부 read가 사실 1의 <code>π·HR*</code> 조건과 어떻게 상호작용하는지(언제 2RT의 latency 손해가 layout 이득으로 상쇄되는지)를 규명할 것.</li></ol>
+<h3 id="turn-6-codex">Turn 6 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-6">이번 턴의 확장 요약</h2>
+<p>이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다.</p>
+<p>핵심 신규 결론은 세 가지다.</p>
+<ol><li>CSD offload scheduler의 목표는 “가장 빠른 장치 선택”이 아니라 <strong>latency SLO를 지키면서 PCIe·GPU MaxSim 자원을 최소화하는 것</strong>이다.</li><li>L2 residency admission은 hit ratio 최대화가 아니라 <strong>future PCIe saving / internal write cost / shard-tail risk</strong>의 이득 밀도로 결정해야 한다.</li><li>batching은 단순 도착 순서 FIFO보다 <strong>H2 block overlap signature 기반 content-aware batching</strong>이 유리하며, 이는 <code>BRF_block</code>을 직접 끌어올리는 scheduling factor다.</li></ol>
+<p>---</p>
+<h2 id="새로-추가한-사실-6">새로 추가한 사실</h2>
+<h3 id="1-scheduler-목적-함수는-latency-단일-최적화가-아니다">1. Scheduler 목적 함수는 latency 단일 최적화가 아니다</h3>
+<p>CSD가 GPU보다 약간 느려도, PCIe와 GPU MaxSim queue를 크게 줄이면 전체 시스템에서는 더 좋은 선택일 수 있다. 따라서 query 또는 shard task <code>x</code>의 routing은 다음 목적 함수로 보는 것이 맞다.</p>
+<pre><code class="language-text">minimize  E[T_x]
+        + λ_tail · max(0, P99_x − SLO)
+        + λ_pcie · PCIe_bytes_x
+        + λ_gpu  · GPU_MaxSim_time_x
+        + λ_csd  · CSD_internal_bytes_x</code></pre>
+<ul><li>latency-critical search serving: <code>λ_tail</code>이 큼</li><li>GPU가 encoder 또는 reranker와 공유됨: <code>λ_gpu</code>가 큼</li><li>PCIe가 병목인 multi-tenant 서버: <code>λ_pcie</code>가 큼</li><li>CSD NAND endurance/write 경합이 문제: <code>λ_csd</code>가 큼</li></ul>
+<p>즉 동일한 trace에서도 scheduler 결론은 운영 목표에 따라 달라진다. 논문에서는 최소 두 가지 목표를 분리해야 한다.</p>
+<pre><code class="language-text">Mode A: latency-first
+  primary metric = p99 latency
+  secondary metric = PCIe GB/s
+
+Mode B: resource-first
+  primary metric = PCIe GB/query, GPU-ms/query
+  constraint = p99 ≤ SLO</code></pre>
+<h3 id="2-admission-policy는-hot-문서-가-아니라-순이득-문서-를-pin해야-한다">2. Admission policy는 “hot 문서”가 아니라 “순이득 문서”를 pin해야 한다</h3>
+<p>Turn 5의 <code>ζ</code>는 admission write가 read datapath와 경합한다는 점을 지적했다. 이를 policy로 바꾸면, 문서 <code>d</code>를 CSD DRAM에 올릴지의 점수는 빈도만으로는 부족하다.</p>
+<pre><code class="language-text">Benefit(d)
+  = E_future_access(d) · bytes_comp(d) · saved_path_cost(d)
+
+Cost(d)
+  = bytes_comp(d) / BW_admit
+  + write_amplification(d)
+  + shard_tail_penalty(d)
+  + eviction_cost(d)
+
+Admit if Benefit(d) / Cost(d) &gt; θ</code></pre>
+<p><code>f_train(d)</code> 상위 문서 STATIC-HOT은 좋은 baseline이지만, runtime에서는 다음 항이 필요하다.</p>
+<pre><code class="language-text">saved_path_cost(d)
+  = 1/(ε·BW_pcie) − π_d/BW_int_eff</code></pre>
+<p>이 값이 음수면, 아무리 hot해도 CSD에 올릴 이유가 약하다. 특히 <code>π_d</code>가 큰 block layout에서는 hot 문서가 오히려 내부 bandwidth를 낭비할 수 있다.</p>
+<h3 id="3-content-aware-batching이-brf_block-을-직접-제어한다">3. Content-aware batching이 <code>BRF_block</code>을 직접 제어한다</h3>
+<p>FIFO micro-batch는 구현이 쉽지만, 같은 시간 창 안에서도 query 간 H2 block overlap이 크게 다를 수 있다. scheduler는 query <code>q</code>의 block signature를 만들어 overlap이 큰 query끼리 묶을 수 있다.</p>
+<pre><code class="language-text">sig(q) = MinHash( Blocks(H2(q)) ) 또는 Bloom sketch
+
+batch_score(q, G)
+  = estimated_overlap(sig(q), sig(G))
+  − α_wait · expected_wait(q)
+  − α_tail · shard_imbalance(q, G)</code></pre>
+<p>이때 batch의 read 이득은 다음처럼 관찰된다.</p>
+<pre><code class="language-text">BRF_block(G)
+  = Σ_q physical_bytes(Blocks(H2(q)))
+    / physical_bytes(∪_q Blocks(H2(q)))</code></pre>
+<p>FIFO와 content-aware batching을 비교하면, batching 자체의 효과와 topical/query-locality 활용 효과를 분리할 수 있다.</p>
+<p>---</p>
+<h2 id="더-구체화한-부분-5">더 구체화한 부분</h2>
+<h3 id="queue-stable-shard-scheduler-v3">Queue-stable shard scheduler v3</h3>
+<p>scheduler는 장치별 virtual finish time과 resource budget을 같이 본다.</p>
+<pre><code class="language-python">def route_task(task):
+    candidates = feasible_devices(task)
+
+    best = None
+    for dev in candidates:
+        service = predict_service_time(dev, task)
+        finish = virtual_finish_time[dev] + service
+
+        penalty = 0
+        penalty += lambda_tail * tail_risk(dev, task)
+        penalty += lambda_pcie * pcie_bytes(dev, task)
+        penalty += lambda_gpu  * gpu_ms(dev, task)
+        penalty += lambda_csd  * csd_internal_bytes(dev, task)
+
+        score = finish + penalty
+
+        if utilization_after(dev, task) &gt; rho_max:
+            score += overload_penalty
+
+        best = min(best, (score, dev))
+
+    return best.dev</code></pre>
+<p>핵심은 <code>rho_max</code>다.</p>
+<pre><code class="language-text">ρ_gpu   = λ_gpu · E[S_gpu]   &lt; ρ_max
+ρ_csd_s = λ_s   · E[S_csd_s] &lt; ρ_max</code></pre>
+<p><code>ρ_max≈0.7~0.85</code>는 임의 가정이며 실험 sweep 대상이다. p99는 utilization이 1에 가까워질수록 비선형으로 악화되므로, 평균 latency만으로 라우팅하면 tail이 쉽게 무너진다.</p>
+<h3 id="pcie-cap-기반-break-even">PCIe cap 기반 break-even</h3>
+<p>기존 break-even은 <code>T_csd ≤ T_gpu</code>였다. 운영 환경에서는 PCIe 포화 조건도 필요하다.</p>
+<pre><code class="language-text">All-GPU PCIe demand:
+D_pcie = λ · E[bytes_H2_comp]
+
+PCIe stable condition:
+D_pcie ≤ β_pcie · ε · BW_pcie</code></pre>
+<p><code>β_pcie</code>는 안전 사용률이다. 예를 들어 <code>β_pcie=0.7</code>, <code>ε·BW_pcie=25GB/s</code>, <code>E[bytes_H2_comp]=0.6MB/query</code>이면:</p>
+<pre><code class="language-text">max λ_all_gpu ≈ 0.7 · 25GB/s / 0.6MB ≈ 29k QPS</code></pre>
+<p>20k QPS에서는 latency상 GPU가 빠를 수 있지만, 다른 GPU traffic과 encoder/reranker가 붙으면 CSD offload가 필요해진다. 이 경우 CSD의 역할은 “더 빠른 MaxSim”이 아니라 <strong>PCIe pressure valve</strong>다.</p>
+<h3 id="trace-schema-추가-scheduling-outcome까지-기록">Trace schema 추가: scheduling outcome까지 기록</h3>
+<p>기존 trace는 access 중심이었다. scheduler 연구에는 결정과 예측 오차가 필요하다.</p>
+<pre><code class="language-text">routing_decisions(
+  q_idx, task_id, granularity,              # query | shard | block-batch
+  chosen_device, candidate_devices,
+  pred_gpu_us, pred_csd_us,
+  pred_pcie_bytes, pred_internal_bytes,
+  pred_tail_risk,
+  actual_latency_us,
+  actual_queue_us,
+  actual_pcie_bytes,
+  actual_internal_bytes
+)
+
+cache_events(
+  t_idx, pid, block_id, shard_id,
+  action,                                  # admit | evict | refresh | replicate
+  bytes_written,
+  reason_score,
+  victim_pid
+)</code></pre>
+<p>이 두 테이블이 있어야 cost model이 얼마나 틀렸는지, admission이 실제로 이득이었는지, shard tail이 어디서 생겼는지 역추적할 수 있다.</p>
+<p>---</p>
+<h2 id="관련-맥락-배경-설명-6">관련 맥락 / 배경 설명</h2>
+<p>CSD MaxSim runtime은 accelerator scheduling이라기보다 <strong>multi-tier memory scheduling</strong>에 가깝다. GPU는 compute device이지만, 이 문제에서는 PCIe로 데이터를 먹여야만 빠르다. CSD는 compute가 약하지만, embedding을 움직이지 않는다는 장점이 있다.</p>
+<p>따라서 좋은 scheduler는 다음 세 질문을 query마다 답해야 한다.</p>
+<pre><code class="language-text">1. 이 query의 residual bytes는 어디에 이미 따뜻한가?
+   GPU HBM / host DRAM / CSD DRAM / NAND
+
+2. 이 query를 GPU로 보내면 어떤 shared resource가 막히는가?
+   PCIe / GPU stream / encoder batch / HBM bandwidth
+
+3. 이 query를 CSD로 보내면 어떤 tail risk가 생기는가?
+   cold shard / bad block packing / queue depth / admission write</code></pre>
+<p>이 구조에서는 <code>HR_bytes(B)</code> 하나만 높은 정책보다, <code>π</code>, <code>BRF_block</code>, queue depth, prediction error까지 함께 낮추는 정책이 더 강한 연구 주장이다.</p>
+<p>---</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-6">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li>Turn 5의 “<code>π</code>가 CSD에만 붙는다”는 결론은 <strong>host-gather GPU baseline</strong>에서만 맞다. GDS block-read baseline, mmap 직접 전송, compressed contiguous layout baseline에서는 GPU도 일부 <code>π</code>를 부담할 수 있다. baseline을 세 개로 나눠야 한다.</li></ol>
+<pre><code class="language-text">GPU-HG: host gather 후 useful bytes만 H2D
+GPU-GDS: block 단위 direct read
+GPU-L0: HBM resident</code></pre>
+<ol><li>“fp16 multiplier가 0으로 붕괴”는 centroid score와 residual LUT가 정확히 재사용될 때만 성립한다. scale, residual norm, per-dimension codebook, dequant offset이 있으면 multiplier 또는 extra add가 일부 부활한다.</li></ol>
+<ol><li><code>BRF_block</code>은 batch 크기만의 함수가 아니다. query arrival correlation, topic burst, scheduler의 reordering window에 의존한다. 따라서 <code>S_zipf</code>만으로 batching 이득을 주장하면 약하다.</li></ol>
+<ol><li>admission policy의 <code>E_future_access(d)</code>는 train/test drift에 민감하다. online EWMA를 쓰면 빠르게 적응하지만 oscillation이 생길 수 있으므로 hysteresis 또는 minimum residency time이 필요하다.</li></ol>
+<ol><li>content-aware batching은 latency를 희생한다. SLO가 빡빡한 workload에서는 <code>BRF</code> 이득보다 waiting penalty가 더 클 수 있다.</li></ol>
+<p>---</p>
+<h2 id="다음-에이전트가-이어서-확장할-지점-6">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>SLO-constrained scheduler simulator</strong>: <code>λ_tail</code>, <code>λ_pcie</code>, <code>λ_gpu</code>, <code>ρ_max</code>를 sweep하면서 <code>all-GPU / all-CSD / shard-hybrid / content-aware batch</code>를 p50, p99, PCIe GB/s, GPU-ms/query로 비교하라.</li></ol>
+<ol><li><strong>Admission policy 실험</strong>: <code>STATIC-HOT</code>, <code>LRU</code>, <code>Benefit/Cost admission</code>, <code>replicated-hot</code>을 같은 trace에서 비교하고, <code>bytes_written</code>, <code>ζ</code>, <code>HR_bytes</code>, shard p99를 함께 보고하라.</li></ol>
+<ol><li><strong>Baseline taxonomy 재정의</strong>: GPU-HG, GPU-GDS, GPU-L0, CSD-L2, CSD-NAND를 명시적으로 분리해 <code>π</code>, PCIe traffic, internal read, exactness 조건이 어느 경로에 붙는지 표로 고정하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T12:59:19.931406+00:00</li><li>누적 턴 수: 5</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T13:00:44.694303+00:00</li><li>누적 턴 수: 6</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
