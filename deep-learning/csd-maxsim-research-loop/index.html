@@ -568,6 +568,20 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-4">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-5-claude">Turn 5 / Claude</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-5">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-5">새로 추가한 사실</a>
+<a class="toc-level-3" href="#사실-1-block-packing-amplification-가-csd에만-붙어-hr-를-0-61-0-88로-끌어올린다">사실 1 — Block packing amplification `π`가 CSD에만 붙어 `HR*`를 0.61→~0.88로 끌어올린다</a>
+<a class="toc-level-3" href="#사실-2-압축-datapath-fp16-곱셈기는-붕괴하고-병목이-lut-read-대역폭으로-이동">사실 2 — 압축 datapath: fp16 곱셈기는 붕괴하고 병목이 LUT-read 대역폭으로 이동</a>
+<a class="toc-level-3" href="#사실-3-distributed-pruning-one-round-vs-two-round-프로토콜과-recall-over-provision-부등식">사실 3 — Distributed pruning: one-round vs two-round 프로토콜과 recall over-provision 부등식</a>
+<a class="toc-level-2" href="#더-구체화한-부분-4">더 구체화한 부분</a>
+<a class="toc-level-3" href="#descriptor-압축-정량화와-nvme-command-count-병목">Descriptor 압축 정량화와 NVMe command-count 병목</a>
+<a class="toc-level-3" href="#s_burst-brf는-도착-수가-아니라-도착-상관-에-의존한다">`S_burst`: BRF는 도착 수가 아니라 도착 *상관*에 의존한다</a>
+<a class="toc-level-3" href="#query-encoder-배치가-만드는-gpu-utilization-바닥과-필수-gpu-csd-hop">Query encoder 배치가 만드는 GPU utilization 바닥과 필수 GPU→CSD hop</a>
+<a class="toc-level-3" href="#corrected-service-time-lut-datapath에서-compute-floor가-배치로-더-빨리-지배">Corrected service-time: LUT datapath에서 compute-floor가 배치로 더 빨리 지배</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-5">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-5">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-5">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -649,7 +663,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -1030,8 +1044,85 @@ shard_service(batch_id, shard_id,
 <ol><li><strong>compressed residual datapath 설계 비교</strong>: <code>fp16 reconstruct+MAC</code>, <code>centroid score + residual LUT accumulation</code>, <code>integer dot approximation</code> 3가지를 <code>DSP 수 / SRAM port / accumulator bitwidth / latency</code> 표로 비교하라.</li></ol>
 <ol><li><strong>block-level locality trace 설계 완성</strong>: pid-level <code>HR_bytes</code>와 block-level <code>BRF_bytes</code>, <code>block_efficiency</code>, <code>false_positive_bytes</code>를 같은 trace에서 계산하는 절차와 pseudo-code를 작성하라.</li></ol>
 <ol><li><strong>queue-stable shard scheduler 시뮬레이터 구체화</strong>: virtual finish time, utilization cap, batch timeout, descriptor overhead, tail-risk penalty를 포함해 <code>all-GPU / whole-query CSD / shard-hybrid / batched-union CSD</code>를 p50, p99, PCIe GB/s, CSD internal GB/s로 비교하는 실험 프로토콜을 정의하라.</li></ol>
+<h3 id="turn-5-claude">Turn 5 / Claude</h3>
+<h2 id="이번-턴의-확장-요약-5">이번 턴의 확장 요약</h2>
+<p>이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지:</p>
+<ol><li>Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplification <code>π</code>)으로 합쳐지고, 이 <code>π</code>가 <strong>host가 pid를 compact해서 DMA하는 baseline에서는 CSD 쪽에만 붙는 페널티</strong>라서 Turn 1의 임계 residency를 <code>HR* 0.61 → ~0.88</code>로 크게 끌어올린다. → <strong>access trace로 passage를 재배치(co-access clustering)하는 것이 residency만큼 중요한 레버</strong>가 된다.</li><li>Turn 4의 &quot;LUT accumulation이면 MAC 요구가 줄 수 있다&quot;는 방향은 맞지만 부정확하다. 실제로는 <strong>fp16 곱셈기 array가 사실상 0으로 붕괴</strong>(centroid 항은 stage-1에서 이미 계산됨)하고, 대신 <strong>LUT-read 대역폭(~1.5 T lookups/s → ~1,500–1,900 뱅크)</strong>이 새 병목으로 이동한다. 유닛 <em>개수</em>는 ~1,700로 비슷하나 유닛 <em>종류</em>(fp16 multiplier → adder+banked SRAM)가 바뀐다.</li><li>Turn 4 확인점 2(&quot;각 CSD가 독립 pruning하면 exactness 깨짐&quot;)를 <strong>one-round(host prune) vs two-round(CSD prune) 프로토콜</strong>로 정식화하고, local pruning의 over-provision recall 부등식을 유도한다.</li></ol>
+<p>---</p>
+<h2 id="새로-추가한-사실-5">새로 추가한 사실</h2>
+<h3 id="사실-1-block-packing-amplification-가-csd에만-붙어-hr-를-0-61-0-88로-끌어올린다">사실 1 — Block packing amplification <code>π</code>가 CSD에만 붙어 <code>HR*</code>를 0.61→~0.88로 끌어올린다</h3>
+<p>Turn 4는 <code>block_efficiency</code>(spatial 낭비)와 <code>BRF_bytes</code>(배치 재사용)를 병렬로 나열했지만, runtime 비용에는 <strong>둘의 합성 하나</strong>만 들어간다. 정의:</p>
+<pre><code>B*  = Σ_{d∈∪_q H2(q)} bytes_comp(d)      # 이상적: 필요 pid를 압축 상태로 1회씩만
+P   = |∪_q blocks(H2(q))| · s_block       # 물리: 실제 읽는 block union
+π   = P / B*                              # block packing amplification (≥1, 배치 내 block공유가 상쇄 일부)</code></pre>
+<p><strong>핵심 비대칭(신규)</strong>: GPU baseline이 <em>host page cache로 block을 읽어 필요한 pid만 gather한 뒤 H2D DMA</em>하면, PCIe에는 useful pid byte <code>B*</code>만 흐른다. 반면 CSD는 <strong>내부 read에서 물리 block <code>P = π·B*</code>를 그대로 소모</strong>한다. 즉 <code>π</code>는 GPU가 아니라 CSD 쪽에만 붙는 페널티다. 따라서 Turn 1의 내부대역폭 조건이 <code>π</code>만큼 강화된다:</p>
+<pre><code>BW_int_eff(HR) / π ≥ ε·BW_pcie
+⇒ HR* = ( 1/BW_NAND − 1/(π·ε·BW_pcie) ) / ( 1/BW_NAND − 1/BW_DRAM )</code></pre>
+<p>가정값(BW_DRAM=40, BW_NAND=12, ε·BW_pcie=21 GB/s, 모두 배경지식/실측 필요):</p>
+<div class="table-wrap"><table><thead><tr><th><code>π</code></th><th>유효 요구 BW_int</th><th><code>HR*</code></th></tr></thead><tbody><tr><td>1.0 (block=passage, 완벽 정렬)</td><td>21 GB/s</td><td><strong>0.61</strong> (Turn 1 값)</td></tr><tr><td>1.5 (2.5KB passage / 4KB block, 중간 낭비)</td><td>31.5 GB/s</td><td><strong>0.88</strong></td></tr><tr><td>2.0 (block당 유효 pid 1개꼴)</td><td>42 GB/s</td><td><strong>&gt; 1 (단일 CSD 불가)</strong></td></tr></tbody></table></div>
+<p><strong>해석</strong>: block packing이 조금만 나빠도 CSD가 warm-host baseline을 이기는 데 필요한 residency가 급등한다. 이 페널티를 없애는 길은 둘:</p>
+<ul><li><strong>(a) baseline을 GPUDirect Storage(GDS)로 두면</strong> GPU도 block을 통째로 읽으므로 <code>π</code>가 양쪽에서 상쇄된다 → <code>HR*</code>는 0.61로 복귀. 즉 <strong>CSD의 공정한 상대는 &quot;host-gather baseline&quot;이 아니라 &quot;GDS block-read baseline&quot;</strong>일 때 유리하다.</li><li><strong>(b) access trace로 passage를 재배치</strong>해 co-access되는 pid를 같은 block에 모으면 <code>π→1</code>. 이것이 사실상 Turn 1의 locality 지표를 <strong>물리 layout 최적화</strong>로 환산하는 지점이다(아래 다음 조사 1).</li></ul>
+<h3 id="사실-2-압축-datapath-fp16-곱셈기는-붕괴하고-병목이-lut-read-대역폭으로-이동">사실 2 — 압축 datapath: fp16 곱셈기는 붕괴하고 병목이 LUT-read 대역폭으로 이동</h3>
+<p>Turn 4의 centroid+residual 분해는 옳지만, PLAID는 <strong>centroid 점수 <code>S_cent[i,c]=⟨q_i, centroid_c⟩</code>를 stage-1에서 이미 Q×C_probe 밀집행렬로 계산</strong>한다. 따라서 scoring 시점의 doc token <code>j</code>에 대한 점수는:</p>
+<pre><code>score(i,j) = S_cent[i, c_j]  (precomputed → ADD 1회, 곱셈 0)
+           + Σ_e LUT[i,e, code_j[e]]   (residual, ADD·lookup만)</code></pre>
+<p>→ <strong>scoring 경로에 fp16 곱셈기가 필요 없다</strong>(centroid는 이미 계산, LUT 값은 <code>q_i[e]·bucket[code]</code>로 쿼리당 <code>Q·E·2^b=16,384</code> 곱만 1회 빌드). Turn 1의 &quot;≥1,700 MAC&quot;은 <em>fp16 재복원 구현</em>의 상한 설계점이고, LUT 구현에서는 곱셈기 array가 사라진다. <strong>대신 새 병목은 LUT-read 대역폭</strong>:</p>
+<pre><code>token rate (read-limited) = BW_int / bytes_code ≈ 12e9 / 32B ≈ 3.75×10^8 tok/s
+LUT lookups/s            = token_rate · (Q·E) = 3.75e8 · 4096 ≈ 1.5×10^12 /s
+필요 병렬 LUT 뱅크        = 1.5e12 / (f·u) = 1.5e12/(1e9·0.8) ≈ 1,900 뱅크(=accumulate lane)
+LUT 상주 용량            = Bq · Q·E·2^b · b_e = 32 · 16384 · 2B = 1 MB SRAM</code></pre>
+<p>즉 유닛 <em>개수</em>는 여전히 ~1.7–1.9K로 fp16 MAC과 같은 자릿수지만, <strong>유닛 종류가 &quot;fp16 multiplier&quot;에서 &quot;adder + 고banking SRAM 포트&quot;로 바뀐다</strong>(면적·전력은 유리, SRAM 포트 압박은 새 제약). 이것이 Turn 4의 &quot;MAC 요구가 줄 수 있다&quot;의 정확한 형태다: 줄어드는 것은 곱셈기이고, 새로 생기는 요구는 <strong>1.5 T reads/s를 감당할 LUT 뱅킹/복제</strong>다.</p>
+<h3 id="사실-3-distributed-pruning-one-round-vs-two-round-프로토콜과-recall-over-provision-부등식">사실 3 — Distributed pruning: one-round vs two-round 프로토콜과 recall over-provision 부등식</h3>
+<p>Turn 4 확인점 2를 프로토콜로 정식화한다. <strong>residual scoring(stage-3)을 CSD가 하려면 stage-1/2 pruning의 실행 위치가 exactness를 결정한다.</strong></p>
+<pre><code>[one-round, host-prune]  (Turn 3의 k_local=k exact 전제)
+  host: 전체 centroid 점수 → 전역 H2 확정 → pid→shard 분배 → 각 CSD에 survivor list 송신
+  비용: host가 centroid table(수백 MB, 배경지식) 또는 CSD가 올려준 centroid 점수 보유 필요
+  왕복: 1회.  exactness: 보장(H2가 전역에서 확정됨)
+
+[two-round, CSD-prune]
+  R1: query matrix(8KB) → 모든 CSD; 각 CSD가 자기 shard의 centroid-approx 점수 계산·local top-k&#x27; 반환
+  host: 전역 merge → H2 확정 → survivor list 회신
+  R2: 각 CSD가 survivor residual read+full score → local top-k 반환
+  비용: centroid table을 host로 옮길 필요 없음, host centroid 연산 없음
+  왕복: 2회 → T_fix ~2× (단일 query latency 악화)</code></pre>
+<p>CSD가 R1 없이 <strong>독립적으로 local pruning만 하고 곧장 stage-3</strong>로 가면 전역 top-k 후보가 누락될 수 있다. random-hash shard에서 전역 top-N 후보가 shard-local rank로 흩어지므로, recall ≥ 1−δ 보장에 필요한 local 유지 개수는 이항 꼬리로:</p>
+<pre><code>k_local^prune ≥ N/m + z_δ·√( N·(1/m)·(1−1/m) )    (전역 후보 N개, shard m개)
+예: N=1024, m=8 → N/m=128, z_{0.99}≈2.33 → k_local^prune ≈ 128 + 2.33·10.6 ≈ 153</code></pre>
+<p>즉 <strong>독립 pruning은 ~1.2×(=153/128) over-fetch로 recall≈0.99를 살 수 있다</strong> — one-round 왕복을 없애는 대신 ~20% 내부 read를 더 쓴다. 이 20%가 사실 1의 <code>π</code>와 곱해져 residency 요구를 다시 올리므로, <strong>latency(왕복) ↔ 내부 read(over-fetch) ↔ exactness의 3자 트레이드</strong>가 성립한다.</p>
+<p>---</p>
+<h2 id="더-구체화한-부분-4">더 구체화한 부분</h2>
+<h3 id="descriptor-압축-정량화와-nvme-command-count-병목">Descriptor 압축 정량화와 NVMe command-count 병목</h3>
+<p>Turn 4의 &quot;block-union + qmask&quot; 이득을 수치화한다. 배치 union block <code>≈|∪blocks|</code>, descriptor <code>= block_id(4)+shard(1)+offset(4)+len(2)+qmask(⌈Bq/8⌉=4) ≈ 15B</code>:</p>
+<pre><code>union blocks ≈ (Σ|H2|_pid / BRF_pid) · (pid/ block) ≈ (8192/6)·? ≈ 850–1,400 block (추정)
+descriptor traffic ≈ 1,000 · 15B ≈ 15 KB   vs. naive per-(q,pid) 128 KB  → ~8–10× 절감</code></pre>
+<p>단 Turn 4 확인점 5(NVMe command-count)를 정식화하면: <strong>submission overhead ∝ #blocks</strong>이면 descriptor byte가 작아도 command 수가 병목이다. 완화책은 <strong>block-list를 단일 CS(computational storage) command로 전달</strong>(SNIA CS API의 batched descriptor, 확인 필요)해서 command 수를 <code>O(1)</code>로 만드는 것. 이것이 안 되면 <code>T_ctrl = n_cmd·t_submit</code>가 <code>T_fix,csd</code>를 지배할 수 있다.</p>
+<h3 id="s_burst-brf는-도착-수가-아니라-도착-상관-에-의존한다"><code>S_burst</code>: BRF는 도착 수가 아니라 도착 <em>상관</em>에 의존한다</h3>
+<p>Turn 3의 <code>BRF(Bq)</code>는 배치 크기만의 함수로 모델링됐으나, 실제 concurrent overlap은 <strong>query 내용 상관</strong>에 좌우된다. 뉴스 이벤트 등 위상적 burst에서는 동시 도착 query가 같은 hot passage를 공유해 window 내 overlap이 급증한다. 따라서 Turn 1의 <code>S_uniq/S_zipf</code>에 <strong>세 번째 스트림 <code>S_burst</code></strong>를 추가한다:</p>
+<pre><code>S_burst: query pool을 topic 클러스터로 묶고, self-exciting(Hawkes) 도착으로 topical burst 합성
+측정: window w별 BRF_block(w)을, S_uniq(하한)·S_zipf(정상)·S_burst(상한) 세 스트림에서 각각</code></pre>
+<ul><li><code>S_zipf</code>는 pool에서 i.i.d. 복원추출이라 <strong>window 내 상관을 0으로 만들어 BRF를 과소평가</strong>한다. 배치 이득의 상한을 방어하려면 <code>S_burst</code>가 필요하다.</li><li>예상: <code>BRF_block(S_burst) &gt; BRF_block(S_zipf) &gt; BRF_block(S_uniq)</code>. runtime 배치 정책은 세 값 사이의 <strong>최악(S_uniq)에서도 payoff 부등식 <code>BRF_block &gt; π</code>(사실 1)를 만족</strong>해야 안전하다.</li></ul>
+<h3 id="query-encoder-배치가-만드는-gpu-utilization-바닥과-필수-gpu-csd-hop">Query encoder 배치가 만드는 GPU utilization 바닥과 필수 GPU→CSD hop</h3>
+<p>Turn 0가 &quot;query encoder(BERT)는 양 경로 공통이라 소거&quot;했지만, runtime 구조에서는 두 함의가 남는다:</p>
+<ul><li><strong>CSD는 BERT를 못 돌린다</strong> → all-CSD 경로도 GPU/host가 encoder를 돌려야 하므로 GPU는 절대 idle이 아니다. 스케줄러가 봐야 할 값은 GPU <em>idle</em>이 아니라 <strong>encoder 이후 남는 GPU MaxSim slack</strong>이다.</li><li><strong>query matrix(8KB)는 GPU encoder의 출력</strong> → 단일 query CSD 경로도 <code>GPU→host→CSD</code>로 8KB를 내려야 한다(critical path). batch에서는 상각되지만 low-latency 단일 query에서는 <code>T_fix,csd</code>에 더해지는 고정 hop이다.</li></ul>
+<h3 id="corrected-service-time-lut-datapath에서-compute-floor가-배치로-더-빨리-지배">Corrected service-time: LUT datapath에서 compute-floor가 배치로 더 빨리 지배</h3>
+<p>사실 2를 Turn 4의 <code>S_s(G)</code>에 대입하면, batching이 read를 <code>BRF_block</code>로 줄이는 동안 <strong>LUT-read compute는 줄지 않으므로</strong>, 배치가 커질수록 compute-bound로 넘어가는 임계 <code>Bq_comp</code>가 fp16 경로보다 낮다:</p>
+<pre><code>read 항  = π·B*/(BRF_block·BW_int)     # Bq↑ 시 BRF_block↑로 감소
+comp 항  = Σ_{q,d} Q·E / OPS_lut       # Bq에 선형 증가(줄지 않음)
+⇒ Bq_comp = argmin_{Bq} [read = comp]  이후로는 배치가 LUT-read 대역폭에만 의존</code></pre>
+<p>즉 압축-LUT datapath에서는 <strong>배치의 read 이득이 LUT 뱅킹 예산(사실 2)에서 조기에 포화</strong>한다. Turn 3의 &quot;compute는 배치로 안 줄어든다&quot;가 LUT 구현에서 더 날카롭게 성립한다.</p>
+<p>---</p>
+<h2 id="관련-맥락-배경-설명-5">관련 맥락 / 배경 설명</h2>
+<ul><li><strong>locality trace → 물리 layout이 이번 턴의 통합점</strong>: 지금까지 trace는 &quot;무엇이 hot인가&quot;(residency)만 답했다. 사실 1은 여기에 &quot;<strong>hot pid들을 어떤 block에 배치하는가</strong>&quot;라는 두 번째 질문을 추가한다. 같은 <code>HR_bytes(B)</code>라도 co-access pid가 흩어져 있으면(<code>π↑</code>) CSD가 지고, 같은 block에 모여 있으면 이긴다. 따라서 access trace의 <strong>co-access 그래프(같은 query에 함께 등장하는 pid 쌍)</strong>가 layout 최적화의 입력이 된다 — 이는 전통 그래프 파티셔닝/BFS-reordering(예: Gorder류, 배경지식)과 같은 구조다.</li><li><strong>control plane이 datapath만큼 설계 변수인 이유</strong>: 사실 3의 프로토콜 선택(one/two-round)과 descriptor/command 인코딩은 embedding traffic이 0으로 붕괴한 뒤 <strong>남는 유일한 host↔CSD 상호작용</strong>이다. embedding을 없앨수록 상대적으로 control plane 비중이 커지는 역설이 있다.</li><li><strong>왜 곱셈기 붕괴가 중요한가</strong>: CSD의 실리콘 예산은 GPU와 다르다(FPGA DSP·SRAM 포트가 제약). 사실 2는 &quot;몇 MAC이면 되나&quot;라는 질문을 &quot;<strong>fp16 multiplier vs banked-SRAM 중 무엇을 살 것인가</strong>&quot;로 바꾼다 — 하드웨어 선택이 압축 format 디코드 전략에 직접 묶인다.</li></ul>
+<p>---</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-5">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li><strong>(정정) Turn 4의 <code>block_efficiency</code>/<code>BRF_bytes</code> 병렬 나열</strong>: 두 지표는 독립이 아니라 <code>π = P/B*</code> 하나로 합성되며, 이 <code>π</code>는 <strong>host-gather baseline에서 CSD에만 붙는 비대칭 페널티</strong>다. GDS baseline이면 상쇄된다. 어느 baseline인지 명시하지 않으면 <code>HR*</code>가 0.61~&gt;1로 요동친다. — *모델 정정; baseline·<code>π</code> 실측 필요*.</li><li><strong>(정정) Turn 4의 &quot;MAC 요구가 줄 수 있다&quot;</strong>: 줄어드는 것은 fp16 곱셈기(사실상 0)이고, 유닛 개수(~1.7–1.9K)는 비슷하며 <strong>새 병목은 LUT-read 대역폭(~1.5 T/s)</strong>이다. &quot;MAC이 준다&quot;는 서술은 유닛 종류 전환으로 바꿔야 한다. — <em>first-principles 정정; LUT 뱅킹·포트 실측 필요</em>.</li><li><strong>centroid 점수 재사용 가정</strong>: <code>S_cent</code>가 stage-1에서 이미 밀집 계산된다는 것은 PLAID 배경지식이며, CSD가 그 행렬을 넘겨받는지/재계산하는지는 <strong>코드 확인 필요</strong>. 재계산이면 centroid 곱셈기가 소량 부활한다.</li><li><strong>residual bucket이 dimension 공유인지</strong>: LUT 크기(<code>Q·E·2^b</code>)와 곱셈 붕괴는 quantization bucket이 전 차원 공유일 때 성립. 차원별 bucket이면 LUT·빌드 비용이 달라진다. — <em>ColBERTv2 residual layout 확인 필요</em>.</li><li><strong><code>π</code>의 실제 값</strong>: passage 2.5KB / block 4KB 가정에서 <code>π≈1.2–2.0</code>으로 추정했으나, doclens 분산과 block 정렬 순서에 민감. <strong>trace+실제 index 파일로 측정 필요</strong>(사실 1 표 전체가 여기 의존).</li><li><strong>over-provision <code>k_local^prune</code>의 이항 근사</strong>: shard가 hot-affinity면(사실: random 아님) 분포가 치우쳐 <code>z_δ·√</code> 근사가 깨진다. hot-sharding에서는 훨씬 큰 over-fetch 필요 — <em>시뮬 실측 필요</em>.</li></ol>
+<p>---</p>
+<h2 id="다음-에이전트가-이어서-확장할-지점-5">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>Trace-driven passage layout 재배치로 <code>π</code> 최소화</strong>: access trace의 co-access 그래프에서 함께 읽히는 pid를 같은 block에 모으는 배치 알고리즘(그래프 파티셔닝/BFS-reordering)을 정의하고, <code>π</code>와 그에 따른 <code>HR*</code>를 재배치 전/후로 <code>S_uniq/S_zipf/S_burst</code> 세 스트림에서 측정하라. &quot;residency 예산 <code>B</code>를 늘리는 것과 layout으로 <code>π</code>를 낮추는 것 중 PCIe 절감 한계이득이 큰 쪽&quot;을 비교하는 것이 목표.</li></ol>
+<ol><li><strong>LUT datapath 하드웨어 sizing 모델</strong>: <code>fp16 reconstruct+MAC</code> vs <code>centroid-add + residual-LUT</code> vs <code>integer dot 근사</code> 세 datapath를 (① fp16 multiplier 수, ② LUT SRAM 뱅크/포트 수, ③ accumulator bitwidth, ④ 단일 token latency)로 비교표를 만들고, SmartSSD급 FPGA(KU15P: DSP ~2K, BRAM/URAM 수 MB — 배경지식, 확인 필요) 예산 안에서 어느 datapath가 <code>BW_int=12 GB/s</code>를 감당하는지 판정하라. accumulator precision이 top-k recall에 주는 영향도 함께.</li></ol>
+<ol><li><strong>one-round vs two-round 프로토콜 시뮬레이터</strong>: 각 CSD의 centroid-approx 점수 반환(R1 egress), host 전역 merge, survivor 회신(R2 ingress), over-provision <code>k_local^prune</code> recall sweep을 discrete-event로 모델링하고, <code>host-prune(1RT) / CSD-prune(2RT) / GDS-block-baseline</code>을 (p50, p99, PCIe GB/s, host centroid-compute, recall)로 비교하라. 왕복 추가 latency와 over-fetch 내부 read가 사실 1의 <code>π·HR*</code> 조건과 어떻게 상호작용하는지(언제 2RT의 latency 손해가 layout 이득으로 상쇄되는지)를 규명할 것.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T12:53:24.455269+00:00</li><li>누적 턴 수: 4</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T12:59:19.931406+00:00</li><li>누적 턴 수: 5</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
