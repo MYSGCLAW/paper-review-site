@@ -528,6 +528,19 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-2-codex">Turn 2 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-2">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-2">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-whole-query-routing보다-shard-level-routing이-더-자연스럽다">1. Whole-query routing보다 shard-level routing이 더 자연스럽다</a>
+<a class="toc-level-3" href="#2-_q-는-hit-ratio가-아니라-service-time-predictor여야-한다">2. `ρ_q`는 hit ratio가 아니라 service-time predictor여야 한다</a>
+<a class="toc-level-3" href="#3-csd-offload의-runtime-병목은-compute보다-tail-shard-일-수-있다">3. CSD offload의 runtime 병목은 compute보다 “tail shard”일 수 있다</a>
+<a class="toc-level-2" href="#더-구체화한-부분">더 구체화한 부분</a>
+<a class="toc-level-3" href="#runtime-operator-graph">Runtime operator graph</a>
+<a class="toc-level-3" href="#corrected-scheduling-decision-point">Corrected scheduling decision point</a>
+<a class="toc-level-3" href="#scheduling-rule-v2">Scheduling rule v2</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-2">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-2">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -609,7 +622,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -697,8 +710,97 @@ Batch 상각 조건:      B ≥ B_amort ≈ T_fix,csd/(bytes_c,perq/BW_int_eff) 
 <p>---</p>
 <h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
 <ol><li><strong><code>HR*</code> 임계식의 민감도 표를 완성</strong>: <code>(BW_DRAM_int, BW_NAND_int, ε·BW_pcie)</code> 격자에서 <code>HR*</code> 등고선을 그려, 산출물 2의 <code>HR_bytes(B)</code> 곡선과 겹쳐 &quot;어느 <code>B</code> 예산에서 CSD가 켜지는지&quot;를 시각화하라(멀티드라이브 <code>BW_int=n_csd·BW_drive</code> 축 포함).</li><li><strong>L1(host page cache)을 정식 모델링</strong>: <code>w_q</code> 분포를 trace에서 측정하고, &quot;L1과 L2 예산을 어떻게 나눠야 총 PCIe·SSD read가 최소인가&quot;라는 <strong>2-cache 예산 분할 최적화</strong>로 확장하라(CSD 고유 이득 = host→GPU hop 제거를 정량화).</li><li><strong>큐잉/스케줄링 시뮬레이터 설계</strong>: <code>t_arrival</code> Poisson + <code>ρ_q</code>-의존 서비스 시간의 이질적 2-server 위에서 산출물 5 rule을 all-GPU/all-CSD/random과 p99·PCIe 이용률로 비교하는 실험 프로토콜을 구체화하라(batch 상각 <code>B_amort</code> sweep 포함).</li></ol>
+<h3 id="turn-2-codex">Turn 2 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-2">이번 턴의 확장 요약</h2>
+<p>이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload보다 현실적인 <strong>shard-level hybrid scheduling</strong>을 제안하며, (3) <code>ρ_q</code>를 단일 hit ratio가 아니라 <strong>resident byte, miss byte, shard imbalance, queue delay</strong>가 결합된 dispatch 변수로 재정의한다. 또한 이전 턴의 <code>ρ_q</code> 계산 시점 표현은 약간 수정이 필요하다.</p>
+<h2 id="새로-추가한-사실-2">새로 추가한 사실</h2>
+<h3 id="1-whole-query-routing보다-shard-level-routing이-더-자연스럽다">1. Whole-query routing보다 shard-level routing이 더 자연스럽다</h3>
+<p>기존 rule은 query 전체를 GPU 또는 CSD 중 하나로 보내는 형태였다. 하지만 PLAID/ColBERTv2 index는 pid/block 단위로 shard가 가능하므로 runtime은 query <code>q</code>의 H2 집합을 다음처럼 쪼갤 수 있다.</p>
+<pre><code class="language-text">H2(q) = H2_gpu(q) ∪ H2_csd_1(q) ∪ ... ∪ H2_csd_m(q)</code></pre>
+<p>각 CSD는 자기 shard의 passage score 또는 local top-k만 반환하고, host가 최종 top-k를 merge한다. 이 방식의 장점은 <code>ρ_q</code>가 낮은 query에서도 resident/hot shard만 CSD로 보내고, miss-heavy shard는 GPU로 보내는 hybrid execution이 가능하다는 점이다.</p>
+<p>단, document 하나의 token embedding은 한 실행 주체에 온전히 있어야 한다. MaxSim은 query token별 max를 낸 뒤 sum하기 때문에, 문서 token을 여러 장치에 쪼개면 partial max vector를 merge해야 한다.</p>
+<pre><code class="language-text">score(q,d) = Σ_i max_j &lt;q_i, d_j&gt;</code></pre>
+<p>pid 단위 shard는 merge가 단순하다. token-level shard는 각 query token <code>i</code>에 대한 partial max를 모아야 하므로 runtime 복잡도가 커진다.</p>
+<h3 id="2-_q-는-hit-ratio가-아니라-service-time-predictor여야-한다">2. <code>ρ_q</code>는 hit ratio가 아니라 service-time predictor여야 한다</h3>
+<p>단순히 “H2 중 resident 비율”만 보면 scheduling에 부족하다. 같은 <code>ρ_q=0.8</code>이어도 miss byte가 큰 문서에 몰려 있으면 CSD latency가 커진다. 따라서 dispatch feature는 최소한 byte-weighted로 정의해야 한다.</p>
+<pre><code class="language-text">ρ_bytes(q) = Σ_{d∈H2(q)∩L2} bytes_c(d) / Σ_{d∈H2(q)} bytes_c(d)
+
+miss_bytes(q) = Σ_{d∈H2(q)\L2} bytes_c(d)
+
+imbalance(q) = max_s bytes_s(q) / mean_s bytes_s(q)</code></pre>
+<p>CSD service time은 평균 hit ratio보다 다음 형태가 더 직접적이다.</p>
+<pre><code class="language-text">T_csd(q) =
+  T_fix,csd
+  + max_s [
+      bytes_hit_s(q)  / BW_DRAM_s
+    + bytes_miss_s(q) / BW_NAND_s
+    + MAC_s(q)        / OPS_s
+    ]
+  + T_merge(q)</code></pre>
+<p>즉 runtime scheduler는 <code>ρ_q</code> 하나가 아니라 <code>miss_bytes</code>, shard별 skew, queue depth를 같이 봐야 한다.</p>
+<h3 id="3-csd-offload의-runtime-병목은-compute보다-tail-shard-일-수-있다">3. CSD offload의 runtime 병목은 compute보다 “tail shard”일 수 있다</h3>
+<p>multi-drive CSD에서 query latency는 평균 drive가 아니라 가장 늦은 drive가 결정한다.</p>
+<pre><code class="language-text">T_query_csd = max_s T_csd_s(q) + T_host_merge</code></pre>
+<p>따라서 hot documents가 특정 shard에 몰리면 전체 <code>HR_bytes</code>가 높아도 p99 latency가 나빠진다. residency policy도 global top-frequency만으로 정하면 안 되고, shard별 capacity와 load를 제약으로 둬야 한다.</p>
+<pre><code class="language-text">maximize   Σ_d x_d · f_test(d) · bytes(d)
+subject to Σ_{d∈shard s} x_d · bytes(d) ≤ B_s    for each shard s
+           expected_load_s ≤ load_cap_s
+           x_d ∈ {0,1}</code></pre>
+<p>실용적으로는 shard별 STATIC-HOT + periodic rebalancing부터 시작하면 된다.</p>
+<h2 id="더-구체화한-부분">더 구체화한 부분</h2>
+<h3 id="runtime-operator-graph">Runtime operator graph</h3>
+<pre><code class="language-text">Q0  Query encoder on GPU/CPU
+Q1  Centroid scoring / IVF probe
+Q2  H1 candidate list 생성
+Q3  H2 planning: pid → block_id, bytes, shard, residency state
+Q4  Scheduler decision
+Q5a GPU path: residual fetch → decompress → MaxSim
+Q5b CSD path: in-device read → decompress → streaming MaxSim → local top-k
+Q6  Host merge: GPU results + CSD local top-k
+Q7  Final top-k 반환</code></pre>
+<p>중요한 점은 Q4가 residual read 이전에 있어야 한다는 것이다. 그래야 scheduler가 “읽은 뒤 결정”하는 모순을 피한다.</p>
+<h3 id="corrected-scheduling-decision-point">Corrected scheduling decision point</h3>
+<p>이전 턴의 “stage-1 직후 <code>ρ_q</code> 계산 가능”은 표현을 더 정확히 해야 한다. <code>H1</code>만 안 상태에서는 최종 residual read 대상인 <code>H2</code>가 아직 확정되지 않을 수 있다. 안전한 정의는 다음이다.</p>
+<pre><code class="language-text">Q4 decision point = H2 pid list가 확정된 직후, residual block read를 시작하기 전</code></pre>
+<p>만약 runtime이 더 이른 결정을 원하면 <code>H1</code> 기반 예측치를 따로 둔다.</p>
+<pre><code class="language-text">ρ_hat_q = predicted resident byte ratio over H2, estimated from H1 features
+ρ_q     = exact resident byte ratio after H2 planning</code></pre>
+<p>초기 구현은 <code>ρ_q</code> 기반 oracle-free scheduler로 충분하고, 이후 <code>ρ_hat_q</code>로 앞당기는 실험을 추가한다.</p>
+<h3 id="scheduling-rule-v2">Scheduling rule v2</h3>
+<pre><code class="language-python">def route_query(q):
+    plan = build_h2_plan(q)  # pid, bytes, shard, l2_state
+
+    t_gpu = T_fix_gpu \
+        + bytes_comp(q) / (eps * BW_pcie) \
+        + decomp_mac_gpu(q) \
+        + cold_read_penalty(q)
+
+    t_csd = T_fix_csd + max(
+        shard.hit_bytes / BW_DRAM_s
+        + shard.miss_bytes / BW_NAND_s
+        + shard.mac / OPS_s
+        + queue_delay_s
+        for shard in plan.csd_shards
+    ) + T_merge(q)
+
+    if t_csd + risk_margin &lt; t_gpu:
+        return &quot;CSD&quot;
+    if resident_subset_beneficial(plan):
+        return &quot;HYBRID&quot;
+    return &quot;GPU&quot;</code></pre>
+<p><code>risk_margin</code>은 p99 보호용이다. CSD 평균 latency가 약간 낮아도 tail shard가 불안정하면 GPU로 보내는 것이 낫다.</p>
+<h2 id="관련-맥락-배경-설명-2">관련 맥락 / 배경 설명</h2>
+<p>CSD MaxSim runtime은 전통적인 accelerator offload와 다르게, 연산량보다 <strong>데이터 위치와 이동 경로</strong>가 먼저 결정한다. GPU는 HBM 또는 host DRAM page cache가 따뜻할수록 유리하고, CSD는 L2 resident set과 NAND locality가 좋을수록 유리하다.</p>
+<p>따라서 scheduler는 “GPU가 빠른가, CSD가 빠른가”를 정적으로 고르는 장치가 아니라, query마다 다음을 추정하는 작은 cost model이어야 한다.</p>
+<div class="table-wrap"><table><thead><tr><th>Factor</th><th>의미</th><th>GPU 영향</th><th>CSD 영향</th></tr></thead><tbody><tr><td><code>bytes_comp(q)</code></td><td>압축 residual 총량</td><td>PCIe 증가</td><td>내부 read 증가</td></tr><tr><td><code>ρ_bytes(q)</code></td><td>CSD DRAM hit byte 비율</td><td>무관</td><td>latency 감소</td></tr><tr><td><code>w_bytes(q)</code></td><td>host page-cache warm 비율</td><td>SSD read 감소</td><td>무관</td></tr><tr><td><code>imbalance(q)</code></td><td>shard별 byte skew</td><td>낮음</td><td>tail latency 증가</td></tr><tr><td><code>Q_gpu</code>, <code>Q_csd_s</code></td><td>queue depth</td><td>대기시간 증가</td><td>대기시간 증가</td></tr><tr><td><code>B_batch</code></td><td>micro-batch 크기</td><td>kernel 효율 증가</td><td>fixed cost 상각</td></tr></tbody></table></div>
+<h2 id="잠재적-오류-또는-확인-필요-지점-2">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li><code>ρ_q</code> 계산 시점은 H1 직후가 아니라 <strong>H2 planning 직후</strong>로 두는 것이 안전하다. H1 기반 조기 dispatch는 예측 문제로 따로 분리해야 한다.</li><li>CSD가 local top-k만 반환할 때 exactness가 깨질 수 있다. 각 shard가 <code>k</code>개만 반환하면 global top-k는 보통 맞지만, tie나 score 분포가 평평한 경우 안전하지 않을 수 있다. <code>k_local = α·k</code> sweep이 필요하다.</li><li>shard imbalance가 <code>HR_bytes(B)</code> 곡선에 가려질 수 있다. 평균 hit ratio가 높아도 특정 CSD가 hot shard를 독점하면 p99가 나빠진다.</li><li>GPU path의 <code>cold_read_penalty</code>는 host page cache, GPUDirect Storage, mmap 방식에 따라 달라진다. trace에는 logical access뿐 아니라 실제 page-cache hit 여부를 별도 계측해야 한다.</li><li>CSD fixed cost <code>T_fix,csd</code>가 single-query latency에서 매우 중요하다. batch 없이도 이기는지, batch가 필요한지는 실측으로 분리해야 한다.</li></ol>
+<h2 id="다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>shard-level trace schema 확장</strong>: <code>accesses</code>에 <code>shard_id</code>, <code>block_id</code>, <code>resident_tier</code>, <code>queue_id</code>를 추가하고, <code>imbalance(q)</code>와 per-shard p50/p99 service time을 계산하는 metric table을 완성하라.</li></ol>
+<ol><li><strong>exact top-k merge 조건 분석</strong>: CSD local top-k 크기 <code>k_local</code>이 global exactness와 traffic에 미치는 영향을 수식화하고, <code>k_local ∈ {k, 2k, 4k, all_scores}</code> sweep 프로토콜을 설계하라.</li></ol>
+<ol><li><strong>runtime simulator 설계</strong>: Poisson arrival, GPU queue, per-CSD queue, micro-batch timeout을 포함한 discrete-event simulator를 정의하고, 정책 <code>all-GPU</code>, <code>all-CSD</code>, <code>whole-query routing</code>, <code>hybrid shard routing</code>을 p50/p99 latency와 PCIe GB/s로 비교하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T12:46:12.160193+00:00</li><li>누적 턴 수: 1</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T12:47:18.321871+00:00</li><li>누적 턴 수: 2</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
