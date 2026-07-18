@@ -541,6 +541,20 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-2">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-2">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-2">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-3-claude">Turn 3 / Claude</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-3">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-3">새로 추가한 사실</a>
+<a class="toc-level-3" href="#사실-1-batched-internal-scan-locality를-read-절감으로-바꾸는-runtime-레버">사실 1 — Batched internal scan: locality를 read 절감으로 바꾸는 runtime 레버</a>
+<a class="toc-level-3" href="#사실-2-hit-ratio-최적-sharding과-merge-traffic-최적-sharding은-상충한다">사실 2 — Hit-ratio 최적 sharding과 merge-traffic 최적 sharding은 상충한다</a>
+<a class="toc-level-3" href="#사실-3-cache-admission-write가-read-datapath와-내부-대역폭을-경합한다">사실 3 — Cache admission write가 read datapath와 내부 대역폭을 경합한다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-2">더 구체화한 부분</a>
+<a class="toc-level-3" href="#정정된-csd-실행-시간-sum-max-파이프라인-모델-분기">정정된 CSD 실행 시간: sum → max (파이프라인) + 모델 분기</a>
+<a class="toc-level-3" href="#exact-top-k-merge-비용과-근사-recall-codex-우려-정정-확장">Exact top-k merge 비용과 근사 recall (Codex 우려 정정·확장)</a>
+<a class="toc-level-3" href="#micro-batch-창-window-최적화-latency-throughput-frontier">Micro-batch 창(window) 최적화: latency–throughput frontier</a>
+<a class="toc-level-3" href="#straggler-hedging-tail-대응-runtime-기법">Straggler hedging (tail 대응 runtime 기법)</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-3">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-3">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -622,7 +636,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -799,8 +813,80 @@ Q7  Final top-k 반환</code></pre>
 <ol><li><strong>shard-level trace schema 확장</strong>: <code>accesses</code>에 <code>shard_id</code>, <code>block_id</code>, <code>resident_tier</code>, <code>queue_id</code>를 추가하고, <code>imbalance(q)</code>와 per-shard p50/p99 service time을 계산하는 metric table을 완성하라.</li></ol>
 <ol><li><strong>exact top-k merge 조건 분석</strong>: CSD local top-k 크기 <code>k_local</code>이 global exactness와 traffic에 미치는 영향을 수식화하고, <code>k_local ∈ {k, 2k, 4k, all_scores}</code> sweep 프로토콜을 설계하라.</li></ol>
 <ol><li><strong>runtime simulator 설계</strong>: Poisson arrival, GPU queue, per-CSD queue, micro-batch timeout을 포함한 discrete-event simulator를 정의하고, 정책 <code>all-GPU</code>, <code>all-CSD</code>, <code>whole-query routing</code>, <code>hybrid shard routing</code>을 p50/p99 latency와 PCIe GB/s로 비교하라.</li></ol>
+<h3 id="turn-3-claude">Turn 3 / Claude</h3>
+<h2 id="이번-턴의-확장-요약-3">이번 턴의 확장 요약</h2>
+<p>이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 runtime read 절감으로 직접 환산한다, (2) Codex의 <code>k_local</code> 우려 <strong>정정</strong>: pid-shard에서 <code>k_local = k</code>는 tie와 무관하게 항상 exact이며, 오히려 sharding 정책에 따라 <code>k/m</code>까지 줄일 수 있다(단 hit-ratio 최적 sharding과 상충), (3) Codex의 <code>T_csd</code> 내부 항이 read+compute <strong>합(sum)</strong>으로 되어 있어 파이프라인 가정과 모순 — <code>max</code>로 정정하고 DRAM/NAND 병렬 여부라는 모델 분기를 추가, (4) 캐시 admission write가 read datapath와 내부 대역폭을 두고 경합한다는 <strong>write-cost-aware residency</strong>.</p>
+<p>---</p>
+<h2 id="새로-추가한-사실-3">새로 추가한 사실</h2>
+<h3 id="사실-1-batched-internal-scan-locality를-read-절감으로-바꾸는-runtime-레버">사실 1 — Batched internal scan: locality를 read 절감으로 바꾸는 runtime 레버</h3>
+<p>Turn 1·2는 쿼리 하나의 H2를 캐시 층에 두는 관점이었다. 그러나 CSD가 <strong>동시 도착 쿼리 배치</strong>를 한 번의 내부 스캔으로 처리하면, 서로 다른 쿼리의 candidate 겹침이 곧바로 read 절감이 된다. 배치 <code>Bq</code>개 쿼리의 union을 한 번만 읽고, 각 block을 그 block을 포함한 모든 쿼리에 대해 scoring한다:</p>
+<pre><code>읽는 block 집합      = ∪_{q∈batch} H2(q)          (union, 중복 제거)
+내부 read bytes      = |∪H2| · s_block            (Σ_q|H2(q)| 아님)
+MAC work             = Σ_{q,d∈H2(q)} Q·E          (줄지 않음 — 각 (q,d) 쌍 유지)</code></pre>
+<p>여기서 <strong>batch reuse factor</strong>를 정의한다:</p>
+<pre><code>BRF(Bq) = Σ_{q∈batch}|H2(q)| / |∪_{q∈batch} H2(q)|</code></pre>
+<p><code>BRF</code>는 곧 배치 창(window) 안에서의 접근 재사용률이므로 Turn 1의 <strong>Heaps 지수 β로 즉시 예측된다</strong>. 배치 총 접근 <code>T_b = Bq·n̄_H2</code>, 고유 문서 <code>U_b ≈ κ·T_b^β</code>이면:</p>
+<pre><code>BRF(Bq) ≈ T_b^{1−β} / κ</code></pre>
+<p><strong>규모 감(추정)</strong>: <code>n̄_H2=256, Bq=32 → T_b=8192</code>. <code>β=0.8</code>이면 <code>BRF ≈ 8192^0.2/κ ≈ 6.1/κ</code>. κ≈1이면 배치 read를 ~6× 줄인다 — <strong>압축 baseline 이득(~7×)과 맞먹는 크기</strong>이며, 이미 locality 연구가 측정하는 β에서 공짜로 나온다. 이것이 runtime이 locality를 활용하는 <strong>가장 직접적인 지점</strong>이고, Turn 1의 residency(정적 배치)와 별개의 축이다(residency = 어디 두나, batching = 언제 같이 읽나).</p>
+<p>per-query 파이프라인 시간은 배치로 다음처럼 바뀐다:</p>
+<pre><code>T_perq_csd ≈ max( bytes_perq /(BRF·BW_int_eff),  MAC_perq/OPS )  +  T_fix,csd / Bq</code></pre>
+<p>→ read 항은 <code>BRF</code>로, 고정비는 <code>Bq</code>로 나뉜다. <strong>compute 항은 배치로 줄지 않으므로</strong>, 배치는 read/fixed-bound regime에서만 이득이고 compute-bound(<code>N_mac</code> 부족) CSD에서는 효과가 반감된다. 이는 Turn 1 사실 2(≥1,700 MAC)를 <strong>배치 실행에서 다시 요구하는</strong> 조건이다.</p>
+<p><strong>경계 조건(중요)</strong>: <code>BRF</code>는 <code>S_uniq</code>(corpus locality만) ≤ 실측 ≤ <code>S_zipf</code>(query 반복 포함) 사이에 있다. dedup된 공개 query에서 concurrent overlap은 corpus locality 하한으로 제한되므로, 배치 이득 주장은 두 스트림 모두에서 측정해야 방어된다.</p>
+<h3 id="사실-2-hit-ratio-최적-sharding과-merge-traffic-최적-sharding은-상충한다">사실 2 — Hit-ratio 최적 sharding과 merge-traffic 최적 sharding은 상충한다</h3>
+<p>Codex는 &quot;<code>k_local = k</code>가 tie에서 불안전할 수 있어 <code>α·k</code> sweep 필요&quot;라 했으나 이는 <strong>정정 대상</strong>이다(아래 오류 1). 대신 진짜 설계 긴장은 sharding 정책에 있다:</p>
+<ul><li><strong>random/hash sharding</strong>: 임의 문서의 global rank <code>r</code>인 문서는 shard-local rank 기대값 <code>≈ r/m</code>. 따라서 <code>k_local ≈ k/m</code>(+집중 여유)만으로도 global top-k를 exact하게 복원 → merge egress <code>6·m·k_local ≈ 6k</code>로 <strong>m에 무관</strong>.</li><li><strong>locality/hot sharding</strong>(hit-ratio를 높이려 hot 문서를 CSD·특정 shard에 몰기): global top-k score가 소수 shard에 집중 → 그 shard의 <code>k_local</code>이 최대 <code>k</code>까지 필요 → merge traffic·머지 지연 증가.</li></ul>
+<p>즉 <strong>residency hit ratio를 올리는 배치(hot 집중)가 정확한 저비용 merge를 방해한다.</strong> 이는 Turn 2 tail-shard 문제(hot shard 독점 → p99 악화)와 같은 뿌리이며, sharding 정책이 hit ratio·tail latency·merge traffic 세 목적을 동시에 건드리는 <strong>3자 트레이드오프</strong>임을 뜻한다.</p>
+<h3 id="사실-3-cache-admission-write가-read-datapath와-내부-대역폭을-경합한다">사실 3 — Cache admission write가 read datapath와 내부 대역폭을 경합한다</h3>
+<p>전통 캐시 문헌은 admission을 무료로 본다. 그러나 CSD DRAM(L2) resident set을 갱신하려면 <strong>NAND→DRAM write</strong>가 필요하고, 이 write는 MaxSim의 read 스트림과 <strong>같은 내부 채널·DRAM 포트</strong>를 쓴다. 따라서 online LRU/admission을 켜면 유효 read 대역폭이 낮아진다:</p>
+<pre><code>BW_int_eff_effective = BW_int_eff · (1 − ζ),   ζ = admission_write_bytes / total_internal_bytes</code></pre>
+<p><code>ζ</code>가 크면 Turn 1의 임계식 <code>BW_int_eff ≥ ε·BW_pcie</code>가 admission 부담만으로 깨질 수 있다. 결론: <strong>정적 STATIC-HOT(admission=0)이 online LRU보다 CSD에 유리할 수 있다</strong> — 캐시 hit ratio는 LRU가 높아도 write 경합이 순이득을 잠식하기 때문. runtime은 admission을 idle window/double-buffer로 read 임계경로 밖에 밀어내거나, <strong>주기적 배치 rebalancing</strong>(Turn 2 제안)으로 write를 amortize해야 한다.</p>
+<p>---</p>
+<h2 id="더-구체화한-부분-2">더 구체화한 부분</h2>
+<h3 id="정정된-csd-실행-시간-sum-max-파이프라인-모델-분기">정정된 CSD 실행 시간: sum → max (파이프라인) + 모델 분기</h3>
+<p>Codex의 per-shard 항 <code>hit/BW_DRAM + miss/BW_NAND + MAC/OPS</code>(전부 합)는 Turn 1의 <code>max(T_read, T_mac)</code> 파이프라인 가정과 모순이며, 최대 2×까지 비관적이다. 정정:</p>
+<pre><code>[read 내부 구조 분기]
+ (a) 직렬(access-order 스트림, hot/cold 인터리브):
+     T_read_s = (hit_bytes + miss_bytes)/BW_int_eff,   BW_int_eff = 조화평균 (Turn 1)
+ (b) 병렬(DRAM 포트와 NAND 채널 독립 prefetch·reorder):
+     T_read_s = max( hit_bytes/BW_DRAM,  miss_bytes/BW_NAND )   ← 더 빠름
+
+[read↔compute 파이프라인]
+ T_csd_s = T_fill + max( T_read_s,  MAC_s/OPS_s ) + T_res(≈0)
+ T_fill  = (PE array depth)/f_csd  ≈ 수십~수백 ns  (N 큰 배치에서 무시 가능)
+
+[쿼리 전체]
+ T_query_csd = max_s T_csd_s + T_merge      (Turn 2 tail-shard 형태 유지)</code></pre>
+<p>→ 모델이 (a)/(b) 중 어느 read 구조를 가정하는지가 <code>HR*</code> 값을 바꾼다. (b) 병렬 read는 <code>HR*</code>를 낮춰(작은 residency로도 CSD 승리) CSD에 유리한 낙관 시나리오다. <strong>어느 쪽인지는 실측 필요</strong>(controller 아키텍처 의존).</p>
+<h3 id="exact-top-k-merge-비용과-근사-recall-codex-우려-정정-확장">Exact top-k merge 비용과 근사 recall (Codex 우려 정정·확장)</h3>
+<p>pid-shard에서 global top-k에 드는 문서 <code>d</code>는 자기 shard 내 자기보다 위인 문서 수 <code>≤ (d의 global rank) ≤ k</code>이므로 <strong>항상 자기 shard의 top-k 안에 있다</strong> — tie 유무 무관, <code>k_local = k</code>면 exact. 따라서 traffic:</p>
+<pre><code>exact merge egress = m · k · (b_id + b_score) = m·k·6 B   (uint32 id + fp16 score)
+                   = 8·100·6 = 4.8 KB  (m=8, k=100)   ← 무시 가능
+merge compute      = k-way heap merge O(m·k·log m)          ← µs 미만</code></pre>
+<p>근사 regime(traffic·머지 더 줄이기): <code>k_local = γk</code>. random sharding에서 miss 확률은 global-rank-r 문서의 shard-local rank가 <code>γk</code>를 넘을 확률 = 이항 꼬리. 안전 여유 <code>γ ≥ 1/m + c·√(1/(m·k))</code> (집중 부등식) → <code>m=8, k=100</code>이면 <code>γ ≈ 0.2</code>에서도 recall≈1. 즉 <strong>random sharding은 merge 비용을 5× 더 줄일 여지</strong>가 있으나, 사실 2의 hot-sharding과 병용 불가.</p>
+<h3 id="micro-batch-창-window-최적화-latency-throughput-frontier">Micro-batch 창(window) 최적화: latency–throughput frontier</h3>
+<p>Codex가 지목한 batch timeout을 정량화한다. 도착률 <code>λ</code>, 창 <code>w</code>, Poisson이면 기대 배치 <code>Bq = λw</code>:</p>
+<pre><code>E[per-query 지연] ≈ w/2               (배치 대기)
+                 + max(bytes_perq/(BRF(λw)·BW_int_eff), MAC_perq/OPS)   (서비스)
+                 + T_fix,csd/(λw)      (고정비 상각)</code></pre>
+<ul><li><code>w↑</code>: 고정비 항↓, <code>BRF↑</code>(overlap 축적) → 서비스 효율↑. 그러나 대기 <code>w/2↑</code>.</li><li><code>BRF(λw)</code>는 배치가 <strong>working set을 덮으면 포화</strong>(union → WSS) → knee <code>w*</code> 존재. <code>w &gt; w*</code>는 대기만 늘리고 read 이득 없음.</li><li>최적 창: <code>w* ≈ WSS 커버 시간</code> 부근, latency-SLO가 있으면 <code>w ≤ SLO_budget − 서비스</code>로 상한.</li></ul>
+<p><strong>on-chip 자원 제약(신규)</strong>: 배치 실행은 <code>Bq</code>개 query matrix를 on-chip에 상주시켜야 한다 → <code>Bq·Q·E·b_e = Bq·8 KB</code>. <code>Bq=32 → 256 KB</code>, <code>Bq=128 → 1 MB</code> SRAM. SSD 컨트롤러/FPGA BRAM 예산이 <strong><code>Bq</code>의 하드 상한</strong>을 준다. 따라서 <code>Bq ≤ min(SLO 허용, SRAM/8KB)</code>.</p>
+<h3 id="straggler-hedging-tail-대응-runtime-기법">Straggler hedging (tail 대응 runtime 기법)</h3>
+<p>Turn 2의 tail-shard 문제에 대한 실행 레벨 해법: latency-critical 쿼리는 가장 느린 shard를 <strong>GPU에 speculative dual-dispatch</strong>(hedge). shard <code>s</code>의 예상 완료가 p99 위험이면 그 shard만 GPU로 복제 실행, 먼저 끝난 결과 채택.</p>
+<pre><code>비용 = 중복 shard의 PCIe·GPU 자원 (redundancy overhead)
+이득 = T_query = max_s T_s 를 2nd-slowest 수준으로 절단 → p99↓
+발동 = predicted T_s &gt; τ_p99  일 때만 (예산 있는 쿼리 한정)</code></pre>
+<p>이는 Turn 2 <code>risk_margin</code>을 정적 회피가 아니라 <strong>동적 복제</strong>로 구현한 것이다.</p>
+<p>---</p>
+<h2 id="관련-맥락-배경-설명-3">관련 맥락 / 배경 설명</h2>
+<ul><li><strong>왜 batching이 residency와 다른 축인가</strong>: residency(L2)는 <em>시간 축</em>의 재사용(reuse distance)을 캐시 hit으로 바꾸고, batching은 <em>동시성 축</em>의 재사용(concurrent overlap)을 single-scan으로 바꾼다. 두 축은 곱해진다 — resident hot block을 배치가 한 번 읽으면 그 read조차 DRAM 속도. 그래서 runtime cost model은 <code>HR_bytes</code>와 <code>BRF</code>를 <strong>동시에</strong> 입력으로 받아야 한다.</li><li><strong>캐시 write 경합이 runtime-구조적 신규 지점인 이유</strong>: MaxSim datapath와 캐시 관리가 물리적으로 같은 내부 대역폭을 공유하므로, &quot;캐시 정책 최적화&quot;와 &quot;데이터 경로 최적화&quot;가 분리 불가능하다. 이는 host DRAM page cache(write가 별도 DMA)와 근본적으로 다른, CSD 고유의 제약이다.</li><li><strong>sharding이 세 목적을 동시에 건드림</strong>: (i) hit ratio(hot 집중이 유리), (ii) tail latency(분산이 유리), (iii) merge traffic(분산이 유리). random hash sharding은 (ii)(iii)에 좋고 (i)에 나쁘며, hot-affinity sharding은 반대다. runtime은 <strong>hybrid</strong>(hot 문서는 복제해 여러 shard에 두어 hit는 살리고 부하는 분산)로 절충할 수 있으나 복제는 L2 용량을 소비한다.</li></ul>
+<p>---</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li><strong>(정정) Codex의 <code>k_local</code> tie 우려</strong>: pid-shard에서 <code>k_local = k</code>는 tie와 무관하게 exact — 위 증명. sweep이 필요한 것은 exactness가 아니라 <strong>근사로 traffic을 줄이는 방향</strong>(<code>γk &lt; k</code>)이며, 그 하한은 sharding 정책이 정한다. — <em>first-principles 정정, 실측 불필요</em>.</li><li><strong>(정정) Codex <code>T_csd</code> 내부 항의 sum</strong>: read↔compute는 파이프라인이므로 <code>max</code>, read 내부도 DRAM/NAND 병렬이면 <code>max</code>. sum은 최대 2× 비관. — <em>모델 정정; (a)직렬/(b)병렬 분기는 아키텍처 실측 필요</em>.</li><li><code>BRF(Bq)</code>의 실제 β와 κ — <strong>trace 실측 필요</strong>. 특히 concurrent 배치 창 안의 overlap은 전체 스트림 β와 다를 수 있음(짧은 시간창은 hot 문서 편중이 더 심할 수 있어 β 유효값↓, BRF↑). 배치 창 크기별 β를 따로 측정해야 함.</li><li>admission write 계수 <code>ζ</code>와 CSD DRAM write 대역폭 — <strong>실측 필요</strong>. double-buffer로 read 임계경로 밖에 밀 수 있는지가 사실 3의 순이득을 좌우.</li><li>on-chip query buffer <code>Bq·8KB</code>가 대상 CSD(SmartSSD KU15P BRAM/URAM ≈ 수 MB — 배경지식, 확인 필요)에서 실제 <code>Bq</code> 상한을 얼마로 만드는지 — <strong>스펙 확인 필요</strong>.</li><li>hedging의 GPU 복제가 PCIe·GPU 큐를 얼마나 오염시키는지 — p99 이득 대비 평균 throughput 손실은 <strong>시뮬 실측 필요</strong>.</li></ol>
+<p>---</p>
+<h2 id="다음-에이전트가-이어서-확장할-지점-3">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong><code>BRF</code> × <code>HR_bytes</code> 결합 cost surface</strong>: 배치 창 <code>w</code>(→<code>Bq</code>, <code>BRF</code>)와 L2 예산 <code>B</code>(→<code>HR_bytes</code>)를 두 축으로, per-query CSD latency와 PCIe GB/s의 2D 등고선을 그려 &quot;residency와 batching 예산을 어떻게 나눠야 총비용 최소인가&quot;를 최적화하라. admission write 계수 <code>ζ</code>를 페널티로 포함할 것.</li><li><strong>Sharding 정책 3-목적 파레토</strong>: <code>{random-hash, hot-affinity, hot-replicated-hybrid}</code> 세 정책에 대해 (hit ratio, p99, merge egress <code>m·k_local</code>)를 trace 시뮬로 측정하고, hot 문서 복제도(replication factor)를 sweep해 L2 용량 대비 tail·traffic 개선 곡선을 도출하라. 필요 <code>k_local(정책)</code> 하한도 함께 실측하라.</li><li><strong>동시성 포함 discrete-event simulator</strong>: Poisson arrival + micro-batch timeout <code>w</code> + 배치 내 <code>∪H2</code> union scan + per-CSD queue + straggler hedging을 모델링하고, <code>all-GPU / all-CSD / whole-query routing(Turn2) / shard-hybrid / batched-scan+hedge</code>를 p50·p99·PCIe·내부 write 경합률로 비교하라. cost-model 추정 편향을 EWMA로 온라인 보정하는 라우터의 안정성(oscillation)도 함께 검증할 것.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T12:47:18.321871+00:00</li><li>누적 턴 수: 2</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T12:51:35.601098+00:00</li><li>누적 턴 수: 3</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
