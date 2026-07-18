@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --max-width: 980px;
+      --content-width: 1120px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+    a { color: var(--accent); }
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+    .article-width {
+      max-width: var(--max-width);
+    }
+    header {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+    .summary {
+      max-width: 760px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    .tag, .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .tag {
+      border-color: rgba(118, 169, 250, 0.36);
+      color: var(--accent);
+    }
+    .validation-pass {
+      border-color: rgba(135, 215, 165, 0.44);
+      color: #87d7a5;
+    }
+    .validation-fail {
+      border-color: rgba(255, 143, 143, 0.44);
+      color: #ff8f8f;
+    }
+    .validation-pending {
+      border-color: rgba(174, 184, 198, 0.34);
+      color: var(--muted);
+    }
+    main {
+      padding: 38px 0 80px;
+    }
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+    .doc-index .toc-level-3 {
+      padding-left: 12px;
+    }
+    .doc-index .toc-level-4 {
+      padding-left: 24px;
+      font-size: 0.8rem;
+    }
+    article {
+      padding: 30px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    h2, h3, h4 {
+      margin: 1.7em 0 0.55em;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    h2:first-child, h3:first-child, h4:first-child {
+      margin-top: 0;
+    }
+    p, ul, ol, pre, blockquote, .table-wrap {
+      margin: 0 0 1.05em;
+    }
+    ul, ol {
+      padding-left: 1.3em;
+    }
+    li + li {
+      margin-top: 0.35em;
+    }
+    strong {
+      color: #f6fbff;
+    }
+    blockquote {
+      padding: 12px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: rgba(118, 169, 250, 0.08);
+      color: var(--muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      background: rgba(8, 11, 17, 0.32);
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: rgba(118, 169, 250, 0.12);
+      color: #f6fbff;
+      font-size: 0.88rem;
+    }
+    tr:last-child td {
+      border-bottom: 0;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #080b11;
+    }
+    .mermaid {
+      margin: 18px 0 1.2em;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      overflow-x: auto;
+    }
+    .diagram-frame {
+      position: relative;
+      margin: 18px 0 1.2em;
+    }
+    .diagram-frame .mermaid {
+      margin: 0;
+    }
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+    code {
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 820px) {
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-index {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body class="auth-locked index-hidden">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header id="top">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="meta-pill validation-pass">Codex 검증 완료</span>
+      </div>
+      <p class="eyebrow">딥러닝</p>
+      <h1>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</h1>
+      <p class="summary">Claude와 Codex가 번갈아 자료를 확장하며 매 턴의 변화와 응답 누적을 저장하는 실제 실행 로그입니다.</p>
+      <div class="meta-row">
+        <span class="meta-pill">업데이트 2026-07-18</span>
+        <span class="tag">Claude</span><span class="tag">Codex</span><span class="tag">runtime-study</span><span class="tag">deep-research-loop</span>
+      </div>
+    </div>
+  </header>
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a class="toc-level-2" href="#목표">목표</a>
+<a class="toc-level-2" href="#초기-seed">초기 seed</a>
+<a class="toc-level-2" href="#가장-중요한-중심-질문">가장 중요한 중심 질문</a>
+<a class="toc-level-2" href="#매-턴-규칙">매 턴 규칙</a>
+<a class="toc-level-2" href="#선행-research-요약-재료-document-locality-workload">선행 research 요약 재료: Document locality workload</a>
+<a class="toc-level-2" href="#한-줄-요약">한 줄 요약</a>
+<a class="toc-level-2" href="#수집-범위">수집 범위</a>
+<a class="toc-level-2" href="#핵심-요약">핵심 요약</a>
+<a class="toc-level-2" href="#정보-지도">정보 지도</a>
+<a class="toc-level-2" href="#프로토콜-동작-흐름">프로토콜 / 동작 흐름</a>
+<a class="toc-level-2" href="#세부-정리">세부 정리</a>
+<a class="toc-level-3" href="#1-워크로드-선정">1. 워크로드 선정</a>
+<a class="toc-level-3" href="#2-trace-생성-방법">2. Trace 생성 방법</a>
+<a class="toc-level-3" href="#3-locality-metrics">3. Locality Metrics</a>
+<a class="toc-level-3" href="#4-csd-residency-benefit">4. CSD Residency Benefit</a>
+<a class="toc-level-2" href="#선행-research-요약-재료-gpu-csd-maxsim-break-even">선행 research 요약 재료: GPU/CSD MaxSim break-even</a>
+<a class="toc-level-2" href="#한-줄-요약-2">한 줄 요약</a>
+<a class="toc-level-2" href="#수집-범위-2">수집 범위</a>
+<a class="toc-level-2" href="#핵심-요약-2">핵심 요약</a>
+<a class="toc-level-2" href="#정보-지도-2">정보 지도</a>
+<a class="toc-level-2" href="#프로토콜-동작-흐름-2">프로토콜 / 동작 흐름</a>
+<a class="toc-level-2" href="#세부-정리-2">세부 정리</a>
+<a class="toc-level-3" href="#1-maxsim-operation-model">1. MaxSim Operation Model</a>
+<a class="toc-level-3" href="#2-gpu-latency-model">2. GPU Latency Model</a>
+<a class="toc-level-3" href="#3-csd-latency-model">3. CSD Latency Model</a>
+<a class="toc-level-3" href="#4-break-even-mac-pe-조건">4. Break-even MAC/PE 조건</a>
+<a class="toc-level-2" href="#deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</a>
+<a class="toc-level-2" href="#누적-응답-로그">누적 응답 로그</a>
+<a class="toc-level-2" href="#전체-응답-누적">전체 응답 누적</a>
+<a class="toc-level-3" href="#turn-1-claude">Turn 1 / Claude</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#선행-research-요약과-연결고리-첫-턴-필수">선행 research 요약과 연결고리 (첫 턴 필수)</a>
+<a class="toc-level-3" href="#a-document-locality-요약-6줄">A. Document locality 요약 (6줄)</a>
+<a class="toc-level-3" href="#b-gpu-csd-break-even-요약-7줄">B. GPU/CSD break-even 요약 (7줄)</a>
+<a class="toc-level-3" href="#연결고리-핵심">연결고리 (핵심)</a>
+<a class="toc-level-2" href="#새로-추가한-사실">새로 추가한 사실</a>
+<a class="toc-level-3" href="#사실-1-locality와-break-even을-잇는-임계-residency-hr">사실 1 — locality와 break-even을 잇는 임계 residency `HR*`</a>
+<a class="toc-level-3" href="#사실-2-csd-compute-요구치-재보정-630-1-700-mac">사실 2 — CSD compute 요구치 재보정: 630 → ~1,700 MAC</a>
+<a class="toc-level-3" href="#사실-3-4단-캐시-모델-runtime-구조의-핵심">사실 3 — 4단 캐시 모델 (runtime 구조의 핵심)</a>
+<a class="toc-level-3" href="#사실-4-ms-marco-v1은-capacity-논거에-약한-워크로드">사실 4 — MS MARCO v1은 capacity 논거에 약한 워크로드</a>
+<a class="toc-level-2" href="#더-구체화한-부분-산출물-1-5">더 구체화한 부분 — 산출물 1~5</a>
+<a class="toc-level-3" href="#산출물-1-통합-연구-가설-3개-falsifiable">산출물 1 — 통합 연구 가설 3개 (falsifiable)</a>
+<a class="toc-level-3" href="#산출물-2-trace-schema-metric-table">산출물 2 — trace schema + metric table</a>
+<a class="toc-level-3" href="#산출물-3-t_gpu-t_csd-break-even-수식-재보정판">산출물 3 — T_gpu / T_csd / break-even 수식 (재보정판)</a>
+<a class="toc-level-3" href="#산출물-4-regime-구분표">산출물 4 — regime 구분표</a>
+<a class="toc-level-3" href="#산출물-5-scheduling-factor-decision-rule-초안">산출물 5 — scheduling factor &amp; decision rule 초안</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-2" href="#현재-상태">현재 상태</a>
+      </nav>
+    </aside>
+    
+    <div class="article-width">
+      <article>
+        <h1 id="runtime-내부-구조와-스케줄링-딥러닝-자료-확장">Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</h1>
+<h2 id="목표">목표</h2>
+<p>Claude와 Codex가 서로의 응답을 검증 종료점이 아니라 다음 확장의 입력으로 사용하며 자료를 누적한다.</p>
+<h2 id="초기-seed">초기 seed</h2>
+<h1 id="csd-maxsim-deep-learning-seed">CSD MaxSim Deep Learning Seed</h1>
+<p>이 deep-learning loop는 선행 research 두 개를 요약한 뒤, CSD 기반 ColBERT/PLAID MaxSim offload 연구 아이디어를 더 깊게 확장한다.</p>
+<h2 id="가장-중요한-중심-질문">가장 중요한 중심 질문</h2>
+<ol><li>기존 retrieval workload 하나를 기준으로 document/passage embedding locality와 활용도를 어떻게 측정할 것인가?</li><li>GPU에서 수행하는 MaxSim과 CSD에서 수행하는 MaxSim의 end-to-end 성능을 어떻게 비교하고, CSD가 필요한 MAC unit/PE/FLOPS 조건을 어떻게 도출할 것인가?</li></ol>
+<h2 id="매-턴-규칙">매 턴 규칙</h2>
+<ul><li>첫 턴은 아래 두 research 결과를 각각 5-8줄로 요약한 뒤, 둘 사이의 연결고리를 정리한다.</li><li>이후 턴은 document locality, PCIe traffic reduction, MaxSim operation model, GPU/CSD break-even, scheduling factor 중 최소 2개를 반드시 더 구체화한다.</li><li>추상적인 관련 연구 요약보다 수식, 변수, trace schema, 실험 절차, sanity-check 계산을 우선한다.</li><li>불확실한 값은 문헌 기반 값, 임의 가정, 실측 필요 값으로 구분한다.</li><li>결론은 항상 다음 실험 또는 다음 모델 개선 질문으로 이어지게 한다.</li></ul>
+<h2 id="선행-research-요약-재료-document-locality-workload">선행 research 요약 재료: Document locality workload</h2>
+<h1 id="csd-resident-embedding을-위한-document-locality-측정-설계-워크로드-선정-trace-생성-지표-정의">CSD Resident Embedding을 위한 Document Locality 측정 설계 — 워크로드 선정, Trace 생성, 지표 정의</h1>
+<h2 id="한-줄-요약">한 줄 요약</h2>
+<p><strong>PLAID engine + ColBERTv2 index + MS MARCO passage corpus</strong> 조합을 워크로드로 선정하고, query별로 <strong>residual decompression 단계에서 실제 읽히는 passage embedding block 집합</strong>을 trace로 남겨, access frequency / reuse distance / working-set / hot coverage를 계산하면 CSD residency hit ratio와 PCIe traffic 절감량을 곧바로 유도할 수 있다.</p>
+<h2 id="수집-범위">수집 범위</h2>
+<ul><li><strong>포함</strong>: ColBERT/ColBERTv2/PLAID/MS MARCO/BEIR 중 워크로드 선정, query stream → access trace 생성 절차와 record schema, locality metric 수식, CSD residency benefit 추정 절차, scheduling 인계 factor 정의.</li><li><strong>제외</strong>: end-to-end 성능 모델, CSD 하드웨어 설계 자체, retrieval 품질(MRR/nDCG) 분석.</li><li><strong>자료 상태(중요)</strong>: <code>references/manifest.json</code>의 5개 문서는 모두 <code>&quot;URL only; content was not fetched automatically&quot;</code> 상태이고, 이번 세션에서 WebFetch/WebSearch 권한이 거부되어 <strong>원문을 직접 열람하지 못했다</strong>. 따라서 5개 문서는 전부 &quot;URL 메타데이터만 확인&quot;이며, 본문의 기술 내용은 해당 논문·코드베이스에 대한 <strong>배경지식</strong>으로 작성하고 수치는 <strong>추정/확인 필요</strong>로 구분했다. 첨부 repo도 없음(<code>repo-files.txt</code>: &quot;No repository attached&quot;).</li></ul>
+<h2 id="핵심-요약">핵심 요약</h2>
+<ol><li><strong>최종 추천 워크로드</strong>: PLAID(실행 엔진) + ColBERTv2(index 포맷) + MS MARCO v1 passage(약 8.8M passages, 배경지식). BEIR는 query 수가 적어 보조 검증용, ColBERT v1은 index가 비압축이라 CSD 시나리오와 거리가 있다.</li><li><strong>&quot;접근&quot;의 정의가 결과를 좌우한다</strong>: PLAID는 후보를 centroid 점수만으로 걸러내므로, storage에서 실제로 읽는 것은 <strong>최종 단계에서 residual을 decompress하는 passage 집합</strong>뿐이다. 이 집합(이하 H2)을 byte 단위 접근으로 정의하고, 1단계 candidate 집합(H1)은 scheduling feature용으로 별도 기록한다.</li><li><strong>공개 query set은 dedup되어 있다</strong>(배경지식): 동일 query 반복이 없으므로 문서 재사용은 서로 다른 query의 candidate 중복에서만 나온다. 따라서 <strong>S_uniq(고유 query 스트림, locality 하한)</strong> 과 <strong>S_zipf(Zipf 재표집 스트림, 운영 환경 근사)</strong> 두 스트림을 모두 측정해야 주장이 방어된다 — 본 설계의 최대 쟁점.</li><li>지표는 6종으로 충분하다: <code>access frequency</code>, <code>reuse ratio</code>, <code>temporal reuse distance</code>(LRU stack distance), <code>working-set size</code>(Denning WSS + Heaps 지수), <code>hot coverage</code>(Lorenz/CDF), <code>Zipf α</code>. 문서 크기가 token 수에 비례하므로 전 지표를 <strong>byte-weighted 버전과 병행</strong> 계산한다.</li><li><strong>PCIe 절감 주장에 필요한 최소 metric</strong>은 두 개다: baseline bytes/query 분포와 <strong>byte-weighted residency hit ratio HR_bytes(C)</strong>. CSD가 hit을 내부에서 처리하면 절감율 = HR_bytes(C)가 그대로 성립한다.</li><li>규모 감(추정): ColBERTv2 2-bit 압축 시 token embedding당 ~36B, passage당 평균 ~2.5KB. PLAID k=100 설정에서 query당 수백 개 passage를 decompress한다고 알려져 있어 압축 상태로 ~0.6MB/query, fp16 원본 전송이면 ~4.5MB/query 수준 — 1k QPS면 PCIe Gen4 x4 대역폭(~8GB/s, 배경지식)의 상당 부분을 embedding 이동이 차지한다.</li><li>static hot-set 평가는 <strong>trace의 train/test 분할이 필수</strong>다. 전체 trace로 hot set을 뽑아 같은 trace로 hit ratio를 재면 oracle leakage다.</li><li>scheduling에 넘길 핵심 online feature는 <strong>candidate set locality ρ_q(후보 중 CSD resident 비율)</strong> 이다. ρ_q는 stage-1 직후(어떤 residual도 읽기 전에) 계산 가능하므로 GPU/CSD dispatch의 자연스러운 결정점이 된다.</li><li>PLAID의 단계별 파라미터(nprobe, ndocs, 최종 decompress 수)와 index 수치는 원문 미열람 상태의 배경지식이므로, 본문 말미의 <strong>확인 필요 리스트</strong>를 논문·코드로 검증한 뒤 수치를 확정해야 한다.</li></ol>
+<h2 id="정보-지도">정보 지도</h2>
+<p>subgraph IDX[index 산출물 = CSD에 놓일 객체] RES[&quot;residual blocks: pid→압축 embedding / (용량 지배, locality 측정 대상)&quot;] PL --&gt; TR[&quot;access trace / (queries / accesses / docs 테이블)&quot;] TR --&gt; MET[&quot;locality metrics / f(d), RR, stack distance, WSS, Cov, α&quot;] SIM --&gt; SCH[&quot;GPU/CSD scheduling features / hotness, Δq, residency state, ρ_q&quot;] 관계 요점: MS MARCO는 corpus+query pool을, ColBERTv2는 <strong>CSD에 상주시킬 저장 객체(residual blocks)</strong> 를, PLAID는 <strong>어떤 pid의 block이 언제 읽히는지</strong>를 결정하는 접근 패턴 생성기를 제공한다. BEIR는 corpus를 바꿔 같은 파이프라인을 돌리는 민감도 실험 축이다.</p>
+<h2 id="프로토콜-동작-흐름">프로토콜 / 동작 흐름</h2>
+<p>participant M as CSD DRAM (resident set) participant N as CSD NAND (residual blocks)</p>
+<ul><li><strong>상태/객체 순서</strong>: query handle(qid, q_idx) → centroid score 행렬(임시) → H1 candidate pid 리스트 → pruning 후 H2 pid 리스트 → residual block read 요청(pid→(chunk, offset, len) 변환은 doclens 누적합) → decompress된 embedding(임시) → top-k 결과로 완료.</li><li><strong>CSD 경계</strong>: baseline(일반 SSD)에서는 H2 residual bytes가 PCIe를 건너 host/GPU로 간다. CSD 설계에서는 H2 읽기·decompress·MaxSim이 장치 내부에서 끝나고 PCIe에는 Q(내려감)와 top-k(올라옴)만 흐른다. 즉 <strong>H2 집합의 byte 합이 곧 절감 대상 traffic</strong>이다.</li><li>centroid table과 IVF/doclens는 크기가 작아(수십~수백 MB 추정) 무조건 resident로 두고, locality 측정 대상에서 제외한다(쟁점 2 참조).</li></ul>
+<h2 id="세부-정리">세부 정리</h2>
+<h3 id="1-워크로드-선정">1. 워크로드 선정</h3>
+<p>| 후보 | 성격 | locality 측정 적합성 | 결격/제약 | | ColBERT v1 (arXiv:2004.12832) | late interaction 검색기, token 단위 ANN + 비압축 fp16 index | passage embedding 접근 개념은 동일 | index가 ~150GB급(추정)으로 CSD 상주 시나리오와 어긋남. candidate 생성이 외부 ANN 라이브러리 내부에 있어 계측 어려움 | | ColBERTv2 (arXiv:2112.01488) | centroid+quantized residual 압축 index | <strong>CSD에 놓일 저장 객체(residual block)를 정의</strong> | 실행 파이프라인 최적화는 PLAID가 대체 | | PLAID (arXiv:2205.09707) | ColBERTv2 index 위의 staged pruning 엔진 | <strong>&quot;어떤 pid를 실제로 읽는가&quot;가 단계별로 명시적</strong> — trace hook이 자연스러움. k/nprobe/ndocs 파라미터로 candidate 규모 sweep 가능 | 엔진일 뿐 corpus/query는 별도 필요 | | MS MARCO passage (microsoft.github.io/msmarco) | corpus 8.8M + 대규모 query pool (train ~0.5M, dev ~100k, dev.small 6,980 — 추정, 확인 필요) | <strong>긴 query stream을 만들 유일한 후보</strong>. 실제 Bing 질의 유래라 분포가 현실적 | qrels는 sparse지만 locality 측정에는 불필요. query가 dedup되어 반복 없음(쟁점 1) |</p>
+<ul><li>MS MARCO v1 <code>collection.tsv</code>(~8.8M passages), <code>queries.train.tsv</code> / <code>queries.dev.tsv</code>(스트림 구성용; qrels는 선택),</li><li>ColBERTv2 공개 checkpoint, PLAID index 빌드 산출물: <code>centroids</code>, <code>ivf</code>(centroid→pid), <code>doclens</code>(pid→token 수), <code>residuals</code>(압축 embedding) — 파일명·포맷은 repo 확인 필요,</li><li>(선택) query 반복 모델 근거: ORCAS 등 공개 click/query log 통계(배경지식, 확인 필요),</li><li>자원: index 빌드용 GPU, index 저장 ~20-25GB(2-bit 기준 추정).</li></ul>
+<ol><li>PLAID의 staged pruning 때문에 &quot;candidate로 잡힘&quot;과 &quot;실제 storage에서 embedding을 읽음&quot;이 분리된다. CSD 논거에 필요한 것은 후자이고, PLAID는 그 집합을 코드 상 명시적으로 만든다(decompress 대상 pid 리스트).</li><li>ColBERTv2 residual block(passage당 ~KB, 추정)은 CSD에 두기에 적절한 크기의, 잘 정의된 저장 객체다. dense single-vector 검색(embedding 1개 = 수백 B)보다 문서당 byte가 커서 residency 효과가 뚜렷하게 나타난다.</li><li>MS MARCO만이 수십만 규모 query pool을 제공해 train/test 분할과 긴 스트림 구성이 가능하다.</li><li>전 구성요소가 공개(코드: stanford-futuredata/ColBERT GitHub repo — 배경지식, URL 미검증)라 계측 hook 삽입이 현실적이다.</li></ol>
+<h3 id="2-trace-생성-방법">2. Trace 생성 방법</h3>
+<p>passage(~2.5KB 추정) &lt; 4KB이므로 한 block에 여러 pid가 섞인다 → <strong>pid 단위와 block 단위 지표가 달라진다</strong>(block 단위는 spatial locality·배치 순서 효과 포함). query 내에서 block id는 dedupe한다. <strong>Trace schema</strong>:</p>
+<ul><li><code>S_uniq</code>: dev-full(또는 train에서 표본) query를 무작위 순서로 1회씩 재생. 반복이 없으므로 <strong>corpus 내재 locality(후보 중복)만 측정하는 하한</strong>.</li><li><code>S_zipf</code>: query pool에서 Zipf(α_q) 인기 분포로 N개(예: 1M)를 복원추출해 반복이 있는 스트림을 합성. α_q는 공개 검색 로그의 query 빈도 왜도에서 가져오되(배경지식상 0.7~1.0 부근, <strong>확인 필요</strong>) 민감도 sweep(α_q ∈ {0.6, 0.8, 1.0})으로 방어한다.</li><li>각 query에 <code>q_idx</code>(0..N-1, <strong>논리 시간축</strong>)와 합성 <code>t_arrival</code>(Poisson 도착 등)을 부여한다. locality 계산은 q_idx 기준, latency 모델만 t_arrival 사용.</li><li><code>H1</code>: stage-1 candidate generation 직후의 candidate pid 집합(+ probed centroid ids).</li><li><code>H2</code>: <strong>residual decompression에 들어가는 pid 집합</strong> — 실제 storage read. 이것이 locality의 1차 접근 정의.</li><li><code>H3</code>: 최종 top-k pid.</li><li>hook 위치는 ColBERT repo의 searcher/index-scorer 경로(배경지식상 <code>Searcher.search</code> → candidate generation → filter → residual lookup 순, 정확한 함수명 <strong>확인 필요</strong>).</li></ul>
+<h1 id="queries-테이블-query당-1행">queries 테이블 (query당 1행)</h1>
+<h1 id="accesses-테이블-q_idx-pid-당-1행-h2-기준이-기본-stage_max로-h1도-표현">accesses 테이블 ((q_idx, pid)당 1행; H2 기준이 기본, stage_max로 H1도 표현)</h1>
+<h1 id="docs-테이블-정적-pid당-1행">docs 테이블 (정적, pid당 1행)</h1>
+<p>이 schema로 §3의 모든 지표가 trace 재스캔 없이 groupby/집계만으로 계산되고, §5의 scheduling feature도 같은 field에서 파생된다.</p>
+<h3 id="3-locality-metrics">3. Locality Metrics</h3>
+<p>파생 — corpus utilization <code>util = U/|C|</code> (전체 corpus 중 한 번이라도 읽힌 비율; CSD에 &quot;전체를 둘 필요가 없다&quot;는 첫 근거).</p>
+<p><strong>그래프(질문 4의 답)</strong>: ① rank–frequency log-log(Zipf plot), ② <strong>누적 곡선 &quot;top x% 문서가 y% 접근을 커버&quot;</strong>(x 로그축, 1/5/10% 마커 표시, Lorenz curve와 동치) — CSD 스토리에는 ②가 주 그림, ①은 근거 그림. 불평등 요약치로 Gini <code>G = 1 − 2∫₀¹ L(x)dx</code>.</p>
+<ul><li><strong>access frequency</strong>:</li><li><strong>reuse ratio</strong>:</li><li><strong>temporal reuse distance</strong> — 두 정의를 모두 기록:</li><li>query-gap: <code>Δq(d, j) = j − prev(d, j)</code> (같은 pid의 연속 접근 간 query 수).</li><li><strong>LRU stack distance</strong>: <code>sd(d, j) = |{ d′ ≠ d : last_access(d′) ∈ (prev(d,j), j) }|</code> — 두 접근 사이에 등장한 <em>고유</em> 문서 수. last-access 위치에 대한 Fenwick tree로 O(T log U)에 계산(Mattson 계열 표준 기법, 배경지식).</li><li>핵심 성질: <strong>LRU 용량 C(문서 수)에서의 hit ratio가 <code>HR_LRU(C) = Pr[sd &lt; C]</code>로 즉시 나온다.</strong> byte 용량 B에 대해서는 <code>sd_bytes</code>(그 구간 고유 문서 byte 합)로 <code>HR_LRU,B(B) = Pr_bytes[sd_bytes &lt; B]</code>를 쓴다(가변 크기 객체라 근사임을 명시; passage 크기 분산이 작아 오차 작음 — 추정).</li><li>그래프: reuse distance CCDF(log-log). 꼬리가 짧을수록 작은 CSD DRAM으로 충분.</li><li><strong>working-set size</strong> (Denning, 배경지식):</li><li><strong>hot coverage</strong>:</li><li><strong>Zipf/skew</strong>:</li></ul>
+<h3 id="4-csd-residency-benefit">4. CSD Residency Benefit</h3>
+<p><strong>설정</strong>: 용량 B bytes의 CSD 내부 상주 영역(DRAM 또는 pinned 구역)에 embedding block 일부를 두고, 나머지는 miss로 처리. 세 정책을 시뮬레이션한다 — ① STATIC-HOT: train 구간 f(d) 상위 문서를 byte 예산 B까지 pin, ② LRU(online) — §3의 sd_bytes 분포에서 바로 계산, ③ (상한 참고용) offline optimal 근사.</p>
+<p>LRU는 <code>HR_LRU,B(B) = Pr[sd_bytes &lt; B]</code>. <strong>PCIe 주장에 쓰는 값은 HR_bytes다.</strong></p>
+<p>CSD가 hit을 내부에서 scoring하는 설계: PCIe에는 query embedding(≈ <code>n_q·128·2B</code> ≈ 8KB/query, 추정)과 top-k 결과(수 KB)만 흐르므로 miss를 host로 올려 scoring하는 hybrid 설계면 PCIe bytes/query = <code>(1 − HR_bytes(B)) · E[bytes_H2]</code>.</p>
+<p>miss 1건 비용 모델 — <code>T_miss(d) = bytes(d)/BW_NAND_int + T_NAND_lat + [hybrid: bytes(d)/BW_PCIe + host 처리]</code>, hit은 <code>T_hit(d) = bytes(d)/BW_DRAM_int ≈ 0</code>. 절감 주장이 성립할 조건(hybrid 기준): <code>HR_bytes(B) &gt; 1 − BW_PCIe_gain_threshold</code> 형태의 부등식으로 제시하되, BW 상수(PCIe Gen4 x4 ≈ 8GB/s, NAND/내부 DRAM 대역 — 모두 배경지식)는 별도 표로 분리해 가정임을 명시한다.</p>
+<p><code>B ∈ {0.25, 0.5, 1, 2, 4, 8, 16} GB</code> (index 총량 ~22GB 추정 대비 ~1%→~70%)에서 HR_bytes(B) 곡선과 <code>Saved GB / 1k queries</code>를 그린다. 곡선의 knee <code>B*</code>(한계 이득 &lt; ε 지점)가 CSD DRAM sizing 근거가 된다. 목표 서사: &quot;<strong>index의 x%인 B* GB만 상주시켜도 H2 byte의 y%가 장치 내부에서 끝난다</strong>&quot;.</p>
+<ul><li><strong>residency hit ratio</strong>:</li><li><strong>traffic saved bytes</strong>:</li><li><strong>cold miss cost</strong>:</li><li><strong>hot document capacity sweep</strong>:</li><li><strong>최소 metric 세트(질문 5의 답)</strong>: ① <code>E[bytes_H2/query]</code>(baseline traffic), ② <code>HR_bytes(B)</code> 곡선(정책 1개 이상, train/test 분할), ③ miss 비용 가정 1세트. 이 셋이면 &quot;PCIe traffi</li></ul>
+<h2 id="선행-research-요약-재료-gpu-csd-maxsim-break-even">선행 research 요약 재료: GPU/CSD MaxSim break-even</h2>
+<p>웹 도구(WebFetch/WebSearch)와 작업 디렉터리 외부 읽기가 모두 거부되어, 참고자료는 URL 메타데이터만 확인했습니다. 수치 파라미터(ColBERT 기본값, PCIe 대역폭, GPU/CSD 스펙)는 배경지식으로 명시하고, 요청된 수식 중심 break-even 모델을 작성합니다.</p>
+<h1 id="csd-maxsim-offload의-gpu-대비-mac-pe-flops-break-even-분석">CSD MaxSim Offload의 GPU 대비 MAC/PE/FLOPS Break-even 분석</h1>
+<h2 id="한-줄-요약-2">한 줄 요약</h2>
+<p>Candidate embedding이 GPU-resident가 아닌 한 GPU MaxSim은 PCIe-bound이므로, CSD는 GPU의 FLOPS가 아니라 <strong>PCIe 전달률만 이기면 되고</strong>, 그 조건은 <code>N_mac ≥ Q · BW_pcie / (b_e · f_csd · u)</code> — fp16, Q=32, PCIe Gen4 x16 기준 <strong>약 630개 MAC(≈1 TFLOP/s, A100 peak의 0.3%)</strong> 수준이다. 단, 이는 <code>BW_int ≥ BW_pcie</code>(내부 read bandwidth 조건)와 &quot;압축 전송 baseline과의 비교&quot;라는 두 개의 더 어려운 전제를 동반한다.</p>
+<h2 id="수집-범위-2">수집 범위</h2>
+<ul><li><strong>포함</strong>: MaxSim의 MAC/FLOP 연산 모델, GPU 실행 경로(T_gpu)와 CSD 실행 경로(T_csd)의 latency equation, break-even inequality와 required MAC/PE/OPS 유도, sanity-check 수치 예시, sensitivity sweep 설계.</li><li><strong>제외</strong>: 문서 로컬리티/캐시 히트율 자체 분석(job scope에서 명시적으로 제외), query encoder(BERT forward)의 비용 — 양 경로에 공통이므로 소거, candidate generation(ANN/centroid 단계)의 자체 비용 — 단 배치(placement) 쟁점으로만 언급.</li><li><strong>자료 유형</strong>: manifest의 참고자료 8건(ColBERT/ColBERTv2/PLAID/MS MARCO/BEIR/CUDA Guide/PCIe/SNIA)은 전부 <strong>URL 메타데이터만 확인</strong> — 본문 텍스트가 <code>references/text/</code>에 없고, 이번 세션에서 WebFetch/WebSearch 권한이 거부되어 열람하지 못했다. 따라서 본 문서의 모든 수치 파라미터(Q=32, E=128, PCIe 대역폭 표, GPU 스펙, SmartSSD 스펙 등)는 <strong>배경지식</strong>이며, 불확실한 값은 개별적으로 &quot;확인 필요&quot;로 표시한다. 수식 유도 자체는 first-principles이므로 참조 의존성이 없다.</li></ul>
+<h2 id="핵심-요약-2">핵심 요약</h2>
+<ol><li><strong>MaxSim은 batched small GEMM + row-wise max</strong>: <code>FLOP_total ≈ 2·B·N·Q·D·E</code>, max-reduction은 GEMM 대비 <code>1/(2E) ≈ 0.4%</code> (E=128)로 무시 가능하다.</li><li><strong>GPU 경로의 arithmetic intensity는 <code>AI = 2Q/b_e</code><strong> (query는 on-chip 상주, fused kernel 가정). fp16·Q=32이면 32 FLOP/B로 A100 ridge(≈153 FLOP/B)에 한참 못 미쳐 </strong>HBM-bound</strong>이고, 데이터가 PCIe를 건너는 순간 <code>BW_pcie ≪ BW_hbm</code>(30~80배)이므로 <strong>항상 PCIe-bound</strong>가 된다.</li><li>따라서 break-even의 본질은 &quot;CSD compute vs GPU compute&quot;가 아니라 <strong>&quot;CSD compute vs PCIe 전달률&quot;</strong>: <code>required OPS = (Q/b_e)·BW_pcie [MAC/s]</code>. 여기서 <strong>B, N, D, E가 전부 소거</strong>된다 — break-even MAC 수는 워크로드 크기와 무관하고 Q, precision, 링크 속도, clock, utilization에만 의존한다.</li><li><strong>필요 MAC 수는 작다</strong>: <code>N_mac* = Q·BW_pcie/(b_e·f·u)</code> → fp16, f=1 GHz, u=0.8일 때 Gen4 x4에서 158개, Gen4 x16에서 630개, Gen5 x16에서 1,260개. SmartSSD급 FPGA(KU15P, DSP slice 약 2천 개 — 배경지식, 확인 필요)로도 도달 가능한 규모다.</li><li><strong>진짜 병목은 두 번째 필요조건 <code>BW_int ≥ BW_pcie</code><strong>: 단일 drive의 NAND 내부 대역폭(~7–16 GB/s)은 GPU x16 링크 유효 대역폭(25–54 GB/s)보다 낮다. 단일 CSD는 warm host DRAM baseline에 지고, </strong>cold data / multi-drive scale-out / HBM·host DRAM capacity 초과 corpus</strong>에서만 이긴다.</li><li><strong>Result traffic은 소거 가능</strong>: score만 반환 시 <code>D·E·b_e/b_s = 8192배</code>, top-k 반환 시 10⁵배까지 egress가 줄어 T_res는 µs 단위가 된다. CSD의 PCIe 비용은 사실상 0으로 모델링해도 된다.</li><li><strong>최강 GPU baseline은 raw fp16 전송이 아니라 압축 전송</strong>(ColBERTv2 residual compression, ~36 B/vector — 배경지식, 확인 필요): 전송량이 ~7배 줄면 required <code>N_mac*</code>도 ~7배(Gen4 x16 기준 ~4.5K MAC) 커진다. CSD 제안의 공정한 비교 대상은 PLAID류 압축 경로다.</li><li>GPU-resident(HBM 상주) baseline을 이기는 것은 불가능에 가깝다(<code>required OPS ≈ 65 TFLOP/s</code> + <code>BW_int ≥ 2 TB/s</code>). CSD 논거는 latency가 아니라 <strong>capacity(fp16 full index ~150+ GB &gt; HBM 80 GB), cost, host 자원 절감</strong>으로 옮겨가야 한다.</li></ol>
+<h2 id="정보-지도-2">정보 지도</h2>
+<p>W[&quot;MaxSim workload model / FLOP=2BNQDE, Bytes=BNDEb_e / AI=2Q/b_e&quot;] --&gt; G[&quot;GPU path model / T_pcie vs T_comp(roofline)&quot;] W --&gt; C[&quot;CSD path model / T_read vs T_mac, top-k egress&quot;] G --&gt; BE[&quot;Break-even algebra / N_mac* = Q·BW_pcie/(b_e·f·u)&quot;] BE --&gt; S[&quot;Sensitivity sweeps / PCIe Gen / precision / n_csd / Q&quot;] R1[&quot;참고자료(URL만 확인) / ColBERT·v2·PLAID·PCIe·SNIA&quot;] -.파라미터 근거.-&gt; W 관계 구조: (1) workload 모델이 양쪽 latency 모델의 공통 입력이고, (2) break-even 대수는 두 모델의 bottleneck 항끼리의 비교로 환원되며, (3) baseline 선택(어떤 GPU 경로와 비교하는가)이 결론의 부호를 바꾸는 최대 쟁점이다.</p>
+<h2 id="프로토콜-동작-흐름-2">프로토콜 / 동작 흐름</h2>
+<p>participant S as SSD / CSD participant G as GPU Note over H,G: [GPU path] 이동 객체 = doc embeddings (BNDEb_e, MB~GB급) H-&gt;&gt;G: cudaMemcpyAsync H2D (stream) 또는 GPUDirect로 S→G 직접 Note over H,S: [CSD path] 이동 객체 = query embedding(8 KB) + scores/top-k(≤16 KB) H-&gt;&gt;H: n_csd개 drive의 partial top-k merge 핵심 차이: GPU path는 <strong>큰 메모리 객체(embedding tensor)가 두 번 hop</strong>(SSD→host DRAM→HBM)하는 구조이고, CSD path는 큰 객체가 device 내부에 머물고 <strong>작은 상태(Q·E query matrix 8 KB, doc당 Q개 partial-max register, k-heap)</strong>만 유지된다. CSD에서는 Q×D score matrix가 아예 materialize되지 않는다(streaming max).</p>
+<h2 id="세부-정리-2">세부 정리</h2>
+<h3 id="1-maxsim-operation-model">1. MaxSim Operation Model</h3>
+<p><strong>MAC / FLOP</strong>: MAC_total  = B · N · Q · D · E                    (dot-product 곱셈-누산) FLOP_gemm  = 2 · B · N · Q · D · E FLOP_red   = B · N · (Q·(D−1) compare + (Q−1) add) ≈ B·N·Q·D FLOP_total ≈ 2·B·N·Q·D·E · (1 + 1/(2E)) ≈ 2·B·N·Q·D·E     [E=128 → red 비중 0.4%] <strong>Intermediate matrix</strong>: candidate당 <code>Q×D</code> score matrix. Materialize 시 <code>B·N·Q·D·b_s</code> bytes (예: N=4096, Q=32, D=128 → 67 MB, 입력의 절반 규모) — fused kernel이면 register/shared memory에서 소거된다. <strong>Max-reduction</strong>은 FLOP으로는 무시 가능하지만, unfused 구현에서는 HBM traffic을 ~2배로 만들 수 있는 memory-side 항이다. AI      = FLOP/Bytes_D = 2Q/b_e   [FLOP/B]   ← N, D, E에 무관, Q와 precision만의 함수</p>
+<h3 id="2-gpu-latency-model">2. GPU Latency Model</h3>
+<p>경로: NAND → (SSD 링크) → host DRAM → (GPU 링크) → HBM → SM → score 반환. T_pcie    = Bytes_in / (ε_pcie · BW_pcie),   BW_pcie = min(n_ssd·BW_ssd_link, BW_gpu_link, BW_host) T_comp    = max( FLOP_total/(F_gpu·η_gpu),  Bytes_HBM/BW_hbm )      [roofline] T_gpu     = T_fix,gpu + T_pcie + T_comp                (non-overlapped) T_gpu     ≈ T_fix,gpu + max(T_pcie, T_comp)            (chunked pipeline)</p>
+<ul><li><code>ε_pcie ≈ 0.8–0.9</code> (protocol overhead, 대형 DMA 기준 — 배경지식), <code>T_fix,gpu ≈ 10–30 µs</code> (kernel launch + driver — CUDA Guide 계열 배경지식).</li><li><strong>HBM constraint 두 가지</strong>: (bandwidth) <code>Bytes_HBM ≥ Bytes_D</code> — fused면 1회 read, unfused면 score matrix 왕복이 추가돼 ~2배. (capacity) resident baseline이 성립하려면 <code>index size ≤ C_hbm</code> — fp16 MS MARCO full index ~150+ GB(배경지식, 확인 필요)는 80 GB HBM에 안 들어가고, ColBERTv2 압축 index ~20–36 GB는 들어간다.</li><li><strong>regime 판별</strong>: compute-bound 조건은 <code>AI &gt; F_gpu·η/BW_hbm</code> (A100 fp16 ridge ≈ 153 FLOP/B — 배경지식). Q=32·fp16(AI=32)는 미달 → resident면 HBM-bound. 비-resident면 <code>BW_pcie(≤63 GB/s) ≪ BW_hbm(2–3.35 TB/s)</code>이므로 <strong>무조건 PCIe-bound</strong>: <code>T_gpu ≈ Bytes_D/(ε·BW_pcie)</code>. 이때 GPU의 F_gpu는 1차 근사에서 결과에 등장하지 않는다.</li></ul>
+<h3 id="3-csd-latency-model">3. CSD Latency Model</h3>
+<p>경로: NAND → internal channel → on-drive PE array → local max/top-k → 결과만 PCIe. Bytes_int  = B·N·D·E·b_e                       (internal read bytes, GPU 입력과 동일) OPS_csd    = N_mac · f_csd · u                  [MAC/s]  (= 2·N_mac·f_csd·u FLOP/s) T_mac      = MAC_total / OPS_csd = B·N·Q·D·E / (N_mac·f_csd·u) T_csd      = T_fix,csd + max(T_read, T_mac) + Bytes_res/BW_link</p>
+<ul><li><code>N_mac</code>: MAC unit(PE) 수, <code>f_csd</code>: clock, <code>u</code>: utilization(스트리밍 정렬/뱅크 충돌/tail 포함 유효 계수). local max-reduction은 MAC 뒤 comparator를 파이프라인에 붙이면 추가 cycle이 없고 <code>u</code>에 흡수된다. top-k heap은 <code>O(N log k)</code> scalar 연산으로 무시 가능.</li><li>필요한 on-chip 상태는 query matrix <code>Q·E·b_e = 8 KB</code> + doc당 Q개 partial-max register뿐 — score matrix를 만들지 않는다.</li><li><strong>Result traffic 축소율</strong>: 전체 score 반환 시 <code>R = D·E·b_e/b_s = 8192배</code> (D=E=128, fp16), top-k(k=100, N=4096) 반환 시 134 MB → 800 B ≈ <strong>1.7×10⁵배</strong>. <code>T_res</code>는 Gen4 x4에서도 µs 단위 → 모델에서 소거 가능. 이것이 job 질문 &quot;score/top-k 반환 시 traffic 모델 변화&quot;의 답: CSD egress 항이 상수(≈0)로 바뀌고, break-even은 ingress(BW_int)와 compute(OPS_csd)만의 문제가 된다.</li><li><code>T_fix,csd</code>: NVMe/CS command 왕복 + FW dispatch, 수십~수백 µs 추정(<strong>확인 필요</strong> — SNIA CS API 문서와 실측 필요).</li></ul>
+<h3 id="4-break-even-mac-pe-조건">4. Break-even MAC/PE 조건</h3>
+<p><strong>Break-even inequality</strong> (양쪽 모두 pipelined, 비-resident GPU baseline): T_csd ≤ T_gpu ⇔ max( Bytes_D/BW_int ,  MAC_total/OPS_csd ) ≤ Bytes_D/(ε·BW_pcie)      [+ 고정항 무시] ⇔ (i)  BW_int ≥ ε·BW_pcie                        …… 대역폭 조건 (ii) OPS_csd ≥ MAC_total/Bytes_D · ε·BW_pcie = (Q/b_e)·ε·BW_pcie      …… compute 조건 (ii)에서 <code>MAC_total/Bytes_D = (B·N·Q·D·E)/(B·N·D·E·b_e) = Q/b_e</code> [MAC/B] — <strong>B, N, D, E가 전부 소거</strong>된다. 전송되는 1 byte당 수행해야 할 MAC이 <code>Q/b_e</code>로 고정되기 때문이다(각 doc token vector가 Q개 dot product에 참여). <strong>Required OPS / MAC units / FLOPS</strong>: required OPS      = (Q/b_e) · BW_pcie                  [MAC/s] required N_mac*   = Q · BW_pcie / (b_e · f_csd · u)    [MAC units] required F_csd    = 2Q · BW_pcie / b_e                 [FLOP/s] 내부 BW 활용 설계점: N_mac<strong> = Q · BW_int / (b_e · f_csd · u)   (이 이상은 read-bound라 낭비) </strong>수치표** (Q=32, fp16 <code>b_e=2</code> → 16 MAC/B; <code>f_csd=1 GHz</code>, <code>u=0.8</code>; PCIe는 nominal — 배경지식):</p>
+<p>| GPU 경로 병목 링크 | BW_pcie | required OPS | required N_mac* | = FLOP/s (A100 312 TFLOPS 대비) | | Gen3 x4 | 3.94 GB/s | 63 GMAC/s | <strong>79</strong> | 0.13 T (0.04%) | | Gen4 x4 | 7.88 GB/s | 126 GMAC/s | <strong>158</strong> | 0.25 T (0.08%) | | Gen4 x16 | 31.5 GB/s | 504 GMAC/s | <strong>630</strong> | 1.0 T (0.32%) | | Gen5 x16 | 63.0 GB/s | 1.01 TMAC/s | <strong>1,260</strong> | 2.0 T (0.65%) | | Gen6 x16 | 121 GB/s | 1.94 TMAC/s | <strong>2,420</strong> | 3.9 T (1.2%) |</p>
+<p><strong>PCIe bottleneck effect</strong>: 위 표가 곧 그 정량화다 — GPU가 312 TFLOP/s를 가져도 비-resident 데이터에는 <code>(Q/b_e)·BW_pcie ≈ 0.25–2 TFLOP/s</code>만큼만 쓸 수 있으므로, CSD는 GPU peak의 <strong>0.1–1%대 compute</strong>로 대등해진다. 32×32 systolic array(1,024 MAC) @1 GHz ≈ 1 TMAC/s면 Gen5 x16급 전달률까지 커버한다. SmartSSD급 FPGA(KU15P DSP ≈ 2K개, 0.3–0.5 GHz — 배경지식, fp16 MAC은 DSP 2개 소요 가능성 있어 확인 필요)로도 Gen4 x16 조건은 충족 가능. Bytes_D = 4096·128·128·2 = 134.2 MB          MAC_total = 2.147 GMAC (FLOP 4.29 G) [GPU-A] warm host DRAM, Gen4 x16 (eff 25 GB/s): T_pcie = 5.37 ms → T_gpu ≈ 5.4 ms   (compute는 transfer의 1/80 — PCIe-bound 확인) [GPU-B] cold, 단일 SSD Gen4 x4 (eff 6.5 GB/s): T_gpu ≈ 20.6 ms [GPU-C] HBM-resident: T_gpu ≈ 67 µs + fix ≈ 0.1 ms [CSD]   BW_int=12 GB/s, N_mac=256(16×16), f=1 GHz, u=0.8 → OPS=204.8 GMAC/s T_read = 11.2 ms, T_mac = 10.5 ms, T_res = 16.4 KB → ~2 µs → T_csd ≈ 1</p>
+<h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
+<ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
+<h2 id="누적-응답-로그">누적 응답 로그</h2>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr></tbody></table></div>
+<h2 id="전체-응답-누적">전체 응답 누적</h2>
+<h3 id="turn-1-claude">Turn 1 / Claude</h3>
+<h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
+<p>첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 <strong>임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD compute 요구치 재보정(630 → ~1,700 MAC)<strong>, (3) HBM/host-DRAM/CSD-DRAM/NAND </strong>4단 캐시 모델</strong>과 그 위의 dispatch rule이다. 산출물 1~5를 모두 채운다.</p>
+<p>---</p>
+<h2 id="선행-research-요약과-연결고리-첫-턴-필수">선행 research 요약과 연결고리 (첫 턴 필수)</h2>
+<h3 id="a-document-locality-요약-6줄">A. Document locality 요약 (6줄)</h3>
+<p>PLAID(엔진) + ColBERTv2(압축 index) + MS MARCO v1(8.8M passages, query pool)을 워크로드로 고정한다. &quot;storage 접근&quot;은 centroid pruning 이후 <strong>residual을 실제로 decompress하는 pid 집합 H2</strong>로 정의하고, candidate 집합 H1은 scheduling feature로 따로 기록한다. 공개 query는 dedup되어 있으므로 <code>S_uniq</code>(locality 하한)와 <code>S_zipf</code>(운영 근사) 두 스트림을 모두 재생한다. 지표 6종(access freq, reuse ratio, LRU stack distance, WSS, hot coverage, Zipf α)을 <strong>byte-weighted 병행</strong>으로 계산하고, 최종적으로 PCIe 절감 주장은 <code>HR_bytes(B)</code> 하나로 환원된다. 규모 감(추정): 압축 ~36B/token, passage ~2.5KB, query당 수백 passage → 압축 ~0.6MB/query.</p>
+<h3 id="b-gpu-csd-break-even-요약-7줄">B. GPU/CSD break-even 요약 (7줄)</h3>
+<p>MaxSim은 <code>FLOP≈2·B·N·Q·D·E</code>의 batched small GEMM + row-wise max이고, arithmetic intensity <code>AI=2Q/b_e</code>(fp16·Q=32 → 32 FLOP/B)라 GPU는 resident면 HBM-bound, 비-resident면 <strong>항상 PCIe-bound</strong>다. 따라서 break-even의 본질은 &quot;CSD vs GPU FLOPS&quot;가 아니라 <strong>&quot;CSD vs PCIe 전달률&quot;</strong>이고, 조건은 <code>N_mac* = Q·BW_pcie/(b_e·f·u)</code>로 <strong>B,N,D,E가 전부 소거</strong>된다(fp16 기준 Gen4 x16 ≈ 630 MAC). 더 어려운 두 전제는 <code>BW_int ≥ ε·BW_pcie</code>(내부 대역폭)와 &quot;raw fp16이 아닌 <strong>압축 전송 baseline</strong>과의 공정 비교&quot;다. Result traffic(score/top-k)은 10⁴~10⁵배 축소로 사실상 0. GPU-HBM-resident baseline은 이기기 어렵고, CSD 논거는 latency보다 <strong>capacity/cost/host 자원</strong>으로 옮겨야 한다.</p>
+<h3 id="연결고리-핵심">연결고리 (핵심)</h3>
+<p>두 연구는 <strong>같은 객체(H2 = residual block)를 서로 다른 층에서 본다.</strong> A는 그것을 <em>어느 캐시 층에 두느냐</em>(residency <code>HR_bytes</code>), B는 그것을 <em>어느 경로로 옮기고 어디서 계산하느냐</em>(PCIe vs 내부)로 본다. 접점은 <strong>CSD의 유효 내부 read 대역폭이 residency에 의해 결정된다</strong>는 것이다:</p>
+<pre><code>BW_int_eff(HR) = 1 / [ HR/BW_DRAM_int + (1−HR)/BW_NAND_int ]</code></pre>
+<p>즉 A의 산출물 <code>HR_bytes(B)</code>가 B의 필요조건 <code>BW_int ≥ ε·BW_pcie</code>의 좌변을 직접 만든다. 이것이 이번 턴이 두 연구를 하나로 묶는 지점이다.</p>
+<p>---</p>
+<h2 id="새로-추가한-사실">새로 추가한 사실</h2>
+<h3 id="사실-1-locality와-break-even을-잇는-임계-residency-hr">사실 1 — locality와 break-even을 잇는 임계 residency <code>HR*</code></h3>
+<p>CSD가 <strong>warm host-DRAM baseline</strong>을 read-BW에서 이기려면 <code>BW_int_eff(HR) ≥ ε·BW_pcie</code>이어야 하므로, 위 식을 풀면 locality 지표에 대한 명시적 임계값이 나온다:</p>
+<pre><code>HR* = ( 1/BW_NAND_int − 1/(ε·BW_pcie) ) / ( 1/BW_NAND_int − 1/BW_DRAM_int )</code></pre>
+<p>가정값(모두 배경지식/실측 필요) <code>BW_DRAM_int=40, BW_NAND_int=12 GB/s</code>에서:</p>
+<ul><li><code>ε·BW_pcie = 21 GB/s</code> → <strong>HR* ≈ 0.61</strong></li><li><code>ε·BW_pcie = 25 GB/s</code>(research B의 GPU-A 예시) → <strong>HR* ≈ 0.74</strong></li></ul>
+<p>해석: <strong>A가 측정한 <code>HR_bytes(B)</code> 곡선이 B* GB 지점에서 0.61~0.74를 넘으면 그 순간 단일 CSD가 warm 경로를 이긴다.</strong> 특수 케이스로 <code>BW_NAND_int ≥ ε·BW_pcie</code>(멀티채널 CSD)면 <code>HR* ≤ 0</code> → residency 없이도 항상 이긴다(research B point 5의 locality 버전). 이 임계식이 산출물 2의 곡선과 산출물 3의 부등식을 하나로 묶는다.</p>
+<h3 id="사실-2-csd-compute-요구치-재보정-630-1-700-mac">사실 2 — CSD compute 요구치 재보정: 630 → ~1,700 MAC</h3>
+<p>research B의 <code>Bytes_int = B·N·D·E·b_e</code>(fp16)는 <strong>NAND가 fp16을 저장한다는 암묵 가정</strong>이지만, ColBERTv2 NAND에는 <strong>압축 residual(~36B/token)</strong>이 있다. 따라서 (i) 내부 read 바이트는 fp16의 ~1/7로 <strong>더 작고</strong>(research B의 <code>T_read</code>는 ~7× 비관), (ii) MAC은 여전히 decompress된 <code>E=128</code> 차원 위에서 돌므로 <strong>byte당 MAC 밀도가 7× 높다.</strong> CSD가 내부 read rate를 따라잡으려면:</p>
+<pre><code>N_mac(내부) = Q·E·BW_int_eff / (b_tok_comp · f · u)
+            = 32·128·12e9 / (36 · 1e9 · 0.8) ≈ 1,707 MAC</code></pre>
+<p>즉 <strong>압축 데이터를 내부 대역폭으로 decompress+MAC하려면 630이 아니라 ~1,700 MAC</strong>이 필요하다(48×48 systolic array ≈ 2,304 MAC로 충족, 여전히 소형). research B point 7의 &quot;~7×&quot;를 정확한 값으로 확정한 것이며, 630은 <em>fp16 PCIe baseline</em> 전용 수치임을 명시해야 한다.</p>
+<h3 id="사실-3-4단-캐시-모델-runtime-구조의-핵심">사실 3 — 4단 캐시 모델 (runtime 구조의 핵심)</h3>
+<p>두 경로는 서로 <strong>다른 캐시</strong>로 이득을 본다:</p>
+<p>| 층 | 이름 | GPU 경로가 쓰는가 | CSD 경로가 쓰는가 | |----|------|:--:|:--:| | L0 | GPU HBM (index pin) | ✅ (fits면) | ❌ | | L1 | host DRAM page cache | ✅ (SSD read 절감) | ❌ | | L2 | CSD DRAM (resident set, <code>ρ_q</code>) | ❌ | ✅ | | L3 | NAND | fallback | fallback |</p>
+<p><strong>중요 정정</strong>: host page cache(L1)는 <em>SSD→host read</em>만 절감하고 <strong>host→GPU PCIe hop은 여전히 지불</strong>한다. CSD는 그 PCIe hop 전체를 없앤다(in-device MaxSim). 따라서 <em>fully warm host page cache</em>를 상대로도 CSD의 PCIe 이득은 유지된다 — CSD의 진짜 경쟁자는 L1이 아니라 <strong>L0(HBM-resident index)</strong>이다.</p>
+<h3 id="사실-4-ms-marco-v1은-capacity-논거에-약한-워크로드">사실 4 — MS MARCO v1은 capacity 논거에 약한 워크로드</h3>
+<p>ColBERTv2 압축 index(MS MARCO v1) ~20GB는 <strong>A100 80GB HBM에 그대로 들어간다</strong>(L0 feasible). 즉 v1에서는 최강 baseline이 HBM-resident이고 CSD는 latency로 못 이긴다(research B의 결론과 정합). capacity 논거를 세우려면 HBM을 초과하는 corpus가 필요하다:</p>
+<pre><code>MS MARCO v2 ≈ 138M passages ≈ 15.7× v1 → 압축 index ≈ 314 GB ≫ 80 GB HBM</code></pre>
+<p>→ <strong>capacity-motivating 워크로드로 MS MARCO v2(또는 web-scale)를 A의 워크로드 축에 추가</strong>할 것을 권고한다(민감도 실험이 아니라 논거의 전제).</p>
+<p>---</p>
+<h2 id="더-구체화한-부분-산출물-1-5">더 구체화한 부분 — 산출물 1~5</h2>
+<h3 id="산출물-1-통합-연구-가설-3개-falsifiable">산출물 1 — 통합 연구 가설 3개 (falsifiable)</h3>
+<ul><li><strong>H1 (Locality → Traffic).</strong> PLAID/ColBERTv2/MS MARCO에서 <code>HR_bytes(B)</code>의 knee <code>B*</code>가 index 크기보다 훨씬 작아, <code>B* GB</code>만 CSD-resident로 두어도 H2 byte의 <code>HR_bytes(B*)</code>가 장치 내부에서 종결된다. <strong>반증</strong>: <code>S_uniq</code>·<code>S_zipf</code> 둘 다에서 <code>B*</code>가 host DRAM 예산보다 크면 CSD는 L1 대비 capacity 이점이 없다.</li><li><strong>H2 (Break-even은 regime 의존).</strong> <code>N_mac ≥ 1,700</code>(압축 내부 read 기준)인 CSD는 비-resident 데이터에서 GPU MaxSim과 대등하다. <strong>단</strong> (a) batch <code>B ≥ B_amort</code>로 <code>T_fix</code>가 상각되고 (b) baseline이 cold이거나 fp16일 때만. <strong>반증</strong>: warm+compressed+single-query에서 GPU가 항상 이김(사실 3·아래 sanity-check).</li><li><strong>H3 (Scheduling이 per-query locality를 활용).</strong> <code>ρ_q</code>(L2 residency), <code>w_q</code>(L1 warmth), 큐 깊이를 쓰는 online 라우터가 all-GPU/all-CSD를 p99·PCIe 이용률에서 이긴다. <strong>반증</strong>: trace 기반 시뮬에서 정적 정책 대비 개선 없음.</li></ul>
+<h3 id="산출물-2-trace-schema-metric-table">산출물 2 — trace schema + metric table</h3>
+<p>research A의 3-테이블 스키마에 <strong>scheduling·2단 캐시용 필드</strong>를 추가한다(신규 굵게):</p>
+<pre><code class="language-text">queries(q_idx, qid, t_arrival, n_H1, n_H2, bytes_H2_comp, bytes_H2_fp16,
+        rho_q,            # ★ H2 중 L2-resident 비율 (stage-1 직후 계산)
+        w_q)              # ★ H2 중 L1(host page cache)-warm 비율
+accesses(q_idx, pid, stage_max∈{1,2,3}, bytes_comp, l2_state∈{hit,miss})  # ★ l2_state
+docs(pid, doclen, bytes_comp, bytes_fp16, block_id, f_train)              # ★ f_train=train-split 빈도</code></pre>
+<div class="table-wrap"><table><thead><tr><th>지표</th><th>기호</th><th>정의/수식</th><th>용도</th></tr></thead><tbody><tr><td>access freq</td><td><code>f(d)</code></td><td>H2에서 pid d 등장 횟수</td><td>hot-set, utilization `U/</td><td>C</td><td>`</td></tr><tr><td>reuse ratio</td><td><code>RR</code></td><td><code>(T−U)/T</code>, T=총 access, U=고유 pid</td><td>locality 유무 1차 판정</td></tr><tr><td>LRU stack dist</td><td><code>sd</code>, <code>sd_bytes</code></td><td>두 access 사이 고유 pid(또는 byte) 수, Fenwick O(T log U)</td><td><code>HR_LRU(C)=Pr[sd&lt;C]</code></td></tr><tr><td>working set</td><td><code>WSS(τ)</code></td><td>Denning; Heaps <code>W≈k·n^β</code></td><td>L2 sizing</td></tr><tr><td>hot coverage</td><td><code>Cov(x)</code></td><td>top-x% pid가 커버하는 access 비율(Lorenz)</td><td>knee <code>B*</code></td></tr><tr><td>Zipf/skew</td><td><code>α</code>, Gini <code>G</code></td><td>rank-freq log-log 기울기</td><td>S_zipf 파라미터</td></tr><tr><td><strong>byte residency</strong></td><td><strong><code>HR_bytes(B)</code></strong></td><td><strong>B byte 예산에서 내부 종결된 H2 byte 비율</strong></td><td><strong>산출물 3 좌변</strong></td></tr></tbody></table></div>
+<p><code>HR_bytes(B)</code>가 A와 B를 잇는 단 하나의 필수 산출물이다.</p>
+<h3 id="산출물-3-t_gpu-t_csd-break-even-수식-재보정판">산출물 3 — T_gpu / T_csd / break-even 수식 (재보정판)</h3>
+<pre><code>[공정 baseline: 양쪽 모두 압축 residual(bytes_c)을 옮긴다]
+
+T_gpu = T_fix,gpu + bytes_c/(ε·BW_pcie) + T_decomp+mac,gpu       # PCIe-bound
+      (cold면 앞에 + bytes_c/BW_ssd 추가; warm이면 L1 hit로 소거)
+
+T_csd = T_fix,csd + bytes_c/BW_int_eff(HR) + T_mac,csd + T_res(≈0)
+        BW_int_eff(HR) = 1/[HR/BW_DRAM_int + (1−HR)/BW_NAND_int]
+
+Break-even (read):    BW_int_eff(HR) ≥ ε·BW_pcie   ⇔   HR ≥ HR*   (사실 1)
+Break-even (compute): N_mac ≥ Q·E·BW_int_eff/(b_tok_comp·f·u) ≈ 1,700   (사실 2)
+Batch 상각 조건:      B ≥ B_amort ≈ T_fix,csd/(bytes_c,perq/BW_int_eff)  # 단일 query면 T_fix 지배</code></pre>
+<p><strong>Sanity-check (단일 query, N=256, 압축 640KB / fp16 4.58MB; 가정: warm PCIe 21, SSD 6.5, NAND_int 12, DRAM_int 40 GB/s, T_fix,gpu=20µs, T_fix,csd=50µs, HR=0.7)</strong>:</p>
+<div class="table-wrap"><table><thead><tr><th>시나리오</th><th>GPU</th><th>CSD</th><th>승자</th></tr></thead><tbody><tr><td>warm + 압축 + 단일</td><td>20+30+3 ≈ <strong>54µs</strong></td><td>50+27+0.4 ≈ 78µs</td><td><strong>GPU</strong></td></tr><tr><td>cold + 압축 + 단일</td><td>20+98+30 ≈ <strong>148µs</strong></td><td>78µs</td><td><strong>CSD</strong></td></tr><tr><td>warm + fp16(raw)</td><td>20+218 ≈ <strong>240µs</strong></td><td>78µs</td><td><strong>CSD</strong></td></tr><tr><td>warm + 압축 + batch32</td><td>≈ 32µs/q</td><td>≈ 29µs/q</td><td><strong>CSD(근소)</strong></td></tr></tbody></table></div>
+<p>→ <strong>CSD는 cold·fp16·batched에서 이기고, warm+압축+단일에서 진다.</strong> batch32 접전은 <code>HR</code>이 <code>BW_int_eff</code>를 21→ 넘길 때 부호가 바뀐다(사실 1과 정합).</p>
+<h3 id="산출물-4-regime-구분표">산출물 4 — regime 구분표</h3>
+<div class="table-wrap"><table><thead><tr><th>Regime</th><th>CSD 판정</th><th>결정 요인</th></tr></thead><tbody><tr><td>GPU-HBM-resident (L0, index≤80GB, e.g. MS MARCO v1)</td><td>✗ latency, △ cost</td><td><code>BW_int ≪ BW_hbm</code>; capacity/cost로만 논쟁</td></tr><tr><td>warm host-DRAM + 압축 + 단일 query</td><td>✗</td><td><code>T_fix,csd</code> + 소량 bytes(사실 3)</td></tr><tr><td>cold(L1 miss) 또는 batched</td><td>✓ (if HR&gt;HR*)</td><td><code>BW_int_eff(HR) ≥ ε·BW_pcie</code></td></tr><tr><td>raw fp16 baseline</td><td>✓</td><td>전송 7× → PCIe-bound 심화</td></tr><tr><td>corpus &gt; HBM (MS MARCO v2 ~314GB, web-scale)</td><td>✓✓</td><td>capacity — CSD 고유 영역</td></tr><tr><td>multi-drive scale-out</td><td>✓✓</td><td><code>BW_int = n_csd·BW_drive</code> 누적</td></tr></tbody></table></div>
+<h3 id="산출물-5-scheduling-factor-decision-rule-초안">산출물 5 — scheduling factor &amp; decision rule 초안</h3>
+<p><strong>online feature (stage-1 직후, 어떤 residual도 읽기 전 계산 가능)</strong>: <code>n_H2</code>, <code>bytes_c(q)</code>, <code>ρ_q</code>(L2 hit 비율), <code>w_q</code>(L1 warm 비율), <code>Q_gpu</code>/<code>Q_csd</code>(큐 깊이).</p>
+<pre><code class="language-python">def route(q):
+    # 예상 서비스 시간
+    t_gpu = T_fix_gpu + bytes_c(q)/(eps*BW_pcie) \
+            + (0 if w_q(q)&gt;θ_warm else bytes_c(q)/BW_ssd)      # cold면 SSD read 가산
+    bw_eff = 1/(rho_q(q)/BW_DRAM_int + (1-rho_q(q))/BW_NAND_int)
+    t_csd = T_fix_csd + bytes_c(q)/bw_eff
+    # 큐 대기 포함 유효 완료시각
+    if Q_csd*t_csd_avg + t_csd &lt; Q_gpu*t_gpu_avg + t_gpu:
+        return &quot;CSD&quot;
+    return &quot;GPU&quot;</code></pre>
+<p><strong>decision rule 요약</strong>: (a) <code>w_q</code> 높음(host warm) → GPU 유리, (b) <code>ρ_q &gt; HR*</code> &amp; cold → CSD 유리, (c) 큐 불균형 시 load-balancing 항이 지배. <strong>batch 정책</strong>: latency-critical 단일 query는 GPU(warm), throughput-oriented 스트림은 CSD로 batch 합류 → <code>T_fix,csd</code> 상각. 이 rule은 산출물 2 스키마의 <code>ρ_q</code>·<code>w_q</code>에서 바로 파생된다.</p>
+<p>---</p>
+<h2 id="관련-맥락-배경-설명">관련 맥락 / 배경 설명</h2>
+<ul><li><strong>왜 4단 캐시가 runtime 구조의 본질인가</strong>: MaxSim offload는 &quot;compute를 어디서 하느냐&quot;가 아니라 &quot;<strong>데이터가 이미 어느 층에 있느냐</strong>&quot;가 승부를 가른다. GPU 경로는 L0/L1로, CSD 경로는 L2로 이득을 보므로, 스케줄러는 두 캐시 상태를 <em>동시에</em> 봐야 한다. 이것이 단일 hit-ratio 최적화(전통 캐시 문헌)와 다른 지점이다.</li><li><strong>큐잉 관점</strong>: t_arrival(Poisson)을 부여하면 GPU·CSD-farm은 <strong>서비스 시간이 <code>ρ_q</code>에 의존하는 이질적 2-server</strong>가 된다. state-dependent routing이라 M/G/1 닫힌형이 어렵고 trace 기반 시뮬이 현실적이다.</li><li><strong>Result egress가 0인 이유(재확인 맥락)</strong>: CSD는 score/top-k만 반환(≤16KB) → PCIe egress가 상수 → break-even이 ingress(<code>BW_int</code>)와 compute(<code>N_mac</code>) 2변수 문제로 축소. 이 단순화가 산출물 3 부등식이 깔끔한 근거다.</li></ul>
+<p>---</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li><strong>(오류 정정) research B의 <code>Bytes_int=fp16</code><strong>: NAND는 압축 residual(~36B/token)을 저장하므로 내부 read는 압축 바이트이고, compute 요구는 630이 아니라 </strong>~1,700 MAC</strong>이다(사실 2). — <em>first-principles 정정, 실측 불필요</em>.</li><li><code>BW_DRAM_int</code>, <code>BW_NAND_int</code>, <code>T_fix,csd</code> 실값 — <strong>실측 필요</strong>(SmartSSD/삼성 CSD). <code>HR*</code>가 이 값들에 매우 민감(0.61 vs 0.74). — <em>임의 가정→실측 대체 필요</em>.</li><li>PLAID 최종 decompress 문서 수(ndocs 기본값)와 avg doclen/<code>doc_maxlen</code> — <strong>문헌/코드 확인 필요</strong>(현재 &quot;수백&quot;·&quot;~70 token&quot;은 추정).</li><li>GPU의 ColBERTv2 residual <strong>decompression 비용이 임계경로에 드는지</strong> — <code>T_decomp+mac,gpu</code>를 few µs로 근사했으나 gather-bound일 수 있음 — <strong>실측 필요</strong>.</li><li><code>w_q</code>(host page-cache warmth)의 실제 hit rate — 이것이 산출물 5 라우팅의 GPU 항을 좌우 — <strong>trace 실측 필요</strong>(L1은 A의 원 설계에 없던 축).</li><li>MS MARCO v2 압축 index ~314GB는 v1 선형 스케일 추정 — <strong>확인 필요</strong>(centroid 수·차원 재조정 가능).</li></ol>
+<p>---</p>
+<h2 id="다음-에이전트가-이어서-확장할-지점">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong><code>HR*</code> 임계식의 민감도 표를 완성</strong>: <code>(BW_DRAM_int, BW_NAND_int, ε·BW_pcie)</code> 격자에서 <code>HR*</code> 등고선을 그려, 산출물 2의 <code>HR_bytes(B)</code> 곡선과 겹쳐 &quot;어느 <code>B</code> 예산에서 CSD가 켜지는지&quot;를 시각화하라(멀티드라이브 <code>BW_int=n_csd·BW_drive</code> 축 포함).</li><li><strong>L1(host page cache)을 정식 모델링</strong>: <code>w_q</code> 분포를 trace에서 측정하고, &quot;L1과 L2 예산을 어떻게 나눠야 총 PCIe·SSD read가 최소인가&quot;라는 <strong>2-cache 예산 분할 최적화</strong>로 확장하라(CSD 고유 이득 = host→GPU hop 제거를 정량화).</li><li><strong>큐잉/스케줄링 시뮬레이터 설계</strong>: <code>t_arrival</code> Poisson + <code>ρ_q</code>-의존 서비스 시간의 이질적 2-server 위에서 산출물 5 rule을 all-GPU/all-CSD/random과 p99·PCIe 이용률로 비교하는 실험 프로토콜을 구체화하라(batch 상각 <code>B_amort</code> sweep 포함).</li></ol>
+<h2 id="현재-상태">현재 상태</h2>
+<ul><li>마지막 업데이트: 2026-07-18T12:46:12.160193+00:00</li><li>누적 턴 수: 1</li><li>중단 사유: 아직 실행 가능</li></ul>
+      </article>
+    </div>
+  </main>
+  <footer>
+    <div class="page-shell">
+      이 문서는 입력 자료, 분석 범위, 생성 시점에 따라 달라질 수 있습니다.
+    </div>
+  </footer>
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+  </script>
+</body>
+</html>
