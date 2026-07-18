@@ -555,6 +555,19 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-3">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-3">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-3">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-4-codex">Turn 4 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-4">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-4">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-h2-plan-descriptor-traffic은-작지만-0이-아니다">1. H2 plan descriptor traffic은 작지만 0이 아니다</a>
+<a class="toc-level-3" href="#2-brf는-pid-count가-아니라-byte-block-기준으로-다시-정의해야-한다">2. BRF는 pid-count가 아니라 byte/block 기준으로 다시 정의해야 한다</a>
+<a class="toc-level-3" href="#3-압축-residual-maxsim은-mac-array-요구를-바꿀-수-있다">3. 압축 residual MaxSim은 MAC array 요구를 바꿀 수 있다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-3">더 구체화한 부분</a>
+<a class="toc-level-3" href="#batched-csd-service-time-model-v2">Batched CSD service-time model v2</a>
+<a class="toc-level-3" href="#queue-stable-routing-rule">Queue-stable routing rule</a>
+<a class="toc-level-3" href="#runtime-trace-schema-추가">Runtime trace schema 추가</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-4">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -636,7 +649,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -885,8 +898,140 @@ merge compute      = k-way heap merge O(m·k·log m)          ← µs 미만</co
 <p>---</p>
 <h2 id="다음-에이전트가-이어서-확장할-지점-3">다음 에이전트가 이어서 확장할 지점</h2>
 <ol><li><strong><code>BRF</code> × <code>HR_bytes</code> 결합 cost surface</strong>: 배치 창 <code>w</code>(→<code>Bq</code>, <code>BRF</code>)와 L2 예산 <code>B</code>(→<code>HR_bytes</code>)를 두 축으로, per-query CSD latency와 PCIe GB/s의 2D 등고선을 그려 &quot;residency와 batching 예산을 어떻게 나눠야 총비용 최소인가&quot;를 최적화하라. admission write 계수 <code>ζ</code>를 페널티로 포함할 것.</li><li><strong>Sharding 정책 3-목적 파레토</strong>: <code>{random-hash, hot-affinity, hot-replicated-hybrid}</code> 세 정책에 대해 (hit ratio, p99, merge egress <code>m·k_local</code>)를 trace 시뮬로 측정하고, hot 문서 복제도(replication factor)를 sweep해 L2 용량 대비 tail·traffic 개선 곡선을 도출하라. 필요 <code>k_local(정책)</code> 하한도 함께 실측하라.</li><li><strong>동시성 포함 discrete-event simulator</strong>: Poisson arrival + micro-batch timeout <code>w</code> + 배치 내 <code>∪H2</code> union scan + per-CSD queue + straggler hedging을 모델링하고, <code>all-GPU / all-CSD / whole-query routing(Turn2) / shard-hybrid / batched-scan+hedge</code>를 p50·p99·PCIe·내부 write 경합률로 비교하라. cost-model 추정 편향을 EWMA로 온라인 보정하는 라우터의 안정성(oscillation)도 함께 검증할 것.</li></ol>
+<h3 id="turn-4-codex">Turn 4 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-4">이번 턴의 확장 요약</h2>
+<p>이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 <code>query matrix + H2 plan descriptor</code> 자체가 작지만 무시할 수 없는 입력이라는 점, 그리고 ColBERTv2 압축 residual은 “fp16 vector로 완전 복원 후 MAC”만이 아니라 <strong>centroid score + residual LUT accumulation</strong>으로 구현될 수 있다는 점을 모델에 넣는다.</p>
+<p>핵심 신규 결론은 다음이다.</p>
+<pre><code class="language-text">CSD offload cost =
+  control ingress(query + plan)
+  + union-block internal read
+  + compressed residual scoring
+  + local top-k egress
+  + queue/backpressure delay</code></pre>
+<p>즉 CSD scheduler는 단순히 <code>ρ_q</code>가 높은 query를 보내는 장치가 아니라, <strong>계획 descriptor 크기, block-level BRF, 압축 연산 형태, queue stability</strong>까지 보는 runtime policy가 되어야 한다.</p>
+<h2 id="새로-추가한-사실-4">새로 추가한 사실</h2>
+<h3 id="1-h2-plan-descriptor-traffic은-작지만-0이-아니다">1. H2 plan descriptor traffic은 작지만 0이 아니다</h3>
+<p>CSD는 residual을 직접 읽더라도, host/runtime은 CSD에 “무엇을 읽고 어떤 query에 대해 scoring할지”를 알려줘야 한다. 따라서 CSD ingress는 query embedding만이 아니다.</p>
+<pre><code class="language-text">Bytes_ctrl(batch)
+  = Bq · Q · E · b_q
+  + |U_block| · b_block_desc
+  + Σ_{block∈U} membership_bytes(block)</code></pre>
+<p>예시 가정:</p>
+<pre><code class="language-text">Bq = 32, Q=32, E=128, fp16 query
+query bytes = 32 · 32 · 128 · 2 = 262 KB
+
+naive per-(q,pid) descriptor:
+32 queries · 256 docs/query · 16 B ≈ 128 KB</code></pre>
+<p>따라서 small-query/small-H2 regime에서는 control ingress가 CSD 고정비와 함께 latency를 흔든다. 반면 embedding traffic은 <code>32·256·2.5KB ≈ 20MB</code> 수준이므로, batch가 충분하면 descriptor는 여전히 1차 병목은 아니다.</p>
+<p>중요한 runtime 최적화는 descriptor를 doc 단위가 아니라 <strong>block-union + query membership bitset</strong>으로 압축하는 것이다.</p>
+<pre><code class="language-text">block_plan(block_id, shard_id, byte_offset, byte_len, qmask_or_qid_list)</code></pre>
+<p>이 구조를 쓰면 CSD는 block을 한 번 읽고, 해당 block이 필요한 query 집합에만 score를 누적한다.</p>
+<h3 id="2-brf는-pid-count가-아니라-byte-block-기준으로-다시-정의해야-한다">2. BRF는 pid-count가 아니라 byte/block 기준으로 다시 정의해야 한다</h3>
+<p>이전 턴의 <code>BRF = Σ|H2(q)| / |∪H2(q)|</code>는 직관은 좋지만, 실제 storage read 절감량을 과대평가할 수 있다. CSD는 pid가 아니라 block/page 단위로 읽고, 한 block에 여러 pid가 섞인다.</p>
+<p>정확한 read-side batch reuse factor는 다음이 더 낫다.</p>
+<pre><code class="language-text">BRF_bytes(Bq)
+  = Σ_q Σ_{b∈Blocks(H2(q))} bytes_read_for_q(b)
+    / Σ_{b∈∪_q Blocks(H2(q))} bytes(b)</code></pre>
+<p>추가로 block packing 때문에 필요 없는 pid가 같이 읽히는 비용을 분리한다.</p>
+<pre><code class="language-text">false_positive_bytes
+  = Σ_{b read} bytes(b) - Σ_{pid actually scored} bytes(pid)
+
+block_efficiency
+  = useful_pid_bytes / physical_block_read_bytes</code></pre>
+<p>따라서 locality trace는 pid locality와 block locality를 둘 다 남겨야 한다. CSD의 PCIe 절감은 pid byte 기준으로 보이지만, CSD 내부 NAND/DRAM bandwidth는 block byte 기준으로 소모된다.</p>
+<h3 id="3-압축-residual-maxsim은-mac-array-요구를-바꿀-수-있다">3. 압축 residual MaxSim은 MAC array 요구를 바꿀 수 있다</h3>
+<p>ColBERTv2 residual이 <code>centroid + quantized residual</code> 형태라면, CSD가 매 token vector를 fp16으로 완전 복원한 뒤 <code>Q·E</code> fp16 MAC을 수행할 필요는 없다. 점수는 다음처럼 분해할 수 있다.</p>
+<pre><code class="language-text">dot(q_i, x_dj)
+  = dot(q_i, centroid_c)
+  + dot(q_i, residual_code_dj)</code></pre>
+<p>query별 centroid 점수는 stage-1에서 이미 계산됐거나 CSD가 작은 centroid table로 재계산할 수 있다.</p>
+<pre><code class="language-text">S_cent[i,c] = dot(q_i, centroid_c)</code></pre>
+<p>2-bit residual이라면 residual term은 multiplication보다 LUT accumulation에 가깝다.</p>
+<pre><code class="language-text">LUT[i,e,code] = q_i[e] · decode(code)
+
+dot_residual(q_i, r_j)
+  = Σ_e LUT[i,e,r_j[e]]</code></pre>
+<p>이 경우 datapath 요구는 다음처럼 나뉜다.</p>
+<pre><code class="language-text">T_score_csd =
+  max(
+    bytes_code / BW_unpack,
+    Q · E · num_tokens / ADD_or_LUT_OPS
+  )</code></pre>
+<p>즉 “필요 MAC 수 1,700개”는 <strong>fp16 복원 후 MAC 구현의 상한적 설계점</strong>이고, LUT accumulation 구조를 쓰면 DSP MAC 요구는 줄어들 수 있다. 대신 bit-unpack bandwidth, LUT SRAM port 수, accumulator precision이 새 병목이 된다.</p>
+<h2 id="더-구체화한-부분-3">더 구체화한 부분</h2>
+<h3 id="batched-csd-service-time-model-v2">Batched CSD service-time model v2</h3>
+<p>배치 <code>G</code>에 대해 shard <code>s</code>의 실행 시간은 read는 union 기준, compute는 query-doc pair 기준으로 계산해야 한다.</p>
+<pre><code class="language-text">U_s(G) = ∪_{q∈G} Blocks(H2_s(q))
+
+Read_s(G)
+  = bytes(U_s(G)) / BW_read_s
+
+Compute_s(G)
+  = Σ_{q∈G} Σ_{d∈H2_s(q)} cost_score(q,d) / OPS_s
+
+Ctrl_s(G)
+  = bytes_ctrl_s(G) / BW_pcie_down
+
+S_s(G)
+  = T_fix,csd
+    + Ctrl_s(G)
+    + max(Read_s(G), Compute_s(G))
+    + Result_s(G)</code></pre>
+<p>query latency는 tail shard로 결정된다.</p>
+<pre><code class="language-text">T_csd(G) = max_s [ queue_delay_s + S_s(G) ] + T_host_merge</code></pre>
+<p>여기서 <code>BRF_bytes</code>는 <code>Read_s</code>만 줄인다. <code>Compute_s</code>는 줄지 않는다. 따라서 CSD가 compute-bound이면 batching의 효과는 <code>T_fix</code> 상각 정도로 제한된다.</p>
+<h3 id="queue-stable-routing-rule">Queue-stable routing rule</h3>
+<p>스케줄러는 가장 빠른 장치를 고르는 것만으로는 부족하다. p99를 지키려면 각 실행 자원의 utilization을 제한해야 한다.</p>
+<pre><code class="language-text">ρ_gpu = λ_gpu · E[S_gpu] &lt; ρ_max
+ρ_csd_s = λ_s · E[S_csd_s] &lt; ρ_max</code></pre>
+<p>실용적인 online rule은 virtual finish time 기반이 좋다.</p>
+<pre><code class="language-python">def assign_shard(shard_task):
+    candidates = [&quot;GPU&quot;, shard_task.home_csd]
+
+    if shard_task.hot_replicated:
+        candidates += shard_task.replica_csds
+
+    return argmin_j(
+        virtual_finish_time[j]
+        + predicted_service_time(j, shard_task)
+        + tail_risk_penalty(j, shard_task)
+    )</code></pre>
+<p>whole-query routing보다 shard-task routing이 더 유연하다. 단, final top-k exactness를 위해 같은 pid의 모든 token은 한 실행 주체에서 score를 완성해야 한다.</p>
+<h3 id="runtime-trace-schema-추가">Runtime trace schema 추가</h3>
+<p>기존 trace에 batch와 descriptor 계측 필드를 추가한다.</p>
+<pre><code class="language-text">queries(q_idx, qid, t_arrival, n_H2, bytes_H2_comp, rho_bytes, w_bytes)
+
+accesses(q_idx, pid, block_id, shard_id, bytes_comp,
+         resident_tier, stage_max)
+
+batches(batch_id, q_idx_list, window_start, window_close,
+        bytes_query, bytes_plan_desc, bytes_result)
+
+block_reads(batch_id, shard_id, block_id,
+            physical_bytes, useful_pid_bytes,
+            qmask_popcnt, source_tier)
+
+shard_service(batch_id, shard_id,
+              read_us, compute_us, ctrl_us,
+              queue_us, total_us)</code></pre>
+<p>이 schema가 있어야 <code>BRF_bytes</code>, <code>block_efficiency</code>, tail shard, descriptor overhead를 분리해서 볼 수 있다.</p>
+<h2 id="관련-맥락-배경-설명-4">관련 맥락 / 배경 설명</h2>
+<p>CSD MaxSim runtime에서 중요한 분리는 세 가지다.</p>
+<p>첫째, <strong>logical access와 physical read는 다르다.</strong> PLAID의 H2는 pid 집합이지만 CSD는 block/page를 읽는다. 따라서 locality metric은 pid 기준뿐 아니라 block 기준이어야 한다.</p>
+<p>둘째, <strong>control plane과 data plane은 다르다.</strong> embedding traffic을 없애도 H2 plan descriptor와 query matrix는 내려가야 한다. 이 항은 large batch에서는 작지만 low-latency single-query에서는 무시하면 안 된다.</p>
+<p>셋째, <strong>압축 format은 하드웨어 구조를 결정한다.</strong> fp16 GEMM처럼 보면 MAC array가 중심이지만, quantized residual을 직접 scoring하면 bit-unpack, LUT, accumulator tree가 중심이 된다. CSD 제안은 “몇 MAC이면 되는가”와 함께 “압축을 어디까지 풀 것인가”를 설계 변수로 둬야 한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-4">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li>이전 턴의 <code>BRF</code>는 문서 수 기준이라 내부 read bandwidth 절감을 직접 나타내지 못한다. 실제 모델은 <code>BRF_bytes</code>와 <code>block_efficiency</code>로 바꿔야 한다.</li></ol>
+<ol><li><code>k_local = k</code> exact 조건은 <strong>global H2 후보 집합이 이미 확정되어 있고 pid 단위로 shard된 경우</strong>에만 성립한다. 각 CSD가 독립적으로 pruning까지 수행하면 global candidate 누락이 생길 수 있어 exactness 보장이 깨진다.</li></ol>
+<ol><li><code>max(Read, Compute)</code> 모델은 double buffering과 충분한 stream pipeline이 있을 때만 맞다. bit-unpack, LUT SRAM port, accumulator writeback이 직렬화되면 <code>Compute</code> 쪽에 추가 stall이 들어간다.</li></ol>
+<ol><li>ColBERTv2 residual encoding의 실제 bit layout, centroid id 저장 위치, decompression kernel 구조는 코드/논문 확인이 필요하다. LUT accumulation이 가능한지는 format 세부에 의존한다.</li></ol>
+<ol><li>CSD command interface가 block-union plan과 qmask를 효율적으로 받을 수 있는지 확인해야 한다. NVMe command 수가 block 수에 비례하면 descriptor가 작아도 command submission overhead가 병목이 될 수 있다.</li></ol>
+<h2 id="다음-에이전트가-이어서-확장할-지점-4">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>compressed residual datapath 설계 비교</strong>: <code>fp16 reconstruct+MAC</code>, <code>centroid score + residual LUT accumulation</code>, <code>integer dot approximation</code> 3가지를 <code>DSP 수 / SRAM port / accumulator bitwidth / latency</code> 표로 비교하라.</li></ol>
+<ol><li><strong>block-level locality trace 설계 완성</strong>: pid-level <code>HR_bytes</code>와 block-level <code>BRF_bytes</code>, <code>block_efficiency</code>, <code>false_positive_bytes</code>를 같은 trace에서 계산하는 절차와 pseudo-code를 작성하라.</li></ol>
+<ol><li><strong>queue-stable shard scheduler 시뮬레이터 구체화</strong>: virtual finish time, utilization cap, batch timeout, descriptor overhead, tail-risk penalty를 포함해 <code>all-GPU / whole-query CSD / shard-hybrid / batched-union CSD</code>를 p50, p99, PCIe GB/s, CSD internal GB/s로 비교하는 실험 프로토콜을 정의하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T12:51:35.601098+00:00</li><li>누적 턴 수: 3</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T12:53:24.455269+00:00</li><li>누적 턴 수: 4</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
