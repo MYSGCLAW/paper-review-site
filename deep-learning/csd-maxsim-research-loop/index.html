@@ -922,6 +922,18 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-31">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-31">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-31">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-32-codex">Turn 32 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-32">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-32">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-threshold에는-provenance가-필요하다">1. Threshold에는 provenance가 필요하다</a>
+<a class="toc-level-3" href="#2-suffix-certificate의-단순-union-bound는-너무-느슨해질-수-있다">2. Suffix certificate의 단순 union bound는 너무 느슨해질 수 있다</a>
+<a class="toc-level-3" href="#3-q-c-table은-세-가지-materialization-모드로-나뉜다">3. `q·c` table은 세 가지 materialization 모드로 나뉜다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-31">더 구체화한 부분</a>
+<a class="toc-level-3" href="#certified-early-stop-비용식">Certified early-stop 비용식</a>
+<a class="toc-level-3" href="#crf가-early-stop-mode까지-결정한다">CRF가 early-stop mode까지 결정한다</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-32">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-32">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-32">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -1003,7 +1015,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 6이 세운 <strong>다목적 scheduler 제어 문제</strong>의 내부 정합성을 파고든다. 핵심 신규 결론 네 가지: 1. <strong>admission과 routing은 순차 결정이 아니라 결합 고정점(fixed point)</strong>이고, 빈 L2에서 출발하면 <strong>cold-start deadlock</strong>에 빠진다 — 이것이 Turn 1의 STATIC-HOT을 &quot;basel</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>scheduler가 쓰는 예측값의 불확실성</strong>, <strong>CSD 내부 early-exit / cancellation</strong>, 그리고 <strong>PCIe·NVMe control-plane 병목</strong>을 추가한다. Turn 7은 admission-routing 고정점과 resource ledger를 잘 정리했지만, runtime scheduler가 실제로 실패하는 지점은 평</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 8의 세 축(uncertainty-aware routing, cancellation, control-plane cap)을 <strong>exactness-안전한 형태로 완성</strong>하고, 지금까지 8턴이 한 번도 다루지 않은 <strong>에너지/TCO break-even</strong>과 <strong>end-to-end Amdahl 상한</strong>을 새 축으로 넣는다. 핵심 신규 결론 다섯 가지:</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조를 실제 구현 단위로 쪼개고</strong>, scheduler를 고정 가중치 정책이 아니라 <strong>온라인 자원 가격(resource price)을 학습하는 제어기</strong>로 확장한다. 핵심은 CSD MaxSim offload가 단일 kernel offload가 아니라 다음 네 상태를 계속 조정하는 runtime이라는 점이다. <code></code>`text quer</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 10이 세운 <strong>runtime 정확성 invariant / dual-price scheduler / hedged execution</strong>의 내부 정합성을 파고들어, 그중 두 개를 정정하고 세 개의 새 축(제어 평면 자체의 자원 예산, monotone-CRDT 병합, epoch RCU 용량 페널티)을 추가한다. 핵심 신규 결론 다섯 가지: 1. Tur</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 <strong>partial-max 병합 가능성</strong>을 받아들이되, 그 결론이 runtime 설계에 주는 부작용을 더 구체화한다. 핵심은 다음이다. 1. <code>max</code> monoid 덕분에 pid를 token 단위로 쪼개도 정확성은 유지할 수 있지만, <strong>partial-max 벡터를 host로 많이 반환하면 CSD의 PCIe 절감 논리가 무너진다.</strong> 2.</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 12의 네 축(Invariant E 부분전송, completion certificate, NAND topology, credit lease)을 받되, 그중 두 수치를 정정하고 <strong>지금까지 12턴이 한 번도 계량하지 않은 세 항</strong>을 추가한다. 핵심은 &quot;CSD는 PCIe 밖에 embedding을 가둔다&quot;는 서사가 **다운링크(query 배포)와 제</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 13의 <strong>query fan-out / 제어 평면 에너지 / per-doc slack certificate</strong>를 runtime scheduling 관점에서 더 조인다. 핵심은 CSD scale-out의 병목이 단순히 <code>n_drives</code>가 아니라, trace에서 관측되는 <strong>query별 touched-drive 수 <code>F_q</code></strong>, block-lis</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 14의 <code>F_q</code> 프레임을 받되, 그 핵심 수치를 <strong>정정</strong>하고 지금까지 14턴이 건드리지 않은 <strong>하드웨어 topology 층(PCIe multicast/CMB)</strong>과 <strong>candidate-generation 배치 fork</strong>를 새 축으로 넣는다. 핵심은 세 가지다. 1. Turn 14는 &quot;<code>n_drives</code>가 128이어도 <code>F_q≈16</code>이면</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 <code>F_q</code>, multicast/CMB, O(1) certificate 주장을 더 runtime-protocol 관점에서 조인다. 핵심 정정은 두 가지다. 1. PCIe multicast가 query payload 복제를 줄여도 **NVMe command submission, doorbell, completion, fence는 여전히 dri</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 16의 두 핵심 주장 — <strong>① multicast가 있어도 command fan-out은 남는다</strong>, <strong>② global certificate egress는 O(F_q·k)</strong> — 을 받되, ②를 크게 정정하고 ①에 메커니즘을 붙인다. 핵심 네 가지: 1. **Result egress는 스칼라(pid+score) 단위라 총 후보 수 <code>K</code>로 상한</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 <code>τ_hint</code>, result egress, command fan-out 모델을 이어받아 <strong>runtime 내부 구조가 실제로 어떤 큐와 상태를 가져야 하는지</strong>로 내려간다. 새 핵심은 세 가지다. 1. <code>τ_hint</code> one-round는 안전하지만, **calibration이 deterministic bound가 아니라 quantile</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 18의 세 축(τ_hint의 exact/δ-risk 분기, fanout concurrency, micro-stage DAG credit)을 받되 <strong>두 수치를 정정하고</strong>, 18턴이 한 번도 1급 변수로 세우지 않은 <strong>top-k gap <code>Δ_k</code></strong>를 도입한다. 핵심은 세 가지다. 1. Turn 18의 위험 상한 `Pr[unsafe] ≤ K_q</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 19의 <code>Δ_k</code>, risk-budget, closed queueing 관점을 받아서 <strong>scheduler가 실제로 무엇을 예측하고 어떤 단위로 자원을 배분해야 하는지</strong>를 더 낮은 수준으로 내린다. 핵심 추가점은 세 가지다. 1. <code>F_q</code>와 <code>K_q</code>만으로는 부족하다. CSD 실행시간과 straggler는 후보 수보다 **토큰 길이 합 `L_</td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 20의 token-work 프레임을 받되, <strong>핵심 수치 하나를 정정</strong>하고 그 위에 세 개의 새 결합을 얹는다. 1. Turn 20의 <code>Work_mac(q,s)=Q·E·Σ_{d∈C(q,s)} doclen(d)</code>는 **candidate 집합 <code>C</code>(=H1, 수천 개)로 합을 잡아 ~10× 과대계상<strong>했다. MaxSim이 실제로 도는 것은 </strong>H2</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 21의 H2-token-work와 SoA/2-pass 논의를 받아서, 빠진 실행 단계를 하나 더 넣는다. 핵심은 <strong>CSD MaxSim은 read와 MAC만의 2-stage가 아니라 <code>compressed read → decode/dequant → dot/max → merge</code> 파이프라인</strong>이라는 점이다. 주요 추가점은 세 가지다. 1. 압축 Co</td></tr><tr><td>23</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 22의 <code>T_decode</code>·codebook/LUT locality 논의를 받되, <strong>decode 문제의 실체를 재정의</strong>하고 그 위에 prior 20턴이 한 번도 1급 변수로 세우지 않은 것을 도입한다. 1. <strong>압축 파이프라인의 진짜 숨은 대용량 항은 residual이 아니라 centroid-score 재구성</strong>이다. residual read는</td></tr><tr><td>24</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 23의 CRF/codebook 논의를 받아서 <strong>codebook 비용의 위치를 정정</strong>하고, runtime scheduling에 빠져 있던 <strong>descriptor/control-plane byte 원장</strong>을 추가한다. 핵심은 세 가지다. 1. 전체 centroid codebook은 수십 MB급이면 CSD DRAM에는 거의 항상 pin 가능하다.</td></tr><tr><td>25</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 24의 세 사실(codebook은 residency가 아닌 <code>q·c</code> 재구성 문제 / GPU-compressed decode amplification / descriptor downlink)을 받되, <strong>두 개를 정정</strong>하고 그 위에 20턴이 한 번도 1급 변수로 세우지 않은 <strong>host/CSD split point</strong>를 도입해 세 사실을 하나로</td></tr><tr><td>26</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 25의 <strong>host/CSD split point</strong>를 더 낮춰서, “어떤 값을 host가 계산해서 내려보내는가”와 “CSD가 최종 MaxSim을 정확히 재구성할 수 있는가”를 분리한다. 핵심 추가점은 세 가지다. 1. <code>PruningScore(D)</code> 스칼라는 **UB pruning에는 충분할 수 있지만, 최종 exact MaxSim score 계</td></tr><tr><td>27</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 26의 세 사실을 받되 <strong>두 개를 실행 가능성 층위에서 정정</strong>하고, 26턴 동안 static index로만 다뤄온 전제 하나를 깬다. 1. Turn 26의 &quot;two-round thin: round 1에서 CSD가 UB pruning, round 2에서 survivor centroid만 전송&quot;은 <strong>구현 불가능</strong>하다. thin split의 C</td></tr><tr><td>28</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 27의 <code>two-round thin</code>, <code>microbatch</code>, <code>index mutability</code> 논의를 받아서 runtime 내부 구조를 <strong>스케줄러가 실제로 제어할 수 있는 상태 변수</strong> 중심으로 재정리한다. 핵심 추가점은 세 가지다. 1. microbatching은 “candidate overlap이 있어야만 유효”가 아니라, **두 종류*</td></tr><tr><td>29</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 28의 <code>spatial multiplexing</code>·<code>queue backpressure</code>·<code>threshold propagation</code> 세 축을 받되 <strong>두 개를 정정</strong>하고, 28턴 동안 cancellation을 &quot;whole-document tile&quot; 단위로만 다뤄온 전제를 깬다. 1. Turn 28의 &quot;spatial multiplexing은 `p_d</td></tr><tr><td>30</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 29의 token early-stop을 더 실행 가능한 형태로 낮춘다. 핵심 정정은 <strong>query별 centroid-desc 물리 정렬은 불가능에 가깝고</strong>, 대신 CSD가 page/chunk 단위의 <strong>suffix-bound certificate</strong>를 이용해 “읽을 가치가 없는 남은 구간”을 건너뛰는 방식이 더 현실적이라는 점이다. 추가로 sc</td></tr><tr><td>31</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 30의 chunk-certificate early-stop을 받되 <strong>두 가지를 정정</strong>하고, 30턴 동안 &quot;read를 줄인다&quot;는 주장이 암묵적으로 무료라고 가정해 온 <strong>bound 평가 비용</strong>을 1급 항으로 끌어올린다. 1. Turn 30의 <code>T_bound_eval</code>(bound 평가)은 작은 상수가 아니다. <code>UB_chunk</code>를 계산하려면 c</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 6이 세운 <strong>다목적 scheduler 제어 문제</strong>의 내부 정합성을 파고든다. 핵심 신규 결론 네 가지: 1. <strong>admission과 routing은 순차 결정이 아니라 결합 고정점(fixed point)</strong>이고, 빈 L2에서 출발하면 <strong>cold-start deadlock</strong>에 빠진다 — 이것이 Turn 1의 STATIC-HOT을 &quot;basel</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>scheduler가 쓰는 예측값의 불확실성</strong>, <strong>CSD 내부 early-exit / cancellation</strong>, 그리고 <strong>PCIe·NVMe control-plane 병목</strong>을 추가한다. Turn 7은 admission-routing 고정점과 resource ledger를 잘 정리했지만, runtime scheduler가 실제로 실패하는 지점은 평</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 8의 세 축(uncertainty-aware routing, cancellation, control-plane cap)을 <strong>exactness-안전한 형태로 완성</strong>하고, 지금까지 8턴이 한 번도 다루지 않은 <strong>에너지/TCO break-even</strong>과 <strong>end-to-end Amdahl 상한</strong>을 새 축으로 넣는다. 핵심 신규 결론 다섯 가지:</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조를 실제 구현 단위로 쪼개고</strong>, scheduler를 고정 가중치 정책이 아니라 <strong>온라인 자원 가격(resource price)을 학습하는 제어기</strong>로 확장한다. 핵심은 CSD MaxSim offload가 단일 kernel offload가 아니라 다음 네 상태를 계속 조정하는 runtime이라는 점이다. <code></code>`text quer</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 10이 세운 <strong>runtime 정확성 invariant / dual-price scheduler / hedged execution</strong>의 내부 정합성을 파고들어, 그중 두 개를 정정하고 세 개의 새 축(제어 평면 자체의 자원 예산, monotone-CRDT 병합, epoch RCU 용량 페널티)을 추가한다. 핵심 신규 결론 다섯 가지: 1. Tur</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 <strong>partial-max 병합 가능성</strong>을 받아들이되, 그 결론이 runtime 설계에 주는 부작용을 더 구체화한다. 핵심은 다음이다. 1. <code>max</code> monoid 덕분에 pid를 token 단위로 쪼개도 정확성은 유지할 수 있지만, <strong>partial-max 벡터를 host로 많이 반환하면 CSD의 PCIe 절감 논리가 무너진다.</strong> 2.</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 12의 네 축(Invariant E 부분전송, completion certificate, NAND topology, credit lease)을 받되, 그중 두 수치를 정정하고 <strong>지금까지 12턴이 한 번도 계량하지 않은 세 항</strong>을 추가한다. 핵심은 &quot;CSD는 PCIe 밖에 embedding을 가둔다&quot;는 서사가 **다운링크(query 배포)와 제</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 13의 <strong>query fan-out / 제어 평면 에너지 / per-doc slack certificate</strong>를 runtime scheduling 관점에서 더 조인다. 핵심은 CSD scale-out의 병목이 단순히 <code>n_drives</code>가 아니라, trace에서 관측되는 <strong>query별 touched-drive 수 <code>F_q</code></strong>, block-lis</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 14의 <code>F_q</code> 프레임을 받되, 그 핵심 수치를 <strong>정정</strong>하고 지금까지 14턴이 건드리지 않은 <strong>하드웨어 topology 층(PCIe multicast/CMB)</strong>과 <strong>candidate-generation 배치 fork</strong>를 새 축으로 넣는다. 핵심은 세 가지다. 1. Turn 14는 &quot;<code>n_drives</code>가 128이어도 <code>F_q≈16</code>이면</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 <code>F_q</code>, multicast/CMB, O(1) certificate 주장을 더 runtime-protocol 관점에서 조인다. 핵심 정정은 두 가지다. 1. PCIe multicast가 query payload 복제를 줄여도 **NVMe command submission, doorbell, completion, fence는 여전히 dri</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 16의 두 핵심 주장 — <strong>① multicast가 있어도 command fan-out은 남는다</strong>, <strong>② global certificate egress는 O(F_q·k)</strong> — 을 받되, ②를 크게 정정하고 ①에 메커니즘을 붙인다. 핵심 네 가지: 1. **Result egress는 스칼라(pid+score) 단위라 총 후보 수 <code>K</code>로 상한</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 <code>τ_hint</code>, result egress, command fan-out 모델을 이어받아 <strong>runtime 내부 구조가 실제로 어떤 큐와 상태를 가져야 하는지</strong>로 내려간다. 새 핵심은 세 가지다. 1. <code>τ_hint</code> one-round는 안전하지만, **calibration이 deterministic bound가 아니라 quantile</td></tr><tr><td>19</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 18의 세 축(τ_hint의 exact/δ-risk 분기, fanout concurrency, micro-stage DAG credit)을 받되 <strong>두 수치를 정정하고</strong>, 18턴이 한 번도 1급 변수로 세우지 않은 <strong>top-k gap <code>Δ_k</code></strong>를 도입한다. 핵심은 세 가지다. 1. Turn 18의 위험 상한 `Pr[unsafe] ≤ K_q</td></tr><tr><td>20</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 19의 <code>Δ_k</code>, risk-budget, closed queueing 관점을 받아서 <strong>scheduler가 실제로 무엇을 예측하고 어떤 단위로 자원을 배분해야 하는지</strong>를 더 낮은 수준으로 내린다. 핵심 추가점은 세 가지다. 1. <code>F_q</code>와 <code>K_q</code>만으로는 부족하다. CSD 실행시간과 straggler는 후보 수보다 **토큰 길이 합 `L_</td></tr><tr><td>21</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 20의 token-work 프레임을 받되, <strong>핵심 수치 하나를 정정</strong>하고 그 위에 세 개의 새 결합을 얹는다. 1. Turn 20의 <code>Work_mac(q,s)=Q·E·Σ_{d∈C(q,s)} doclen(d)</code>는 **candidate 집합 <code>C</code>(=H1, 수천 개)로 합을 잡아 ~10× 과대계상<strong>했다. MaxSim이 실제로 도는 것은 </strong>H2</td></tr><tr><td>22</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 21의 H2-token-work와 SoA/2-pass 논의를 받아서, 빠진 실행 단계를 하나 더 넣는다. 핵심은 <strong>CSD MaxSim은 read와 MAC만의 2-stage가 아니라 <code>compressed read → decode/dequant → dot/max → merge</code> 파이프라인</strong>이라는 점이다. 주요 추가점은 세 가지다. 1. 압축 Co</td></tr><tr><td>23</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 22의 <code>T_decode</code>·codebook/LUT locality 논의를 받되, <strong>decode 문제의 실체를 재정의</strong>하고 그 위에 prior 20턴이 한 번도 1급 변수로 세우지 않은 것을 도입한다. 1. <strong>압축 파이프라인의 진짜 숨은 대용량 항은 residual이 아니라 centroid-score 재구성</strong>이다. residual read는</td></tr><tr><td>24</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 23의 CRF/codebook 논의를 받아서 <strong>codebook 비용의 위치를 정정</strong>하고, runtime scheduling에 빠져 있던 <strong>descriptor/control-plane byte 원장</strong>을 추가한다. 핵심은 세 가지다. 1. 전체 centroid codebook은 수십 MB급이면 CSD DRAM에는 거의 항상 pin 가능하다.</td></tr><tr><td>25</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 24의 세 사실(codebook은 residency가 아닌 <code>q·c</code> 재구성 문제 / GPU-compressed decode amplification / descriptor downlink)을 받되, <strong>두 개를 정정</strong>하고 그 위에 20턴이 한 번도 1급 변수로 세우지 않은 <strong>host/CSD split point</strong>를 도입해 세 사실을 하나로</td></tr><tr><td>26</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 25의 <strong>host/CSD split point</strong>를 더 낮춰서, “어떤 값을 host가 계산해서 내려보내는가”와 “CSD가 최종 MaxSim을 정확히 재구성할 수 있는가”를 분리한다. 핵심 추가점은 세 가지다. 1. <code>PruningScore(D)</code> 스칼라는 **UB pruning에는 충분할 수 있지만, 최종 exact MaxSim score 계</td></tr><tr><td>27</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 26의 세 사실을 받되 <strong>두 개를 실행 가능성 층위에서 정정</strong>하고, 26턴 동안 static index로만 다뤄온 전제 하나를 깬다. 1. Turn 26의 &quot;two-round thin: round 1에서 CSD가 UB pruning, round 2에서 survivor centroid만 전송&quot;은 <strong>구현 불가능</strong>하다. thin split의 C</td></tr><tr><td>28</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 27의 <code>two-round thin</code>, <code>microbatch</code>, <code>index mutability</code> 논의를 받아서 runtime 내부 구조를 <strong>스케줄러가 실제로 제어할 수 있는 상태 변수</strong> 중심으로 재정리한다. 핵심 추가점은 세 가지다. 1. microbatching은 “candidate overlap이 있어야만 유효”가 아니라, **두 종류*</td></tr><tr><td>29</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 28의 <code>spatial multiplexing</code>·<code>queue backpressure</code>·<code>threshold propagation</code> 세 축을 받되 <strong>두 개를 정정</strong>하고, 28턴 동안 cancellation을 &quot;whole-document tile&quot; 단위로만 다뤄온 전제를 깬다. 1. Turn 28의 &quot;spatial multiplexing은 `p_d</td></tr><tr><td>30</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 29의 token early-stop을 더 실행 가능한 형태로 낮춘다. 핵심 정정은 <strong>query별 centroid-desc 물리 정렬은 불가능에 가깝고</strong>, 대신 CSD가 page/chunk 단위의 <strong>suffix-bound certificate</strong>를 이용해 “읽을 가치가 없는 남은 구간”을 건너뛰는 방식이 더 현실적이라는 점이다. 추가로 sc</td></tr><tr><td>31</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 30의 chunk-certificate early-stop을 받되 <strong>두 가지를 정정</strong>하고, 30턴 동안 &quot;read를 줄인다&quot;는 주장이 암묵적으로 무료라고 가정해 온 <strong>bound 평가 비용</strong>을 1급 항으로 끌어올린다. 1. Turn 30의 <code>T_bound_eval</code>(bound 평가)은 작은 상수가 아니다. <code>UB_chunk</code>를 계산하려면 c</td></tr><tr><td>32</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 31의 certificate early-stop 모델을 <strong>threshold correctness와 runtime dataflow</strong> 관점에서 다시 낮춘다. 핵심 추가점은 세 가지다. 1. <code>τ_s</code>와 <code>τ_global</code>은 그냥 숫자가 아니라 <strong>certified threshold / speculative threshold</strong>로 구분해야 한다.</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -4775,8 +4787,136 @@ hot-partitioned shard(Turn 27 residency pin): hot doc shard는 τ_s 높음(early
 <ol><li><strong>certificate tightness × 비트폭 × Δ_k 공동 sweep</strong>: 사실 1의 MAC floor(<code>Q·E·U_c</code>)와 사실 3의 pin된 cert 위에서, cert bound를 <code>{Cauchy-Schwarz ‖r‖, PQ-subspace 합, sign-aware, 방향사영}</code> × <code>cert_bytes∈{8,16,32,64}</code> × <code>Δ_k</code> 분위수로 sweep해 <code>φ_chunk</code>·recall·<code>net_read_saving</code>(Turn 30)을 측정하라. <code>√E</code> looseness가 φ를 1로 밀어 early-stop이 죽는 bound 유형과, tighten이 cert size↑로 상쇄되는 concave 최적점을 찾고, residual leg를 다 없애도 남는 centroid-leg MAC floor를 GPU-fused baseline과 대조해 &quot;read는 줄여도 MAC은 못 줄이는&quot; regime을 분리할 것.</li></ol>
 <ol><li><strong>병렬-chunk-prune(A) vs 순차-suffix-stop(B) 손익분기 sim</strong>: 사실 2의 두 형태를 Turn 1 access trace + Turn 17 page layout 위에서 구현해 (cert pre-read bytes, 물리순서 φ 손실, BRF_page 보존, p99)를 대조하라. (A)는 cert 전량 pre-read지만 최적 skip, (B)는 page 순차 보존이나 늦은 stop — <code>HR_bytes</code>(cert가 pin이면 pre-read가 DRAM)와 <code>Δ_k</code>에 따라 어느 형태가 이기는지 격자로 그리고, 사실 4의 L0 passage-UB 선컷이 (A)의 <code>Bytes_cert</code>를 survivor로 축소하는 효과를 정량화할 것.</li></ol>
 <ol><li><strong>placement 4-way 충돌 + L1-skew 원장</strong>: 사실 5의 shard τ_s 분산을 Turn 27의 <code>B=B_resid_unique+B_replica+B_cent+B_certmeta</code> 4분할과 결합해, hot-doc replica factor를 sweep하며 (residency capacity 손실, fork-join tail, cold-shard φ 회복, ΔE_saved)을 삼중 원장에 올려라. residency pin(hot 밀집)이 L1 read 절감을 skew시켜 cold-shard straggler를 만드는 지점과, replica가 그 τ_s를 끌어올려 tail을 줄이지만 cert/scratch 예산을 갉는 knee를 찾고, affinity batching(Turn 27)·speculative issue(Turn 30)가 같은 hot chunk 위에서 placement·routing과 얽히는 목적함수로 정식화할 것.</li></ol>
+<h3 id="turn-32-codex">Turn 32 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-32">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 31의 certificate early-stop 모델을 <strong>threshold correctness와 runtime dataflow</strong> 관점에서 다시 낮춘다.</p>
+<p>핵심 추가점은 세 가지다.</p>
+<ol><li><code>τ_s</code>와 <code>τ_global</code>은 그냥 숫자가 아니라 <strong>certified threshold / speculative threshold</strong>로 구분해야 한다. 후자를 pruning에 쓰면 recall 위험이 생긴다.</li><li>suffix certificate는 가능하지만, 단순 centroid union bound는 너무 느슨할 수 있다. 실제로는 <strong>remaining-centroid max 구조</strong>와 <strong>top-L bound cache</strong>가 필요하다.</li><li><code>q·c</code> centroid leg는 MAC floor이지만, 반드시 query마다 전부 SRAM에 materialize할 필요는 없다. scheduler는 <strong>precompute table / on-demand compute / streaming cache</strong> 중 하나를 골라야 한다.</li></ol>
+<h2 id="새로-추가한-사실-32">새로 추가한 사실</h2>
+<h3 id="1-threshold에는-provenance가-필요하다">1. Threshold에는 provenance가 필요하다</h3>
+<p>early-stop pruning 조건은 다음처럼 보인다.</p>
+<pre><code class="language-text">UB(D_remaining) &lt; τ</code></pre>
+<p>하지만 여기서 <code>τ</code>가 어떤 방식으로 만들어졌는지가 correctness를 결정한다.</p>
+<pre><code class="language-text">τ_certified:
+  이미 exact score가 완료된 문서들로 만든 kth threshold
+  pruning에 사용해도 safe
+
+τ_speculative:
+  저정밀 score, partial score, approximate CSD score로 예측한 threshold
+  pruning에 쓰면 recall risk 발생</code></pre>
+<p>따라서 runtime은 threshold를 둘로 관리해야 한다.</p>
+<pre><code class="language-text">prune_allowed only if UB &lt; τ_certified
+priority_boost allowed if UB &lt; τ_speculative</code></pre>
+<p>즉 speculative threshold는 tile 우선순위나 eager/cautious issue에는 쓸 수 있지만, residual read를 생략하는 hard pruning에는 쓰면 안 된다.</p>
+<h3 id="2-suffix-certificate의-단순-union-bound는-너무-느슨해질-수-있다">2. Suffix certificate의 단순 union bound는 너무 느슨해질 수 있다</h3>
+<p>순차 suffix-stop은 다음 구조를 요구한다.</p>
+<pre><code class="language-text">SuffixUB_i(t)
+  = max(
+      seen_i(t),
+      max_{centroid c in suffix(t)} q_i·c + r_bound(c)
+    )</code></pre>
+<p>문제는 <code>suffix(t)</code>에 centroid가 많이 남아 있으면 거의 항상 높은 centroid 하나가 남아 bound를 지배한다는 점이다. 그러면 chunk를 꽤 많이 읽기 전까지 <code>SuffixUB</code>가 떨어지지 않는다.</p>
+<p>완화 구조:</p>
+<pre><code class="language-text">suffix_topL_cert:
+  각 suffix position마다 상위 L개 centroid id와 bound만 저장
+
+centroid_lastpos:
+  centroid c가 문서 안에서 마지막으로 등장하는 chunk 위치
+
+remaining_max_heap:
+  q_i·c + r_bound(c)를 key로 두고, lastpos가 지난 centroid를 lazy-delete</code></pre>
+<p>이 방식은 suffix union 전체를 매번 스캔하지 않고도 bound를 갱신한다. 대신 per-query heap 상태가 필요해 SRAM pressure가 증가한다.</p>
+<h3 id="3-q-c-table은-세-가지-materialization-모드로-나뉜다">3. <code>q·c</code> table은 세 가지 materialization 모드로 나뉜다</h3>
+<p>Turn 31의 “bound 평가 = centroid leg”는 맞지만, 구현 비용은 split에 따라 달라진다.</p>
+<pre><code class="language-text">Mode M1: full q·c table
+  Bytes/SRAM = Q · U_c · b_s
+  bound lookup 빠름
+  낮은 CRF query에서 scratch 큼
+
+Mode M2: on-demand q·c compute
+  SRAM 작음
+  같은 centroid가 반복되면 MAC 중복
+  PE/decoder와 경쟁
+
+Mode M3: streaming centroid cache
+  hot centroid만 q·c cache
+  miss centroid는 compute
+  CRF와 centroid reuse에 따라 중간 지점</code></pre>
+<p>새 scheduler 변수:</p>
+<pre><code class="language-text">ctable_policy(q)
+  ∈ {full_table, on_demand, streaming_cache}
+
+centroid_reuse(q)
+  = T_h2 / U_c</code></pre>
+<p><code>centroid_reuse</code>가 높으면 full table이 유리하고, 낮으면 on-demand가 scratch를 아껴 admission을 늘릴 수 있다.</p>
+<h2 id="더-구체화한-부분-31">더 구체화한 부분</h2>
+<h3 id="certified-early-stop-비용식">Certified early-stop 비용식</h3>
+<p>early-stop을 correctness-safe하게 쓰면 비용식은 다음처럼 바뀐다.</p>
+<pre><code class="language-text">T_exec_s
+  = T_ctable_policy
+    + T_cert_lookup
+    + Σ_chunk 1[UB_chunk ≥ τ_certified_seen]
+        · (T_read_chunk + T_mac_chunk)
+    + T_finalize_exact</code></pre>
+<p>그리고 speculative scheduling 낭비는 별도로 기록한다.</p>
+<pre><code class="language-text">waste_spec
+  = Σ issued_chunk bytes
+      · 1[UB_chunk &lt; τ_certified_later]</code></pre>
+<p>즉 pruning 손익은 단순 <code>skip_ratio</code>가 아니라:</p>
+<pre><code class="language-text">net_gain
+  = saved_residual_read
+    - cert_lookup_cost
+    - ctable_materialization_cost
+    - speculative_waste</code></pre>
+<h3 id="crf가-early-stop-mode까지-결정한다">CRF가 early-stop mode까지 결정한다</h3>
+<p>기존 CRF는 <code>q·c</code> table traffic과 split 선택에 쓰였다. 이제는 certificate 실행 방식도 결정한다.</p>
+<pre><code class="language-text">CRF high:
+  U_c 작음
+  full q·c table 가능
+  suffix/chunk bound lookup cheap
+  early-stop 적극 사용
+
+CRF low:
+  U_c 큼
+  full table SRAM 부담 큼
+  on-demand 또는 streaming cache 필요
+  early-stop이 residual read를 줄여도 centroid leg가 커져 이득 제한</code></pre>
+<p>따라서 early-stop eligibility rule 초안은 다음과 같다.</p>
+<pre><code class="language-text">enable_early_stop(q) if:
+  expected_saved_residual_bytes(q)
+    &gt;
+  ctable_cost(q, policy)
+  + cert_cost(q)
+  + expected_spec_waste(q)
+
+and τ_certified expected early enough
+and SRAM_remaining &gt; state_bytes(policy)</code></pre>
+<h2 id="관련-맥락-배경-설명-32">관련 맥락 / 배경 설명</h2>
+<p>certificate early-stop은 이제 단순한 read optimization이 아니라, <strong>exactness ownership</strong>과 직접 묶인다.</p>
+<pre><code class="language-text">CSD exact:
+  τ_certified를 장치 내부에서 생산 가능
+  early-stop fully usable
+
+CSD UB-only + GPU final:
+  CSD는 certified exact score를 만들지 못함
+  τ_certified 생산이 약함
+  early-stop은 passage-UB 수준으로 제한
+
+GPU final with CSD forwarding:
+  CSD가 residual을 이미 읽어야 하므로 early-stop 이득 일부 상실</code></pre>
+<p>즉 early-stop은 CSD exact 경로의 장점을 강화하지만, hybrid 경로에서는 효과가 작아질 수 있다. 이 구분 없이 “certificate로 NAND read 절감”만 주장하면 middle path의 이득을 과대평가한다.</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-32">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li>Turn 31의 <code>τ_s</code> 사용은 correctness-safe이지만, <code>τ_s</code>가 certified exact score에서 온 경우에만 hard pruning에 안전하다. approximate threshold를 쓰는 경우 recall audit이 필요하다.</li></ol>
+<ol><li>suffix certificate의 storage가 아직 불명확하다. <code>suffix_topL_cert</code>는 tightness를 높이지만 <code>L·chunks·bytes</code>가 커져 <code>B_certmeta</code>를 압박한다.</li></ol>
+<ol><li>full <code>q·c</code> table이 항상 최선은 아니다. 낮은 CRF query에서는 table SRAM이 inflight concurrency를 줄여 p99를 악화시킬 수 있다.</li></ol>
+<ol><li>on-demand <code>q·c</code> compute는 MAC floor를 줄이지 않고 오히려 중복 계산할 수 있다. centroid reuse 분포를 trace로 봐야 한다.</li></ol>
+<ol><li>speculative threshold를 hard pruning에 쓰는 실험은 recall loss와 latency gain을 분리해서 보고해야 한다.</li></ol>
+<h2 id="다음-에이전트가-이어서-확장할-지점-32">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>threshold provenance simulator</strong>: <code>τ_certified</code>와 <code>τ_speculative</code>를 분리해 hard pruning, priority-only speculation, aggressive unsafe pruning을 비교하라. p99, skipped bytes, recall loss, tie-band error를 같은 표에 올릴 것.</li></ol>
+<ol><li><strong>q·c materialization policy sweep</strong>: <code>{full_table, on_demand, streaming_cache}</code>를 <code>CRF</code>, <code>U_c</code>, SRAM budget, inflight query 수에 대해 sweep해 early-stop 이득이 scratch pressure로 상쇄되는 경계를 찾을 것.</li></ol>
+<ol><li><strong>suffix certificate 구조 비교</strong>: <code>{per-chunk cert, suffix union, suffix_topL, centroid_lastpos heap}</code>를 cert size, bound tightness, <code>φ_chunk</code>, SRAM state, update cost 기준으로 비교하고, recentroiding 후 cert rebuild 비용까지 포함한 epoch별 원장을 만들 것.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T14:24:59.087613+00:00</li><li>누적 턴 수: 31</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T14:25:51.423063+00:00</li><li>누적 턴 수: 32</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
