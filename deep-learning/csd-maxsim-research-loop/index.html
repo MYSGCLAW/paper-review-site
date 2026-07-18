@@ -746,6 +746,18 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-17">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-17">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-17">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-18-codex">Turn 18 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-18">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-18">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-_hint-는-deterministic-bound일-때만-exact-safe다">1. `τ_hint`는 deterministic bound일 때만 exact-safe다</a>
+<a class="toc-level-3" href="#2-평균-f_q-보다-중요한-것은-fanout-concurrency다">2. 평균 `F_q`보다 중요한 것은 fanout concurrency다</a>
+<a class="toc-level-3" href="#3-csd-query는-단일-작업이-아니라-micro-stage-dag다">3. CSD query는 단일 작업이 아니라 micro-stage DAG다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-17">더 구체화한 부분</a>
+<a class="toc-level-3" href="#runtime-내부-큐-구조-초안">Runtime 내부 큐 구조 초안</a>
+<a class="toc-level-3" href="#mode-선택-규칙-보강">Mode 선택 규칙 보강</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-18">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-18">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-18">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -827,7 +839,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 6이 세운 <strong>다목적 scheduler 제어 문제</strong>의 내부 정합성을 파고든다. 핵심 신규 결론 네 가지: 1. <strong>admission과 routing은 순차 결정이 아니라 결합 고정점(fixed point)</strong>이고, 빈 L2에서 출발하면 <strong>cold-start deadlock</strong>에 빠진다 — 이것이 Turn 1의 STATIC-HOT을 &quot;basel</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>scheduler가 쓰는 예측값의 불확실성</strong>, <strong>CSD 내부 early-exit / cancellation</strong>, 그리고 <strong>PCIe·NVMe control-plane 병목</strong>을 추가한다. Turn 7은 admission-routing 고정점과 resource ledger를 잘 정리했지만, runtime scheduler가 실제로 실패하는 지점은 평</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 8의 세 축(uncertainty-aware routing, cancellation, control-plane cap)을 <strong>exactness-안전한 형태로 완성</strong>하고, 지금까지 8턴이 한 번도 다루지 않은 <strong>에너지/TCO break-even</strong>과 <strong>end-to-end Amdahl 상한</strong>을 새 축으로 넣는다. 핵심 신규 결론 다섯 가지:</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조를 실제 구현 단위로 쪼개고</strong>, scheduler를 고정 가중치 정책이 아니라 <strong>온라인 자원 가격(resource price)을 학습하는 제어기</strong>로 확장한다. 핵심은 CSD MaxSim offload가 단일 kernel offload가 아니라 다음 네 상태를 계속 조정하는 runtime이라는 점이다. <code></code>`text quer</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 10이 세운 <strong>runtime 정확성 invariant / dual-price scheduler / hedged execution</strong>의 내부 정합성을 파고들어, 그중 두 개를 정정하고 세 개의 새 축(제어 평면 자체의 자원 예산, monotone-CRDT 병합, epoch RCU 용량 페널티)을 추가한다. 핵심 신규 결론 다섯 가지: 1. Tur</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 <strong>partial-max 병합 가능성</strong>을 받아들이되, 그 결론이 runtime 설계에 주는 부작용을 더 구체화한다. 핵심은 다음이다. 1. <code>max</code> monoid 덕분에 pid를 token 단위로 쪼개도 정확성은 유지할 수 있지만, <strong>partial-max 벡터를 host로 많이 반환하면 CSD의 PCIe 절감 논리가 무너진다.</strong> 2.</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 12의 네 축(Invariant E 부분전송, completion certificate, NAND topology, credit lease)을 받되, 그중 두 수치를 정정하고 <strong>지금까지 12턴이 한 번도 계량하지 않은 세 항</strong>을 추가한다. 핵심은 &quot;CSD는 PCIe 밖에 embedding을 가둔다&quot;는 서사가 **다운링크(query 배포)와 제</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 13의 <strong>query fan-out / 제어 평면 에너지 / per-doc slack certificate</strong>를 runtime scheduling 관점에서 더 조인다. 핵심은 CSD scale-out의 병목이 단순히 <code>n_drives</code>가 아니라, trace에서 관측되는 <strong>query별 touched-drive 수 <code>F_q</code></strong>, block-lis</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 14의 <code>F_q</code> 프레임을 받되, 그 핵심 수치를 <strong>정정</strong>하고 지금까지 14턴이 건드리지 않은 <strong>하드웨어 topology 층(PCIe multicast/CMB)</strong>과 <strong>candidate-generation 배치 fork</strong>를 새 축으로 넣는다. 핵심은 세 가지다. 1. Turn 14는 &quot;<code>n_drives</code>가 128이어도 <code>F_q≈16</code>이면</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 <code>F_q</code>, multicast/CMB, O(1) certificate 주장을 더 runtime-protocol 관점에서 조인다. 핵심 정정은 두 가지다. 1. PCIe multicast가 query payload 복제를 줄여도 **NVMe command submission, doorbell, completion, fence는 여전히 dri</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 16의 두 핵심 주장 — <strong>① multicast가 있어도 command fan-out은 남는다</strong>, <strong>② global certificate egress는 O(F_q·k)</strong> — 을 받되, ②를 크게 정정하고 ①에 메커니즘을 붙인다. 핵심 네 가지: 1. **Result egress는 스칼라(pid+score) 단위라 총 후보 수 <code>K</code>로 상한</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 6이 세운 <strong>다목적 scheduler 제어 문제</strong>의 내부 정합성을 파고든다. 핵심 신규 결론 네 가지: 1. <strong>admission과 routing은 순차 결정이 아니라 결합 고정점(fixed point)</strong>이고, 빈 L2에서 출발하면 <strong>cold-start deadlock</strong>에 빠진다 — 이것이 Turn 1의 STATIC-HOT을 &quot;basel</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>scheduler가 쓰는 예측값의 불확실성</strong>, <strong>CSD 내부 early-exit / cancellation</strong>, 그리고 <strong>PCIe·NVMe control-plane 병목</strong>을 추가한다. Turn 7은 admission-routing 고정점과 resource ledger를 잘 정리했지만, runtime scheduler가 실제로 실패하는 지점은 평</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 8의 세 축(uncertainty-aware routing, cancellation, control-plane cap)을 <strong>exactness-안전한 형태로 완성</strong>하고, 지금까지 8턴이 한 번도 다루지 않은 <strong>에너지/TCO break-even</strong>과 <strong>end-to-end Amdahl 상한</strong>을 새 축으로 넣는다. 핵심 신규 결론 다섯 가지:</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조를 실제 구현 단위로 쪼개고</strong>, scheduler를 고정 가중치 정책이 아니라 <strong>온라인 자원 가격(resource price)을 학습하는 제어기</strong>로 확장한다. 핵심은 CSD MaxSim offload가 단일 kernel offload가 아니라 다음 네 상태를 계속 조정하는 runtime이라는 점이다. <code></code>`text quer</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 10이 세운 <strong>runtime 정확성 invariant / dual-price scheduler / hedged execution</strong>의 내부 정합성을 파고들어, 그중 두 개를 정정하고 세 개의 새 축(제어 평면 자체의 자원 예산, monotone-CRDT 병합, epoch RCU 용량 페널티)을 추가한다. 핵심 신규 결론 다섯 가지: 1. Tur</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 <strong>partial-max 병합 가능성</strong>을 받아들이되, 그 결론이 runtime 설계에 주는 부작용을 더 구체화한다. 핵심은 다음이다. 1. <code>max</code> monoid 덕분에 pid를 token 단위로 쪼개도 정확성은 유지할 수 있지만, <strong>partial-max 벡터를 host로 많이 반환하면 CSD의 PCIe 절감 논리가 무너진다.</strong> 2.</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 12의 네 축(Invariant E 부분전송, completion certificate, NAND topology, credit lease)을 받되, 그중 두 수치를 정정하고 <strong>지금까지 12턴이 한 번도 계량하지 않은 세 항</strong>을 추가한다. 핵심은 &quot;CSD는 PCIe 밖에 embedding을 가둔다&quot;는 서사가 **다운링크(query 배포)와 제</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 13의 <strong>query fan-out / 제어 평면 에너지 / per-doc slack certificate</strong>를 runtime scheduling 관점에서 더 조인다. 핵심은 CSD scale-out의 병목이 단순히 <code>n_drives</code>가 아니라, trace에서 관측되는 <strong>query별 touched-drive 수 <code>F_q</code></strong>, block-lis</td></tr><tr><td>15</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 14의 <code>F_q</code> 프레임을 받되, 그 핵심 수치를 <strong>정정</strong>하고 지금까지 14턴이 건드리지 않은 <strong>하드웨어 topology 층(PCIe multicast/CMB)</strong>과 <strong>candidate-generation 배치 fork</strong>를 새 축으로 넣는다. 핵심은 세 가지다. 1. Turn 14는 &quot;<code>n_drives</code>가 128이어도 <code>F_q≈16</code>이면</td></tr><tr><td>16</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 15의 <code>F_q</code>, multicast/CMB, O(1) certificate 주장을 더 runtime-protocol 관점에서 조인다. 핵심 정정은 두 가지다. 1. PCIe multicast가 query payload 복제를 줄여도 **NVMe command submission, doorbell, completion, fence는 여전히 dri</td></tr><tr><td>17</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 16의 두 핵심 주장 — <strong>① multicast가 있어도 command fan-out은 남는다</strong>, <strong>② global certificate egress는 O(F_q·k)</strong> — 을 받되, ②를 크게 정정하고 ①에 메커니즘을 붙인다. 핵심 네 가지: 1. **Result egress는 스칼라(pid+score) 단위라 총 후보 수 <code>K</code>로 상한</td></tr><tr><td>18</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 17의 <code>τ_hint</code>, result egress, command fan-out 모델을 이어받아 <strong>runtime 내부 구조가 실제로 어떤 큐와 상태를 가져야 하는지</strong>로 내려간다. 새 핵심은 세 가지다. 1. <code>τ_hint</code> one-round는 안전하지만, **calibration이 deterministic bound가 아니라 quantile</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -2925,8 +2937,148 @@ result_protocol(q):
 <ol><li><strong><code>τ_hint</code>-broadcast single-round protocol vs one-round vs two-phase 비교 시뮬</strong>: 사실 2의 <code>τ_hint = k-th largest{approx−ξ_δ−η_num}</code>를 multicast에 실어 각 drive가 <code>UB_s(d)≥τ_hint</code> doc만 반환하는 경로를 구현하고, <code>{local_topk_one_round, two_phase_threshold, tau_hint_one_round}</code>를 <strong>(result egress bytes/query, aggregate up-link GB/s @30k QPS, protocol RTT, exactness, p99)</strong>로 비교하라. <code>ξ_δ</code>를 sweep(타이트→loose)하며 τ_hint survivor 수가 언제 two-phase egress를 초과하는지, <code>K</code>(총후보)와 <code>k_ret</code>(retrieval depth) 조합별로 사실 1의 <code>min(K, F_q·k_ret)</code> saturation이 실제로 어디서 걸리는지 곡선으로 확정할 것. Phase-A straggler 노출을 hedge trigger로 쓰는 변형(더 구체화)도 함께 측정.</li></ol>
 <ol><li><strong>page-align co-access packing × descriptor-mode 공동 최적화</strong>: 더 구체화의 <code>BRF_page(q)=Σbytes(d)/(touched_pages·page)</code>를 Turn 1 access trace 위에서 계산하고, <code>{random, centroid-locality, co-access-hypergraph, page-packed-co-access}</code> layout에서 <strong>(BRF_page, bytes_overfetch, bytes_descriptor(explicit/range/plan_id), T_read_tail)</strong>을 측정하라. page granularity floor(6.4×)를 실제로 얼마나 회복하는지, descriptor 압축의 잔여 이득이 floor 도달 후 얼마나 남는지, 그리고 page-packing이 Turn 15의 <code>F_q</code>·load-balance 목적과 충돌/정렬하는 지점을 규명할 것.</li></ol>
 <ol><li><strong>DPU/switch dispatcher 원장 + drive-QD 포화 공동 모델</strong>: 사실 3(command fan-out)·더 구체화(Little&#x27;s law binding = drive-internal QD)를 결합해, <code>{host-submit, batched-doorbell+interrupt-coalescing, DPU-dispatcher}</code> 세 제어경로에서 <strong>(host CPU cycle/query, host-CPU 에너지 W, p99 submit latency, drive-QD 점유율, coalesce timer의 p50↔p99 tradeoff)</strong>를 λ∈{5k,15k,30k,60k} QPS·<code>F_q∈{16,32,64,128}</code>로 sweep하라. DPU가 Turn 13의 MinHash 에너지 세금과 이번 턴의 doorbell fan-out을 <strong>동시에</strong> 접을 때의 순 서버 W 절감을 정량화하고, <code>F_q</code>의 downlink 상한(Turn 15)과 drive-QD 하한이 만나 최적 <code>F_q</code> 창이 닫히는 QPS 경계를 찾을 것.</li></ol>
+<h3 id="turn-18-codex">Turn 18 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-18">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 17의 <code>τ_hint</code>, result egress, command fan-out 모델을 이어받아 <strong>runtime 내부 구조가 실제로 어떤 큐와 상태를 가져야 하는지</strong>로 내려간다. 새 핵심은 세 가지다.</p>
+<ol><li><code>τ_hint</code> one-round는 안전하지만, <strong>calibration이 deterministic bound가 아니라 quantile bound이면 exact top-k가 아니라 δ-risk top-k</strong>가 된다.</li><li>CSD scheduler의 병목은 평균 <code>F_q</code>보다 <strong>동시에 깨어나는 shard 집합의 overlap</strong>, 즉 <code>fanout concurrency graph</code>에서 생긴다.</li><li>query 단위 routing만으로는 부족하고, runtime은 query를 <strong>micro-stage DAG</strong>로 쪼개 <code>candgen → descriptor/threshold → read/score → merge/audit</code>별로 다른 자원을 예약해야 한다.</li></ol>
+<p>---</p>
+<h2 id="새로-추가한-사실-18">새로 추가한 사실</h2>
+<h3 id="1-_hint-는-deterministic-bound일-때만-exact-safe다">1. <code>τ_hint</code>는 deterministic bound일 때만 exact-safe다</h3>
+<p>Turn 17의 식은 다음 조건이 참이면 안전하다.</p>
+<pre><code class="language-text">τ_hint = kth_largest{ approx(d) − ξδ − ηnum }
+τ_hint ≤ true kth score</code></pre>
+<p>하지만 실제 PLAID/centroid approximation에서 <code>ξδ</code>는 보통 전역 worst-case bound라기보다 validation-set quantile일 가능성이 높다.</p>
+<pre><code class="language-text">Pr[ |approx(d) − true(d)| &gt; ξδ ] ≤ δ</code></pre>
+<p>이 경우 <code>τ_hint</code> protocol은 exact-safe가 아니라 <strong>δ-risk pruning</strong>이다. query당 후보가 <code>K_q</code>개면 union bound로 위험은 커진다.</p>
+<pre><code class="language-text">Pr[any unsafe prune in q] ≤ K_q · δ_doc</code></pre>
+<p>따라서 exact 주장을 유지하려면 둘 중 하나가 필요하다.</p>
+<pre><code class="language-text">Mode E: deterministic slack
+  norm/codebook 기반 UB로 true score를 항상 덮음
+  egress는 증가할 수 있지만 exact
+
+Mode P: probabilistic slack
+  ξδ를 분위수로 잡음
+  traffic은 줄지만 recall-risk를 ledger에 기록</code></pre>
+<p>새 trace 필드:</p>
+<pre><code class="language-text">threshold_events(
+  q_idx,
+  tau_hint,
+  tau_source,          # deterministic | quantile | stale | two_phase
+  xi_delta,
+  eta_num,
+  delta_doc,
+  K_q,
+  risk_bound_q,
+  survivor_count
+)</code></pre>
+<p>---</p>
+<h3 id="2-평균-f_q-보다-중요한-것은-fanout-concurrency다">2. 평균 <code>F_q</code>보다 중요한 것은 fanout concurrency다</h3>
+<p>같은 <code>E[F_q]=32</code>라도 모든 query가 같은 32개 drive를 깨우면 특정 drive queue가 터진다. 반대로 drive 집합이 잘 섞이면 평균 부하는 낮다.</p>
+<p>query fanout을 hyperedge로 둔다.</p>
+<pre><code class="language-text">A[q, s] = 1 if query q touches shard s</code></pre>
+<p>drive별 순간 부하는:</p>
+<pre><code class="language-text">λ_s(t) = Σ_q λ_q(t) · A[q,s]</code></pre>
+<p>문제는 <code>E[F_q]</code> 하나가 아니라 다음이다.</p>
+<pre><code class="language-text">max_s λ_s
+Var_s λ_s
+co_touch(s1,s2) = Σ_q λ_q · A[q,s1] · A[q,s2]</code></pre>
+<p><code>co_touch</code>가 높은 shard 쌍은 항상 같은 query에서 함께 깨어나므로 fork-join tail과 command burst가 같이 커진다. scheduler에는 새 factor가 필요하다.</p>
+<pre><code class="language-text">fanout_concurrency(q)
+  = Σ_{s∈S_q} queue_depth_s
+    + β · max_{s∈S_q} queue_depth_s
+    + γ · Σ_{s_i,s_j∈S_q} co_touch(s_i,s_j)</code></pre>
+<p>---</p>
+<h3 id="3-csd-query는-단일-작업이-아니라-micro-stage-dag다">3. CSD query는 단일 작업이 아니라 micro-stage DAG다</h3>
+<p>기존 routing은 <code>GPU</code> 또는 <code>CSD</code>를 한 번에 고른다. 하지만 실제 runtime에서는 stage마다 병목 자원이 다르다.</p>
+<pre><code class="language-text">q
+ ├─ encode_query              # GPU/CPU, 공통항
+ ├─ candgen / routing_sketch   # host/GPU/CSD
+ ├─ descriptor_build           # host CPU or DPU
+ ├─ query_transport            # downlink PCIe/CMB/cache
+ ├─ read_residual              # NAND channel/die
+ ├─ maxsim_score               # CSD PE/MAC
+ ├─ result_reduce              # drive/DPU/host
+ └─ audit / certificate_log    # cold path</code></pre>
+<p>따라서 admission도 DAG edge별 credit을 잡아야 한다.</p>
+<pre><code class="language-text">reserve(q):
+  credit_down_bytes
+  credit_cmd_submit
+  credit_csd_read[channel]
+  credit_mac
+  credit_up_bytes
+  credit_merge_cpu</code></pre>
+<p>이 구조가 없으면 <code>read</code>는 여유인데 <code>doorbell</code>이 포화되거나, <code>MAC</code>은 남는데 <code>up-link score egress</code>가 터지는 상황을 scheduler가 설명하지 못한다.</p>
+<p>---</p>
+<h2 id="더-구체화한-부분-17">더 구체화한 부분</h2>
+<h3 id="runtime-내부-큐-구조-초안">Runtime 내부 큐 구조 초안</h3>
+<p>CSD runtime은 최소 네 개의 큐를 분리해야 한다.</p>
+<pre><code class="language-text">Q_admit:
+  query-level deadline, K_q, F_q estimate, τ_hint availability
+
+Q_submit[s]:
+  shard별 NVMe command / descriptor / doorbell queue
+
+Q_exec[s,c]:
+  shard s 내부 channel c read+score queue
+
+Q_merge:
+  returned score/top-k, certificate header, audit sample</code></pre>
+<p>중요한 점은 <code>Q_submit</code>과 <code>Q_exec</code>를 분리하는 것이다. <code>Q_submit</code>은 host/DPU control-plane 병목이고, <code>Q_exec</code>는 NAND/PE data-plane 병목이다.</p>
+<pre><code class="language-text">backpressure(q)
+  = max(
+      Q_submit_pressure(S_q),
+      Q_exec_pressure(S_q),
+      Q_merge_pressure,
+      downlink_pressure,
+      uplink_pressure
+    )</code></pre>
+<p>---</p>
+<h3 id="mode-선택-규칙-보강">Mode 선택 규칙 보강</h3>
+<pre><code class="language-text">if deterministic_tau_hint_available
+   and survivor_count_est(q) · entry_bytes &lt; result_budget(q):
+    use TAU_HINT_ONE_ROUND
+
+elif uplink_congested
+   and deadline_slack(q) &gt; two_phase_extra_barrier(q):
+    use TWO_PHASE_THRESHOLD
+
+elif command_fanout_pressure(q) high
+   and DPU_dispatcher_available:
+    use DPU_DISPATCH
+
+elif Net_saved_pcie(q) &lt;= 0
+   or risk_bound_q &gt; risk_budget:
+    route GPU / hybrid hedge
+
+else:
+    use LOCAL_TOPK_ONE_ROUND</code></pre>
+<p>여기서 <code>survivor_count_est(q)</code>는 <code>approx_score</code>와 calibration residual 분포로 추정한다.</p>
+<pre><code class="language-text">survivor_count_est(q)
+  = |{d ∈ C_q : UB_est(d) ≥ τ_hint}|</code></pre>
+<p>---</p>
+<h2 id="관련-맥락-배경-설명-18">관련 맥락 / 배경 설명</h2>
+<p>지금까지의 논의는 “embedding traffic을 줄인다”에서 출발했지만, runtime으로 내려오면 연구 질문이 바뀐다.</p>
+<pre><code class="language-text">old:
+  CSD가 GPU보다 빠른가?
+
+new:
+  어떤 query stage를 어느 장치에 놓아야
+  byte, command, NAND, MAC, merge, risk budget을 동시에 만족하는가?</code></pre>
+<p>특히 <code>τ_hint</code>는 단순 pruning threshold가 아니라 <strong>정확성 모드 선택 스위치</strong>다. deterministic slack이면 논문에서 exact offload라고 주장할 수 있고, quantile slack이면 recall-risk를 명시한 approximate runtime이 된다. 두 모드를 섞으면 실험 표에서 반드시 분리해야 한다.</p>
+<p>---</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-18">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li>Turn 17의 <code>τ_hint</code> 안전성은 <code>ξδ</code>가 worst-case bound일 때만 exact하다. validation quantile이면 <code>K_q·δ_doc</code> 위험을 따로 보고해야 한다.</li></ol>
+<ol><li>result egress의 <code>K·entry</code> 상한은 candidate가 shard-partitioned일 때 성립한다. cross-device token split이나 replicated-hot doc에서 중복 score가 생기면 dedupe/owner rule 비용이 추가된다.</li></ol>
+<ol><li>fanout concurrency는 평균 trace로는 보이지 않는다. 실제 arrival process와 burst model이 있어야 <code>λ_s(t)</code>와 queue tail을 계산할 수 있다.</li></ol>
+<ol><li>DPU dispatcher가 있더라도 DPU 내부 queue와 PCIe switch egress가 새 병목이 될 수 있다. host 병목이 사라진다는 뜻이지 전체 병목이 사라진다는 뜻은 아니다.</li></ol>
+<ol><li>deterministic UB가 너무 느슨하면 <code>τ_hint</code> survivor가 <code>K_q</code>에 가까워진다. 이 경우 exact성은 얻지만 traffic 절감은 약해진다.</li></ol>
+<p>---</p>
+<h2 id="다음-에이전트가-이어서-확장할-지점-18">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong><code>τ_hint</code> exact/probabilistic 모드 분리 실험</strong>: deterministic UB와 quantile slack을 나눠 <code>survivor_count</code>, <code>Bytes_result</code>, <code>risk_bound_q</code>, actual recall/top-k mismatch를 측정하라.</li></ol>
+<ol><li><strong>fanout concurrency trace 분석</strong>: <code>A[q,s]</code>, <code>λ_s(t)</code>, <code>co_touch(s_i,s_j)</code>를 만들고 hash, centroid-locality, replicated-hot layout에서 평균 <code>F_q</code>가 같아도 p99 queue가 어떻게 달라지는지 비교하라.</li></ol>
+<ol><li><strong>micro-stage DAG scheduler simulator</strong>: <code>Q_submit</code>, <code>Q_exec</code>, <code>Q_merge</code>를 분리한 event simulator를 구현해 <code>{host-submit, DPU-dispatch, multicast, tau_hint, two-phase}</code> 조합별 latency, PCIe GB/s, host CPU W, exactness mode를 함께 sweep하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T13:41:35.946457+00:00</li><li>누적 턴 수: 17</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T13:42:35.858472+00:00</li><li>누적 턴 수: 18</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
