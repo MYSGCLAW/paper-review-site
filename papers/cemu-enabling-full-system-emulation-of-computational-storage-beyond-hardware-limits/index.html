@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>CEMU: Enabling Full-System Emulation of Computational Storage Beyond Hardware Limits</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>CEMU: Enabling Full-System Emulation of Computational Storage Beyond Hardware Limits</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Qiuyang Zhang, Jiapin Wang, You Zhou, Peng Xu, Kai Lu, Jiguang Wan, Fei Wu, Tao Lu</span>
+        <span><strong>출처</strong> · ASPLOS &#x27;26 (31st ACM International Conference on Architectural Support for Programming Languages and Operating Systems), Volume 2, Pittsburgh, PA, USA</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 또는 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>CEMU는 computational storage drive(CSD) 연구를 위한 완전히 소프트웨어 기반의 오픈소스 full-system 에뮬레이션 플랫폼이다. 기존 CSD 연구 플랫폼은 (1) 고가이고 hardware-bounded인 하드웨어 플랫폼(예: OpenSSD, SmartSSD), (2) host CPU 성능에 종속되는(CPU-bounded) 소프트웨어 에뮬레이션, (3) full-system 실행을 지원하지 않아 page cache 같은 시스템 구성요소가 누락되는 소프트웨어 시뮬레이션(예: MQSim)으로 파편화되어 있어, 재현성과 전체 설계 공간(full design space) 탐구가 어렵다는 문제를 안고 있다. CEMU는 QEMU와 FEMU를 기반으로 guest VM 안에 표준 NVMe drive로 마운트되며, 핵심적으로 새로운 VM-freezing 메커니즘으로 host CPU/FPGA 성능을 초과하는 configurable computing capability를 에뮬레이트하고, 새로운 파일시스템 FDMFS를 중심으로 SNIA/NVMe 산업 표준을 준수하면서도 전통적 POSIX I/O 스택과 호환되는 CSD-oriented 소프트웨어 스택을 제공한다. CEMU는 Samsung SmartSSD와 ScaleFlux CSD2000 실제 하드웨어 대비 네 가지 synthetic benchmark(grep, kNN, LZ4, TPC-H sql)에서 평균 95% 이상의 종단간 정확도를 달성했고, LLM training과 LevelDB 두 full-system case study를 통해 수백 줄의 코드만으로 CSD 시스템을 프로토타이핑할 수 있는 민첩성과, 기존 플랫폼으로는 얻기 어려운 통찰(예: CSD 컴퓨팅 파워를 수백 배 늘려도 speedup은 약 2배에 그침, cache bypassing·I/O interference·inter-CSD 전송 오버헤드 등의 부작용)을 제시한다.</p>
+        <span class="source-ref">PDF p. 323, 324, 325</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>CEMU는 VM-freezing 메커니즘으로 host CPU/FPGA 성능을 초과하는 configurable computing capability를 에뮬레이트하여, 소프트웨어만으로 물리 하드웨어의 성능 한계를 넘어선 CSD를 연구할 수 있게 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 324, 328</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>CEMU는 실제 CSD 하드웨어(SmartSSD, CSD2000) 대비 네 벤치마크에서 평균 95% 이상의 종단간 정확도를 달성했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 323, 332</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>새로운 파일시스템 FDMFS를 중심으로 SNIA/NVMe 표준을 준수하면서 전통적 POSIX I/O 스택과 호환되는 CSD-oriented 소프트웨어 스택을 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 327, 330</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>CSD 컴퓨팅 파워를 수백 배 늘려도 LLM training speedup은 약 2배에 그쳐, CSD 잠재력 실현에는 holistic system design이 필수임을 case study가 보여준다.</span>
+              </div>
+              <span class="source-ref">PDF p. 325, 333</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>LevelDB case study는 host cache bypassing, CSD 내부 I/O interference, inter-CSD 데이터 전송 오버헤드 등 CSD offloading의 부작용을 드러내 CSD의 신중한 배치가 필요함을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 325, 335</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>CSD 연구를 위한 적절한 research platform의 부재</h3>
+      <p>데이터의 기하급수적 증가와 AI 확산으로 컴퓨팅 파워·에너지 효율 수요가 커지는 가운데, 전통적 컴퓨팅 모델은 스토리지에서 host로 대량의 데이터를 이동시켜야 하므로 성능 오버헤드, 에너지 소비, 시스템 병목을 유발한다. CSD(computational storage drive)는 데이터가 위치한 장치에서 연산을 수행하는 in-storage processing 모델로 이 데이터 이동 오버헤드를 제거하며, HPC·데이터베이스·압축·그래프·추천·ML·LLM/RAG 등 여러 분야에서 이점이 입증되었고 Samsung SmartSSD, ScaleFlux, Alibaba PolarDB 등 산업계 채택과 SNIA/NVMe 표준화도 진행되었다. 그러나 CSD 기술의 연구와 보급을 저해하는 major challenge는 적절한 연구 플랫폼의 부재이다.</p>
+      <span class="source-ref">PDF p. 323</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>파편화된 플랫폼과 세 갈래의 근본적 제약</h3>
+      <p>기존 플랫폼은 하드웨어 플랫폼과 소프트웨어(에뮬레이션/시뮬레이션) 플랫폼으로 파편화되어 있다. 하드웨어 플랫폼은 비용이 높고 컴퓨팅 성능이 hardware-bounded이며, 소프트웨어 에뮬레이션은 host CPU 성능에 종속(CPU-bounded)되고, 소프트웨어 시뮬레이션은 full-system fidelity가 부족하다. 이 파편화 때문에 CSD 시스템의 전체 설계 공간(full design space)을 탐구하기 어렵다.</p>
+      <span class="source-ref">PDF p. 323, 324</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>하드웨어 플랫폼: 고비용·hardware-bounded</h3>
+      <p>OpenSSD 같은 하드웨어 플랫폼은 compute/storage subsystem과 소프트웨어 스택을 모두 갖춰 full-system 연구가 가능하지만, 비용이 높고(SmartSSD 약 $2,400, multi-CSD 구성 시 더 고가) 컴퓨팅 성능이 hardware-bounded여서 물리적 플랫폼보다 높은 성능의 차세대 CSD를 구성할 수 없다.</p>
+      <span class="source-ref">PDF p. 324</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>소프트웨어 에뮬레이션: CPU-bounded</h3>
+      <p>빠른 DRAM으로 느린 flash를 timing delay 모델로 에뮬레이트하는 방식은 비용이 없고 상용 서버에서 실행되지만, CSD 내 하드웨어 가속기 에뮬레이션이 서버 CPU의 성능·효율에 근본적으로 제한(CPU-bounded)되어 컴퓨팅 능력 구성이 제약된다.</p>
+      <span class="source-ref">PDF p. 324</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>소프트웨어 시뮬레이션: full-system 부재</h3>
+      <p>RTL synthesis나 MQSim 같은 시뮬레이터는 하드웨어 한계 없이 CSD를 유연하게 구성하지만 full-system 실행을 지원하지 않는다. 그 결과 system-level page cache 같은 핵심 구성요소가 누락되어 부정확한 평가로 이어진다. 예컨대 LevelDB에 대한 CSD offloading 시뮬레이션은 page cache를 배제하므로, 논문 §6.2가 드러내는 cache bypassing으로 인한 예기치 않은 성능 저하를 반영하지 못한다.</p>
+      <span class="source-ref">PDF p. 324</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>부정확한 성능 모델과 낮은 충실도</h3>
+      <p>기존 CSD 압축 성능 모델은 constant 압축 지연을 가정하지만, 실측에서 4KB Zstd 압축의 host CPU 지연은 데이터 패턴에 따라 18μs~25μs로 38.8% 변동한다. INSIDER는 FPGA compute subsystem을 쓰되 실제 flash 대신 DRAM에 constant I/O delay를 더해 storage를 단순화하므로 flash 병렬성이 재현되지 않아, 동일 FPGA의 SmartSSD와 grep/knn/filter로 비교 시 34%의 종단간 오차율을 보인다(Figure 2).</p>
+      <span class="source-ref">PDF p. 324, 326</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>느린 full-system 시뮬레이션과 기능 한정 에뮬레이터</h3>
+      <p>gem5는 full-system 모드를 제공하나 마이크로아키텍처 시뮬레이션 목적의 단일 스레드 clock-driven 방식이라 매우 느리다(수십 초 SSD 시뮬레이션에 5시간 소요). blockNDP·Wilcox 등의 QEMU 기반 CSD 에뮬레이터는 CSD offloading의 기능적 에뮬레이션에 그치고 성능 모델링이 없으며 컴퓨팅 성능 구성이 host CPU에 종속된다.</p>
+      <span class="source-ref">PDF p. 326</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>표준 비준수·비오픈소스·인터페이스 혼재·multi-CSD 부재</h3>
+      <p>기존 CSD 플랫폼 중 SNIA/NVMe 산업 표준을 준수하는 것이 없고 대부분 비오픈소스여서 생태계가 파편화되고 재현이 어렵다. 또한 λ-IO·INSIDER는 Linux pread 시스템 콜을 오버로드해 연산을 오프로드함으로써 compute semantics와 file read semantics를 하나의 인터페이스에 혼재시킨다. 대부분의 연구는 multi-CSD를 다루지 않으며, Smart-Infinity(SmartSSD 10개+확장 섀시)·BlueDBM처럼 구축한 경우도 고비용·저가용성 문제가 있다.</p>
+      <span class="source-ref">PDF p. 324, 326</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>무료·고configurability의 통합 오픈소스 플랫폼 CEMU</h3>
+      <p>무료이고 높은 configurability를 갖춘 CSD 에뮬레이션과, 산업 CSD 표준 및 전통적 POSIX I/O 스택에 호환되는 CSD-oriented 소프트웨어 스택을 통합한 새로운 오픈소스 소프트웨어 플랫폼을 제시하여 정확한 full-system 및 multi-CSD 연구를 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 325</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실제 하드웨어 기반 검증</h3>
+      <p>CEMU를 Samsung SmartSSD와 ScaleFlux CSD2000 실제 하드웨어로 검증했다. 네 가지 synthetic benchmark가 평균 95%의 에뮬레이션 정확도를 달성했으며, LLM training과 LevelDB 두 full-system case study는 수백 줄의 코드만으로 CSD 시스템을 프로토타이핑하는 민첩성(agility)을 보였다.</p>
+      <span class="source-ref">PDF p. 325</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>통찰을 주는 case study</h3>
+      <p>다양한 CSD 구성을 탐색하며 full-system 동작을 조사해 기존 플랫폼으로는 얻기 어려운 통찰을 도출한다. LLM training case study는 다중·초고속 CSD로 성능을 크게 개선할 수 있으나 CSD 컴퓨팅 파워를 수백 배 늘려도 speedup은 약 2배에 그쳐 holistic system design이 필수임을 시사한다. LevelDB case study는 host cache bypassing, CSD 내부 I/O interference, inter-CSD 전송 오버헤드 등 CSD offloading의 부작용을 드러내 CSD를 신중히 배치해야 함을 보인다.</p>
+      <span class="source-ref">PDF p. 325, 326</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>두 축: CSD emulator와 CSD-oriented 소프트웨어 스택</h3>
+      <p>CEMU는 QEMU와 FEMU를 기반으로 개발된 완전 소프트웨어 CSD 에뮬레이션 플랫폼으로 guest VM 안에 표준 NVMe drive로 마운트된다. 크게 CEMU CSD emulator(§3)와 CSD-oriented 소프트웨어 스택(§4)으로 구성된다. CSD emulator는 conventional NVM storage namespace, compute namespace, memory namespace 세 NVMe namespace를 노출한다.</p>
+      <span class="source-ref">PDF p. 324, 327</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>CSD emulator의 네 모듈</h3>
+      <p>CSD emulator는 NVMe module, CSF module, scheduling module, FEMU module의 네 모듈로 이루어진다. 핵심 아이디어는 (1) 새로운 VM-freezing 메커니즘으로 host CPU/FPGA 성능을 초과하는 compute engine을 configurable computing capability로 에뮬레이트하는 것과, (2) 새로운 파일시스템 FDMFS를 중심으로 SNIA/NVMe 표준을 준수하면서 기존 I/O 스택과 호환되는 소프트웨어 스택을 제공하는 것이다.</p>
+      <span class="source-ref">PDF p. 327</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 — 마운트 및 namespace 노출</h3>
+      <p>CEMU CSD emulator(QEMU/FEMU 기반)가 guest VM 안에 표준 NVMe drive로 마운트되어 conventional NVM storage / compute / memory 세 namespace를 노출한다(Figure 3).</p>
+      <span class="source-ref">PDF p. 327</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 — 메모리 사전할당 및 CSF 다운로드</h3>
+      <p>사용자는 FDMFS에서 fallocate()로 input/output device memory 공간을 파일로 미리 할당하고, ioctl(IOCTL_DOWNLOAD)로 compute namespace에 CSF(eBPF/shared library/bitstream)를 다운로드한다(Figure 7a).</p>
+      <span class="source-ref">PDF p. 330, 331</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 — 입력 로드(direct/indirect usage model)</h3>
+      <p>direct usage model에서는 copy_file_range() 시스템 콜로 flash 상 데이터 파일에서 input device-memory 파일로 데이터를 직접 복사한다(FDMFS가 이를 NVMe memory-copy 명령으로 변환해 host를 거치지 않고 전달). indirect usage model에서는 하나의 ioctl(IOCTL_EXECUTE, indirect=1) 호출로 태스크 전체를 제출하고 CSD firmware가 흐름을 관리한다(Figure 7b).</p>
+      <span class="source-ref">PDF p. 331</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 — VM freeze 및 실제 실행</h3>
+      <p>입력 로드가 끝나고 CSF 태스크가 초기화되면 CEMU는 BQL을 획득하고 global VM clock을 정지시킨 뒤 모든 vCPU에 pause 요청을 broadcast하여 VM을 freeze하고, 태스크를 host CPU(또는 FPGA)에서 실제로 실행한다.</p>
+      <span class="source-ref">PDF p. 328</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 — stall time 계산 및 VM resume</h3>
+      <p>CSD 스케줄러가 Texec 모델(Scsf × Thost 또는 실측 실행시간)에 기반한 stall time을 계산하고, host CPU 상 물리적 연산이 끝나면 global VM clock을 재활성화하고 모든 vCPU에 resume 요청을 broadcast하여 VM을 재개한다. VM 관점에서는 태스크가 거의 즉시 완료된 것처럼 보인다(Figure 4).</p>
+      <span class="source-ref">PDF p. 327, 328</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 — 결과 저장 및 파이프라인/P2P</h3>
+      <p>연산 결과는 output device-memory 파일에 저장되어 copy_file_range()로 flash 데이터 파일에 기록되거나 pread()로 host에 직접 읽힌다. 여러 chunk/CU/CSD를 이용하면 입력·연산·출력 단계를 파이프라인/병렬 처리할 수 있고, CSD 간 데이터 이동은 PCIe P2P로 host를 거치지 않고 수행할 수 있다.</p>
+      <span class="source-ref">PDF p. 329, 331</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 또는 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>VM-Freezing 메커니즘</h3>
+      <p>host CPU 성능을 초과하는 compute engine을 에뮬레이트하기 위한 핵심 기법이다. 입력 데이터가 device memory에 로드되고 CSF 태스크가 초기화되면 QEMU VM(vCPU와 clock)을 pause_all_vcpus(), cpu_disable_ticks()로 정지시켜, 실제 연산을 host CPU에서 수행하는 동안의 지연을 VM 관점에서 관찰되지 않게 숨긴다. 그 뒤 Texec 모델 기반 stall time만 VM에 노출하고 resume_all_vcpus(), cpu_enable_ticks()로 VM을 재개한다. 이로써 물리 하드웨어보다 빠른 컴퓨팅 성능을 자유롭게 configurable하게 표현할 수 있다.</p>
+      <span class="source-ref">PDF p. 328</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Texec 타이밍 모델과 CSF 실행 환경</h3>
+      <p>CSF module은 오프로딩된 연산 태스크를 위해 eBPF(ubpf), shared library(.so, libdl), FPGA bitstream의 세 실행 환경을 제공하고, functional behavior와 timing model을 에뮬레이트한다. 타이밍은 사용자 설정 가능한 scaling factor Scsf로 실제 host 실행시간을 스케일링하여 Texec = Scsf × Thost로 계산한다.</p>
+      <span class="source-ref">PDF p. 327, 328</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>스케줄링 모델과 이기종 컴퓨팅</h3>
+      <p>scheduling module은 태스크의 queueing/waiting time(Tsched)을 모델링하며 enqueue_job(), dequeue_job(), pick_next_job(), switched_out()의 네 hook function으로 pluggable scheduling policy를 지원한다(기본 FIFO·round-robin). 여러 compute unit(CU)에 개별 scaling factor와 policy를 지정해 heterogeneous 컴퓨팅을 에뮬레이트한다.</p>
+      <span class="source-ref">PDF p. 328</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>FDMFS와 스토리지 서브시스템</h3>
+      <p>FDMFS(Functional Data Memory File System)는 device memory를 파일로 추상화해 fallocate로 할당하고 pread/pwrite로 접근하며 파일 permission으로 접근을 제어한다. block device(memory namespace)와 character device(compute namespace) 위에서 동작하고 NAND flash용 전통 파일시스템(ext4 등)과 공존한다. 스토리지 측은 FEMU를 채택해 host memory에 병렬 flash를 충실히 에뮬레이트하고, FTL이 별도 스레드로 동작하며 대역폭 기반 queuing/propagation delay를 모델링하는 PCIe bus model로 보강된다. CSD 간 데이터 전송은 각 CSD의 device memory를 PCIe BAR로 노출해 host를 거치지 않는 단일 P2P I/O로 수행한다.</p>
+      <span class="source-ref">PDF p. 328, 329, 330</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>정확도 검증 벤치마크</h3>
+      <p>grep, kNN, LZ4 압축, TPC-H query 1(sql)의 네 가지 synthetic benchmark로 100GB 데이터셋을 16MB chunk 단위로 처리하며, 단일 SmartSSD·3중 SmartSSD·CSD2000(압축 지원) 구성을 대상으로 1C/2C/4C(동시 처리 chunk 수) 정확도를 검증한다(§5.2).</p>
+      <span class="source-ref">PDF p. 332</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>프로그래밍 모델·오버헤드·확장성</h3>
+      <p>LZ4 압축(1GB)에서 pipelined chunk 수와 chunk 크기(1MB/2MB/4MB)를 바꿔 direct/indirect 프로그래밍 모델을 비교하고(§5.3.2), 소프트웨어 스택 오버헤드를 breakdown한다(Figure 9). 또한 LZ4를 1~8개 CSD에 균등 분산해 확장성을 평가한다(§5.4, Figure 10).</p>
+      <span class="source-ref">PDF p. 332, 333</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Full-system case study</h3>
+      <p>GPT-2(1.7B 파라미터) LLM training(Smart-Infinity 포팅, batch size 4, gradient/optimizer state 약 37GB, updater 4GB device memory)과, LevelDB compaction 오프로딩(LevelDB-CSD; 8-byte key/16-byte value, 1천만 건 load 후 1천만 건 read/write, 작업 집합 약 300MB, 다양한 read/write 비율과 CSD-host 컴퓨팅 능력 비율 1:x)을 수행한다(§6.1, §6.2). Baseline은 실제 SmartSSD·CSD2000 하드웨어와 vanilla LevelDB(오프로딩 없음)이며, 지표는 end-to-end latency/throughput, relative error rate, 오버헤드 breakdown, CPU usage, I/O bandwidth/traffic, read latency, 구현 LoC 등이다.</p>
+      <span class="source-ref">PDF p. 333, 334</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>높은 에뮬레이션 정확도</h3>
+      <p>CEMU는 실제 CSD 하드웨어 대비 평균 95% 이상의 종단간 성능 정확도를 달성한다. 구성별로는 단일 SmartSSD 96%, 3중 SmartSSD 95%, CSD2000 97%이며, Figure 8의 모든 구성에서 relative error rate가 10% 미만이다. 대부분의 경우 chunk를 2개 동시 처리하는 것만으로 최대 성능을 얻는다. GPT-2 학습에서 CEMU-aligned CSD(compute 대역폭 약 1.25GB/s로 SmartSSD 모사)는 실제 SmartSSD 대비 평균 편차가 2.4%에 그친다.</p>
+      <span class="source-ref">PDF p. 323, 332, 333</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>낮은 소프트웨어 스택 오버헤드와 모델 비교</h3>
+      <p>CEMU 소프트웨어 스택(io_uring, vfs, block layer, FDMFS, ext4)의 오버헤드는 전체 태스크 완료 시간에서 7.5%를 넘지 않는다(Figure 9, LZ4 direct 모델 단일 chunk 순차). indirect usage model은 chunk 크기가 작을수록 direct 대비 유리하여 1MB에서 7%, 2MB에서 4%, 4MB에서 3%의 성능 차이를 보인다.</p>
+      <span class="source-ref">PDF p. 332</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>확장성과 병목</h3>
+      <p>LZ4 압축은 CSD 수에 따라 throughput이 거의 선형 증가하다 약 6개 CSD에서 포화한다(Figure 10). LevelDB(CSD별 개별 인스턴스)는 compaction을 오프로딩해도 host 측 복잡한 데이터 처리가 병목으로 남아 LZ4보다 처리량 증가가 느리고 더 일찍 포화한다.</p>
+      <span class="source-ref">PDF p. 332, 333</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>LLM training case study의 통찰</h3>
+      <p>Smart-Infinity를 CEMU로 포팅하는 데 약 200 LoC만 필요했다. CSD 수를 1→3개로 늘리면 GPT-2 학습이 2~2.5× speedup되지만, CEMU-extreme CSD(compute 대역폭 700GB/s로 확장, 컴퓨팅 엔진이 수백 배 빠름)는 CEMU-aligned(1.25GB/s) 대비 최대 2.4×에 그친다. 이는 컴퓨팅 파워를 수백 배 늘려도 I/O 오버헤드가 병목이 되어 개선이 제한됨을 보여, holistic system design의 필요성을 시사한다(Figure 12).</p>
+      <span class="source-ref">PDF p. 333</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>LevelDB case study의 부작용과 최적화</h3>
+      <p>background compaction을 shared library 타입 CSF로 오프로딩(LevelDB-CSD)하는 데 약 500 LoC가 들었다. 100% write에서 host와 CSD 컴퓨팅 능력이 같을 때(x=1) 처리량은 501→721 Kops/s로 향상되지만, 50% write 혼합 워크로드에서는 CSD 내부 I/O interference로 vanilla 대비 절반 수준으로 저하된다(Figure 13, 16). FTL에 internal I/O 전용 큐를 두고 external I/O를 우선하도록 최적화하면 throughput과 I/O latency가 개선된다(Figure 17). 또한 locality 기반으로 16개 연속 SSTable을 동일 CSD에 배치하면 5-CSD RAID-0 100% write에서 P2P I/O 트래픽이 17.3→12 GB로 줄고 처리량이 7.4% 향상된다(Figure 18).</p>
+      <span class="source-ref">PDF p. 334, 335</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>결론 및 의의</h3>
+      <p>CEMU는 무료·오픈소스이면서 configurable하고 SNIA/NVMe 표준과 POSIX I/O 스택에 호환되는 CSD-oriented 소프트웨어 스택을 통합함으로써, 하드웨어 한계를 넘어선(beyond hardware limits) 정확한 full-system 및 multi-CSD 연구를 가능하게 한다. QEMU 8.0.0/Linux 6.8 기반으로 총 약 11,000 LoC(QEMU 약 8K + kernel 약 3K)로 구현되었으며, 실제 하드웨어 대비 평균 95% 이상의 정확도와 수백 줄 수준의 프로토타이핑 민첩성, 그리고 기존 플랫폼으로는 얻기 어려운 시스템 수준 통찰을 함께 제공한다.</p>
+      <span class="source-ref">PDF p. 325, 331</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 327, 328, 329, 331</span>
+              </div>
+              <p>사용자가 FDMFS로 device memory를 할당하고 CSF를 다운로드한 뒤, 입력을 로드하면 CEMU가 VM을 freeze하여 실제 연산을 host에서 수행하고 Texec 기반 stall time만 노출한 후 VM을 재개해 결과를 저장하는 전체 흐름.</p>
+              <div class="mermaid">
+flowchart TD
+  A[FDMFS fallocate\ninput/output 메모리 할당] --&gt; B[ioctl DOWNLOAD\nCSF 다운로드]
+  B --&gt; C{usage model}
+  C --&gt;|direct| D[copy_file_range\nflash to device memory]
+  C --&gt;|indirect| E[ioctl EXECUTE\nfirmware가 흐름 관리]
+  D --&gt; F[VM freeze\nclock 정지 + vCPU pause]
+  E --&gt; F
+  F --&gt; G[host CPU/FPGA에서 실제 연산]
+  G --&gt; H[Texec = Scsf x Thost\nstall time 계산]
+  H --&gt; I[VM resume\nclock 재개 + vCPU resume]
+  I --&gt; J[output 메모리 저장]
+  J --&gt; K[copy_file_range/pread\n결과 flash 기록 또는 host 읽기]
+  J -.PCIe P2P.-&gt; L[다른 CSD로 host 우회 전송]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 CEMU의 차이</h3>
+                <span class="source-ref">PDF p. 324, 327, 330</span>
+              </div>
+              <p>기존 플랫폼은 하드웨어(고비용·hardware-bounded), 소프트웨어 에뮬레이션(CPU-bounded), 소프트웨어 시뮬레이션(full-system 부재)으로 파편화된 반면, CEMU는 VM-freezing과 FEMU 기반으로 configurable·full-system·표준호환을 동시에 달성한다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph Prior[기존 방식]
+    P1[하드웨어 플랫폼\n고비용, hardware-bounded]
+    P2[SW 에뮬레이션\nCPU-bounded]
+    P3[SW 시뮬레이션\nfull-system 부재]
+  end
+  subgraph CEMU[CEMU]
+    C1[VM-freezing\nconfigurable compute]
+    C2[FEMU 기반\nfull-system flash]
+    C3[FDMFS\nSNIA/NVMe + POSIX 호환]
+  end
+  P1 --&gt; C1
+  P2 --&gt; C1
+  P3 --&gt; C2
+  C1 --&gt; C3
+  C2 --&gt; C3
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>구성별 CEMU 에뮬레이션 정확도</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 332 · Figure 8(a)/(b)/(c) · grep/knn/lz4/sql, 100GB, 16MB chunk, 1C/2C/4C 병렬
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>chunk 크기별 indirect가 direct 대비 우수한 성능 차이</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 332 · LZ4, 1GB 데이터셋, 단일 chunk
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>LevelDB 100% write 처리량 (x=1)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 334 · Figure 13 · 8B key/16B value, 1천만 load + 1천만 write, x=1, 100% write
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>SSTable 배치 최적화에 따른 P2P I/O 트래픽</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 335 · Figure 18 · 단일 LevelDB 인스턴스를 5개 CSD에 RAID-0 분산, 100% write
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>VM-freezing이라는 단순하면서 강력한 메커니즘으로 host CPU 성능이라는 근본적 제약(CPU-bounded)을 우회하여, 물리 하드웨어보다 수백 배 빠른 compute engine까지 configurable하게 표현할 수 있게 한 점이 핵심 강점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 328</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>FEMU 기반의 충실한 flash 에뮬레이션과 full-system 실행을 결합하여, 시뮬레이터가 놓치는 page cache·I/O interference 같은 system-level 효과를 관측할 수 있어 평가의 현실성이 높다.</span>
+              </div>
+              <span class="source-ref">PDF p. 324, 329</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>FDMFS와 io_uring, SNIA direct/indirect usage model을 통해 표준 준수와 기존 POSIX I/O 스택 호환을 동시에 달성하여, 애플리케이션 포팅 비용(예: Smart-Infinity 약 200 LoC, LevelDB 약 500 LoC)이 낮다.</span>
+              </div>
+              <span class="source-ref">PDF p. 330, 333, 334</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>실제 하드웨어(SmartSSD, CSD2000) 대비 정량 검증으로 평균 95% 이상 정확도와 10% 미만 오차를 제시해 에뮬레이션 신뢰성을 실증적으로 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 332</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>CEMU의 확장성은 host 서버 한 대의 CPU·메모리에 제한된다. QEMU는 여러 host에 걸친 단일 VM 생성이 불가하고 flash를 host memory에 에뮬레이트하므로, multi-CSD의 총 용량과 I/O 대역폭이 host memory의 용량·대역폭을 초과할 수 없다(다중 QEMU 인스턴스, CXL/RDMA 원격 메모리, 실제 SSD 활용은 향후 방향으로만 언급).</span>
+              </div>
+              <span class="source-ref">PDF p. 329, 330</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>QEMU는 fine-grained per-vCPU freezing을 지원하지 않아 global VM clock이 모든 vCPU에 대해 함께 정지된다(저자는 clock 정지 중 guest 실행이 진행되지 않으므로 정확성·timing observability에는 영향이 없다고 주장).</span>
+              </div>
+              <span class="source-ref">PDF p. 328</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>VM pause/resume 절차가 저자 서버에서 약 21μs의 지연 오버헤드를 유발하여, VM-freezing 기반 모델링으로 표현 가능한 최소 태스크 실행시간이 제한된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 328</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>FDMFS에서 device memory 매핑 파일을 resize하려면 현재 구현상 삭제 후 재생성해야 한다. 비연속 메모리 할당을 이용한 on-the-fly 동적 크기 조정은 가능하다고만 언급되고 실제 구현되지 않아 future work로 남겨졌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 330</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정확도 검증이 grep/kNN/LZ4/sql 등 비교적 단순한 데이터-병렬 커널과 두 종의 실제 하드웨어에 국한되어, 복잡한 제어흐름·이기종 가속기·비정형 워크로드에서의 정확도는 검증되지 않은 것으로 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 332</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>다중 QEMU 인스턴스, CXL/RDMA 원격 메모리, 실제 SSD 백엔드 중 어떤 방식이 single-host 메모리 한계를 실용적 정확도 손실 없이 넘어설 수 있는가?</h3>
+              </div>
+              <p>저자가 host 자원 한계와 확장 방향을 명시했으나 실제 구현·평가는 제시하지 않음</p>
+              <span class="source-ref">PDF p. 329, 330</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>약 21μs의 pause/resume 오버헤드가 표현 가능한 최소 실행시간을 제한하는데, 마이크로초 이하의 초고속 가속기(예: 700GB/s급 엔진)를 모델링할 때 이 오버헤드가 정확도에 얼마나 영향을 주는가?</h3>
+              </div>
+              <p>VM-freezing 오버헤드가 minimum task execution time을 제한한다는 저자 서술</p>
+              <span class="source-ref">PDF p. 328</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>CSD 컴퓨팅 파워를 수백 배 늘려도 speedup이 약 2배에 그친다면, I/O 병목을 완화하는 holistic system design(데이터 배치, 파이프라이닝, I/O 스케줄링)의 구체적 설계 원칙은 무엇이어야 하는가?</h3>
+              </div>
+              <p>LLM training case study가 I/O 병목을 병목으로 지목했으나 일반적 설계 지침은 제시하지 않음</p>
+              <span class="source-ref">PDF p. 333</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>grep/kNN/LZ4/sql 외의 제어흐름이 복잡한 워크로드나 이기종 CU 혼합 구성에서도 평균 95% 수준의 에뮬레이션 정확도가 유지되는가?</h3>
+              </div>
+              <p>검증이 특정 synthetic benchmark와 두 하드웨어에 한정됨</p>
+              <span class="source-ref">PDF p. 332</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>CSD (Computational Storage Drive)</dt>
+              <dd>
+                데이터가 저장된 장치 내부에서 직접 연산을 수행(in-storage processing)하여 storage-host 간 데이터 이동 오버헤드를 제거하는 스토리지 장치.
+                <span class="source-ref">PDF p. 323</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>VM-Freezing</dt>
+              <dd>
+                CEMU가 host 성능을 초과하는 compute engine을 에뮬레이트하기 위해 실제 연산 중 QEMU VM의 vCPU와 clock을 정지시켜 물리 실행 지연을 감추고 Texec 모델 기반 stall time만 노출하는 메커니즘.
+                <span class="source-ref">PDF p. 328</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>CSF (Computational Storage Function)</dt>
+              <dd>
+                CSD로 오프로딩되는 연산 태스크. CEMU는 eBPF(ubpf), shared library(.so), FPGA bitstream의 세 실행 환경을 제공한다.
+                <span class="source-ref">PDF p. 327</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Texec / Scsf</dt>
+              <dd>
+                CSF 실행시간 타이밍 모델. 사용자 설정 scaling factor Scsf로 실제 host 실행시간 Thost를 스케일링하여 Texec = Scsf × Thost로 계산한다.
+                <span class="source-ref">PDF p. 328</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>FDMFS (Functional Data Memory File System)</dt>
+              <dd>
+                device memory를 파일로 추상화하는 CSD-oriented 파일시스템. fallocate로 할당, pread/pwrite로 접근, 파일 permission으로 접근 제어하며 전통 파일시스템과 공존한다.
+                <span class="source-ref">PDF p. 330</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>FEMU</dt>
+              <dd>
+                host memory에 병렬 아키텍처의 flash storage를 충실히 에뮬레이트하는 SSD 에뮬레이터. CEMU의 스토리지 서브시스템 기반이며 별도 스레드의 FTL과 PCIe bus model로 보강되었다.
+                <span class="source-ref">PDF p. 329</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>direct / indirect usage model</dt>
+              <dd>
+                SNIA가 표준화한 CSD 실행 모델. direct는 host가 각 단계를 명시적으로 제어하고, indirect는 CSD firmware가 전체 실행을 관리한다.
+                <span class="source-ref">PDF p. 330, 331</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PCIe P2P (Peer-to-Peer)</dt>
+              <dd>
+                각 CSD의 device memory를 PCIe BAR로 노출하여 host를 거치지 않고 CSD 간 데이터를 직접 전송하는 방식.
+                <span class="source-ref">PDF p. 329</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>hardware-bounded / CPU-bounded</dt>
+              <dd>
+                각각 하드웨어 플랫폼의 컴퓨팅 성능이 물리 하드웨어에, 소프트웨어 에뮬레이션의 성능이 host CPU에 종속되어 구성이 제약되는 상태.
+                <span class="source-ref">PDF p. 324</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Figure 8/10/12/13/15/16/18 등 다수 그래프의 개별 막대·포인트 정확한 수치는 본문 텍스트에 명시되지 않고 차트 이미지로만 제공되어(예: grep/knn/lz4/sql 각각의 초 단위 end-to-end latency), 차트로 만들지 않았다.</li><li>논문 본문에 독립된 &#x27;Limitations&#x27; 절은 없으며, 한계는 §3.2.3, §3.3.2, §4.1 등 여러 절에 산재되어 서술된다.</li><li>TPC-H query 1(sql) 벤치마크의 구체적 쿼리 파라미터·스키마 상세는 본문에 기술되어 있지 않다.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "구성별 CEMU 에뮬레이션 정확도", "labels": ["단일 SmartSSD", "3중 SmartSSD", "CSD2000"], "values": [96, 95, 97], "unit": "%", "xLabel": "하드웨어 구성", "yLabel": "평균 정확도"}, {"canvasId": "chart-1", "type": "bar", "title": "chunk 크기별 indirect가 direct 대비 우수한 성능 차이", "labels": ["1MB", "2MB", "4MB"], "values": [7, 4, 3], "unit": "%", "xLabel": "chunk 크기", "yLabel": "성능 차이"}, {"canvasId": "chart-2", "type": "bar", "title": "LevelDB 100% write 처리량 (x=1)", "labels": ["vanilla LevelDB", "LevelDB-CSD"], "values": [501, 721], "unit": "Kops/s", "xLabel": "구성", "yLabel": "처리량"}, {"canvasId": "chart-3", "type": "bar", "title": "SSTable 배치 최적화에 따른 P2P I/O 트래픽", "labels": ["최적화 전", "5-Optimized"], "values": [17.3, 12], "unit": "GB", "xLabel": "구성", "yLabel": "P2P I/O 트래픽"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
