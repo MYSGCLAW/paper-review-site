@@ -691,6 +691,20 @@
 <a class="toc-level-2" href="#관련-맥락-배경-설명-13">관련 맥락 / 배경 설명</a>
 <a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-13">잠재적 오류 또는 확인 필요 지점</a>
 <a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-13">다음 에이전트가 이어서 확장할 지점</a>
+<a class="toc-level-3" href="#turn-14-codex">Turn 14 / Codex</a>
+<a class="toc-level-2" href="#이번-턴의-확장-요약-14">이번 턴의 확장 요약</a>
+<a class="toc-level-2" href="#새로-추가한-사실-14">새로 추가한 사실</a>
+<a class="toc-level-3" href="#1-downlink-병목의-핵심-변수는-n_drives-가-아니라-f_q-touched_drives-q-다">1. Downlink 병목의 핵심 변수는 `n_drives`가 아니라 `F_q = touched_drives(q)`다</a>
+<a class="toc-level-3" href="#2-block-list-descriptor가-query-embedding보다-커질-수-있다">2. Block-list descriptor가 query embedding보다 커질 수 있다</a>
+<a class="toc-level-3" href="#3-query-embedding-cache가-s_zipf-에서는-downlink를-크게-줄일-수-있다">3. Query embedding cache가 `S_zipf`에서는 downlink를 크게 줄일 수 있다</a>
+<a class="toc-level-3" href="#4-incomplete-heap에서는-_k-safe-를-바로-쓰면-안-된다">4. Incomplete heap에서는 `τ_k^safe`를 바로 쓰면 안 된다</a>
+<a class="toc-level-2" href="#더-구체화한-부분-13">더 구체화한 부분</a>
+<a class="toc-level-3" href="#fan-out-aware-placement-objective">Fan-out-aware placement objective</a>
+<a class="toc-level-3" href="#fan-out-aware-routing-rule">Fan-out-aware routing rule</a>
+<a class="toc-level-3" href="#descriptor-aware-batching">Descriptor-aware batching</a>
+<a class="toc-level-2" href="#관련-맥락-배경-설명-14">관련 맥락 / 배경 설명</a>
+<a class="toc-level-2" href="#잠재적-오류-또는-확인-필요-지점-14">잠재적 오류 또는 확인 필요 지점</a>
+<a class="toc-level-2" href="#다음-에이전트가-이어서-확장할-지점-14">다음 에이전트가 이어서 확장할 지점</a>
 <a class="toc-level-2" href="#현재-상태">현재 상태</a>
       </nav>
     </aside>
@@ -772,7 +786,7 @@
 <h2 id="deep-learning에서-이어갈-산출물">Deep Learning에서 이어갈 산출물</h2>
 <ol><li>두 research 결과를 합친 전체 연구 가설 3개</li><li>document locality trace schema와 metric table</li><li>T_gpu / T_csd / break-even MAC unit 수식 정리</li><li>CSD offload가 가능한 regime과 불가능한 regime 구분</li><li>scheduling factor와 decision rule 초안</li></ol>
 <h2 id="누적-응답-로그">누적 응답 로그</h2>
-<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 6이 세운 <strong>다목적 scheduler 제어 문제</strong>의 내부 정합성을 파고든다. 핵심 신규 결론 네 가지: 1. <strong>admission과 routing은 순차 결정이 아니라 결합 고정점(fixed point)</strong>이고, 빈 L2에서 출발하면 <strong>cold-start deadlock</strong>에 빠진다 — 이것이 Turn 1의 STATIC-HOT을 &quot;basel</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>scheduler가 쓰는 예측값의 불확실성</strong>, <strong>CSD 내부 early-exit / cancellation</strong>, 그리고 <strong>PCIe·NVMe control-plane 병목</strong>을 추가한다. Turn 7은 admission-routing 고정점과 resource ledger를 잘 정리했지만, runtime scheduler가 실제로 실패하는 지점은 평</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 8의 세 축(uncertainty-aware routing, cancellation, control-plane cap)을 <strong>exactness-안전한 형태로 완성</strong>하고, 지금까지 8턴이 한 번도 다루지 않은 <strong>에너지/TCO break-even</strong>과 <strong>end-to-end Amdahl 상한</strong>을 새 축으로 넣는다. 핵심 신규 결론 다섯 가지:</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조를 실제 구현 단위로 쪼개고</strong>, scheduler를 고정 가중치 정책이 아니라 <strong>온라인 자원 가격(resource price)을 학습하는 제어기</strong>로 확장한다. 핵심은 CSD MaxSim offload가 단일 kernel offload가 아니라 다음 네 상태를 계속 조정하는 runtime이라는 점이다. <code></code>`text quer</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 10이 세운 <strong>runtime 정확성 invariant / dual-price scheduler / hedged execution</strong>의 내부 정합성을 파고들어, 그중 두 개를 정정하고 세 개의 새 축(제어 평면 자체의 자원 예산, monotone-CRDT 병합, epoch RCU 용량 페널티)을 추가한다. 핵심 신규 결론 다섯 가지: 1. Tur</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 <strong>partial-max 병합 가능성</strong>을 받아들이되, 그 결론이 runtime 설계에 주는 부작용을 더 구체화한다. 핵심은 다음이다. 1. <code>max</code> monoid 덕분에 pid를 token 단위로 쪼개도 정확성은 유지할 수 있지만, <strong>partial-max 벡터를 host로 많이 반환하면 CSD의 PCIe 절감 논리가 무너진다.</strong> 2.</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 12의 네 축(Invariant E 부분전송, completion certificate, NAND topology, credit lease)을 받되, 그중 두 수치를 정정하고 <strong>지금까지 12턴이 한 번도 계량하지 않은 세 항</strong>을 추가한다. 핵심은 &quot;CSD는 PCIe 밖에 embedding을 가둔다&quot;는 서사가 **다운링크(query 배포)와 제</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>턴</th><th>작성자</th><th>상태</th><th>누적된 내용</th></tr></thead><tbody><tr><td>seed</td><td>사용자</td><td>주제 정의</td><td>Runtime 내부 구조와 스케줄링 딥러닝 자료 확장</td></tr><tr><td>1</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 첫 턴이므로 두 선행 research를 요약·연결한 뒤, <strong>두 연구를 하나의 방정식으로 잇는 새 결과</strong>를 도출한다. 핵심 신규 기여는 (1) locality 지표 <code>HR_bytes(B)</code>와 break-even이 만나는 **임계 residency <code>HR* ≈ 0.61–0.74</code><strong>, (2) NAND가 압축 residual을 저장한다는 사실에서 나오는 </strong>CSD c</td></tr><tr><td>2</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조와 scheduling factor</strong>를 중심으로 확장한다. 핵심 추가점은 (1) MaxSim offload runtime을 <code>query encoding → candidate planning → routing → execution → merge</code>의 operator graph로 분해하고, (2) whole-query offload</td></tr><tr><td>3</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>CSD 내부 실행 datapath와 배치(batch)·머지(merge) 구조</strong>를 파고든다. 핵심 신규 기여는 (1) 동시 쿼리의 candidate 겹침을 단일 내부 스캔으로 흡수하는 <strong>batched internal scan</strong>과 그 이득을 정량화하는 <code>BRF</code>(batch reuse factor) — 이것이 locality 연구의 Heaps β를 r</td></tr><tr><td>4</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduler가 실제로 다루는 제어 경로(control path)</strong> 와 <strong>압축 residual MaxSim datapath</strong>를 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>BRF</code>, shard tail을 중심으로 read/compute 비용을 봤다면, 여기서는 CSD가 받는 `query matrix + H2 plan descr</td></tr><tr><td>5</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>물리 layout(block) ↔ residency 임계값</strong>과 <strong>압축 residual의 실제 datapath 원가</strong>, 그리고 <strong>pruning의 분산 실행 프로토콜</strong>을 파고든다. 핵심 신규 결론 세 가지: 1. Turn 4가 분리해 둔 <code>block_efficiency</code>와 <code>BRF_bytes</code>는 하나의 양(block packing amplific</td></tr><tr><td>6</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime scheduling의 목적 함수와 안정성</strong>을 추가한다. 이전 턴들이 <code>HR_bytes</code>, <code>π</code>, <code>BRF</code>, LUT datapath를 개별 비용 항으로 정리했다면, 이번에는 이 항들을 실제 scheduler가 쓰는 <strong>다중 목적 제어 문제</strong>로 묶는다. 핵심 신규 결론은 세 가지다. 1. CSD offload scheduler의 목표</td></tr><tr><td>7</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 6이 세운 <strong>다목적 scheduler 제어 문제</strong>의 내부 정합성을 파고든다. 핵심 신규 결론 네 가지: 1. <strong>admission과 routing은 순차 결정이 아니라 결합 고정점(fixed point)</strong>이고, 빈 L2에서 출발하면 <strong>cold-start deadlock</strong>에 빠진다 — 이것이 Turn 1의 STATIC-HOT을 &quot;basel</td></tr><tr><td>8</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>scheduler가 쓰는 예측값의 불확실성</strong>, <strong>CSD 내부 early-exit / cancellation</strong>, 그리고 <strong>PCIe·NVMe control-plane 병목</strong>을 추가한다. Turn 7은 admission-routing 고정점과 resource ledger를 잘 정리했지만, runtime scheduler가 실제로 실패하는 지점은 평</td></tr><tr><td>9</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 8의 세 축(uncertainty-aware routing, cancellation, control-plane cap)을 <strong>exactness-안전한 형태로 완성</strong>하고, 지금까지 8턴이 한 번도 다루지 않은 <strong>에너지/TCO break-even</strong>과 <strong>end-to-end Amdahl 상한</strong>을 새 축으로 넣는다. 핵심 신규 결론 다섯 가지:</td></tr><tr><td>10</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 <strong>runtime 내부 구조를 실제 구현 단위로 쪼개고</strong>, scheduler를 고정 가중치 정책이 아니라 <strong>온라인 자원 가격(resource price)을 학습하는 제어기</strong>로 확장한다. 핵심은 CSD MaxSim offload가 단일 kernel offload가 아니라 다음 네 상태를 계속 조정하는 runtime이라는 점이다. <code></code>`text quer</td></tr><tr><td>11</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 10이 세운 <strong>runtime 정확성 invariant / dual-price scheduler / hedged execution</strong>의 내부 정합성을 파고들어, 그중 두 개를 정정하고 세 개의 새 축(제어 평면 자체의 자원 예산, monotone-CRDT 병합, epoch RCU 용량 페널티)을 추가한다. 핵심 신규 결론 다섯 가지: 1. Tur</td></tr><tr><td>12</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 11의 <strong>partial-max 병합 가능성</strong>을 받아들이되, 그 결론이 runtime 설계에 주는 부작용을 더 구체화한다. 핵심은 다음이다. 1. <code>max</code> monoid 덕분에 pid를 token 단위로 쪼개도 정확성은 유지할 수 있지만, <strong>partial-max 벡터를 host로 많이 반환하면 CSD의 PCIe 절감 논리가 무너진다.</strong> 2.</td></tr><tr><td>13</td><td>Claude</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 12의 네 축(Invariant E 부분전송, completion certificate, NAND topology, credit lease)을 받되, 그중 두 수치를 정정하고 <strong>지금까지 12턴이 한 번도 계량하지 않은 세 항</strong>을 추가한다. 핵심은 &quot;CSD는 PCIe 밖에 embedding을 가둔다&quot;는 서사가 **다운링크(query 배포)와 제</td></tr><tr><td>14</td><td>Codex</td><td>ok</td><td>## 이번 턴의 확장 요약 이번 턴은 Turn 13의 <strong>query fan-out / 제어 평면 에너지 / per-doc slack certificate</strong>를 runtime scheduling 관점에서 더 조인다. 핵심은 CSD scale-out의 병목이 단순히 <code>n_drives</code>가 아니라, trace에서 관측되는 <strong>query별 touched-drive 수 <code>F_q</code></strong>, block-lis</td></tr></tbody></table></div>
 <h2 id="전체-응답-누적">전체 응답 누적</h2>
 <h3 id="turn-1-claude">Turn 1 / Claude</h3>
 <h2 id="이번-턴의-확장-요약">이번 턴의 확장 요약</h2>
@@ -2244,8 +2258,242 @@ L2에 f(d) 상위 doc을 pin ⇒ 그 doc의 miss_prob ≈ 0 ⇒ load_c에서 제
 <ol><li><strong>다운링크-포함 scale-out 최적화 시뮬</strong>: 사실 1의 <code>downstream = 8KB·n_drives</code>와 Turn 7의 <code>upstream T_read = bytes_H2/(n_drives·BW_int_drive)</code>를 결합해, <code>n_drives</code>를 sweep하며 <strong>(per-query latency, up-link GB/s, down-link GB/s, aggregate BW_int 충족 여부)</strong>를 측정하라. 멀티캐스트/int8-query/broadcast-then-internal-fanout 세 완화책 각각에서 최적 <code>n_drives</code>와 순이득 <code>bytes_H2 − 8KB·n_drives</code>의 부호가 뒤집히는 QPS·shard 폭 경계를 찾고, centroid 복제 vs 분할(확인점 5)이 그 경계를 어떻게 옮기는지 규명할 것.</li></ol>
 <ol><li><strong>7층 원장 + 에너지-정합 content-aware batching ablation</strong>: Turn 11의 6층에 <code>host-CPU-energy</code>를 더한 7층 원장으로, <code>{batching-off, host-MinHash, SIMD-MinHash, sketch-approx, GPU-signature}</code> 5개 배칭 정책을 (p99, 내부 GB/s via BRF, host 코어, <strong>mJ/query</strong>, 서버 W)로 비교하라. 사실 2의 &quot;제어 에너지 &gt; movement 절감&quot; 부등식이 실제로 언제 성립/역전되는지 실측 상수로 확정하고, energy-win regime(Turn 9)의 경계를 batching 정책별로 다시 그릴 것.</li></ol>
 <ol><li><strong>per-doc-slack certificate + hedge 협력 시뮬</strong>: 사실 3의 <code>τ_k^safe = k-th largest{score_d − slack_d}</code>와 mixed-owner heap(GPU slack 0, CSD slack ξ_δ)을 구현해, deferred hedge(Turn 11)가 heap에 exact score를 주입할 때 <strong>CSD 취소율이 얼마나 올라가는지(hedge↔cancel 협력 이득)</strong>를 측정하라. Turn 12의 <code>doc_terminal_events</code>에 <code>owner_class·centroid_epoch</code>를 추가해 EXACT/PRUNED certificate가 이종 owner·stale τ_k·epoch 경계(확인점 7)에서도 sequential exact top-k와 동일함을 재현성 검증하고, per-doc slack이 전역 ξ_δ 대비 절감(read bytes)을 얼마나 늘리는지 파레토로 보고할 것.</li></ol>
+<h3 id="turn-14-codex">Turn 14 / Codex</h3>
+<h2 id="이번-턴의-확장-요약-14">이번 턴의 확장 요약</h2>
+<p>이번 턴은 Turn 13의 <strong>query fan-out / 제어 평면 에너지 / per-doc slack certificate</strong>를 runtime scheduling 관점에서 더 조인다. 핵심은 CSD scale-out의 병목이 단순히 <code>n_drives</code>가 아니라, trace에서 관측되는 <strong>query별 touched-drive 수 <code>F_q</code></strong>, block-list descriptor 크기, 그리고 fork-join tail이라는 점이다.</p>
+<p>새 결론은 다음이다.</p>
+<pre><code class="language-text">CSD scale-out scheduler는
+  &quot;몇 개 drive가 있나&quot;보다
+  &quot;한 query가 몇 개 drive를 실제로 깨우나&quot;
+를 최소화해야 한다.</code></pre>
+<p>또한 cancellation threshold는 <code>per-doc slack</code>만으로 충분하지 않고, <strong>k개 이상의 terminal lower-bound가 존재하는지</strong>를 확인해야 한다. 그렇지 않으면 incomplete heap에서 너무 이른 pruning이 발생할 수 있다.</p>
+<p>---</p>
+<h2 id="새로-추가한-사실-14">새로 추가한 사실</h2>
+<h3 id="1-downlink-병목의-핵심-변수는-n_drives-가-아니라-f_q-touched_drives-q-다">1. Downlink 병목의 핵심 변수는 <code>n_drives</code>가 아니라 <code>F_q = touched_drives(q)</code>다</h3>
+<p>Turn 13은 <code>downstream_bytes/query = 8KB · n_drives</code>로 잡았다. 이는 후보가 모든 drive에 균등하게 퍼지는 최악 또는 near-worst case다. 실제 scheduler가 봐야 할 값은 다음이다.</p>
+<pre><code class="language-text">F_q = |{ drive_id : H2(q) ∩ shard(drive_id) ≠ ∅ }|</code></pre>
+<p>따라서 downlink는:</p>
+<pre><code class="language-text">Bytes_down(q)
+  = F_q · Bytes_query_embedding
+    + Bytes_descriptor(q)
+    + Bytes_control(q)</code></pre>
+<p>CSD scale-out의 순 PCIe 이득은:</p>
+<pre><code class="language-text">Net_saved_pcie(q)
+  = Bytes_H2_gpu(q)
+    − F_q · Bytes_query
+    − Bytes_descriptor(q)
+    − Bytes_partial(q)
+    − Bytes_result(q)</code></pre>
+<p>CSD offload가 PCIe 관점에서 의미 있으려면:</p>
+<pre><code class="language-text">Net_saved_pcie(q) &gt; 0</code></pre>
+<p>수치 예시:</p>
+<pre><code class="language-text">Bytes_H2_gpu ≈ 0.6 MB/query
+Bytes_query  ≈ 8 KB
+
+descriptor/partial/result를 무시하면:
+  F_q &lt; 0.6MB / 8KB ≈ 75
+
+descriptor가 32KB/query이면:
+  F_q &lt; (0.6MB − 32KB) / 8KB ≈ 71</code></pre>
+<p>즉 Turn 13의 “약 71 drives”는 <code>n_drives</code> 상한이라기보다 <strong>query당 fan-out 상한</strong>이다. drive가 128개 있어도 <code>F_q≈16</code>이면 안전하고, drive가 32개뿐이어도 <code>F_q≈32</code>에 descriptor가 크면 downlink가 빠르게 부담이 된다.</p>
+<p>새 trace metric:</p>
+<pre><code class="language-text">fanout_log(
+  q_idx,
+  n_h2_pid,
+  n_h2_block,
+  touched_drives,
+  touched_channels,
+  bytes_query_down,
+  bytes_descriptor_down,
+  bytes_result_up,
+  net_saved_pcie
+)</code></pre>
+<p>---</p>
+<h3 id="2-block-list-descriptor가-query-embedding보다-커질-수-있다">2. Block-list descriptor가 query embedding보다 커질 수 있다</h3>
+<p>지금까지 downlink는 거의 <code>query embedding 8KB</code>로만 모델링됐다. 하지만 CSD가 처리할 block list를 drive마다 알려줘야 하므로 descriptor도 1차 항이다.</p>
+<p>단순 포맷:</p>
+<pre><code class="language-text">descriptor entry = block_id + offset + length + flags
+                 ≈ 16 B</code></pre>
+<p>query당 unique block이 1,000개면:</p>
+<pre><code class="language-text">Bytes_descriptor ≈ 1000 · 16B = 16 KB</code></pre>
+<p>drive별로 별도 command header, range alignment, certificate metadata까지 붙으면 16KB보다 커질 수 있다. 즉 <code>F_q=4</code>일 때 query fan-out은 32KB지만 descriptor도 16KB 이상이라, downlink의 1/3 이상을 차지한다.</p>
+<p>따라서 CSD runtime interface는 다음 압축을 지원해야 한다.</p>
+<pre><code class="language-text">range descriptor:
+  (start_block, run_length)       # layout이 연속적일 때 유리
+
+delta-coded block ids:
+  sorted block_id list + varint delta
+
+resident plan id:
+  반복 query/batch에서 block-list plan을 drive에 cache하고 plan_id만 전송
+
+Bloom/bitmap descriptor:
+  block universe가 작거나 shard-local block id가 dense할 때 유리</code></pre>
+<p>descriptor 압축률은 layout과 직접 연결된다. locality layout이 좋아지면 <code>BRF_block</code>만 좋아지는 것이 아니라, <strong>descriptor bytes도 줄어든다</strong>.</p>
+<p>---</p>
+<h3 id="3-query-embedding-cache가-s_zipf-에서는-downlink를-크게-줄일-수-있다">3. Query embedding cache가 <code>S_zipf</code>에서는 downlink를 크게 줄일 수 있다</h3>
+<p>Turn 13은 query embedding이 매번 drive로 내려간다고 가정했다. 하지만 운영형 <code>S_zipf</code>에서는 같은 query가 반복되므로, CSD DRAM에 query embedding cache를 둘 수 있다.</p>
+<pre><code class="language-text">QueryCache key:
+  query_hash or qid
+  encoder_epoch
+  quantization_mode</code></pre>
+<p>hit이면 host는 query embedding 8KB 대신 작은 handle만 보낸다.</p>
+<pre><code class="language-text">Bytes_down(q)
+  = F_q · (
+      (1 − HQ_q) · Bytes_query
+      + HQ_q · Bytes_query_handle
+    )
+    + Bytes_descriptor(q)</code></pre>
+<p>여기서 <code>HQ_q</code>는 query embedding cache hit 여부다.</p>
+<p>중요한 구분:</p>
+<pre><code class="language-text">S_uniq:
+  public benchmark query가 dedup되어 있어 query cache 효과 거의 0
+
+S_zipf / production:
+  hot query 반복으로 query cache 효과 큼</code></pre>
+<p>따라서 기존 document locality trace에 <strong>query locality</strong>도 추가해야 한다.</p>
+<pre><code class="language-text">query_frequency(q_text)
+query_embedding_cache_HR(C_query)
+query_drive_fanout_HR(C_query, F_q)</code></pre>
+<p>이 항은 CSD scale-out의 downlink 문제를 완화하는 가장 직접적인 runtime 레버다.</p>
+<p>---</p>
+<h3 id="4-incomplete-heap에서는-_k-safe-를-바로-쓰면-안-된다">4. Incomplete heap에서는 <code>τ_k^safe</code>를 바로 쓰면 안 된다</h3>
+<p>Turn 13의 per-doc slack threshold는 좋은 정정이다.</p>
+<pre><code class="language-text">τ_k^safe(q) = k-th largest { score_d − slack_d }</code></pre>
+<p>하지만 이 식은 heap에 <strong>k개 이상의 valid lower-bound entry</strong>가 있을 때만 의미가 있다. query 초반에는 exact 또는 certified lower-bound가 k개 미만일 수 있다.</p>
+<p>정확한 조건:</p>
+<pre><code class="language-text">if |LB_heap(q)| &lt; k:
+  τ_k^safe(q) = −∞
+else:
+  τ_k^safe(q) = kth_largest(LB_heap)</code></pre>
+<p>여기서 <code>LB_heap</code>에는 다음만 들어간다.</p>
+<pre><code class="language-text">EXACT score with slack 0
+approx score with calibrated lower-bound slack
+mixed-owner score with η_num slack</code></pre>
+<p>따라서 early cancellation은 두 단계로 나뉜다.</p>
+<pre><code class="language-text">Phase 1: bootstrap
+  k개 lower-bound가 모일 때까지 aggressive pruning 금지
+  단, PLAID stage pruning 같은 recall-based pruning은 별도 표기
+
+Phase 2: certified cancellation
+  τ_k^safe가 finite이면 UB_partial &lt; τ_k^safe 조건으로 PRUNED 가능</code></pre>
+<p>이 구분이 없으면 “exact-safe cancellation”과 “recall-calibrated approximate pruning”이 섞여 결과 해석이 흐려진다.</p>
+<p>---</p>
+<h2 id="더-구체화한-부분-13">더 구체화한 부분</h2>
+<h3 id="fan-out-aware-placement-objective">Fan-out-aware placement objective</h3>
+<p>Turn 12의 topology-aware placement는 channel load balance를 봤고, Turn 13은 warm-tier hotspot을 추가했다. 여기에 <code>F_q</code>를 넣어야 한다. 문서 배치는 단순 hotness ranking이 아니라 co-access hypergraph partition 문제다.</p>
+<p>문서 co-access hyperedge:</p>
+<pre><code class="language-text">E_q = H2(q)          # 한 query가 같이 읽는 pid/block 집합</code></pre>
+<p>placement 목표:</p>
+<pre><code class="language-text">minimize
+  α · E_q[F_q]
+  + β · max_c load_c
+  + γ · p99_fork_join_tail
+  − δ · HR_bytes(B)
+  + ζ · write_rebalance_cost</code></pre>
+<p>의미:</p>
+<pre><code class="language-text">HR_bytes(B):
+  hot document를 resident로 올려 PCIe와 NAND read를 줄임
+
+E[F_q]:
+  한 query가 깨우는 drive 수를 줄여 query fan-out과 fork-join tail을 줄임
+
+max_c load_c:
+  특정 NAND channel/die hotspot 방지
+
+write_rebalance_cost:
+  ADD/DELETE/rebuild 시 layout 유지 비용</code></pre>
+<p>중요한 tradeoff:</p>
+<pre><code class="language-text">co-access 문서를 같은 drive에 모으면:
+  F_q 감소, downlink 감소, merge 감소
+  그러나 drive/channel hotspot 증가 가능
+
+co-access 문서를 여러 drive에 흩으면:
+  read parallelism 증가
+  그러나 F_q, query fan-out, fork-join tail 증가</code></pre>
+<p>즉 CSD scale-out은 “많이 나누기”가 아니라 <strong>SLO와 downlink 예산 안에서 필요한 만큼만 나누기</strong>다.</p>
+<p>---</p>
+<h3 id="fan-out-aware-routing-rule">Fan-out-aware routing rule</h3>
+<p>기존 routing rule에 <code>F_q</code>와 descriptor를 명시적으로 넣는다.</p>
+<pre><code class="language-text">cost_csd(q)
+  = UCB_csd(q; F_q)
+    + μ_down · (F_q · Bytes_query + Bytes_descriptor)
+    + μ_up   · (Bytes_partial + Bytes_result)
+    + μ_int  · Bytes_internal
+    + μ_cmd  · n_cmd
+    + μ_cpu  · host_control_cycles</code></pre>
+<p>fork-join tail 보정:</p>
+<pre><code class="language-text">UCB_csd(q; F_q)
+  ≈ μ_s + σ_idio · sqrt(2 ln F_q)
+     + z_slo · σ_common
+     + T_merge(F_q)</code></pre>
+<p>route condition:</p>
+<pre><code class="language-text">route to CSD only if:
+  Net_saved_pcie(q) &gt; 0
+  and required_credits_available(q)
+  and UCB_csd(q; F_q) &lt; deadline(q)</code></pre>
+<p>이제 scheduler는 <code>rho_bytes(q)</code>가 높아도 <code>F_q</code>가 너무 크면 CSD를 거부할 수 있다.</p>
+<pre><code class="language-text">high rho_bytes + low F_q:
+  ideal CSD query
+
+high rho_bytes + high F_q:
+  PCIe up-link는 줄지만 downlink/fork-join tail 위험
+
+low rho_bytes + low F_q:
+  capacity/energy mode에서는 가능, latency mode에서는 의심
+
+low rho_bytes + high F_q:
+  CSD offload 비권장</code></pre>
+<p>---</p>
+<h3 id="descriptor-aware-batching">Descriptor-aware batching</h3>
+<p>content-aware batching은 block reuse만 보지 말고 descriptor amortization도 봐야 한다.</p>
+<p>batch <code>G</code>에 대해:</p>
+<pre><code class="language-text">BRF_block(G)
+  = Σ_q bytes_blocks(q) / bytes_union_blocks(G)
+
+DRF_desc(G)
+  = Σ_q bytes_descriptor(q) / bytes_descriptor_union(G)</code></pre>
+<p>배치 목적 함수:</p>
+<pre><code class="language-text">maximize
+  w_brf · BRF_block(G)
+  + w_drf · DRF_desc(G)
+  − w_wait · added_wait(G)
+  − w_fanout · touched_drives(G)</code></pre>
+<p><code>DRF_desc</code>가 높으면 같은 block-list plan을 여러 query가 공유하거나, drive-local descriptor를 한 번만 보낼 수 있다. 이 경우 content-aware batching의 에너지 비용을 일부 정당화할 수 있다. 반대로 <code>BRF_block</code>은 높지만 <code>DRF_desc</code>가 낮으면 host CPU를 써도 제어 평면 절감이 약하다.</p>
+<p>---</p>
+<h2 id="관련-맥락-배경-설명-14">관련 맥락 / 배경 설명</h2>
+<p>이번 확장은 CSD runtime의 병목을 <strong>up-link 중심 모델에서 bidirectional PCIe 모델</strong>로 바꾼다. 기존 논리는 “embedding MB를 top-k KB로 줄인다”였지만, scale-out에서는 host가 query와 descriptor를 여러 drive에 복제한다. 그래서 실제 교환식은 다음이다.</p>
+<pre><code class="language-text">GPU path:
+  upstream large embedding/object movement
+
+CSD path:
+  downstream query fan-out
+  downstream descriptor
+  upstream top-k/certificate/partial result</code></pre>
+<p>따라서 CSD가 이기는 조건은 단순히 <code>HR_bytes</code>가 높다는 것이 아니다.</p>
+<pre><code class="language-text">CSD wins when:
+  saved embedding bytes
+  &gt;
+  query fan-out bytes
+  + descriptor bytes
+  + partial/certificate bytes
+  + control-plane CPU/energy cost</code></pre>
+<p>이 관점에서는 document locality trace가 더 넓어진다. 기존 trace는 “어떤 pid가 자주 읽히는가”를 봤다. 이제는 “같이 읽히는 pid들이 몇 개 shard를 건드리는가”, “그 block-list가 descriptor로 얼마나 압축되는가”, “반복 query가 drive-side query cache에 hit하는가”까지 봐야 한다.</p>
+<p>---</p>
+<h2 id="잠재적-오류-또는-확인-필요-지점-14">잠재적 오류 또는 확인 필요 지점</h2>
+<ol><li>Turn 13의 <code>8KB · n_drives</code>는 유용한 경고지만, 실제 모델에서는 <code>n_drives</code>보다 <code>F_q=touched_drives(q)</code>를 써야 한다. co-access placement와 routing으로 <code>F_q</code>를 낮출 수 있다.</li></ol>
+<ol><li>descriptor 크기 추정 <code>16B/block</code>은 임의 가정이다. 실제 CSD command ABI가 range, scatter-gather, compressed block-list, resident plan id를 지원하는지 확인해야 한다.</li></ol>
+<ol><li>query embedding cache는 <code>S_zipf</code>에서는 강하지만 <code>S_uniq</code>에서는 거의 효과가 없다. 따라서 benchmark 결과를 production 반복 query로 일반화하려면 query popularity model이 필요하다.</li></ol>
+<ol><li><code>τ_k^safe</code>는 k개 이상의 lower-bound entry가 있을 때만 finite하다. bootstrap 구간 pruning을 exact-safe로 주장하면 안 된다.</li></ol>
+<ol><li>co-access 문서를 같은 drive에 모으면 <code>F_q</code>는 줄지만 read parallelism이 줄어든다. latency-first와 PCIe-first 목적에서 최적 placement가 달라질 수 있다.</li></ol>
+<ol><li>descriptor-aware batching의 CPU 비용이 <code>DRF_desc</code> 이득보다 큰지 실측해야 한다. 특히 Turn 13의 host-MinHash 에너지 문제와 직접 연결된다.</li></ol>
+<p>---</p>
+<h2 id="다음-에이전트가-이어서-확장할-지점-14">다음 에이전트가 이어서 확장할 지점</h2>
+<ol><li><strong>Fan-out-aware trace simulator</strong>: 기존 <code>accesses</code> trace에 <code>drive_id/channel_id</code>를 붙이고 <code>F_q</code>, <code>Bytes_down</code>, <code>Bytes_descriptor</code>, <code>Net_saved_pcie</code>, fork-join <code>UCB_csd(F_q)</code>를 계산하라. random shard, hot-balanced shard, co-access hypergraph shard를 비교해 <code>HR_bytes</code>와 <code>F_q</code>가 충돌하는 지점을 찾을 것.</li></ol>
+<ol><li><strong>Query-cache + descriptor-cache scale-out 실험</strong>: <code>S_uniq/S_zipf/S_burst</code>에서 drive-side query embedding cache와 resident plan-id cache를 넣고, cache capacity별 downlink GB/s 절감률을 측정하라. 결과는 <code>query_cache_HR</code>, <code>descriptor_cache_HR</code>, <code>Net_saved_pcie</code>, p99로 정리하라.</li></ol>
+<ol><li><strong>Bootstrap-safe certificate runtime</strong>: <code>LB_heap</code> 크기가 k 미만인 bootstrap phase와 k 이상인 certified cancellation phase를 분리해 구현하라. per-doc slack order statistic, stale <code>τ_k</code>, EXACT/PRUNED terminal event를 함께 기록하고, 전역 slack 방식 대비 read-saving과 recall/exactness 차이를 검증하라.</li></ol>
 <h2 id="현재-상태">현재 상태</h2>
-<ul><li>마지막 업데이트: 2026-07-18T13:26:06.303252+00:00</li><li>누적 턴 수: 13</li><li>중단 사유: 아직 실행 가능</li></ul>
+<ul><li>마지막 업데이트: 2026-07-18T13:27:41.491324+00:00</li><li>누적 턴 수: 14</li><li>중단 사유: 아직 실행 가능</li></ul>
       </article>
     </div>
   </main>
