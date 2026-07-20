@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Kangqi Chen, Rakesh Nadig, Manos Frouzakis, Nika Mansouri Ghiasi, Yu Liang, Haiyu Mao, Jisung Park, Mohammad Sadrosadati, Onur Mutlu</span>
+        <span><strong>출처</strong> · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), June 21-25, 2025, Tokyo, Japan</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조와 주요 구성요소</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 및 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론 및 후속 논의</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계한다. 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 평가 결과 REIS는 256-core CPU 서버(CPU-Real) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 달성하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비 SSD 구성과 목표 Recall@10에 따라 7.67배에서 최대 24.1배까지 RAG retrieval을 가속한다. 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.</p>
+        <span class="source-ref">PDF p. 1, 2, 5, 6, 11, 12, 13</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>wiki_en(4,150만 항목) 기준 storage I/O 트래픽이 RAG 파이프라인 지연시간의 84%를 차지하며, BQ를 적용해도 dataset loading이 67%로 남는다. 즉 RAG retrieval의 병목은 연산이 아니라 데이터 이동이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>그래프 기반 ANNS(HNSW, DiskANN)는 recall은 좋지만 불규칙 접근 패턴 때문에 ISP에 부적합하다. REIS는 streaming 접근이 가능한 IVF를 택해 SSD 내부 병렬성을 활용한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>OOB 영역의 0.7%(16KB page당 16바이트)만 재사용해 임베딩-문서 주소를 연결함으로써, 별도 인덱스 없이 document retrieval까지 storage 내부에서 완결한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>BQ 기반 Hamming 거리는 XOR과 fail-bit counting으로 환원되므로, NAND plane에 이미 존재하는 로직만으로 계산 가능하다. 이것이 ICE·DeepStore류의 저장·면적 오버헤드를 피하는 핵심이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 6, 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>REIS는 CPU-Real 대비 평균 13배 성능·55배 에너지 효율(최대 112배·157배)을 달성하며, I/O가 전혀 없다고 가정한 이상적 No-I/O 대비로도 평균 1.8배 빠르다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>REIS 적용 후 retrieval 관련 지연시간 비중이 20.3%-69.3%에서 0.02%-0.15%로 떨어지고 Generation이 전체의 92%를 차지한다. 병목이 storage에서 LLM 추론으로 이동했음을 뜻한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>REIS-ASIC 비교(4.1×-6.5× slowdown)는 성능 이득의 상당 부분이 &#x27;연산기의 성능&#x27;이 아니라 &#x27;연산을 plane 안에 두어 데이터를 옮기지 않는 것&#x27;에서 나옴을 보여준다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>RAG의 retrieval 단계가 critical path에 있다</h3>
+      <p>LLM은 학습 시점 데이터에 지식이 국한되며 재학습 비용이 커서 최신·도메인 특화 지식을 반영하기 어렵다. RAG는 외부 지식 데이터베이스를 검색해 이를 보완하지만, retrieval 단계가 응답 생성의 critical path 위에 있으므로 recall(정확도)과 latency(지연시간)의 균형이 중요하다. 즉 retrieval을 느리게 만드는 요인은 곧바로 사용자 응답 지연으로 이어진다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>I/O data movement가 지배적 병목이다</h3>
+      <p>대규모 데이터베이스 임베딩에 대해 Approximate Nearest Neighbor Search(ANNS)를 수행하면 host와 storage 시스템 간 I/O data movement가 심각한 성능 병목이 된다. 저자들의 직접 측정(Sec 3.1, Figure 2)에 따르면 4,150만 개 문서 항목을 가진 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지하며, 데이터셋 크기가 커질수록 dataset loading이 차지하는 지연시간 비중도 함께 증가한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ISP는 유망하지만 기존 설계로는 부족하다</h3>
+      <p>저자들은 선행연구 NDSearch가 storage I/O가 billion-scale ANNS end-to-end 지연시간의 최대 75%를 차지하고 ISP가 CPU 대비 ANNS 성능을 31.7배 향상시킬 수 있음을 보였다고 인용하며, ISP를 병목 해결의 유망한 접근으로 제시한다. 그러나 기존 ISP 기반 ANNS 가속기들은 이 병목을 근본적으로 해소하지 못한다는 것이 이 논문의 출발점이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ISP에 부적합한 알고리즘 선택</h3>
+      <p>HNSW, DiskANN 같은 그래프 기반 알고리즘을 사용하는 기존 ISP ANNS 가속기는 ISP 시스템에 맞지 않는다. 그래프 순회는 현재 방문 중인 정점을 분석해 다음 방문 정점을 결정하는 순차적(sequential-dependent) 과정이므로 불규칙한(irregular) 데이터 접근 패턴을 유발하고, 이는 channel 및 NAND Flash chip 충돌(conflict)을 일으켜 SSD의 내부 대역폭을 충분히 활용하지 못하게 한다.</p>
+      <span class="source-ref">PDF p. 1, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Document retrieval 단계 미가속</h3>
+      <p>기존 ISP 기반 ANNS 가속기는 ANNS(검색) 자체의 가속에만 집중하고, ANNS가 선택한 데이터에 대한 document retrieval(문서 검색) 단계는 가속하지 않는다. 그러나 저자들의 측정(Figure 2, 3)에 따르면 dataset loading 단계가 RAG retrieval에 상당한 지연시간을 유발하므로, ANNS만 빨라져도 전체 병목은 남는다.</p>
+      <span class="source-ref">PDF p. 1, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>저장 공간 및 하드웨어 오버헤드</h3>
+      <p>기존 가속기는 스토리지 시스템에 큰 오버헤드를 도입한다. ICE는 NAND flash die 내부 연산을 위해 오류 정정 없이 오류를 허용하는 데이터 포맷을 사용하여 8-bit(4-bit) 정밀도 데이터에 32×(8×)의 저장 오버헤드를 유발하고, DeepStore는 systolic array 기반 아키텍처를 도입해 상당한 면적·전력 오버헤드를 유발한다.</p>
+      <span class="source-ref">PDF p. 1, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Batching과 Quantization의 한계</h3>
+      <p>여러 질의를 묶어 dataset loading 오버헤드를 amortize하는 batching은, 의료·법률·금융 등 서로 다른 도메인의 질의가 서로 다른 도메인 특화/멀티모달 데이터셋에서 서비스되어야 하므로 실제 효과가 제한적이다. Quantization(PQ, BQ)은 저장 공간과 recall 간 좋은 트레이드오프를 제공하지만 임베딩에만 적용 가능하고 document chunk 크기는 줄이지 못한다. 실험적으로 BQ 적용 시 I/O data movement 오버헤드가 17-29% 감소하지만, 대형 wiki_en 데이터셋에서는 dataset loading이 여전히 전체 지연시간의 67%를 차지하는 병목으로 남는다(BQ 적용 후에도 document chunk가 wiki_en 전체 전송량 14GB 중 9GB를 차지).</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>정교한 인덱스와 CXL 메모리 확장의 한계</h3>
+      <p>SPANN 같은 hybrid ANNS는 flat index보다 큰 자료구조를 요구해 I/O 병목을 오히려 악화시킬 수 있다. SPANN은 HotpotQA에서 0.92 Recall@10을 달성하려면 전체 임베딩의 24%를 centroid로 메모리에 상주시켜야 하고, 그럼에도 exhaustive search 대비 22% 속도향상만 제공한다. 또한 hybrid ANNS는 임베딩의 저장·검색만 최적화할 뿐 document chunk는 최적화하지 않는다. CXL 기반 Memory Expansion은 이론적으로 데이터셋을 메모리에 상주시킬 수 있으나, 메인 메모리가 flash storage보다 GB당 한 자릿수 이상 비싸고(약 3.10 대 0.1 USD/GB) 데이터셋 크기와 도메인 특화 데이터셋 수가 계속 증가하므로 지속 가능하지 않다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>I/O data movement 오버헤드의 최초 정량 평가</h3>
+      <p>RAG 파이프라인의 retrieval 단계에서 발생하는 I/O data movement의 대규모 성능 오버헤드를 정량적으로 평가한 최초의 연구임을 주장한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>기존 완화 기법의 종합 분석</h3>
+      <p>RAG 파이프라인의 I/O data movement 병목을 완화하려는 기존 기법(batching, quantization, hybrid ANNS, CXL 등)의 한계를 종합적으로 분석하고, 기존 ISP 기반 ANNS 가속기를 RAG 파이프라인에 통합하는 것을 비효율적·비실용적으로 만드는 두 가지 주요 문제를 식별했다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAG 특화 ISP retrieval 시스템 REIS 제안</h3>
+      <p>RAG에 특화된 최초의 ISP 기반 retrieval 시스템 REIS를 제안한다. REIS는 (i) 스토리지 시스템 내부에서 임베딩과 문서 간 상관관계를 구축해 효율적인 document retrieval을 지원하고, (ii) ISP-친화적 알고리즘 도입으로 retrieval 성능을 향상시키며, (iii) 현대 스토리지 시스템에 이미 존재하는 계산 자원을 활용하는 맞춤형 in-storage ANNS 계산 엔진으로 에너지 및 면적 효율을 향상시킨다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>두 종류 SSD 설계 기반 구현 및 평가</h3>
+      <p>비용 지향적(cost-oriented) 및 성능 지향적(performance-oriented) SSD 설계를 기반으로 REIS를 구현하고 성능·에너지 효율을 평가했다. 256-core CPU 시스템 대비 평균 13배 성능(에너지 효율 55배) 향상을 제공하며, 최신 ISP 기반 ANNS 가속기 대비 SSD 구성 및 목표 Recall@10 값에 따라 7.67배에서 최대 24.1배까지 RAG retrieval을 가속한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조와 주요 구성요소</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 구조 개요</h3>
+      <p>REIS는 host로부터 query embedding을 수신하여 storage 내부에서 데이터베이스를 조회하고 관련 document chunk를 반환함으로써 host-storage 간 통신을 크게 줄이는 ISP 기반 retrieval 시스템이다. 별도 연산 하드웨어 추가 없이 (1) 임베딩과 문서를 연결하는 database layout, (2) ISP에 맞춰 조정된 IVF 알고리즘 및 데이터 배치 기법, (3) 기존 스토리지 내부 계산 자원(플레인 내부 peripheral logic, SSD controller의 임베디드 코어)을 활용하는 in-storage ANNS 엔진이라는 세 가지 핵심 메커니즘으로 구성된다.</p>
+      <span class="source-ref">PDF p. 1, 2, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 1: Database Layout (Sec 4.1)</h3>
+      <p>벡터 데이터베이스를 embedding region과 document region으로 분리 배치하고, Parallelism-First Page Allocation으로 임베딩을 모든 plane에 고르게 분산시켜 plane/die/channel 병렬성을 극대화한다. NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16 spare bytes, OOB의 0.7%)를 재사용해 각 임베딩에 대응하는 document chunk 주소를 저장함으로써, 별도 자료구조 없이 저비용으로 embedding-document linkage를 만든다. 또한 R-DB라는 coarse-grained 주소 레지스트리(SSD DRAM 상주)를 도입해 페이지 단위 FTL 유지 비용을 줄인다(1TB 데이터베이스 기준 page-level FTL 1GB 대비 21바이트로 축소). Hybrid SSD 설계로 Enhanced SLC-mode Programming(ESP)을 적용한 SLC 파티션에는 binary 임베딩을, 고밀도 TLC 파티션에는 document chunk 및 INT8 임베딩을 저장하여 ECC 없이도 오류 없는(zero BER) in-plane 연산을 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2: ISP-Friendly ANNS 알고리즘 (Sec 4.2)</h3>
+      <p>cluster 기반(IVF), 그래프 기반(HNSW), hash 기반(LSH) 알고리즘을 CPU 상에서 QPS/recall 기준으로 비교(Figure 5)한 결과, HNSW와 IVF 모두 높은 recall을 제공하지만 그래프 기반은 불규칙 접근 패턴 때문에 ISP에 부적합하다고 판단해, 순차적(streaming) 접근 패턴을 갖는 IVF를 채택했다. 이를 위해 embedding region을 centroid / binary / INT8 세 서브 영역으로 나누고, 각 cluster의 centroid 주소·첫/마지막 임베딩 인덱스·8비트 tag를 기록하는 R-IVF 배열(SSD DRAM, 항목당 15바이트)을 도입했으며, OOB 영역에 INT8 임베딩 주소(RADR)와 cluster tag를 추가 저장하도록 embedding-document linkage를 확장했다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3: In-Storage ANNS Engine (Sec 4.3)</h3>
+      <p>Binary Quantization(BQ) 기반으로 설계되어 MAC 유닛 등 추가 하드웨어 없이 기존 SSD 구성요소(Cache Latch, Sensing Latch, Data Latch, fail-bit counter, pass/fail checker 등 peripheral logic과 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행한다. plane/die/channel 수준 병렬성을 활용하며, 세 가지 최적화를 포함한다. (i) Distance Filtering(DF): 사전 정의된 threshold를 초과하는 임베딩을 pass/fail checker에서 조기 제거한다. (ii) Pipelining(PL): Read Page Cache Sequential 모드로 다음 page read와 이전 결과 readout을 중첩하고, 임베디드 코어의 quicksort/reranking 커널 실행과 플레인 내 거리 계산을 중첩한다. (iii) Multi-Plane Input Broadcasting(MPIBC): die 내 모든 plane에 query를 동시에 broadcast한다. 또한 fine-grained 임베딩 접근을 위해 물리 page 주소에 offset을 덧붙이는 Mini-Page 주소 방식을 사용한다.</p>
+      <span class="source-ref">PDF p. 8, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4: System Integration (Sec 4.4)</h3>
+      <p>host와의 통신을 위해 NVM command set을 확장한 RAG 전용 API(DB_Deploy, IVF_Deploy, Search, IVF_Search 등, Table 1)를 정의하고, SSD controller와 flash die 간 통신을 위한 NAND flash command set 확장(IBC, XOR, GEN_DIST, RD_TTL 등, Table 2)을 추가한다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계: Query 수신 및 Input Broadcasting</h3>
+      <p>Host로부터 새 query embedding을 수신하여 SSD DRAM에 저장한 뒤 ANNS 커널 실행을 트리거한다. Query embedding을 각 NAND flash plane의 데이터 버퍼로 전송하고, 이를 여러 번 복제해 Cache Latch(CL) 전체를 채운다(Input Broadcasting, IBC). MPIBC 최적화를 통해 하나의 die 내 모든 plane이 동시에 query를 수신한다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계: Coarse-grained search (cluster 선정)</h3>
+      <p>모든 cluster centroid가 저장된 page를 읽어 Sensing Latch(SL)에 적재하고, CL(질의)과 SL(centroid) 간 XOR 연산 결과를 Data Latch(DL)에 저장한 뒤 peripheral logic의 fail-bit counter로 논리적 1의 개수, 즉 Hamming 거리를 계산한다. 각 항목(DIST, EMB, EADR, TAG)은 SSD DRAM의 TTL-C(Temporal Top List for Centroids)에 기록되고, 임베디드 코어가 quickselect 커널로 query에 가장 가까운 N개 cluster를 선정한다. 이 과정은 다음 page read와 거리 계산을 중첩하며 반복된다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계: Fine-grained search (cluster 내부 탐색)</h3>
+      <p>선정된 cluster 내 모든 임베딩에 대해 동일한 XOR + fail-bit counter 방식으로 거리를 계산한다. 이때 Distance Filtering을 적용해 사전 설정된 threshold를 초과하는(query와 거리가 먼) 임베딩은 pass/fail checker에서 조기에 걸러내 SSD controller로 전송하지 않는다. 남은 항목(DIST, EMB, RADR, DADR)은 TTL-E(Temporal Top List for Embeddings)에 기록된다.</p>
+      <span class="source-ref">PDF p. 8, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계: Top-10k 선택</h3>
+      <p>임베디드 코어가 TTL-E에 대해 quickselect를 수행하여 query에 가장 가까운 10k개 임베딩을 선택한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계: Reranking</h3>
+      <p>임베디드 코어가 RADR(rescoring address)을 이용해 top-10k 임베딩의 INT8 정밀도 버전을 fetch하고 INT8 정밀도로 거리를 재계산한 뒤 quicksort로 정렬하여 최종 top-k 임베딩을 선택한다. 이 단계가 binary quantization으로 인한 정확도 손실을 보상한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계: Document Identification 및 반환</h3>
+      <p>ANNS 엔진이 top-k 결과에 연결된 DADR(document address)을 이용해 document identification을 수행하고, 해당 document chunk들을 host 시스템으로 전송하여 이후 LLM generation 단계에 사용되도록 한다. 즉 host로 나가는 데이터는 전체 데이터셋이 아니라 최종 선택된 문서뿐이다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>IVF 인덱스: 왜 그래프가 아니라 cluster인가</h3>
+      <p>IVF는 데이터베이스 임베딩을 cluster로 나누고 각 cluster를 centroid로 대표한다. 검색은 centroid와의 거리 비교(coarse-grained) 후 선택된 cluster 내부만 순회(fine-grained)하는 2단계로 이루어지며, cluster 내부 임베딩은 연속적으로 배치되어 streaming 접근이 가능하다. 논문은 이 순차성이 SSD의 plane/die/channel 병렬성과 잘 맞아 channel·chip 충돌을 피할 수 있기 때문에, recall이 유사한 HNSW 대신 IVF를 선택했다고 설명한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>BQ 기반 거리 계산: XOR + fail-bit counter</h3>
+      <p>Binary Quantization된 임베딩 간 거리는 Hamming distance로 계산되며, 이는 XOR 후 1의 개수를 세는 연산으로 환원된다. REIS는 NAND flash plane에 이미 존재하는 bitwise 연산 로직과 fail-bit counter(원래 프로그램 검증용)를 그대로 재사용해 이 두 연산을 수행하므로, MAC 유닛이나 systolic array 같은 새 연산 하드웨어가 필요 없다. 이것이 기존 ISP 가속기 대비 면적·전력 오버헤드를 피하는 핵심 기제이다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>보조 자료구조: R-DB, R-IVF, TTL, OOB linkage</h3>
+      <p>R-DB는 데이터베이스 단위 coarse-grained 주소 레지스트리로 page-level FTL을 대체해 1TB 기준 1GB를 21바이트로 축소한다. R-IVF는 cluster별 centroid 주소·첫/마지막 임베딩 인덱스·8비트 tag를 담는 배열로 항목당 15바이트를 차지하며 SSD DRAM에 상주한다. TTL-C와 TTL-E는 각각 centroid·임베딩 후보의 (DIST, EMB, 주소, TAG) 항목을 담는 임시 top list이다. OOB 영역에는 각 임베딩의 document 주소(DADR), INT8 재채점 주소(RADR), cluster tag가 저장되어 임베딩-문서 연결을 별도 인덱스 없이 구현한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>정확도 보존 전략</h3>
+      <p>BQ는 저장·연산 비용을 크게 줄이지만 정밀도 손실이 있다. REIS는 binary 임베딩으로 넓게 후보를 좁힌 뒤(top-10k), INT8 정밀도 reranking으로 최종 top-k를 결정하는 2단계 정밀도 전략을 사용한다. 논문의 CPU 기반 측정(Figure 5)에서 IVF의 recall은 reranking 결합 시 BQ 적용 후 0.97, PQ 적용 후 0.96으로 높게 유지된다.</p>
+      <span class="source-ref">PDF p. 8, 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋 및 워크로드</h3>
+      <p>정보검색 벤치마크 BEIR의 NQ(Natural Questions)와 HotpotQA, Wikipedia 기반 공개 데이터셋 wiki_full 및 그 영어 subset wiki_en을 사용한다. NDSearch와의 비교에는 NDSearch 평가에 쓰인 billion-scale 데이터셋 SIFT1B와 DEEP1B를 별도로 사용한다.</p>
+      <span class="source-ref">PDF p. 8, 11, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상(baselines)</h3>
+      <p>CPU-Real은 AMD EPYC 9554 CPU(2소켓, 128코어, 3.1GHz), 1.5TB DDR4, Samsung PM9A3 SSD 기반 고성능 서버이다. No-I/O는 스토리지 I/O 데이터 이동 오버헤드가 전혀 없다고 가정한 이상적 CPU 비교점이다. ISP 가속기로는 cluster 기반 알고리즘을 쓰는 ICE, ECC가 불필요한 이상화 버전 ICE-ESP(단 4-bit quantization 사용), 그래프 기반(HNSW/DiskANN) NDSearch를 비교한다. 내부 비교로는 최적화를 끈 No-OPT(DF/PL/MPIBC 미적용)와, ESP 대신 controller에서 ECC를 수행하며 이상적 ASIC을 쓰되 모든 데이터를 controller로 전송해야 하는 REIS-ASIC을 둔다.</p>
+      <span class="source-ref">PDF p. 11, 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>SSD 구성 및 측정 방법론</h3>
+      <p>REIS는 비용 지향적 SSD-1과 성능 지향적 SSD-2 두 구성으로 구현·평가된다(Table 3). 성능·에너지 평가는 Flash-Cosmos 기반 SSD 동작 모델과 파라미터를 사용하고, SSD 내부 DRAM은 CACTI7으로 모델링하며, 임베디드 SSD controller 코어는 Zsim과 Ramulator로 시뮬레이션한다. SSD 전력은 상용 제품과 Flash-Cosmos의 실칩 특성화 결과에 기반해 모델링하고, CPU-Real의 전력은 AMD μProf(CPU)와 DDR4 모델(DRAM)로 측정한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>측정 지표</h3>
+      <p>QPS(Queries per Second, CPU-Real 대비 정규화), 에너지 효율(QPS/W, CPU-Real 대비 정규화), Recall@10, RAG 파이프라인 end-to-end 지연시간(초), 그리고 파이프라인 단계별(임베딩 모델 로딩 / 인코딩 / 데이터셋 로딩 / 검색 / 생성 모델 로딩 / 생성) 지연시간 비중(%)을 사용한다. 검색 방식은 brute-force(BF)와 IVF를 모두 평가하며, IVF는 목표 Recall@10을 0.98 / 0.94 / 0.90으로 두고 비교한다.</p>
+      <span class="source-ref">PDF p. 11, 12, 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>CPU 대비 성능 (Figure 7)</h3>
+      <p>REIS-SSD1과 REIS-SSD2는 CPU-Real 대비 retrieval 성능(QPS)을 평균 13배, 최대 112배 향상시킨다. 특히 스토리지 I/O 오버헤드가 전혀 없다고 가정한 이상적 비교점 No-I/O 대비로도 평균 1.8배, 최대 5.3배 빠른데, 이는 REIS의 이득이 단순히 데이터 이동 제거뿐 아니라 스토리지 내부 병렬성 활용에서도 나옴을 의미한다. REIS-SSD2는 채널 수 2배·채널 대역폭 1.7배 증가에 힘입어 REIS-SSD1 대비 평균 2.6배, 최대 3.2배 빠르다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>에너지 효율 (Figure 8)</h3>
+      <p>REIS는 CPU-Real 대비 에너지 효율(QPS/W)을 평균 55배, 최대 157배 향상시킨다. 근본 원인은 SSD가 CPU 대비 평균 29.7배 낮은 전력을 소비하기 때문이다. REIS-SSD2는 REIS-SSD1 대비 평균 2.2배, 최대 2.6배 높은 에너지 효율을 보인다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>기존 ISP 가속기 대비 (Figure 10, 11)</h3>
+      <p>brute-force 검색에서 REIS는 모든 평가 설정에서 ICE 대비 10배를 초과하는 속도 향상을 달성한다. IVF에서는 목표 recall이 높을수록 격차가 벌어져, Section 6.4 본문 기준 SSD-2에서 ICE 대비 평균 7.1배(0.90 Recall@10) 및 22.9배(0.98 Recall@10)를 보고한다. ECC가 불필요한 이상화 버전 ICE-ESP 대비로도 BF에서 geomean 3.85배(SSD-1)/3.92배(SSD-2), IVF 0.9 recall에서 2.08배/2.29배, 0.98 recall에서 2.84배/3.18배의 향상을 달성한다. 그래프 기반 NDSearch 대비로는 billion-scale 데이터셋에서 평균 1.7배, 최대 2.6배 향상을 보인다. 단, ICE 대비 수치는 원문 내에서 서술 위치별로 값이 다르므로 unresolved 항목을 참고해야 한다.</p>
+      <span class="source-ref">PDF p. 2, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>설계 선택의 기여도 (Figure 9, REIS-ASIC 비교)</h3>
+      <p>Sensitivity study에서 Distance Filtering이 No-OPT 대비 가장 큰 속도 향상 요인으로, 평균 4.7배(SSD-1)/5.7배(SSD-2), 최대 5.1배/6.5배의 향상을 제공한다. MPIBC는 DF+PL 대비 평균 6%(SSD-1) 및 26%(SSD-2)의 추가 향상을 주며, die당 plane 수가 많은 SSD에서 이득이 커진다. 한편 ESP 대신 ECC와 이상적 ASIC을 쓰는 REIS-ASIC은 모든 recall 값·데이터셋에서 REIS 대비 4.1×-5.0×(SSD-1), 3.9×-6.5×(SSD-2)의 속도 저하를 겪는데, 이는 plane 내부에서 연산하지 않고 controller로 데이터를 옮길 때의 비용을 정량화한 결과다.</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>End-to-end RAG 파이프라인 영향 (Table 4)</h3>
+      <p>REIS는 Dataset Loading과 Search를 합친 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 감소시켜 RAG retrieval의 데이터 이동 병목을 사실상 제거한다. 그 결과 end-to-end 지연시간이 HotpotQA에서 1.25배(23.79초 → 18.97초), NQ에서 3.24배(61.69초 → 19.0초) 감소한다. REIS 적용 후에는 Generation 단계가 전체 지연시간의 92%를 차지하여 LLM 추론이 새로운 병목이 된다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론 및 후속 논의</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>핵심 메시지</h3>
+      <p>REIS는 RAG retrieval의 지배적 비용이 연산이 아니라 host-storage 간 데이터 이동임을 정량적으로 보이고, 알고리즘 선택(IVF)·데이터 배치(OOB 기반 embedding-document linkage)·연산 위치(NAND plane 내부 기존 로직 재사용)를 함께 재설계함으로써 추가 연산 하드웨어 없이 성능과 에너지 효율을 동시에 개선할 수 있음을 보인다.</p>
+      <span class="source-ref">PDF p. 1, 2, 6, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>저자들이 discussion에서 다루는 확장</h3>
+      <p>논문은 메타데이터 필터링 지원(임베딩별 메타데이터 tag를 OOB에 저장하고 거리 계산과 동일한 방식으로 tag를 비교해 불일치 결과를 걸러내는 확장)과, 실시간으로 갱신되는 데이터베이스 지원(예: 매시간 새 sub-database를 생성하고 타임스탬프로 태깅하는 방식), 그리고 논리-물리 연속성 요구를 완화하는 embedding-document linkage 대안 구현을 discussion에서 논의한다.</p>
+      <span class="source-ref">PDF p. 13, 14</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>REIS 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 8, 9, 10</span>
+              </div>
+              <p>Host가 query embedding을 보내면 SSD 내부에서 coarse-grained cluster 선정, fine-grained 거리 계산 및 distance filtering, top-10k 선택, INT8 reranking, document identification까지 수행하고 최종 document chunk만 host로 반환하는 흐름이다.</p>
+              <div class="mermaid">
+flowchart TD
+    H[&quot;Host: Query Embedding 전송&quot;] --&gt; D[&quot;SSD DRAM 저장 및 ANNS 커널 트리거&quot;]
+    D --&gt; B[&quot;IBC / MPIBC: Cache Latch에 Query Broadcast&quot;]
+    B --&gt; C1[&quot;Coarse-grained Search: Centroid Page 읽기&quot;]
+    C1 --&gt; C2[&quot;XOR + Fail-bit Counter로 거리 계산&quot;]
+    C2 --&gt; C3[&quot;TTL-C 기록 후 Quickselect로 근접 N개 Cluster 선정&quot;]
+    C3 --&gt; F1[&quot;Fine-grained Search: 선정 Cluster 임베딩 스캔&quot;]
+    F1 --&gt; F2[&quot;Distance Filtering: threshold 초과 조기 제거&quot;]
+    F2 --&gt; F3[&quot;TTL-E 기록 (DIST, EMB, RADR, DADR)&quot;]
+    F3 --&gt; T[&quot;Quickselect로 Top-10k 임베딩 선택&quot;]
+    T --&gt; R[&quot;RADR로 INT8 임베딩 Fetch 후 Reranking&quot;]
+    R --&gt; K[&quot;Quicksort로 최종 Top-k 결정&quot;]
+    K --&gt; DOC[&quot;DADR로 Document Chunk 식별&quot;]
+    DOC --&gt; OUT[&quot;Host로 Document Chunk 반환&quot;]
+    OUT --&gt; G[&quot;LLM Generation 단계&quot;]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 REIS의 데이터 이동 비교</h3>
+                <span class="source-ref">PDF p. 1, 2, 6, 9</span>
+              </div>
+              <p>기존 CPU 기반 RAG는 전체 임베딩과 document chunk를 storage에서 host로 옮겨야 하고, 기존 ISP ANNS 가속기는 ANNS만 가속해 document 로딩이 남는다. REIS는 검색과 문서 식별을 모두 storage 내부에서 수행해 최종 문서만 전송한다.</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph BASE[&quot;기존 CPU 기반 RAG&quot;]
+        S1[&quot;SSD: 전체 임베딩 + 문서&quot;] --&gt;|&quot;대용량 I/O&quot;| C1[&quot;Host CPU: ANNS + 문서 선택&quot;]
+        C1 --&gt; L1[&quot;LLM Generation&quot;]
+    end
+    subgraph ISP[&quot;기존 ISP ANNS 가속기&quot;]
+        S2[&quot;SSD: ANNS 가속&quot;] --&gt;|&quot;선택 임베딩 + 문서 로딩 잔존&quot;| C2[&quot;Host CPU: Document Retrieval&quot;]
+        C2 --&gt; L2[&quot;LLM Generation&quot;]
+    end
+    subgraph REIS[&quot;REIS&quot;]
+        S3[&quot;SSD: IVF 검색 + Reranking + 문서 식별&quot;] --&gt;|&quot;최종 Document Chunk만&quot;| C3[&quot;Host&quot;]
+        C3 --&gt; L3[&quot;LLM Generation&quot;]
+    end
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>REIS의 데이터 배치와 보조 자료구조</h3>
+                <span class="source-ref">PDF p. 6, 7, 8</span>
+              </div>
+              <p>임베딩 영역(centroid / binary / INT8)과 문서 영역의 분리, SSD DRAM 상주 레지스트리(R-DB, R-IVF, TTL), OOB 영역에 저장되는 링크 정보의 관계를 나타낸다.</p>
+              <div class="mermaid">
+flowchart TD
+    subgraph DRAM[&quot;SSD DRAM&quot;]
+        RDB[&quot;R-DB: 데이터베이스 주소 레지스트리&quot;]
+        RIVF[&quot;R-IVF: cluster별 centroid 주소/범위/tag (15B)&quot;]
+        TTL[&quot;TTL-C / TTL-E: 임시 Top List&quot;]
+    end
+    subgraph FLASH[&quot;NAND Flash&quot;]
+        subgraph SLC[&quot;SLC 파티션 (ESP, zero BER)&quot;]
+            CEN[&quot;Centroid 임베딩&quot;]
+            BIN[&quot;Binary 임베딩&quot;]
+        end
+        subgraph TLC[&quot;TLC 파티션 (고밀도)&quot;]
+            INT8[&quot;INT8 임베딩&quot;]
+            DOCS[&quot;Document Chunk&quot;]
+        end
+        OOB[&quot;OOB 영역: DADR + RADR + Cluster TAG&quot;]
+    end
+    RIVF --&gt; CEN
+    CEN --&gt; BIN
+    BIN --- OOB
+    OOB --&gt; INT8
+    OOB --&gt; DOCS
+    RDB --&gt; FLASH
+    BIN --&gt; TTL
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>REIS의 retrieval 성능 향상 (CPU-Real 대비 정규화 QPS)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 1, 2, 11 · Figure 7 · REIS-SSD1/SSD2, NQ/HotpotQA/wiki_en/wiki_full, BF 및 IVF(Recall@10=0.98/0.94/0.90) 전체 평균 및 최대값. 원문 그래프는 로그 스케일이며 개별 막대 수치는 확인 불가하므로 본문에 명시된 평균/최대값만 사용함.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>REIS의 에너지 효율 향상 (CPU-Real 대비 정규화 QPS/W)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 1, 2, 12 · Figure 8 · REIS vs CPU-Real, 전체 데이터셋/설정 평균 및 최대값. &#x27;SSD 전력 감소&#x27;는 SSD가 CPU-Real 대비 소비 전력이 낮은 배수로, 에너지 효율 향상의 근본 원인으로 본문에 서술됨.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>End-to-end RAG 파이프라인 지연시간 (REIS vs CPU+BQ)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Table 4 · REIS-SSD1 vs CPU 기반 Binary Quantization 시스템, end-to-end RAG 파이프라인 지연시간(초). 감소 배수는 HotpotQA 1.25×, NQ 3.24×.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Distance Filtering의 성능 기여도 (No-OPT 대비)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Figure 9 · wiki_full 데이터셋, No-OPT(DF/PL/MPIBC 미적용) 대비 Distance Filtering 단독 적용, CPU-Real 대비 정규화된 QPS 기준. MPIBC의 추가 이득(DF+PL 대비 6%/26%)은 단위가 달라 별도 표기하지 않음.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>기존 ISP 기반 ANNS 가속기 대비 성능 향상</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 13 · Figure 10, Figure 11 (ICE-ESP 비교는 Figure에 미표시, 본문 수치) · ICE 비교는 Section 6.4 본문 수치(전체 데이터셋 평균)를 사용했으며, Abstract/Introduction의 24.2×/9.76× 서술과 불일치가 존재한다(unresolved 참조). NDSearch 비교는 SIFT-1B(Recall@10=0.94) 및 DEEP-1B(Recall@10=0.93) 기준.
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>문제 정의가 자체 측정에 기반한다. 84%(무양자화), 67%(BQ 적용 후)라는 구체적 병목 수치를 먼저 제시하고 설계를 도출하므로, 제안 기법의 동기가 사후 정당화가 아니라 관측에서 나온다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>알고리즘·데이터 배치·연산 위치를 각각 따로 최적화하지 않고 일관된 하나의 제약(SSD 내부 병렬성과 plane 로직의 표현력)에 맞춰 공동 설계했다. IVF 선택 → binary 임베딩 → XOR/fail-bit counter → OOB linkage로 이어지는 결정들이 서로를 지지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7, 8, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>추가 연산 하드웨어(MAC, systolic array)를 도입하지 않고 SSD에 이미 존재하는 구성요소만 재사용하므로, ICE·DeepStore가 겪는 저장 공간(32×/8×) 및 면적·전력 오버헤드 문제를 구조적으로 회피한다. 이는 실제 제품 적용 가능성 측면에서 중요한 차별점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 6, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>ANNS만이 아니라 document retrieval까지 storage 내부에서 완결시킨다는 점이 기존 ISP ANNS 가속기와의 본질적 차이다. BQ 적용 후에도 document chunk가 wiki_en 전송량 14GB 중 9GB를 차지한다는 측정이 이 설계 선택의 필요성을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>비교 기준이 공정한 방향으로 설정되어 있다. I/O 비용이 0인 이상적 No-I/O, ECC가 불필요한 이상화 ICE-ESP, 연산 오버헤드가 0인 이상적 REIS-ASIC 등 자신에게 불리한 이상화 baseline을 포함시켜 이득의 출처를 분해한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>end-to-end 파이프라인 관점의 평가(Table 4)를 포함해, 커널 수준 속도 향상이 실제 응답 지연으로 얼마나 이어지는지와 병목이 어디로 이동하는지를 함께 보고한다. 개선의 상한을 스스로 드러낸다는 점에서 정직한 평가다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>ISP 도입 자체의 근본적 설계 난제를 인정한다. (1) 임베디드 코어는 성능과 기능이 제한적이며 부동소수점 연산을 지원하지 않고, (2) flash channel 대역폭이 전체 NAND flash 읽기 대역폭보다 제한적이다. 또한 plane 내부 하드웨어 재사용으로 인해 flash die 내부 로직은 단순한 bitwise 및 bit-counting 연산만 지원하며, NAND flash 읽기는 본질적으로 unreliable하여 ECC가 필요한데 이는 plane 내부 연산 시 기존과 다른 오류 완화 메커니즘(ESP)을 요구한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>I/O data movement가 end-to-end RAG 성능에 기여하는 정도는 인코딩 및 생성 모델의 크기에 크게 좌우된다는 caveat을 인정한다. 예를 들어 Llama 3.2 90B 같은 대형 생성 모델을 쓰면 생성 지연시간이 늘어나 retrieval 단계의 상대적 영향이 줄어든다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Coarse-grained access(경량 L2P 매핑)는 연속된 미할당 물리 공간의 존재를 요구하며, 데이터베이스 배포 시 단편화 해소(defragmentation) 작업이 필요할 수 있다. 저자들은 이를 상각 가능한 초기 오버헤드로 설명한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 14</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>embedding-document linkage와 문서 영역이 contiguity(연속성) 기반 접근을 사용하므로, 문서가 업데이트되어 재배치될 경우를 지원하려면 OOB 영역의 물리 주소를 매번 갱신해야 하는 추가 복잡성이 발생한다(비-contiguity 대안 접근에서).</span>
+              </div>
+              <span class="source-ref">PDF p. 13, 14</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>메타데이터 필터링은 현재 REIS 설계에 기본 포함되어 있지 않으며, 이를 지원하려면 read-only 데이터베이스를 가정한 확장(메타데이터 tag를 OOB 영역에 저장)이 필요하다고 discussion에서 별도로 제안한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>REIS 적용 후 Generation 단계가 전체 지연시간의 92%를 차지하므로, retrieval 최적화의 end-to-end 이득에는 명확한 상한이 있다. HotpotQA에서 end-to-end 개선이 1.25배에 그친 것이 이를 보여준다. 즉 retrieval QPS의 큰 향상이 사용자 체감 지연 개선으로 그대로 전이되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>IVF 채택은 ISP 친화성을 얻는 대신 알고리즘 선택의 폭을 좁힌다. 그래프 기반 알고리즘이 유리한 데이터 분포나, 향후 더 나은 인덱스가 등장할 경우 REIS의 하드웨어-알고리즘 결합 설계가 유연하게 따라가기 어려울 수 있다. 논문은 IVF 이외 알고리즘으로의 확장 가능성을 평가하지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Distance Filtering의 threshold가 사전 정의(pre-defined)되어 있다. 성능 기여도가 가장 큰 최적화(평균 4.7×-5.7×)인 만큼, 질의 분포나 데이터셋 특성에 따른 threshold 민감도와 recall 손실 가능성이 중요한데 이에 대한 분석은 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>평가가 시뮬레이션 기반(Flash-Cosmos 모델, CACTI7, Zsim, Ramulator)이며 실제 SSD 프로토타입 구현 결과는 확인되지 않는다. 특히 ESP 기반 zero-BER 가정과 OOB 영역 재사용의 실환경 신뢰성·수명(endurance) 영향은 실측으로 뒷받침되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>hybrid SSD 구성(SLC 파티션에 binary 임베딩, TLC 파티션에 문서·INT8 임베딩)은 SLC 영역이 TLC 대비 저장 밀도가 낮으므로 실효 용량 측면의 비용을 수반할 것으로 보이나, 이 트레이드오프의 정량적 분석은 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Distance Filtering의 threshold를 질의·데이터셋에 따라 동적으로 조정하면 recall 손실 없이 추가 성능 이득을 얻을 수 있는가?</h3>
+              </div>
+              <p>DF가 No-OPT 대비 평균 4.7×-5.7×로 가장 큰 성능 기여를 하지만 threshold는 사전 정의된 값이며, 조건별 민감도 분석이 논문에서 확인되지 않는다.</p>
+              <span class="source-ref">PDF p. 10, 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>생성 단계가 전체의 92%를 차지하는 상황에서, REIS 같은 in-storage retrieval과 LLM 추론 가속(예: 배치 스케줄링, KV cache 관리)을 함께 설계하면 end-to-end 이득은 얼마나 커지는가?</h3>
+              </div>
+              <p>Table 4에서 병목이 storage에서 generation으로 이동했고, 저자 스스로 생성 모델 크기가 I/O 영향도를 좌우한다고 인정한다.</p>
+              <span class="source-ref">PDF p. 5, 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>지속적으로 갱신되는(write-heavy) 벡터 데이터베이스에서 OOB 기반 embedding-document linkage와 coarse-grained L2P 매핑의 유지 비용은 얼마이며, GC(garbage collection) 및 wear leveling과 어떻게 상호작용하는가?</h3>
+              </div>
+              <p>저자들이 contiguity 요구와 defragmentation 필요성, 문서 재배치 시 OOB 갱신 복잡성을 한계로 명시했으나 정량 평가는 제시하지 않는다.</p>
+              <span class="source-ref">PDF p. 7, 13, 14</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>IVF 이외의 ISP 친화적 인덱스(예: 계층적 cluster, 학습 기반 partitioning)를 동일한 plane 내부 연산 제약(bitwise + bit-counting) 위에서 구현할 수 있는가?</h3>
+              </div>
+              <p>REIS의 알고리즘 선택은 plane 로직이 단순 bitwise/bit-counting만 지원한다는 제약에서 도출되었으며, 다른 인덱스로의 확장은 평가되지 않았다.</p>
+              <span class="source-ref">PDF p. 6, 7, 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>ESP 기반 SLC 파티션의 zero-BER 가정이 실제 소자 노화(P/E cycling, retention) 조건에서 얼마나 유지되며, 이것이 REIS의 recall에 미치는 영향은 무엇인가?</h3>
+              </div>
+              <p>ECC 없는 plane 내부 연산이 REIS 성능 이득의 핵심(REIS-ASIC 대비 4.1×-6.5×)이지만, 평가가 시뮬레이션 및 기존 특성화 결과에 기반한다.</p>
+              <span class="source-ref">PDF p. 6, 11, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>멀티 테넌트 환경에서 서로 다른 도메인 데이터베이스가 하나의 SSD를 공유할 때, plane 병렬성을 전제로 한 Parallelism-First Page Allocation은 어떤 간섭을 겪는가?</h3>
+              </div>
+              <p>저자들은 batching이 도메인 분산 때문에 비효과적이라고 지적했으나, 동일한 도메인 다양성이 REIS의 데이터 배치에 주는 영향은 논의되지 않는다.</p>
+              <span class="source-ref">PDF p. 5, 6, 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>ICE 대비 속도 향상 수치가 원문 내에서 서로 다르게 보고된 원인은 무엇이며, 어떤 조건에서의 값이 대표값인가?</h3>
+              </div>
+              <p>Abstract/Introduction(24.2×/9.76×), Contributions bullet(up to 24.1×), Section 6.4 본문(22.9×/7.1×)의 수치가 일치하지 않으며 조건 차이가 명시되어 있지 않다.</p>
+              <span class="source-ref">PDF p. 2, 13</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>RAG (Retrieval-Augmented Generation)</dt>
+              <dd>
+                외부 지식 데이터베이스에서 질의와 관련된 문서를 검색해 LLM 입력에 추가함으로써, 재학습 없이 최신·도메인 특화 지식을 반영하는 기법. retrieval 단계가 응답 생성의 critical path에 있다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ANNS (Approximate Nearest Neighbor Search)</dt>
+              <dd>
+                고차원 임베딩 공간에서 질의 벡터와 가장 가까운 벡터들을 근사적으로 찾는 검색. 정확도(recall)를 일부 희생해 탐색 속도를 크게 높인다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ISP (In-Storage Processing)</dt>
+              <dd>
+                데이터를 host로 옮기지 않고 스토리지 장치 내부에서 연산을 수행하는 방식. host-storage 간 데이터 이동 비용을 제거하고 SSD 내부 대역폭을 활용할 수 있다.
+                <span class="source-ref">PDF p. 1, 2, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>IVF (Inverted File)</dt>
+              <dd>
+                임베딩을 cluster로 분할하고 각 cluster를 centroid로 대표하는 인덱스. 검색은 centroid 비교(coarse-grained) 후 선택된 cluster 내부 순회(fine-grained)로 진행되며, cluster 내부가 연속 배치되어 streaming 접근이 가능하다.
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>HNSW / DiskANN</dt>
+              <dd>
+                그래프 기반 ANNS 알고리즘. 높은 recall을 제공하지만 순회 과정이 현재 정점 분석에 의존해 불규칙한 접근 패턴을 만들고, 이는 channel/chip 충돌을 유발해 ISP에 부적합하다.
+                <span class="source-ref">PDF p. 1, 6, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>BQ (Binary Quantization)</dt>
+              <dd>
+                임베딩 각 차원을 1비트로 양자화하는 기법. 거리 계산이 Hamming distance(XOR + 1의 개수 세기)로 환원되어 NAND plane의 기존 로직만으로 계산할 수 있게 한다. REIS는 INT8 reranking으로 정밀도 손실을 보상한다.
+                <span class="source-ref">PDF p. 6, 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PQ (Product Quantization)</dt>
+              <dd>
+                임베딩을 부분 벡터로 나누어 각각 코드북 인덱스로 압축하는 양자화 기법. 저장 공간과 recall 간 좋은 트레이드오프를 주지만 document chunk 크기는 줄이지 못한다.
+                <span class="source-ref">PDF p. 6, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>OOB (Out-Of-Band) 영역</dt>
+              <dd>
+                NAND flash page에 부속된 spare 영역으로 통상 ECC·메타데이터 저장에 쓰인다. REIS는 이 중 0.7%(16KB page당 16바이트)를 재사용해 document 주소(DADR), INT8 재채점 주소(RADR), cluster tag를 저장한다.
+                <span class="source-ref">PDF p. 6, 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ESP (Enhanced SLC-mode Programming)</dt>
+              <dd>
+                SLC 모드로 프로그램해 셀 상태 간 마진을 넓힘으로써 오류율을 사실상 0으로 만드는 기법. REIS는 이를 통해 ECC 없이 plane 내부 연산을 수행할 수 있다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Parallelism-First Page Allocation</dt>
+              <dd>
+                임베딩을 모든 plane에 고르게 분산 배치해 plane/die/channel 수준 병렬성을 최대한 활용하도록 하는 REIS의 페이지 할당 정책.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Embedding-Document Linkage</dt>
+              <dd>
+                각 임베딩의 OOB 영역에 대응 document chunk의 물리 주소를 저장해, 별도 자료구조 없이 임베딩과 문서를 연결하는 REIS의 메커니즘. document retrieval을 storage 내부에서 완결시키는 근간이다.
+                <span class="source-ref">PDF p. 6, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>R-DB / R-IVF</dt>
+              <dd>
+                SSD DRAM에 상주하는 레지스트리. R-DB는 coarse-grained 주소 레지스트리로 page-level FTL을 대체해 1TB 기준 1GB를 21바이트로 축소한다. R-IVF는 cluster별 centroid 주소·첫/마지막 임베딩 인덱스·8비트 tag를 담는 배열로 항목당 15바이트를 차지한다.
+                <span class="source-ref">PDF p. 6, 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>TTL-C / TTL-E (Temporal Top List)</dt>
+              <dd>
+                SSD DRAM에 유지되는 임시 후보 목록. TTL-C는 centroid 후보(DIST, EMB, EADR, TAG), TTL-E는 임베딩 후보(DIST, EMB, RADR, DADR)를 기록하며, 임베디드 코어의 quickselect 대상이 된다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>CL / SL / DL (Cache / Sensing / Data Latch)</dt>
+              <dd>
+                NAND flash plane 내부의 래치들. REIS는 CL에 broadcast된 query를, SL에 읽어온 데이터베이스 임베딩을 두고 두 값의 XOR 결과를 DL에 저장하는 방식으로 거리 계산을 수행한다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Fail-bit Counter / Pass-Fail Checker</dt>
+              <dd>
+                원래 프로그램 검증에 쓰이는 plane 내부 peripheral logic. REIS는 fail-bit counter로 XOR 결과의 1의 개수(Hamming distance)를 세고, pass/fail checker로 threshold 초과 임베딩을 조기 제거(Distance Filtering)한다.
+                <span class="source-ref">PDF p. 8, 9, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Distance Filtering (DF)</dt>
+              <dd>
+                사전 정의된 threshold를 초과하는 먼 임베딩을 plane 내부에서 조기에 걸러내 SSD controller로 전송하지 않는 최적화. sensitivity study에서 가장 큰 성능 기여 요인이다(평균 4.7×-5.7×).
+                <span class="source-ref">PDF p. 10, 12</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MPIBC (Multi-Plane Input Broadcasting)</dt>
+              <dd>
+                하나의 die 내 모든 plane에 query embedding을 동시에 broadcast하는 최적화. die당 plane 수가 많은 SSD에서 이득이 커지며, DF+PL 대비 평균 6%(SSD-1)/26%(SSD-2) 추가 향상을 준다.
+                <span class="source-ref">PDF p. 10, 12</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Reranking</dt>
+              <dd>
+                binary 임베딩으로 좁힌 top-10k 후보를 RADR로 fetch한 INT8 정밀도 임베딩으로 재계산·재정렬해 최종 top-k를 결정하는 단계. BQ의 정밀도 손실을 보상한다.
+                <span class="source-ref">PDF p. 8, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Recall@10</dt>
+              <dd>
+                상위 10개 검색 결과 중 실제 정답(정확한 최근접 이웃)이 포함된 비율. 이 논문에서 성능 비교는 동일한 목표 Recall@10(0.90/0.94/0.98) 조건에서 이루어진다.
+                <span class="source-ref">PDF p. 8, 11, 13</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>No-I/O</dt>
+              <dd>
+                스토리지 I/O로 인한 데이터 이동 오버헤드가 전혀 없다고 가정한 이상적 CPU 비교점. REIS가 이 대비로도 평균 1.8배 빠르다는 점이 내부 병렬성 활용 효과를 보여준다.
+                <span class="source-ref">PDF p. 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Mini-Page 주소</dt>
+              <dd>
+                물리 page 주소에 offset을 덧붙여 page보다 작은 단위의 임베딩에 접근할 수 있게 하는 REIS의 fine-grained 주소 지정 방식.
+                <span class="source-ref">PDF p. 8, 9, 10</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>Abstract/Introduction(REIS-SSD2 vs ICE 평균 24.2×/9.76× at Recall@10 0.98/0.90)과 Section 6.4/Figure 10 본문(SSD-2 vs ICE 평균 22.9×/7.1× at Recall@10 0.98/0.90) 사이에 수치 불일치가 원문에 존재하며, 이를 조정할 근거나 계산 조건 차이가 본문에 명시되어 있지 않다.</li><li>Contributions bullet의 &#x27;up to 24.1×&#x27;와 Introduction Key Results의 &#x27;24.2×&#x27;가 서로 다르게 표기되어 있다(원문 그대로 기록, 불일치의 원인은 본문에서 확인 불가).</li><li>Figure 5, 7, 8, 9, 10, 11은 로그 스케일 막대그래프로 제시되어 있어, 본문에 텍스트로 명시된 평균/최대값 이외의 개별 막대(데이터셋×Recall×SSD 조합별) 정확한 수치는 확인할 수 없다. 따라서 charts 배열에는 본문에 명시된 수치만 포함했다.</li><li>REIS-SSD1/SSD2의 정확한 내부 DRAM 용량, latch 크기, 임베디드 코어 클럭 속도 등 세부 스펙은 Table 3에 제시된 항목(채널·플레인·다이 수, 채널 대역폭, tR, 임베디드 코어 종류/개수) 외에는 본문에서 확인되지 않는다.</li><li>REIS-ASIC 비교 실험의 정확한 데이터셋별·recall별 개별 수치는 범위(4.1×-5.0×, 3.9×-6.5×)로만 제시되어 있어 세부 조건별 수치는 확인할 수 없다.</li><li>Distance Filtering threshold의 구체적 설정 방법과 그것이 Recall@10에 미치는 영향에 대한 정량 분석은 확인되지 않는다.</li><li>hybrid SSD 구성(SLC 파티션 + TLC 파티션)이 SSD 실효 용량에 미치는 영향과 그 비용에 대한 정량 분석은 확인되지 않는다.</li><li>OOB 영역 재사용 및 ESP 적용이 SSD 수명(endurance)과 신뢰성에 미치는 장기적 영향은 실측 근거로 확인되지 않는다.</li><li>REIS의 실제 하드웨어 프로토타입 구현 여부는 확인되지 않으며, 평가는 Flash-Cosmos 기반 모델·CACTI7·Zsim·Ramulator를 사용한 시뮬레이션에 기반한다.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "REIS의 retrieval 성능 향상 (CPU-Real 대비 정규화 QPS)", "labels": ["vs CPU-Real (평균)", "vs CPU-Real (최대)", "vs No-I/O (평균)", "vs No-I/O (최대)", "SSD2 vs SSD1 (평균)", "SSD2 vs SSD1 (최대)"], "values": [13, 112, 1.8, 5.3, 2.6, 3.2], "unit": "×", "xLabel": "비교 항목", "yLabel": "속도 향상 배수"}, {"canvasId": "chart-1", "type": "bar", "title": "REIS의 에너지 효율 향상 (CPU-Real 대비 정규화 QPS/W)", "labels": ["vs CPU-Real (평균)", "vs CPU-Real (최대)", "SSD2 vs SSD1 (평균)", "SSD2 vs SSD1 (최대)", "SSD 전력 감소 (평균)"], "values": [55, 157, 2.2, 2.6, 29.7], "unit": "×", "xLabel": "비교 항목", "yLabel": "에너지 효율 향상 배수"}, {"canvasId": "chart-2", "type": "bar", "title": "End-to-end RAG 파이프라인 지연시간 (REIS vs CPU+BQ)", "labels": ["HotpotQA - CPU+BQ", "HotpotQA - REIS", "NQ - CPU+BQ", "NQ - REIS"], "values": [23.79, 18.97, 61.69, 19.0], "unit": "s", "xLabel": "데이터셋 및 시스템", "yLabel": "지연시간"}, {"canvasId": "chart-3", "type": "bar", "title": "Distance Filtering의 성능 기여도 (No-OPT 대비)", "labels": ["DF, SSD1 (평균)", "DF, SSD1 (최대)", "DF, SSD2 (평균)", "DF, SSD2 (최대)"], "values": [4.7, 5.1, 5.7, 6.5], "unit": "×", "xLabel": "구성", "yLabel": "속도 향상 배수"}, {"canvasId": "chart-4", "type": "bar", "title": "기존 ISP 기반 ANNS 가속기 대비 성능 향상", "labels": ["vs ICE, IVF R@10=0.90, SSD2", "vs ICE, IVF R@10=0.98, SSD2", "vs ICE-ESP, BF, SSD1", "vs ICE-ESP, BF, SSD2", "vs ICE-ESP, IVF R@10=0.9, SSD1", "vs ICE-ESP, IVF R@10=0.9, SSD2", "vs ICE-ESP, IVF R@10=0.98, SSD1", "vs ICE-ESP, IVF R@10=0.98, SSD2", "vs NDSearch, billion-scale (평균)", "vs NDSearch, billion-scale (최대)"], "values": [7.1, 22.9, 3.85, 3.92, 2.08, 2.29, 2.84, 3.18, 1.7, 2.6], "unit": "×", "xLabel": "비교 대상 및 조건", "yLabel": "속도 향상 배수"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

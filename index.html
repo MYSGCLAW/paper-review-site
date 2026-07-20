@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>30</small>
+          <small>31</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>4</small>
+          <small>3</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 30편</span>
-        <span class="stat">전체 항목 44개</span>
+        <span class="stat">논문 31편</span>
+        <span class="stat">전체 항목 45개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>30개 문서</small>
+      <small>31개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>30</small>
+          <small>31</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>4</small>
+          <small>3</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,7 +923,7 @@
     </div>
 
     <span class="pending-queue-count">
-      4편 대기 중
+      3편 대기 중
     </span>
   </div>
 
@@ -935,12 +935,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>REIS.pdf</strong>
+            <strong>Towards Storage-Efficient Visual Document Retrieval An Empirical Study.pdf</strong>
             <span>등록 시각 · 2026-07-20 15:27</span>
           </div>
 
           <div class="pending-queue-size">
-            1.2 MB
+            2.5 MB
           </div>
 
           <div>
@@ -954,28 +954,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>Towards Storage-Efficient Visual Document Retrieval An Empirical Study.pdf</strong>
-            <span>등록 시각 · 2026-07-20 15:27</span>
-          </div>
-
-          <div class="pending-queue-size">
-            2.5 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -997,7 +975,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -1030,7 +1008,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">30개</span>
+        <span class="section-count">31개</span>
       </div>
 
       <div class="library-grid">
@@ -1706,6 +1684,32 @@
       </p>
 
       <a class="open-link" href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/reis/">
+            REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Kangqi Chen, Rakesh Nadig, Manos Frouzakis, Nika Mansouri Ghiasi, Yu Liang, Haiyu Mao, Jisung Park, Mohammad Sadrosadati, Onur Mutlu</p>
+      <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), June 21-25, 2025, Tokyo, Japan</p>
+
+      <p class="summary">
+        REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계한다. 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 평가 결과 REIS는 256-core CPU 서버(CPU-Real) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 달성하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비 SSD 구성과 목표 Recall@10에 따라 7.67배에서 최대 24.1배까지 RAG retrieval을 가속한다. 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.
+      </p>
+
+      <a class="open-link" href="papers/reis/">
         보고서 열기 →
       </a>
     </article>
