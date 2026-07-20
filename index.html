@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>25</small>
+          <small>26</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>2</small>
+          <small>1</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 25편</span>
-        <span class="stat">전체 항목 39개</span>
+        <span class="stat">논문 26편</span>
+        <span class="stat">전체 항목 40개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>25개 문서</small>
+      <small>26개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>25</small>
+          <small>26</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>2</small>
+          <small>1</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,7 +923,7 @@
     </div>
 
     <span class="pending-queue-count">
-      2편 대기 중
+      1편 대기 중
     </span>
   </div>
 
@@ -932,28 +932,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             1
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>NVM-Express-Computational-Programs-Command-Set-Specification-Revision-1.2-2025.08.01-Ratified.pdf</strong>
-            <span>등록 시각 · 2026-07-19 23:46</span>
-          </div>
-
-          <div class="pending-queue-size">
-            714.7 KB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-next">
-              다음 분석
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            2
           </div>
 
           <div class="pending-queue-paper">
@@ -966,8 +944,8 @@
           </div>
 
           <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
+            <span class="pending-queue-status queue-next">
+              다음 분석
             </span>
           </div>
         </div>
@@ -986,7 +964,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">25개</span>
+        <span class="section-count">26개</span>
       </div>
 
       <div class="library-grid">
@@ -1558,6 +1536,32 @@
       </p>
 
       <a class="open-link" href="papers/mordenbert/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
+            NVM Express® Computational Programs Command Set Specification, Revision 1.2
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">NVM Express, Inc. (NVM Express Workgroup)</p>
+      <p class="metadata">2025 · Technical specification (industry standard, ratified)</p>
+
+      <p class="summary">
+        본 문서는 연구 논문이 아니라 NVM Express가 2025년 7월 30일자로 발행한 산업 표준 규격서(Revision 1.2, ratified)이며, host에서 NVM subsystem으로 프로그램 실행을 오프로드(offload)하기 위한 Computational Programs Command Set을 정의한다(pp.9-10). 핵심 모델은 host-driven 방식이다. 즉 프로그램(program)은 device-defined이거나 host가 download한 것일 수 있고, 프로그램은 하나 이상의 memory namespace, 즉 Subsystem Local Memory(SLM) 내 데이터에 대해서만 동작하며, 프로그램의 입력 및 출력 데이터는 host가 발행하는 NVMe 커맨드를 통해 memory namespace로 staging된다(pp.9-10). 규격은 이를 위해 (1) 프로그램을 실행하는 주체인 compute namespace, (2) 데이터를 담는 memory namespace/SLM, (3) 프로그램이 접근 가능한 SLM 영역을 (NSID, offset, length) range들의 집합으로 한정하는 Memory Range Set, (4) compute namespace가 어떤 memory namespace에 도달 가능한지를 규정하는 reachability라는 네 가지 개념을 축으로 구조를 정의한다(pp.9-13). 커맨드 수준에서는 I/O 커맨드인 Execute Program(opcode 01h)과 Admin 커맨드인 Load Program, Program Activation Management, Memory Range Set Management가 정의되며, 프로그램은 PUID(64비트 Program Unique Identifier)로 기능이 식별되고 compute namespace 내에서는 PIND(Program Index)로 참조된다(pp.13-16, 25-27, 34-39). 동작 흐름은 capability 탐색 → 프로그램 load → activation → Memory Range Set 생성 → 입력 데이터 staging 후 Execute Program 발행 → completion queue entry에서 상태와 64비트 return value(RVAL) 확인 → 결과 데이터 회수의 순서로 진행된다(pp.17-22). 규격 문서의 특성상 정량적 실험 평가나 baseline 비교는 포함되어 있지 않다.
+      </p>
+
+      <a class="open-link" href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
         보고서 열기 →
       </a>
     </article>
