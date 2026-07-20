@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -706,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 custom CUDA MaxSim 커널이 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 ESPN은 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다.</p>
+        <p>이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 custom CUDA MaxSim 커널이 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 저자들은 ESPN이 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다고 보고한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다고 저자들은 밝힌다.</p>
         <span class="source-ref">PDF p. 1, 6, 7, 9, 11, 12</span>
       </section>
 
@@ -726,7 +753,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>ESPN은 mmap 대비 종단간 쿼리 지연시간을 3.1-3.9배 줄인다.</span>
+                <span>저자들은 ESPN이 mmap 대비 종단간 쿼리 지연시간을 3.1-3.9배 줄인다고 보고한다.</span>
               </div>
               <span class="source-ref">PDF p. 1, 12</span>
             </li>
@@ -734,7 +761,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>ESPN은 완전 캐시 방식 대비 검색 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 줄이고, 지연시간은 완전 캐시 대비 1.02배 수준을 유지한다.</span>
+                <span>저자들은 ESPN이 완전 캐시 방식 대비 검색 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 줄이고, 지연시간은 완전 캐시 대비 1.02배 수준을 유지한다고 보고한다.</span>
               </div>
               <span class="source-ref">PDF p. 1, 12</span>
             </li>
@@ -742,7 +769,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>상위 64-128개만 재랭킹해도 MRR@10의 99-99.7%가 유지되며 임베딩 전송량은 8-16배 감소한다(ESPN-Lite의 근거).</span>
+                <span>상위 64-128개만 재랭킹해도 MRR@10의 99-99.7%가 유지되며 임베딩 전송량은 8-16배 감소한다고 저자들은 보고한다(ESPN-Lite의 근거).</span>
               </div>
               <span class="source-ref">PDF p. 9</span>
             </li>
@@ -758,7 +785,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>naive GDS만으로는 부족하다. 프리페칭 없는 GDS는 critical path에서 DRAM 대비 7.7배 높은 접근 지연을 보이며, ESPN은 GDS 대비 처리량을 68% 향상시킨다.</span>
+                <span>naive GDS만으로는 부족하다. 프리페칭 없는 GDS는 critical path에서 DRAM 대비 7.7배 높은 접근 지연을 보이며, ESPN은 GDS 대비 처리량을 68% 향상시킨다고 저자들은 보고한다.</span>
               </div>
               <span class="source-ref">PDF p. 13</span>
             </li>
@@ -1092,42 +1119,42 @@
       
     <article class="content-item">
       <h3>Prefetcher hit rate</h3>
-      <p>Figure 7에 따르면 MS-MARCO v1에서 hit rate는 prefetch step 5%일 때 74%(nprobe=1000), 85%(nprobe=3000)에서 30%일 때 90% 이상으로 향상된다. MS-MARCO v2에서는 5%일 때 68%(nprobe=160), 70%(nprobe=200)에서 30%일 때 각각 약 89%, 90%로 향상된다. 즉 대부분의 임베딩을 미리 가져올 수 있어 critical path 접근 수요가 크게 줄어든다.</p>
+      <p>Figure 7에 따르면 MS-MARCO v1에서 hit rate는 prefetch step 5%일 때 74%(nprobe=1000), 85%(nprobe=3000)로 측정되며, 30% 지점에서는 본문에 &#x27;90% 이상&#x27;이라는 근사 표현으로만 보고된다. MS-MARCO v2에서는 5%일 때 68%(nprobe=160), 70%(nprobe=200)이며, 30% 지점은 각각 &#x27;약 89%&#x27;, &#x27;약 90%&#x27;로만 언급된다. 정확한 수치가 제시된 5% 지점 기준으로도 대부분의 임베딩을 미리 가져올 수 있어 critical path 접근 수요가 크게 줄어드는 경향을 보인다.</p>
       <span class="source-ref">PDF p. 11</span>
     </article>
     
 
     <article class="content-item">
       <h3>MS-MARCO v1 종단간 지연시간 (Table 5)</h3>
-      <p>Mmap은 메모리 10GB에서 183.2ms로 매우 느리며 30GB에서 53.4ms까지 감소한다. Virtual memory는 76.0ms에서 45.6ms(이 시점에는 임베딩 테이블이 메모리에 완전히 캐시됨)로 감소한다. naive GDS는 10-30GB 전 구간에서 56.6-58.3ms로 메모리 증가에 거의 반응하지 않는다. ESPN은 46.5-47.2ms로 메모리 구성에 관계없이 거의 일정하며, ESPN-Lite(top-128 근사)는 45.2-45.4ms로 표 내 최저치를, ESPN-LIVE는 53.4-54.1ms를 기록한다.</p>
+      <p>Table 5에 따르면 Mmap은 메모리 10GB에서 183.2ms로 매우 느리며 30GB에서 53.4ms까지 감소한다. Virtual memory는 76.0ms에서 45.6ms(이 시점에는 임베딩 테이블이 메모리에 완전히 캐시됨)로 감소한다. naive GDS는 10-30GB 전 구간에서 56.6-58.3ms로 메모리 증가에 거의 반응하지 않는다. ESPN은 46.5-47.2ms로 메모리 구성에 관계없이 거의 일정하며, ESPN-Lite(top-128 근사)는 45.2-45.4ms로 표 내 최저치를, ESPN-LIVE는 53.4-54.1ms를 기록한다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>MS-MARCO v2 종단간 지연시간 (Table 6)</h3>
-      <p>인덱스가 물리 메모리를 크게 초과하는 v2에서는 격차가 더 벌어진다. Mmap은 32GB에서 271.5ms, 256GB에서도 188.6ms이며, Virtual memory는 32GB부터 256GB까지 전 구성에서 OOM이 발생해 동작하지 않는다. naive GDS는 94.1-95.3ms, ESPN은 84.9-85.8ms, ESPN-Lite는 81.7-82.3ms(최저), ESPN-LIVE는 85.2-85.6ms이다. ESPN은 이 구성에서 1ms 이하의 임베딩 접근 지연시간을 제공한다.</p>
+      <p>인덱스가 물리 메모리를 크게 초과하는 v2에서는 격차가 더 벌어진다. Table 6에 따르면 Mmap은 32GB에서 271.5ms, 256GB에서도 188.6ms이며, Virtual memory는 32GB부터 256GB까지 전 구성에서 OOM이 발생해 동작하지 않는다. naive GDS는 94.1-95.3ms, ESPN은 84.9-85.8ms, ESPN-Lite는 81.7-82.3ms(최저), ESPN-LIVE는 85.2-85.6ms이다. ESPN은 이 구성에서 1ms 이하의 임베딩 접근 지연시간을 제공한다고 저자들은 보고한다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>종합 성능 지표</h3>
-      <p>ESPN은 mmap 대비 종단간 쿼리 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 검색 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 종단간 지연시간을 유지한다.</p>
+      <p>저자들은 ESPN이 mmap 대비 종단간 쿼리 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 검색 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 종단간 지연시간을 유지한다고 보고한다.</p>
       <span class="source-ref">PDF p. 1, 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>검색 품질 유지</h3>
-      <p>ColBERTv2와 ColBERTer에서 상위 64-128개 문서만 재랭킹해도 MRR@10 점수의 99-99.7%가 유지되며(Figure 5), 이 부분 재랭킹은 쿼리당 임베딩 데이터 전송량을 8-16배 감소시킨다. ESPN-Lite와 ESPN-LIVE의 실제 품질 저하는 MRR@10 기준 0.5%에 불과하다. 메모리 기반 방식과 저장장치 기반 방식(GDS, ESPN)의 검색 점수는 동등하다.</p>
+      <p>ColBERTv2와 ColBERTer에서 상위 64-128개 문서만 재랭킹해도 MRR@10 점수의 99-99.7%가 유지된다고 저자들은 보고하며(Figure 5), 이 부분 재랭킹은 쿼리당 임베딩 데이터 전송량을 8-16배 감소시킨다. ESPN-Lite와 ESPN-LIVE의 실제 품질 저하는 MRR@10 기준 0.5%로 보고된다. 메모리 기반 방식과 저장장치 기반 방식(GDS, ESPN)의 검색 점수는 동등하다고 저자들은 밝힌다.</p>
       <span class="source-ref">PDF p. 9, 11, 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>배치 처리량과 확장성</h3>
-      <p>종단간 시스템에서 ESPN은 배치 크기 12까지 DRAM 기반 솔루션과 경쟁력을 유지하며, GDS 기반 검색 대비 처리량을 68% 향상시킨다(Figure 8). naive GDS 솔루션은 critical path에서 DRAM 대비 7.7배 높은 임베딩 접근 지연시간을 보인다(Figure 9). ESPN-Lite는 대역폭 요구량을 8배 줄임으로써 배치 크기 96까지 완전 캐시 DRAM 솔루션과 경쟁력을 유지한다.</p>
+      <p>종단간 시스템에서 ESPN은 배치 크기 12까지 DRAM 기반 솔루션과 경쟁력을 유지하며, GDS 기반 검색 대비 처리량을 68% 향상시킨다고 저자들은 Figure 8을 근거로 보고한다. naive GDS 솔루션은 critical path에서 DRAM 대비 7.7배 높은 임베딩 접근 지연시간을 보인다(Figure 9). ESPN-Lite는 대역폭 요구량을 8배 줄임으로써 배치 크기 96까지 완전 캐시 DRAM 솔루션과 경쟁력을 유지한다.</p>
       <span class="source-ref">PDF p. 13</span>
     </article>
     
@@ -1142,14 +1169,14 @@
       
     <article class="content-item">
       <h3>논문의 결론</h3>
-      <p>저자들은 GPU-centric 저장장치 접근 최적화가 대규모 멀티벡터 IR의 메모리 비용과 지연시간 트레이드오프를 근본적으로 개선함을 보였다. ESPN은 GDS 직접 전송, ANN 진행도 기반 프리페칭, early re-ranking을 결합해 저장장치 지연을 ANN 검색 시간 뒤에 숨기며, ESPN-Lite는 대역폭을, ESPN-LIVE는 저장 용량 자체를 제거한다.</p>
+      <p>저자들은 GPU-centric 저장장치 접근 최적화가 대규모 멀티벡터 IR의 메모리 비용과 지연시간 트레이드오프를 근본적으로 개선함을 보였다고 주장한다. ESPN은 GDS 직접 전송, ANN 진행도 기반 프리페칭, early re-ranking을 결합해 저장장치 지연을 ANN 검색 시간 뒤에 숨기며, ESPN-Lite는 대역폭을, ESPN-LIVE는 저장 용량 자체를 제거한다.</p>
       <span class="source-ref">PDF p. 1, 15</span>
     </article>
     
 
     <article class="content-item">
       <h3>분석자 해석: 세 변형의 선택 기준</h3>
-      <p>세 변형은 서로 다른 자원 제약에 대응한다고 해석할 수 있다. 저장 용량이 충분하고 정확도 손실을 원치 않으면 ESPN(exact, top-1024), SSD 대역폭이 병목이고 배치가 크면 ESPN-Lite, 저장 용량 자체가 제약이고 GPU가 유휴 상태라면 ESPN-LIVE가 유리하다. 실제로 v2 실험에서 ESPN-LIVE는 255.4GB의 임베딩 테이블 없이도 ESPN과 거의 동일한 지연시간(85.2-85.6ms vs 84.9-85.8ms)을 달성한다. 다만 v1에서는 ESPN-LIVE가 ESPN보다 약 7ms 느려, 인코딩 비용이 저장장치 조회 비용을 상회하는 구간이 존재한다.</p>
+      <p>세 변형은 서로 다른 자원 제약에 대응한다고 해석할 수 있다. 저장 용량이 충분하고 정확도 손실을 원치 않으면 ESPN(exact, top-1024), SSD 대역폭이 병목이고 배치가 크면 ESPN-Lite, 저장 용량 자체가 제약이고 GPU가 유휴 상태라면 ESPN-LIVE가 유리하다. v2 실험에서 ESPN-LIVE는 255.4GB의 임베딩 테이블 없이도 ESPN과 거의 동일한 지연시간(85.2-85.6ms vs 84.9-85.8ms)을 나타낸다. 다만 v1에서는 ESPN-LIVE가 ESPN보다 약 7ms 느려, 인코딩 비용이 저장장치 조회 비용을 상회하는 구간이 존재한다.</p>
       <span class="source-ref">PDF p. 12, 13</span>
     </article>
     
@@ -1293,7 +1320,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>메모리와 지연시간이라는 통상 상충하는 두 목표를 동시에 개선했다. 인덱스의 6-19%만 메모리에 두고도 완전 캐시 대비 1.02배 지연시간을 달성한 것은, 저장장치 접근을 제거한 것이 아니라 ANN 검색 시간 뒤에 성공적으로 숨겼기 때문이다.</span>
+                <span>메모리와 지연시간이라는 통상 상충하는 두 목표를 동시에 개선했다고 저자들은 주장한다. 인덱스의 6-19%만 메모리에 두고도 완전 캐시 대비 1.02배 지연시간을 달성했다는 보고는, 저장장치 접근을 제거한 것이 아니라 ANN 검색 시간 뒤에 성공적으로 숨겼기 때문으로 해석된다.</span>
               </div>
               <span class="source-ref">PDF p. 1, 12</span>
             </li>
@@ -1309,7 +1336,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>naive GDS와 ESPN을 분리해 비교함으로써, 성능 이득이 GDS 하드웨어 경로 자체가 아니라 프리페칭·early re-ranking이라는 소프트웨어 파이프라이닝에서 온다는 점을 명확히 구분해 보였다(GDS 대비 처리량 68% 향상, GDS의 critical path 접근 지연은 DRAM 대비 7.7배).</span>
+                <span>naive GDS와 ESPN을 분리해 비교함으로써, 성능 이득이 GDS 하드웨어 경로 자체가 아니라 프리페칭·early re-ranking이라는 소프트웨어 파이프라이닝에서 온다는 점을 구분해 보인다(저자들이 보고한 GDS 대비 처리량 68% 향상, GDS의 critical path 접근 지연은 DRAM 대비 7.7배).</span>
               </div>
               <span class="source-ref">PDF p. 13</span>
             </li>
@@ -1325,7 +1352,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>ESPN-Lite의 근사 설계가 임의 휴리스틱이 아니라 &#x27;상위 64-128개 재랭킹만으로 MRR@10의 99-99.7%가 유지된다&#x27;는 별도 측정(Figure 5)에 근거하고 있어, 품질 손실의 상한이 사전에 검증되어 있다.</span>
+                <span>ESPN-Lite의 근사 설계가 임의 휴리스틱이 아니라 &#x27;상위 64-128개 재랭킹만으로 MRR@10의 99-99.7%가 유지된다&#x27;는 별도 측정(Figure 5)에 근거하고 있어, 저자들이 보고한 품질 손실의 상한이 사전에 제시되어 있다.</span>
               </div>
               <span class="source-ref">PDF p. 9</span>
             </li>
@@ -1419,6 +1446,14 @@ flowchart LR
               <span class="source-ref">PDF p. 12, 13</span>
             </li>
             
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Table 5, 6과 Figure 7 등에서 인용한 수치는 저자들이 보고한 값을 그대로 옮긴 것으로, 별도의 원문 대조 재검증을 거치지 않았다. 표·그림의 세부 수치를 실측 검증값으로 단정할 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11, 12</span>
+            </li>
+            
       </ul>
     </section>
     
@@ -1441,7 +1476,7 @@ flowchart LR
                 <span class="claim-badge claim-open_question">후속 질문</span>
                 <h3>PrefetchStep을 쿼리별로 정적 고정하지 않고, ANN 검색 중간 결과의 안정성(예: top-K 순위 변동률)에 따라 동적으로 조정하면 hit rate와 PrefetchBudget의 트레이드오프를 개선할 수 있는가?</h3>
               </div>
-              <p>Figure 7에서 hit rate가 prefetch step 5%(68-85%)에서 30%(약 89-90% 이상)로 단조 증가하지만, step이 커질수록 Eq.1의 PrefetchBudget은 줄어드는 구조적 트레이드오프가 존재한다.</p>
+              <p>Figure 7에서 hit rate가 prefetch step 5%(68-85%)에서 30%(근사치로 약 89-90% 이상)로 증가하는 경향을 보이지만, step이 커질수록 Eq.1의 PrefetchBudget은 줄어드는 구조적 트레이드오프가 존재한다.</p>
               <span class="source-ref">PDF p. 7, 8, 11</span>
             </article>
             
@@ -1588,7 +1623,7 @@ flowchart LR
             <div class="glossary-row">
               <dt>MRR@10 / Recall@1K</dt>
               <dd>
-                검색 품질 지표. MRR@10은 상위 10개 결과 내 첫 정답의 역순위 평균이고, Recall@1K는 상위 1000개 결과 내 정답 포함 비율이다. ESPN-Lite·ESPN-LIVE의 MRR@10 저하는 0.5%로 보고되었다.
+                검색 품질 지표. MRR@10은 상위 10개 결과 내 첫 정답의 역순위 평균이고, Recall@1K는 상위 1000개 결과 내 정답 포함 비율이다. ESPN-Lite·ESPN-LIVE의 MRR@10 저하는 저자들이 0.5%로 보고했다.
                 <span class="source-ref">PDF p. 9, 11, 12</span>
               </dd>
             </div>
@@ -1608,7 +1643,7 @@ flowchart LR
       
         <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>Figure 4, 8, 9 등 그래프의 개별 데이터 포인트(특정 batch size에서의 정확한 지연시간·처리량 수치, 특정 nprobe에서의 정확한 Recall@1K 값)는 본문에 숫자로 명시되지 않고 그래프로만 제시되어 정확한 값을 확정할 수 없음. 시각화 규칙에 따라 해당 값은 차트로 생성하지 않음</li><li>Figure 7의 prefetch step 30% 지점 hit rate는 &#x27;90% 이상&#x27;, &#x27;약 89%&#x27;, &#x27;약 90%&#x27;와 같은 근사 표현으로만 기술되어 정확한 수치가 확정되지 않음. 차트에는 정확한 값이 명시된 5% 지점만 포함함</li><li>Table 4의 BERT 추론 지연시간 수치는 저자들의 자체 실험이 아니라 참고문헌 [36]에서 인용한 값이라고 본문에 명시됨</li><li>ESPN-LIVE의 배치 크기 증가에 따른 인코딩 비용 증가는 정성적으로만 언급되고 구체적 수치가 제시되지 않음</li><li>MS-MARCO v2에서 Virtual memory(+swap space)는 모든 메모리 구성에서 OOM이므로 지연시간 값이 존재하지 않아 해당 차트에서 제외함</li><li>인덱스 갱신(문서 추가·삭제) 시 SSD 임베딩 테이블과 ANN 인덱스의 유지보수 절차는 논문에서 확인되지 않음</li><li>논문 내에 연구비 지원(funding) 관련 명시적 언급은 확인되지 않음</li></ul>
+          <ul><li>Figure 4, 8, 9 등 그래프의 개별 데이터 포인트(특정 batch size에서의 정확한 지연시간·처리량 수치, 특정 nprobe에서의 정확한 Recall@1K 값)는 본문에 숫자로 명시되지 않고 그래프로만 제시되어 정확한 값을 확정할 수 없음. 시각화 규칙에 따라 해당 값은 차트로 생성하지 않음</li><li>Figure 7의 prefetch step 30% 지점 hit rate는 &#x27;90% 이상&#x27;, &#x27;약 89%&#x27;, &#x27;약 90%&#x27;와 같은 근사 표현으로만 기술되어 정확한 수치가 확정되지 않음. 차트에는 정확한 값이 명시된 5% 지점만 포함함</li><li>Table 4의 BERT 추론 지연시간 수치는 저자들의 자체 실험이 아니라 참고문헌 [36]에서 인용한 값이라고 본문에 명시됨</li><li>ESPN-LIVE의 배치 크기 증가에 따른 인코딩 비용 증가는 정성적으로만 언급되고 구체적 수치가 제시되지 않음</li><li>MS-MARCO v2에서 Virtual memory(+swap space)는 모든 메모리 구성에서 OOM이므로 지연시간 값이 존재하지 않아 해당 차트에서 제외함</li><li>인덱스 갱신(문서 추가·삭제) 시 SSD 임베딩 테이블과 ANN 인덱스의 유지보수 절차는 논문에서 확인되지 않음</li><li>논문 내에 연구비 지원(funding) 관련 명시적 언급은 확인되지 않음</li><li>본 보고서에 인용된 Table 5, 6, Figure 5, 7, 8, 9의 수치는 저자들이 논문에서 제시한 값을 그대로 옮긴 것이며, 별도의 독립적 원문 재대조 검증은 완료되지 않았다.</li></ul>
         </section>
         
     </div>

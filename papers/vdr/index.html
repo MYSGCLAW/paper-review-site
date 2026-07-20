@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -706,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다.</p>
+        <p>이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다고 주장한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, 논문은 DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다고 보고한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소한다고 논문은 제시하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다고 저자들은 명시한다.</p>
         <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6, 7, 8, 9</span>
       </section>
 
@@ -726,7 +753,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>DocPruner 대비 near-lossless compression range를 평균 10 percentage point 확장하여 [50-60%]에서 [60-70%]로 옮겼다.</span>
+                <span>논문은 DocPruner 대비 near-lossless compression range를 평균 10 percentage point 확장하여 [50-60%]에서 [60-70%]로 옮겼다고 보고한다.</span>
               </div>
               <span class="source-ref">PDF p. 2</span>
             </li>
@@ -734,7 +761,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>ViDoRe-V1(k=-0.75, m=4)에서 nDCG@5 평균 -0.45% 하락으로 storage를 평균 54.60% 절감했다.</span>
+                <span>ViDoRe-V1(k=-0.75, m=4)에서 nDCG@5 평균 -0.45% 하락으로 storage를 평균 54.60% 절감했다고 논문은 Table 1에서 제시한다.</span>
               </div>
               <span class="source-ref">PDF p. 8</span>
             </li>
@@ -742,7 +769,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초, 평균 +51.42%)에 국한되며 online 검색 비용에는 영향이 없다.</span>
+                <span>추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초, 평균 +51.42%)에 국한되며 online 검색 비용에는 영향이 없다고 저자들은 명시한다.</span>
               </div>
               <span class="source-ref">PDF p. 8, 34</span>
             </li>
@@ -750,7 +777,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>80% 이상 고압축률에서 pruning-only 방법의 sharp performance cliff를 회피한다(ViDoRe-V1/ColQwen2.5 ~84-87%에서 0.86 vs DocPruner 0.77).</span>
+                <span>80% 이상 고압축률에서 pruning-only 방법의 sharp performance cliff를 회피한다고 보고한다(ViDoRe-V1/ColQwen2.5 ~84-87%에서 0.86 vs DocPruner 0.77).</span>
               </div>
               <span class="source-ref">PDF p. 6</span>
             </li>
@@ -758,7 +785,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>g=gm∘gp 분해가 naive single-stage merging보다 true signal distortion을 낮춘다는 것을 Theorem D.1, D.2, Corollary 1로 증명한다.</span>
+                <span>g=gm∘gp 분해가 naive single-stage merging보다 true signal distortion을 낮춘다는 것을 Theorem D.1, D.2, Corollary 1로 증명한다고 저자들은 주장한다.</span>
               </div>
               <span class="source-ref">PDF p. 4, 5, 23, 24</span>
             </li>
@@ -766,7 +793,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>재학습이나 아키텍처 변경이 필요 없는 query-agnostic offline 기법이므로, 기존 late-interaction 검색 스택에 그대로 적용 가능한 구조이다.</span>
+                <span>재학습이나 아키텍처 변경이 필요 없는 query-agnostic offline 기법이므로, 기존 late-interaction 검색 스택에 그대로 적용 가능한 구조로 보인다.</span>
               </div>
               <span class="source-ref">PDF p. 3, 4</span>
             </li>
@@ -849,14 +876,14 @@
 
     <article class="content-item">
       <h3>정보이론적 정당화</h3>
-      <p>Information Bottleneck(IB) 원리와 Rate-Distortion(RD) 이론에 근거하여, 전체 압축 매핑 g: D→D&#x27;&#x27;를 pruning map gp와 merging map gm의 합성 g=gm∘gp로 분해하는 이론적 근거를 제시한다. Theorem D.1, D.2 및 Corollary 1을 통해 이 분해가 naive single-stage merging보다 참 신호(true signal)에 대한 distortion을 더 낮춘다는 시너지 효과를 증명한다.</p>
+      <p>Information Bottleneck(IB) 원리와 Rate-Distortion(RD) 이론에 근거하여, 전체 압축 매핑 g: D→D&#x27;&#x27;를 pruning map gp와 merging map gm의 합성 g=gm∘gp로 분해하는 이론적 근거를 제시한다. Theorem D.1, D.2 및 Corollary 1을 통해 이 분해가 naive single-stage merging보다 참 신호(true signal)에 대한 distortion을 더 낮춘다는 시너지 효과를 증명한다고 저자들은 주장한다.</p>
       <span class="source-ref">PDF p. 4, 5, 23, 24</span>
     </article>
     
 
     <article class="content-item">
       <h3>대규모 실증</h3>
-      <p>6개 벤치마크에 걸친 29개 VDR 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 가지 대표 multi-vector 모델과 결합한 광범위한 실험을 수행하여 두 가지를 보인다. ❶ DocPruner 대비 near-lossless compression range를 평균 10 percentage point 확장하여 [50-60%]에서 [60-70%]로 늘린다. ❷ 80% 이상 고압축률에서 pruning-only 방법이 겪는 급격한 성능 붕괴를 회피하며 모든 baseline을 일관되게 능가한다.</p>
+      <p>6개 벤치마크에 걸친 29개 VDR 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 가지 대표 multi-vector 모델과 결합한 광범위한 실험을 수행하여 두 가지를 보인다고 논문은 밝힌다. ❶ DocPruner 대비 near-lossless compression range를 평균 10 percentage point 확장하여 [50-60%]에서 [60-70%]로 늘린다. ❷ 80% 이상 고압축률에서 pruning-only 방법이 겪는 급격한 성능 붕괴를 회피하며 모든 baseline을 일관되게 능가한다.</p>
       <span class="source-ref">PDF p. 1, 2</span>
     </article>
     
@@ -899,7 +926,7 @@
 
     <article class="content-item">
       <h3>구성요소 4 — 이론적 프레임워크</h3>
-      <p>전체 압축 매핑 g를 g=gm∘gp로 분해하고, pruning(gp)은 query-agnostic한 정보 필터링으로(Theorem D.1), merging(gm)은 필터링된 집합에 대한 Rate-Distortion 관점의 최적 vector quantization으로(Theorem D.2) 정당화한다. Corollary 1은 이 분해가 naive single-stage merge보다 true signal에 대한 distortion을 낮춘다는 시너지 우위를 보인다.</p>
+      <p>전체 압축 매핑 g를 g=gm∘gp로 분해하고, pruning(gp)은 query-agnostic한 정보 필터링으로(Theorem D.1), merging(gm)은 필터링된 집합에 대한 Rate-Distortion 관점의 최적 vector quantization으로(Theorem D.2) 정당화한다. Corollary 1은 이 분해가 naive single-stage merge보다 true signal에 대한 distortion을 낮춘다는 시너지 우위를 보인다고 저자들은 주장한다.</p>
       <span class="source-ref">PDF p. 4, 5, 23, 24</span>
     </article>
     
@@ -978,7 +1005,7 @@
       
     <article class="content-item">
       <h3>Adaptive attention threshold</h3>
-      <p>핵심 알고리즘은 두 개의 하이퍼파라미터로 기술된다. 첫째는 adaptation factor k로, τd=µd+k·σd라는 문서별 임계값을 정한다. 고정 비율(fixed ratio)로 상위 N%를 남기는 방식과 달리, 정보가 조밀한 문서에서는 더 많은 patch가 임계값을 넘고 여백이 많은 문서에서는 더 적게 남는다. 논문의 variant analysis는 이 adaptive 방식이 non-adaptive 방식보다 우수함을 보였다(ViDoRe-V2, Jina-v4, 약 55% pruning rate에서 adaptive 0.56 vs attention-threshold-nfp 0.52, attention-ratio 0.51).</p>
+      <p>핵심 알고리즘은 두 개의 하이퍼파라미터로 기술된다. 첫째는 adaptation factor k로, τd=µd+k·σd라는 문서별 임계값을 정한다. 고정 비율(fixed ratio)로 상위 N%를 남기는 방식과 달리, 정보가 조밀한 문서에서는 더 많은 patch가 임계값을 넘고 여백이 많은 문서에서는 더 적게 남는다. 논문의 variant analysis는 이 adaptive 방식이 non-adaptive 방식보다 우수함을 보였다고 보고한다(ViDoRe-V2, Jina-v4, 약 55% pruning rate에서 adaptive 0.56 vs attention-threshold-nfp 0.52, attention-ratio 0.51).</p>
       <span class="source-ref">PDF p. 3, 30</span>
     </article>
     
@@ -999,7 +1026,7 @@
 
     <article class="content-item">
       <h3>IB/RD 기반 최적성 논증</h3>
-      <p>이론 파트는 pruning을 query-agnostic 정보 필터링으로 보고(Theorem D.1), merging을 필터링된 집합에 대한 Rate-Distortion 최적 vector quantization으로 본다(Theorem D.2). Corollary 1은 같은 최종 벡터 예산 하에서 g=gm∘gp가 naive single-stage merge보다 true signal 기준 distortion이 낮음을 보인다. 즉 &#x27;순서&#x27;가 성능 차이의 원인이라는 주장의 근거이다.</p>
+      <p>이론 파트는 pruning을 query-agnostic 정보 필터링으로 보고(Theorem D.1), merging을 필터링된 집합에 대한 Rate-Distortion 최적 vector quantization으로 본다(Theorem D.2). Corollary 1은 같은 최종 벡터 예산 하에서 g=gm∘gp가 naive single-stage merge보다 true signal 기준 distortion이 낮음을 보인다고 저자들은 주장한다. 즉 &#x27;순서&#x27;가 성능 차이의 원인이라는 주장의 근거이다.</p>
       <span class="source-ref">PDF p. 4, 5, 23, 24</span>
     </article>
     
@@ -1043,35 +1070,35 @@
       
     <article class="content-item">
       <h3>Near-lossless 구간의 확장</h3>
-      <p>가장 핵심적인 결과는 near-lossless compression range가 DocPruner 대비 평균 10 percentage point 확장되어 [50-60%]에서 [60-70%]로 옮겨졌다는 것이다. ViDoRe-V1/ColQwen2.5에서는 embedding을 68% 압축한 뒤에도 base nDCG@5 0.87을 그대로 유지했다.</p>
+      <p>논문이 보고하는 가장 핵심적인 결과는 near-lossless compression range가 DocPruner 대비 평균 10 percentage point 확장되어 [50-60%]에서 [60-70%]로 옮겨졌다는 것이다. ViDoRe-V1/ColQwen2.5에서는 embedding을 68% 압축한 뒤에도 base nDCG@5 0.87을 그대로 유지했다고 논문은 제시한다.</p>
       <span class="source-ref">PDF p. 2, 6</span>
     </article>
     
 
     <article class="content-item">
       <h3>고압축률에서의 붕괴 회피</h3>
-      <p>고압축 영역에서 격차가 가장 뚜렷하다. ViDoRe-V1/ColQwen2.5의 약 84-87% pruning rate에서 PRUNE-THEN-MERGE는 nDCG@5 0.86을 유지한 반면 DocPruner는 0.77로 급락했다(Figure 3). REAL-MM-RAG/ColQwen2.5의 84% 압축률에서는 PRUNE-THEN-MERGE 0.65, Sem-Cluster 0.61, DocPruner 0.56이었다(Figure 5). REAL-MM-RAG Financial Report/Jina-v4에서 DocPruner는 84% pruning rate에서 baseline 0.69가 0.44로 약 36% 상대 하락한 반면, PRUNE-THEN-MERGE는 83% 압축률에서 0.66으로 완만히 저하했다. ViDoSeek과 MMLongBench-Doc에서는 Jina-v4 기준 75% pruning rate까지 base 성능을 완전히 유지했으며, MMLongBench-Doc에서 DocPruner는 77% pruning rate에서 0.54→0.48로 떨어졌다.</p>
+      <p>고압축 영역에서 격차가 가장 뚜렷하다고 논문은 서술한다. ViDoRe-V1/ColQwen2.5의 약 84-87% pruning rate에서 PRUNE-THEN-MERGE는 nDCG@5 0.86을 유지한 반면 DocPruner는 0.77로 급락했다(Figure 3). REAL-MM-RAG/ColQwen2.5의 84% 압축률에서는 PRUNE-THEN-MERGE 0.65, Sem-Cluster 0.61, DocPruner 0.56이었다(Figure 5). REAL-MM-RAG Financial Report/Jina-v4에서 DocPruner는 84% pruning rate에서 baseline 0.69가 0.44로 약 36% 상대 하락한 반면, PRUNE-THEN-MERGE는 83% 압축률에서 0.66으로 완만히 저하했다. ViDoSeek과 MMLongBench-Doc에서는 Jina-v4 기준 75% pruning rate까지 base 성능을 완전히 유지했으며, MMLongBench-Doc에서 DocPruner는 77% pruning rate에서 0.54→0.48로 떨어졌다.</p>
       <span class="source-ref">PDF p. 6, 7, 8</span>
     </article>
     
 
     <article class="content-item">
       <h3>다국어 일반화</h3>
-      <p>JinaVDR 다국어 벤치마크 overall에서 ColQwen2.5 기준 84% 압축률에서 nDCG@5 0.52를 기록했고, DocPruner는 그보다 낮은 80% 압축률에서 이미 0.46이었다(Figure 4). 개별 언어에서도 ColNomic 기준 일본어 문서 89% 압축률에서 0.82(Sem-Cluster 0.76), 중국어 문서 89% 압축률에서 0.95(Sem-Cluster 0.94, near-lossless)를 보였다. Hindi(baseline 0.47)에서는 83% 압축률에서 0.46을 유지한 반면 DocPruner는 0.40으로 붕괴했고, Dutch에서는 82% 압축률까지 baseline 0.68을 유지한 반면 DocPruner는 0.56으로 떨어졌다.</p>
+      <p>JinaVDR 다국어 벤치마크 overall에서 ColQwen2.5 기준 84% 압축률에서 nDCG@5 0.52를 기록했다고 논문은 보고하며, DocPruner는 그보다 낮은 80% 압축률에서 이미 0.46이었다(Figure 4). 개별 언어에서도 ColNomic 기준 일본어 문서 89% 압축률에서 0.82(Sem-Cluster 0.76), 중국어 문서 89% 압축률에서 0.95(Sem-Cluster 0.94, near-lossless)를 보였다. Hindi(baseline 0.47)에서는 83% 압축률에서 0.46을 유지한 반면 DocPruner는 0.40으로 붕괴했고, Dutch에서는 82% 압축률까지 baseline 0.68을 유지한 반면 DocPruner는 0.56으로 떨어졌다. 이 개별 언어 수치들은 본문 서술을 통해 확인한 것으로, Appendix 표 전체와 직접 대조하지는 못했다.</p>
       <span class="source-ref">PDF p. 7, 30</span>
     </article>
     
 
     <article class="content-item">
       <h3>효율성 비용 구조</h3>
-      <p>ViDoRe-V1(k=-0.75, m=4) 기준 base 대비 nDCG@5 하락은 ColQwen2.5 -0.27%, ColNomic -0.51%, JinaV4 -0.57%로 평균 -0.45%에 그쳤고, storage는 각각 -58.88%, -52.16%, -52.77%로 평균 54.60% 감소했다(Table 1). 대가는 offline indexing 비용으로, 문서당 평균 encoding latency가 0.46초에서 0.69초로 늘어 평균 +51.42% 증가했다(ColQwen2.5 +56.10%, ColNomic +51.11%, JinaV4 +47.06%). 논문은 이 증가가 offline 색인 단계에 국한되며 online 검색 비용에는 영향이 없다고 명시한다.</p>
+      <p>ViDoRe-V1(k=-0.75, m=4) 기준 base 대비 nDCG@5 하락은 ColQwen2.5 -0.27%, ColNomic -0.51%, JinaV4 -0.57%로 평균 -0.45%에 그쳤고, storage는 각각 -58.88%, -52.16%, -52.77%로 평균 54.60% 감소했다고 논문은 Table 1에서 제시한다. 대가는 offline indexing 비용으로, 문서당 평균 encoding latency가 0.46초에서 0.69초로 늘어 평균 +51.42% 증가했다(ColQwen2.5 +56.10%, ColNomic +51.11%, JinaV4 +47.06%). 논문은 이 증가가 offline 색인 단계에 국한되며 online 검색 비용에는 영향이 없다고 명시한다.</p>
       <span class="source-ref">PDF p. 8, 34</span>
     </article>
     
 
     <article class="content-item">
       <h3>두 단계의 기여 분리</h3>
-      <p>variant analysis는 merging stage가 실제로 기여함을 보인다. ViDoRe-V2/Jina-v4의 약 80% 압축률에서 전체 프레임워크는 nDCG@5 0.55를 유지한 반면 pruning-only variant(attention-threshold-adap)는 0.51로 떨어졌다(Figure 6). 세부 데이터셋에서는 격차가 달라져 esg_reports_human_labeled_v2에서는 0.60 vs 0.54로 컸고, economics_reports_v2에서는 0.51 vs 0.49로 좁았다.</p>
+      <p>variant analysis는 merging stage가 실제로 기여함을 보인다고 논문은 주장한다. ViDoRe-V2/Jina-v4의 약 80% 압축률에서 전체 프레임워크는 nDCG@5 0.55를 유지한 반면 pruning-only variant(attention-threshold-adap)는 0.51로 떨어졌다(Figure 6). 세부 데이터셋에서는 격차가 달라져 esg_reports_human_labeled_v2에서는 0.60 vs 0.54로 컸고, economics_reports_v2에서는 0.51 vs 0.49로 좁았다.</p>
       <span class="source-ref">PDF p. 8, 30, 31</span>
     </article>
     
@@ -1086,7 +1113,7 @@
       
     <article class="content-item">
       <h3>논문의 결론</h3>
-      <p>논문은 pruning과 merging을 대립하는 선택지가 아니라 순차적으로 결합해야 할 보완적 연산으로 재정의하고, &#x27;first refine, then compress&#x27;라는 단순한 원리만으로 기존 state-of-the-art를 넘는 compression-performance trade-off를 얻을 수 있음을 보인다. 학습이나 아키텍처 변경 없이 3개 base model, 6개 벤치마크, 29개 데이터셋, 다국어 환경 전반에서 일관되게 동작한다는 점을 실용적 가치로 내세운다.</p>
+      <p>논문은 pruning과 merging을 대립하는 선택지가 아니라 순차적으로 결합해야 할 보완적 연산으로 재정의하고, &#x27;first refine, then compress&#x27;라는 단순한 원리만으로 기존 state-of-the-art를 넘는 compression-performance trade-off를 얻을 수 있음을 보인다고 주장한다. 학습이나 아키텍처 변경 없이 3개 base model, 6개 벤치마크, 29개 데이터셋, 다국어 환경 전반에서 일관되게 동작한다는 점을 실용적 가치로 내세운다.</p>
       <span class="source-ref">PDF p. 2, 8, 9</span>
     </article>
     
@@ -1172,7 +1199,7 @@ flowchart LR
           <h2>정량 결과</h2>
           
             <article class="visual-card">
-              <h3>ViDoRe-V1: base 대비 storage 감소율 (모델별)</h3>
+              <h3>ViDoRe-V1: base 대비 storage 감소율 (모델별, 논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-0"></canvas>
               </div>
@@ -1182,7 +1209,7 @@ flowchart LR
             </article>
             
             <article class="visual-card">
-              <h3>ViDoRe-V1: base 대비 nDCG@5 상대적 하락폭 (모델별)</h3>
+              <h3>ViDoRe-V1: base 대비 nDCG@5 상대적 하락폭 (모델별, 논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-1"></canvas>
               </div>
@@ -1192,7 +1219,7 @@ flowchart LR
             </article>
             
             <article class="visual-card">
-              <h3>ViDoRe-V1: offline encoding latency 증가율 (모델별)</h3>
+              <h3>ViDoRe-V1: offline encoding latency 증가율 (모델별, 논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-2"></canvas>
               </div>
@@ -1202,42 +1229,42 @@ flowchart LR
             </article>
             
             <article class="visual-card">
-              <h3>REAL-MM-RAG: 84% 압축률에서의 nDCG@5 비교</h3>
+              <h3>REAL-MM-RAG: 84% 압축률에서의 nDCG@5 비교 (논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-3"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 7 · Figure 5 · REAL-MM-RAG, ColQwen2.5, 84% compression rate
+                PDF p. 7 · Figure 5 · REAL-MM-RAG, ColQwen2.5, 84% compression rate. 본문 서술에서 인용된 값이며 그래프 픽셀 대조로 재검증되지는 않음
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>ViDoRe-V1: 약 84-87% pruning rate에서의 nDCG@5 비교</h3>
+              <h3>ViDoRe-V1: 약 84-87% pruning rate에서의 nDCG@5 비교 (논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-4"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 6 · Figure 3 · ViDoRe-V1, ColQwen2.5, ~84-87% pruning rate (Base는 미압축 상한값 0.87)
+                PDF p. 6 · Figure 3 · ViDoRe-V1, ColQwen2.5, ~84-87% pruning rate (Base는 미압축 상한값 0.87). 본문 서술에서 인용된 값이며 그래프 픽셀 대조로 재검증되지는 않음
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>ViDoRe-V2: 약 80% 압축률에서 전체 프레임워크 vs pruning-only</h3>
+              <h3>ViDoRe-V2: 약 80% 압축률에서 전체 프레임워크 vs pruning-only (논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-5"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 8 · Figure 6 · ViDoRe-V2, Jina-v4, ~80% compression rate
+                PDF p. 8 · Figure 6 · ViDoRe-V2, Jina-v4, ~80% compression rate. 본문 서술에서 인용된 값이며 그래프 픽셀 대조로 재검증되지는 않음
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>JinaVDR 다국어: 고압축률에서의 nDCG@5 (제안 방식)</h3>
+              <h3>JinaVDR 다국어: 고압축률에서의 nDCG@5 (제안 방식, 논문 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-6"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 30 · Figure 4 (본문); Appendix Tables 9-11 · JinaVDR 언어별 데이터셋, 각 라벨에 표시된 압축률. 비교값 — 일본어 Sem-Cluster 0.76, 중국어 Sem-Cluster 0.94, Dutch DocPruner 0.56, Hindi DocPruner 0.40(baseline 0.47)
+                PDF p. 30 · Figure 4 (본문); Appendix Tables 9-11 · JinaVDR 언어별 데이터셋, 각 라벨에 표시된 압축률. 비교값 — 일본어 Sem-Cluster 0.76, 중국어 Sem-Cluster 0.94, Dutch DocPruner 0.56, Hindi DocPruner 0.40(baseline 0.47). Appendix 표 전체와 직접 대조하지는 못했으며 본문·부록 서술에서 인용된 값임
               </p>
             </article>
             
@@ -1368,6 +1395,14 @@ flowchart LR
                 <span>정식 게재 venue가 논문 본문에 명시되어 있지 않으며 preprint 상태로 추정된다. 따라서 동료 심사를 거친 검증 여부는 확인되지 않음.</span>
               </div>
               <span class="source-ref">PDF p. 1</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>본 보고서에 인용된 정량 수치(Table 1, Figure 3-6 등)는 논문 본문과 부록 서술(prose)에 명시적으로 기재된 값을 옮긴 것이며, 표·그래프 원본 이미지를 셀 단위로 재대조하여 독립적으로 확인한 것은 아니다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7, 8, 30, 34</span>
             </li>
             
       </ul>
@@ -1743,7 +1778,7 @@ flowchart LR
       });
     })();
 
-    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe-V1: base 대비 storage 감소율 (모델별)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [58.88, 52.16, 52.77, 54.6], "unit": "%", "xLabel": "Base model", "yLabel": "Storage 감소율"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe-V1: base 대비 nDCG@5 상대적 하락폭 (모델별)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [0.27, 0.51, 0.57, 0.45], "unit": "%", "xLabel": "Base model", "yLabel": "nDCG@5 하락폭"}, {"canvasId": "chart-2", "type": "bar", "title": "ViDoRe-V1: offline encoding latency 증가율 (모델별)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [56.1, 51.11, 47.06, 51.42], "unit": "%", "xLabel": "Base model", "yLabel": "Latency 증가율"}, {"canvasId": "chart-3", "type": "bar", "title": "REAL-MM-RAG: 84% 압축률에서의 nDCG@5 비교", "labels": ["PRUNE-THEN-MERGE", "Sem-Cluster", "DocPruner"], "values": [0.65, 0.61, 0.56], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "nDCG@5"}, {"canvasId": "chart-4", "type": "bar", "title": "ViDoRe-V1: 약 84-87% pruning rate에서의 nDCG@5 비교", "labels": ["Base (미압축)", "PRUNE-THEN-MERGE", "DocPruner"], "values": [0.87, 0.86, 0.77], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "nDCG@5"}, {"canvasId": "chart-5", "type": "bar", "title": "ViDoRe-V2: 약 80% 압축률에서 전체 프레임워크 vs pruning-only", "labels": ["PRUNE-THEN-MERGE (전체)", "Pruning-only (attention-threshold-adap)"], "values": [0.55, 0.51], "unit": "nDCG@5", "xLabel": "구성", "yLabel": "nDCG@5"}, {"canvasId": "chart-6", "type": "bar", "title": "JinaVDR 다국어: 고압축률에서의 nDCG@5 (제안 방식)", "labels": ["중국어 @89% (ColNomic)", "일본어 @89% (ColNomic)", "Dutch @82%", "Hindi @83%"], "values": [0.95, 0.82, 0.68, 0.46], "unit": "nDCG@5", "xLabel": "데이터셋 / 조건", "yLabel": "nDCG@5"}];
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe-V1: base 대비 storage 감소율 (모델별, 논문 보고치)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [58.88, 52.16, 52.77, 54.6], "unit": "%", "xLabel": "Base model", "yLabel": "Storage 감소율"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe-V1: base 대비 nDCG@5 상대적 하락폭 (모델별, 논문 보고치)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [0.27, 0.51, 0.57, 0.45], "unit": "%", "xLabel": "Base model", "yLabel": "nDCG@5 하락폭"}, {"canvasId": "chart-2", "type": "bar", "title": "ViDoRe-V1: offline encoding latency 증가율 (모델별, 논문 보고치)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [56.1, 51.11, 47.06, 51.42], "unit": "%", "xLabel": "Base model", "yLabel": "Latency 증가율"}, {"canvasId": "chart-3", "type": "bar", "title": "REAL-MM-RAG: 84% 압축률에서의 nDCG@5 비교 (논문 보고치)", "labels": ["PRUNE-THEN-MERGE", "Sem-Cluster", "DocPruner"], "values": [0.65, 0.61, 0.56], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "nDCG@5"}, {"canvasId": "chart-4", "type": "bar", "title": "ViDoRe-V1: 약 84-87% pruning rate에서의 nDCG@5 비교 (논문 보고치)", "labels": ["Base (미압축)", "PRUNE-THEN-MERGE", "DocPruner"], "values": [0.87, 0.86, 0.77], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "nDCG@5"}, {"canvasId": "chart-5", "type": "bar", "title": "ViDoRe-V2: 약 80% 압축률에서 전체 프레임워크 vs pruning-only (논문 보고치)", "labels": ["PRUNE-THEN-MERGE (전체)", "Pruning-only (attention-threshold-adap)"], "values": [0.55, 0.51], "unit": "nDCG@5", "xLabel": "구성", "yLabel": "nDCG@5"}, {"canvasId": "chart-6", "type": "bar", "title": "JinaVDR 다국어: 고압축률에서의 nDCG@5 (제안 방식, 논문 보고치)", "labels": ["중국어 @89% (ColNomic)", "일본어 @89% (ColNomic)", "Dutch @82%", "Hindi @83%"], "values": [0.95, 0.82, 0.68, 0.46], "unit": "nDCG@5", "xLabel": "데이터셋 / 조건", "yLabel": "nDCG@5"}];
 
     for (const spec of chartSpecs) {
       const canvas = document.getElementById(spec.canvasId);

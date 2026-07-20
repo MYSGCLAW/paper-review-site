@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -706,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과, CPU-NVMe 대비 최대 4.3배(500M에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 달성했다(p.1-2, p.11-12).</p>
+        <p>이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과, 저자들은 CPU-NVMe 대비 최대 4.3배(500M에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 보고한다(p.1-2, p.11-12).</p>
         <span class="source-ref">PDF p. 1, 2, 5, 6, 7, 8, 9, 11, 12</span>
       </section>
 
@@ -750,7 +777,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>이득은 데이터베이스 규모에 비례해 커진다: CPU-NVMe 대비 0.5M에서 1.6배, 50M에서 4.3배, 500M에서 5.7배.</span>
+                <span>저자들이 보고한 이득은 데이터베이스 규모에 비례해 커진다: CPU-NVMe 대비 0.5M에서 1.6배, 50M에서 4.3배, 500M에서 5.7배.</span>
               </div>
               <span class="source-ref">PDF p. 11</span>
             </li>
@@ -914,7 +941,7 @@
 
     <article class="content-item">
       <h3>6. 대규모 end-to-end 평가</h3>
-      <p>LLAMA2(34B)를 사용하는 5종 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 PubMed/BioASQ(최대 5억 passage, 질의 3,800개)로 평가하여 CPU-NVMe 대비 최대 4.3배, A100 GPU-DRAM 대비 최대 1.5배의 처리량 향상을 보였고, LLM 크기(13B~70B)와 데이터베이스 크기(0.5M~500M)에 대한 민감도 분석을 수행했다.</p>
+      <p>LLAMA2(34B)를 사용하는 5종 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 PubMed/BioASQ(최대 5억 passage, 질의 3,800개)로 평가하여 CPU-NVMe 대비 최대 4.3배, A100 GPU-DRAM 대비 최대 1.5배의 처리량 향상을 보고했고, LLM 크기(13B~70B)와 데이터베이스 크기(0.5M~500M)에 대한 민감도 분석을 수행했다.</p>
       <span class="source-ref">PDF p. 1, 2, 11, 12</span>
     </article>
     
@@ -1079,7 +1106,7 @@
 
     <article class="content-item">
       <h3>구현 및 방법론</h3>
-      <p>메타모픽 가속기는 Verilog로 구현되었고, FreePDK 45 nm 표준 셀 라이브러리 기반 Synopsys Design Compiler 2023.09로 합성하여 1 GHz 클럭을 달성했다. 저장장치의 일반적 전력 예산은 15 W이며 RAGX 가속기의 추정 TDP는 13 W로 그 안에 들어간다(Table 2). 성능 평가는 cycle-level 시뮬레이터와 AWS 실측을 결합한 방식이다. 연구용 칩을 클라우드에 실제 배포할 수 없기 때문에, AWS 실측(CPU-NVMe 등)과 체계적 시뮬레이션을 결합해 RAGX의 Search &amp; Retrieval 성능을 평가했다고 저자들은 명시한다.</p>
+      <p>메타모픽 가속기는 Verilog로 구현되었고, FreePDK 45 nm 표준 셀 라이브러리 기반 Synopsys Design Compiler 2023.09로 합성하여 1 GHz 클럭을 달성했다. 저장장치의 일반적 전력 예산은 15 W이며 RAGX 가속기의 추정 TDP는 13 W로 그 안에 들어간다(Table 2). 성능 평가는 cycle-level 시뮬레이터와 AWS 실측을 결합한 방식이다. 연구용 칩을 클라우드에 실제 배포할 수 없기 때문에, AWS 실측(CPU-NVMe 등)과 체계적 시뮬레이션을 결합해 RAGX의 Search &amp; Retrieval 성능을 평가했다고 저자들은 명시한다. 즉 보고된 성능·비용 수치는 물리적 실배포 측정값이 아니라 이 결합 방법론에 따른 추정치다.</p>
       <span class="source-ref">PDF p. 6, 10, 11</span>
     </article>
     
@@ -1101,49 +1128,49 @@
       
     <article class="content-item">
       <h3>데이터베이스 규모에 따른 처리량 향상</h3>
-      <p>RAGX는 CPU-NVMe 대비 기하평균 처리량이 0.5M에서 1.6배, 5M에서 2.3배, 50M에서 4.3배, 500M에서 5.7배 향상된다(Figure 9, p.11; GTR-LLAMA2의 500M 분석은 메모리 요구량 문제로 측정 불가). 500M은 0.5M 대비 평균 3.6배 더 큰 개선폭을 보인다. 즉 데이터베이스가 클수록 저장장치 접근이 더 지배적이 되고, 그만큼 in-storage 가속의 이득이 커진다는 것이 핵심 경향이다.</p>
+      <p>저자들이 보고한 값에 따르면 RAGX는 CPU-NVMe 대비 기하평균 처리량이 0.5M에서 1.6배, 5M에서 2.3배, 50M에서 4.3배, 500M에서 5.7배 향상된다(Figure 9, p.11; GTR-LLAMA2의 500M 분석은 메모리 요구량 문제로 측정 불가). 500M은 0.5M 대비 평균 3.6배 더 큰 개선폭을 보인다. 즉 데이터베이스가 클수록 저장장치 접근이 더 지배적이 되고, 그만큼 in-storage 가속의 이득이 커진다는 것이 저자들이 제시하는 핵심 경향이다.</p>
       <span class="source-ref">PDF p. 11</span>
     </article>
     
 
     <article class="content-item">
       <h3>저장장치 접근 비중의 감소</h3>
-      <p>RAGX는 저장장치 접근이 차지하는 런타임 비중을 0.5M/5M/50M/500M에서 각각 4.1%/6.7%/12.8%/40%로 낮춘다(CPU-NVMe는 26.6%/47.7%/63.2%/75%, Figure 10, p.11). 개별 사례로 GTR-LLAMA2는 50M에서 NVMe 지연 비중이 72%→27%로 줄어 2.9배의 부분 속도향상을 얻고, BM25-LLAMA2는 PCIe 지연 제거를 통해 60.9%→10.3%로 낮아진다. 이는 성능 향상의 원인이 실제로 데이터 이동 제거에 있음을 보여주는 근거다.</p>
+      <p>저자들의 보고에 따르면 RAGX는 저장장치 접근이 차지하는 런타임 비중을 0.5M/5M/50M/500M에서 각각 4.1%/6.7%/12.8%/40%로 낮춘다(CPU-NVMe는 26.6%/47.7%/63.2%/75%, Figure 10, p.11). 개별 사례로 GTR-LLAMA2는 50M에서 NVMe 지연 비중이 72%→27%로 줄어 2.9배의 부분 속도향상을 얻고, BM25-LLAMA2는 PCIe 지연 제거를 통해 60.9%→10.3%로 낮아진다. 이는 성능 향상의 원인이 실제로 데이터 이동 제거에 있다는 저자들의 해석을 뒷받침하는 근거다.</p>
       <span class="source-ref">PDF p. 11</span>
     </article>
     
 
     <article class="content-item">
       <h3>retriever별 차이</h3>
-      <p>GTR(5M) 기준 RAGX는 CPU-NVMe 대비 임베딩 생성 시간을 12배, 유사도 계산 시간을 37.6배 단축해 3.1배의 처리량 향상을 낸다. SPLADEv2는 0.5M에서 Search &amp; Retrieval이 종단간 시간의 32%에 불과하고 그중 82%가 질의 임베딩이라 이득이 1.1배에 그치지만, 50M에서는 Search &amp; Retrieval 비중이 93%로 올라가고 500M에서는 이득이 6.8배까지 커진다. 데이터셋이 0.5M→500M로 커질 때 GTR-LLAMA2의 개선도는 BM25-LLAMA2보다 1.9~2.7배 더 크다.</p>
+      <p>GTR(5M) 기준 RAGX는 CPU-NVMe 대비 임베딩 생성 시간을 12배, 유사도 계산 시간을 37.6배 단축해 3.1배의 처리량 향상을 낸다고 저자들은 보고한다. SPLADEv2는 0.5M에서 Search &amp; Retrieval이 종단간 시간의 32%에 불과하고 그중 82%가 질의 임베딩이라 이득이 1.1배에 그치지만, 50M에서는 Search &amp; Retrieval 비중이 93%로 올라가고 500M에서는 이득이 6.8배까지 커진다. 데이터셋이 0.5M→500M로 커질 때 GTR-LLAMA2의 개선도는 BM25-LLAMA2보다 1.9~2.7배 더 크다.</p>
       <span class="source-ref">PDF p. 11, 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>다른 배포 방식 대비 비교와 비용</h3>
-      <p>50M 기준 RAGX는 CPU-DRAM 대비 1.5배, Disag-NVMe 대비 4.3배, Disag-DRAM 대비 1.7배, GPU-DRAM 대비 1.4배의 처리량 향상을 달성한다(Figure 11, p.12). 이때 GPU-DRAM은 질의당 비용이 119% 더 높다. CPU-DRAM은 50M에서 비용이 266%, 500M에서 391% 더 비싸며, RAGX는 평가된 모든 시스템 중 가장 낮은 질의당 비용을 달성한다. 500M에서는 임베딩이 A100 DRAM에 들어가지 않아 GPU-DRAM 결과 자체를 얻을 수 없었다.</p>
+      <p>50M 기준 저자들은 RAGX가 CPU-DRAM 대비 1.5배, Disag-NVMe 대비 4.3배, Disag-DRAM 대비 1.7배, GPU-DRAM 대비 1.4배의 처리량 향상을 달성했다고 보고한다(Figure 11, p.12). 이때 GPU-DRAM은 질의당 비용이 119% 더 높다. CPU-DRAM은 50M에서 비용이 266%, 500M에서 391% 더 비싸며, RAGX는 평가된 모든 시스템 중 가장 낮은 질의당 비용을 기록한다. 500M에서는 임베딩이 A100 DRAM에 들어가지 않아 GPU-DRAM 결과 자체를 얻을 수 없었다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>에너지 효율</h3>
-      <p>Search &amp; Retrieval 단계만 놓고 보면 RAGX의 에너지 효율은 CPU-NVMe 대비 평균 50배(GPU-DRAM은 2배)이며, SPLADEv2에서는 최대 150배, 드라이브 8개를 써도 26배의 개선을 유지한다(Figure 12(a), 5M). 그러나 시스템 전체로는 RAGX 단일 드라이브 1.12배, GPU-DRAM 1.08배에 그치고 CPU-DRAM은 뚜렷한 개선이 없다(Figure 12(b)). 저자들은 Referenced Generation을 담당하는 A100 GPU 2대(각 400 W TDP)의 소비가 지배적이기 때문이라고 설명한다.</p>
+      <p>Search &amp; Retrieval 단계만 놓고 보면 저자들이 보고한 RAGX의 에너지 효율은 CPU-NVMe 대비 평균 50배(GPU-DRAM은 2배)이며, SPLADEv2에서는 최대 150배, 드라이브 8개를 써도 26배의 개선을 유지한다(Figure 12(a), 5M). 그러나 시스템 전체로는 RAGX 단일 드라이브 1.12배, GPU-DRAM 1.08배에 그치고 CPU-DRAM은 뚜렷한 개선이 없다(Figure 12(b)). 저자들은 Referenced Generation을 담당하는 A100 GPU 2대(각 400 W TDP)의 소비가 지배적이기 때문이라고 설명한다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>정확도와 확장성</h3>
-      <p>드라이브를 2/4/8개로 늘려도 embedding-based retriever의 recall@100은 저하되지 않고 오히려 ColBERT는 13%, GTR은 4% 향상된다(Figure 13(b), 5M). 종단간 정확도(Unigram F1)는 keyword-based retriever에서 1→8 드라이브 확장 시 변화가 없고, embedding-based는 2~3% 증가한다. 50M 기준 처리량 향상도 드라이브 2개에서 4.4배, 4개 또는 8개에서 4.3배로 유지되며(8 드라이브 개별로는 BM25 3.2배, GTR 4.1배), 표현이 이더넷 네트워크 저장장치에 분산되어도 8드라이브 기준 2.5배 향상을 일관되게 유지한다(드라이브 간 통신이 없기 때문).</p>
+      <p>저자들의 보고에 따르면 드라이브를 2/4/8개로 늘려도 embedding-based retriever의 recall@100은 저하되지 않고 오히려 ColBERT는 13%, GTR은 4% 향상된다(Figure 13(b), 5M). 종단간 정확도(Unigram F1)는 keyword-based retriever에서 1→8 드라이브 확장 시 변화가 없고, embedding-based는 2~3% 증가한다. 50M 기준 처리량 향상도 드라이브 2개에서 4.4배, 4개 또는 8개에서 4.3배로 유지되며(8 드라이브 개별로는 BM25 3.2배, GTR 4.1배), 표현이 이더넷 네트워크 저장장치에 분산되어도 8드라이브 기준 2.5배 향상을 일관되게 유지한다(드라이브 간 통신이 없기 때문).</p>
       <span class="source-ref">PDF p. 12, 13, 14</span>
     </article>
     
 
     <article class="content-item">
       <h3>생성 단계 구성에 대한 민감도</h3>
-      <p>Referenced Generation용 A100을 2개에서 1개로 줄이면 RAGX 이득이 4.3배에서 3.0배로 낮아지고, 4×A100은 4.3배, 2×H100은 4.6배가 된다(Figure 15, 50M). 2×A100에서 출력 토큰 길이를 512로 늘리면 이득이 1.2배까지 떨어지지만 FlashAttention-2를 적용하면 1.9배로 회복된다. 배치 관점에서는 작은 배치에서 8.5배, 배치 256에서 4.4배(GPU-DRAM 4.0배 대비)를 유지하나, 배치 256에서는 Referenced Generation이 런타임의 73%를 차지해 이득 폭이 줄어든다. IVF와의 비교에서는 0.5M→500M 범위에서 CPU-NVMe(IVF) 대비 20%~7.9배, CPU-DRAM(IVF) 대비 12%~51% 더 높은 처리량을 보인다.</p>
+      <p>저자들의 보고에 따르면 Referenced Generation용 A100을 2개에서 1개로 줄이면 RAGX 이득이 4.3배에서 3.0배로 낮아지고, 4×A100은 4.3배, 2×H100은 4.6배가 된다(Figure 15, 50M). 2×A100에서 출력 토큰 길이를 512로 늘리면 이득이 1.2배까지 떨어지지만 FlashAttention-2를 적용하면 1.9배로 회복된다. 배치 관점에서는 작은 배치에서 8.5배, 배치 256에서 4.4배(GPU-DRAM 4.0배 대비)를 유지하나, 배치 256에서는 Referenced Generation이 런타임의 73%를 차지해 이득 폭이 줄어든다. IVF와의 비교에서는 0.5M→500M 범위에서 CPU-NVMe(IVF) 대비 20%~7.9배, CPU-DRAM(IVF) 대비 12%~51% 더 높은 처리량을 보인다.</p>
       <span class="source-ref">PDF p. 13, 14</span>
     </article>
     
@@ -1158,21 +1185,21 @@
       
     <article class="content-item">
       <h3>논문의 결론</h3>
-      <p>논문은 RAG 서비스가 저장장치 기반 배포로 전환됨에 따라 Search &amp; Retrieval이 종단간 지연의 지배적 요인이 되었으며, 이를 해결하기 위해 저장장치 내부에 shape-shifting metamorphic 가속기를 두는 RAGX를 제안한다고 정리한다. 평가 결과 CPU-NVMe 대비 최대 4.3배, GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 달성했다.</p>
+      <p>논문은 RAG 서비스가 저장장치 기반 배포로 전환됨에 따라 Search &amp; Retrieval이 종단간 지연의 지배적 요인이 되었으며, 이를 해결하기 위해 저장장치 내부에 shape-shifting metamorphic 가속기를 두는 RAGX를 제안한다고 정리한다. 저자들은 평가 결과로 CPU-NVMe 대비 최대 4.3배, GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 보고한다.</p>
       <span class="source-ref">PDF p. 1, 14</span>
     </article>
     
 
     <article class="content-item">
       <h3>분석자 해석: 이득의 원천과 상한</h3>
-      <p>RAGX의 성능 이득은 근본적으로 두 축에서 나온다. 첫째는 데이터 이동 제거(저장장치 접근 런타임 비중이 63.2%→12.8%로 감소, 50M 기준)이고, 둘째는 질의 임베딩과 유사도 계산을 같은 하드웨어에서 처리하는 융합이다. 동시에 이 구조는 Amdahl 법칙적 상한을 갖는다. RAGX가 Referenced Generation을 가속하지 않기 때문에, LLM 생성이 런타임에서 차지하는 비중이 커지는 조건(작은 데이터베이스, 큰 배치, 긴 출력 길이, 적은 GPU 수)에서는 이득이 빠르게 줄어든다. 이는 논문이 제시한 민감도 결과들(배치 256에서 생성이 73%, 출력 512에서 이득 1.2배, 1×A100에서 3.0배)과 일관된다.</p>
+      <p>RAGX의 성능 이득은 근본적으로 두 축에서 나온다고 해석할 수 있다. 첫째는 데이터 이동 제거(저장장치 접근 런타임 비중이 63.2%→12.8%로 감소, 50M 기준)이고, 둘째는 질의 임베딩과 유사도 계산을 같은 하드웨어에서 처리하는 융합이다. 동시에 이 구조는 Amdahl 법칙적 상한을 갖는다. RAGX가 Referenced Generation을 가속하지 않기 때문에, LLM 생성이 런타임에서 차지하는 비중이 커지는 조건(작은 데이터베이스, 큰 배치, 긴 출력 길이, 적은 GPU 수)에서는 이득이 빠르게 줄어든다. 이는 논문이 제시한 민감도 결과들(배치 256에서 생성이 73%, 출력 512에서 이득 1.2배, 1×A100에서 3.0배)과 일관된다.</p>
       <span class="source-ref">PDF p. 11, 12, 13, 14</span>
     </article>
     
 
     <article class="content-item">
       <h3>분석자 해석: 비용이 실질적 논거</h3>
-      <p>순수 처리량만 보면 RAGX와 CPU-DRAM/GPU-DRAM의 격차는 1.4~1.6배 수준이다. 논문이 더 강하게 내세우는 축은 오히려 비용으로, CPU-DRAM은 데이터셋이 커질수록 RAGX 대비 119%~391% 더 비싸진다. 즉 RAGX의 주장은 &#x27;가장 빠르다&#x27;보다 &#x27;동등 이상 성능을 훨씬 낮은 비용과 15 W 예산 안에서 달성한다&#x27;에 가깝게 읽힌다.</p>
+      <p>저자들이 보고한 수치만 놓고 보면 RAGX와 CPU-DRAM/GPU-DRAM의 순수 처리량 격차는 1.4~1.6배 수준이다. 논문이 더 강하게 내세우는 축은 오히려 비용으로, CPU-DRAM은 데이터셋이 커질수록 RAGX 대비 119%~391% 더 비싸진다. 즉 RAGX의 주장은 &#x27;가장 빠르다&#x27;보다 &#x27;동등 이상 성능을 훨씬 낮은 비용과 15 W 예산 안에서 달성한다&#x27;에 가깝게 읽힌다. 다만 이 비용 수치 역시 실제 클라우드 청구가 아니라 대리 지표(proxy) 기반 추정값임을 함께 감안해야 한다.</p>
       <span class="source-ref">PDF p. 5, 12</span>
     </article>
     
@@ -1243,17 +1270,17 @@ flowchart LR
           <h2>정량 결과</h2>
           
             <article class="visual-card">
-              <h3>데이터베이스 규모별 RAGX 처리량 향상 (CPU-NVMe 대비, geomean)</h3>
+              <h3>데이터베이스 규모별 RAGX 처리량 향상 (CPU-NVMe 대비, geomean, 저자 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-0"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 11 · Figure 9 · PubMed, LLAMA2 34B, 5종 RAG 벤치마크 기하평균, CPU-NVMe 대비 정규화. 500M은 GTR-LLAMA2 제외(메모리 요구량으로 측정 불가).
+                PDF p. 11 · Figure 9 · PubMed, LLAMA2 34B, 5종 RAG 벤치마크 기하평균, CPU-NVMe 대비 정규화. 500M은 GTR-LLAMA2 제외(메모리 요구량으로 측정 불가). cycle-level 시뮬레이션과 AWS 실측을 결합한 방법론에 따른 저자 보고 수치이며 물리적 실배포 측정값은 아니다.
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>저장장치 접근이 차지하는 런타임 비중: CPU-NVMe vs RAGX</h3>
+              <h3>저장장치 접근이 차지하는 런타임 비중: CPU-NVMe vs RAGX (저자 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-1"></canvas>
               </div>
@@ -1263,7 +1290,7 @@ flowchart LR
             </article>
             
             <article class="visual-card">
-              <h3>50M passage에서 RAGX의 상대 처리량 향상 (각 baseline 대비)</h3>
+              <h3>50M passage에서 RAGX의 상대 처리량 향상 (각 baseline 대비, 저자 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-2"></canvas>
               </div>
@@ -1273,17 +1300,17 @@ flowchart LR
             </article>
             
             <article class="visual-card">
-              <h3>에너지 효율 (CPU-NVMe 대비, 5M passages)</h3>
+              <h3>에너지 효율 (CPU-NVMe 대비, 5M passages, 저자 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-3"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 12 · Figure 12(a), Figure 12(b) · 5M passages, CPU-NVMe 대비 정규화. 시스템 전체 값은 Referenced Generation의 A100 GPU 2대(각 400W) 소비가 지배적이어서 낮음. CPU-DRAM은 시스템 전체에서 뚜렷한 개선 없음.
+                PDF p. 12 · Figure 12(a), Figure 12(b) · 5M passages, CPU-NVMe 대비 정규화. 시스템 전체 값은 Referenced Generation의 A100 GPU 2대(각 400W) 소비가 지배적이어서 낮음. CPU-DRAM은 시스템 전체에서 뚜렷한 개선 없음. 에너지 계산에는 PCIe 접근 고정값(1.93 pJ/bit)이 사용되었고 네트워크 에너지는 미포함.
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>질의당 평균 저장장치 접근 횟수 (데이터베이스 규모별)</h3>
+              <h3>질의당 평균 저장장치 접근 횟수 (데이터베이스 규모별, 저자 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-4"></canvas>
               </div>
@@ -1293,7 +1320,7 @@ flowchart LR
             </article>
             
             <article class="visual-card">
-              <h3>Referenced Generation GPU 구성에 따른 RAGX 처리량 이득 (50M passages)</h3>
+              <h3>Referenced Generation GPU 구성에 따른 RAGX 처리량 이득 (50M passages, 저자 보고치)</h3>
               <div class="chart-container">
                 <canvas id="chart-5"></canvas>
               </div>
@@ -1394,7 +1421,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-author_limit">저자 명시 한계</span>
-                <span>연구용 칩을 클라우드에 실제 배포하는 것이 불가능하여, RAGX의 Search &amp; Retrieval 성능은 AWS 실측(CPU-NVMe 등)과 체계적 시뮬레이션을 결합해 평가되었다. 물리적 실배포 측정 결과가 아니다.</span>
+                <span>연구용 칩을 클라우드에 실제 배포하는 것이 불가능하여, RAGX의 Search &amp; Retrieval 성능은 AWS 실측(CPU-NVMe 등)과 체계적 시뮬레이션을 결합해 평가되었다. 따라서 본 보고서에 인용된 처리량·에너지·비용 수치는 물리적 실배포 측정 결과가 아니라 이 결합 방법론에 기반한 저자들의 추정치로 이해해야 한다.</span>
               </div>
               <span class="source-ref">PDF p. 11</span>
             </li>
@@ -1861,7 +1888,7 @@ flowchart LR
       });
     })();
 
-    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "데이터베이스 규모별 RAGX 처리량 향상 (CPU-NVMe 대비, geomean)", "labels": ["0.5M", "5M", "50M", "500M"], "values": [1.6, 2.3, 4.3, 5.7], "unit": "×", "xLabel": "데이터베이스 크기 (passages)", "yLabel": "정규화 처리량 향상"}, {"canvasId": "chart-1", "type": "bar", "title": "저장장치 접근이 차지하는 런타임 비중: CPU-NVMe vs RAGX", "labels": ["CPU-NVMe 0.5M", "RAGX 0.5M", "CPU-NVMe 5M", "RAGX 5M", "CPU-NVMe 50M", "RAGX 50M", "CPU-NVMe 500M", "RAGX 500M"], "values": [26.6, 4.1, 47.7, 6.7, 63.2, 12.8, 75, 40], "unit": "%", "xLabel": "시스템 및 데이터베이스 크기", "yLabel": "저장장치 접근 런타임 비중"}, {"canvasId": "chart-2", "type": "bar", "title": "50M passage에서 RAGX의 상대 처리량 향상 (각 baseline 대비)", "labels": ["vs CPU-NVMe", "vs Disag-NVMe", "vs Disag-DRAM", "vs CPU-DRAM", "vs GPU-DRAM"], "values": [4.3, 4.3, 1.7, 1.5, 1.4], "unit": "×", "xLabel": "비교 대상 시스템", "yLabel": "RAGX의 처리량 향상"}, {"canvasId": "chart-3", "type": "bar", "title": "에너지 효율 (CPU-NVMe 대비, 5M passages)", "labels": ["Search&Retrieval 단위: RAGX (평균)", "Search&Retrieval 단위: RAGX SPLADEv2 최대", "Search&Retrieval 단위: RAGX 8드라이브", "Search&Retrieval 단위: GPU-DRAM", "시스템 전체: RAGX (1드라이브)", "시스템 전체: GPU-DRAM"], "values": [50, 150, 26, 2, 1.12, 1.08], "unit": "×", "xLabel": "측정 범위 및 시스템", "yLabel": "정규화 에너지 효율"}, {"canvasId": "chart-4", "type": "bar", "title": "질의당 평균 저장장치 접근 횟수 (데이터베이스 규모별)", "labels": ["GTR 0.5M", "GTR 50M", "ColBERT 0.5M", "ColBERT 5M", "ColBERT 500M"], "values": [347, 1493, 393, 395, 3023], "unit": "회", "xLabel": "retriever 및 데이터베이스 크기", "yLabel": "질의당 저장장치 접근 횟수"}, {"canvasId": "chart-5", "type": "bar", "title": "Referenced Generation GPU 구성에 따른 RAGX 처리량 이득 (50M passages)", "labels": ["1× A100", "2× A100 (기준)", "4× A100", "2× H100"], "values": [3.0, 4.3, 4.3, 4.6], "unit": "×", "xLabel": "생성용 GPU 구성", "yLabel": "CPU-NVMe 대비 처리량 향상"}];
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "데이터베이스 규모별 RAGX 처리량 향상 (CPU-NVMe 대비, geomean, 저자 보고치)", "labels": ["0.5M", "5M", "50M", "500M"], "values": [1.6, 2.3, 4.3, 5.7], "unit": "×", "xLabel": "데이터베이스 크기 (passages)", "yLabel": "정규화 처리량 향상"}, {"canvasId": "chart-1", "type": "bar", "title": "저장장치 접근이 차지하는 런타임 비중: CPU-NVMe vs RAGX (저자 보고치)", "labels": ["CPU-NVMe 0.5M", "RAGX 0.5M", "CPU-NVMe 5M", "RAGX 5M", "CPU-NVMe 50M", "RAGX 50M", "CPU-NVMe 500M", "RAGX 500M"], "values": [26.6, 4.1, 47.7, 6.7, 63.2, 12.8, 75, 40], "unit": "%", "xLabel": "시스템 및 데이터베이스 크기", "yLabel": "저장장치 접근 런타임 비중"}, {"canvasId": "chart-2", "type": "bar", "title": "50M passage에서 RAGX의 상대 처리량 향상 (각 baseline 대비, 저자 보고치)", "labels": ["vs CPU-NVMe", "vs Disag-NVMe", "vs Disag-DRAM", "vs CPU-DRAM", "vs GPU-DRAM"], "values": [4.3, 4.3, 1.7, 1.5, 1.4], "unit": "×", "xLabel": "비교 대상 시스템", "yLabel": "RAGX의 처리량 향상"}, {"canvasId": "chart-3", "type": "bar", "title": "에너지 효율 (CPU-NVMe 대비, 5M passages, 저자 보고치)", "labels": ["Search&Retrieval 단위: RAGX (평균)", "Search&Retrieval 단위: RAGX SPLADEv2 최대", "Search&Retrieval 단위: RAGX 8드라이브", "Search&Retrieval 단위: GPU-DRAM", "시스템 전체: RAGX (1드라이브)", "시스템 전체: GPU-DRAM"], "values": [50, 150, 26, 2, 1.12, 1.08], "unit": "×", "xLabel": "측정 범위 및 시스템", "yLabel": "정규화 에너지 효율"}, {"canvasId": "chart-4", "type": "bar", "title": "질의당 평균 저장장치 접근 횟수 (데이터베이스 규모별, 저자 보고치)", "labels": ["GTR 0.5M", "GTR 50M", "ColBERT 0.5M", "ColBERT 5M", "ColBERT 500M"], "values": [347, 1493, 393, 395, 3023], "unit": "회", "xLabel": "retriever 및 데이터베이스 크기", "yLabel": "질의당 저장장치 접근 횟수"}, {"canvasId": "chart-5", "type": "bar", "title": "Referenced Generation GPU 구성에 따른 RAGX 처리량 이득 (50M passages, 저자 보고치)", "labels": ["1× A100", "2× A100 (기준)", "4× A100", "2× H100"], "values": [3.0, 4.3, 4.3, 4.6], "unit": "×", "xLabel": "생성용 GPU 구성", "yLabel": "CPU-NVMe 대비 처리량 향상"}];
 
     for (const spec of chartSpecs) {
       const canvas = document.getElementById(spec.canvasId);

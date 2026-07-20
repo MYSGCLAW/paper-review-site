@@ -1220,8 +1220,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-unverified">
-          검증 전
+        <span class="status-badge status-failed">
+          검증 실패
         </span>
       </div>
 
@@ -1229,7 +1229,7 @@
       <p class="metadata">2026 · arXiv preprint (arXiv:2509.18095v2 [cs.IR]) — 동료심사 게재 정보는 확인되지 않음</p>
 
       <p class="summary">
-        MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 보였다(p. 9).
+        MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 논문이 보고한 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 저자들이 보였다(p. 9).
       </p>
 
       <a class="open-link" href="papers/metaembed/">
@@ -1246,8 +1246,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-unverified">
-          검증 전
+        <span class="status-badge status-failed">
+          검증 실패
         </span>
       </div>
 
@@ -1350,8 +1350,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-unverified">
-          검증 전
+        <span class="status-badge status-failed">
+          검증 실패
         </span>
       </div>
 
@@ -1359,7 +1359,7 @@
       <p class="metadata">2026 · arXiv preprint (arXiv:2602.19549) — 정식 게재 venue는 논문에 명시되지 않음</p>
 
       <p class="summary">
-        이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다.
+        이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다고 주장한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, 논문은 DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다고 보고한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소한다고 논문은 제시하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다고 저자들은 명시한다.
       </p>
 
       <a class="open-link" href="papers/vdr/">
@@ -1584,8 +1584,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-unverified">
-          검증 전
+        <span class="status-badge status-failed">
+          검증 실패
         </span>
       </div>
 
@@ -1593,7 +1593,7 @@
       <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), Tokyo, Japan (ACM)</p>
 
       <p class="summary">
-        이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과, CPU-NVMe 대비 최대 4.3배(500M에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 달성했다(p.1-2, p.11-12).
+        이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과, 저자들은 CPU-NVMe 대비 최대 4.3배(500M에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 보고한다(p.1-2, p.11-12).
       </p>
 
       <a class="open-link" href="papers/in-storage-acceleration-of-retrieval-augmented-generation-as-a-service/">
@@ -1688,8 +1688,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-unverified">
-          검증 전
+        <span class="status-badge status-failed">
+          검증 실패
         </span>
       </div>
 
@@ -1697,7 +1697,7 @@
       <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), June 21-25, 2025, Tokyo, Japan</p>
 
       <p class="summary">
-        REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계한다. 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 평가 결과 REIS는 256-core CPU 서버(CPU-Real) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 달성하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비 SSD 구성과 목표 Recall@10에 따라 7.67배에서 최대 24.1배까지 RAG retrieval을 가속한다. 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.
+        REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계한다. 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 저자들이 보고한 평가 결과에 따르면 REIS는 256-core CPU 서버(CPU-Real) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 제공하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비로는 서술 위치(Abstract/Introduction vs. 본문 Section 6.4)에 따라 제시된 배수 값이 다르므로 단일 수치로 단정하기보다 SSD 구성과 목표 Recall@10에 따라 수 배에서 최대 20배 이상의 폭으로 RAG retrieval을 가속한다고 이해하는 것이 안전하다(세부 수치는 unresolved 참조). 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.
       </p>
 
       <a class="open-link" href="papers/reis/">
@@ -1714,8 +1714,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-unverified">
-          검증 전
+        <span class="status-badge status-failed">
+          검증 실패
         </span>
       </div>
 
@@ -1723,7 +1723,7 @@
       <p class="metadata">2025 · The Journal of Supercomputing</p>
 
       <p class="summary">
-        이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 custom CUDA MaxSim 커널이 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 ESPN은 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다.
+        이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 custom CUDA MaxSim 커널이 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 저자들은 ESPN이 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다고 보고한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다고 저자들은 밝힌다.
       </p>
 
       <a class="open-link" href="papers/espnlive/">

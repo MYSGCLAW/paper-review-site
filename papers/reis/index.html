@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -706,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계한다. 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 평가 결과 REIS는 256-core CPU 서버(CPU-Real) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 달성하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비 SSD 구성과 목표 Recall@10에 따라 7.67배에서 최대 24.1배까지 RAG retrieval을 가속한다. 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.</p>
+        <p>REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계한다. 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 저자들이 보고한 평가 결과에 따르면 REIS는 256-core CPU 서버(CPU-Real) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 제공하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비로는 서술 위치(Abstract/Introduction vs. 본문 Section 6.4)에 따라 제시된 배수 값이 다르므로 단일 수치로 단정하기보다 SSD 구성과 목표 Recall@10에 따라 수 배에서 최대 20배 이상의 폭으로 RAG retrieval을 가속한다고 이해하는 것이 안전하다(세부 수치는 unresolved 참조). 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.</p>
         <span class="source-ref">PDF p. 1, 2, 5, 6, 11, 12, 13</span>
       </section>
 
@@ -750,7 +777,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>REIS는 CPU-Real 대비 평균 13배 성능·55배 에너지 효율(최대 112배·157배)을 달성하며, I/O가 전혀 없다고 가정한 이상적 No-I/O 대비로도 평균 1.8배 빠르다.</span>
+                <span>저자들은 REIS가 CPU-Real 대비 평균 13배 성능·55배 에너지 효율(최대 112배·157배)을 제공하며, I/O가 전혀 없다고 가정한 이상적 No-I/O 대비로도 평균 1.8배 빠르다고 보고한다.</span>
               </div>
               <span class="source-ref">PDF p. 1, 2, 11, 12</span>
             </li>
@@ -877,7 +904,7 @@
 
     <article class="content-item">
       <h3>두 종류 SSD 설계 기반 구현 및 평가</h3>
-      <p>비용 지향적(cost-oriented) 및 성능 지향적(performance-oriented) SSD 설계를 기반으로 REIS를 구현하고 성능·에너지 효율을 평가했다. 256-core CPU 시스템 대비 평균 13배 성능(에너지 효율 55배) 향상을 제공하며, 최신 ISP 기반 ANNS 가속기 대비 SSD 구성 및 목표 Recall@10 값에 따라 7.67배에서 최대 24.1배까지 RAG retrieval을 가속한다.</p>
+      <p>비용 지향적(cost-oriented) 및 성능 지향적(performance-oriented) SSD 설계를 기반으로 REIS를 구현하고 성능·에너지 효율을 평가했다. 저자들은 256-core CPU 시스템 대비 평균 13배 성능(에너지 효율 55배) 향상을 보고하며, 최신 ISP 기반 ANNS 가속기 대비로는 SSD 구성 및 목표 Recall@10 값에 따라 논문 내 서로 다른 위치에서 다른 배수가 제시되어 있어 정확한 상한값은 확정하지 않는다(unresolved 참조).</p>
       <span class="source-ref">PDF p. 2</span>
     </article>
     
@@ -1035,7 +1062,7 @@
 
     <article class="content-item">
       <h3>SSD 구성 및 측정 방법론</h3>
-      <p>REIS는 비용 지향적 SSD-1과 성능 지향적 SSD-2 두 구성으로 구현·평가된다(Table 3). 성능·에너지 평가는 Flash-Cosmos 기반 SSD 동작 모델과 파라미터를 사용하고, SSD 내부 DRAM은 CACTI7으로 모델링하며, 임베디드 SSD controller 코어는 Zsim과 Ramulator로 시뮬레이션한다. SSD 전력은 상용 제품과 Flash-Cosmos의 실칩 특성화 결과에 기반해 모델링하고, CPU-Real의 전력은 AMD μProf(CPU)와 DDR4 모델(DRAM)로 측정한다.</p>
+      <p>REIS는 비용 지향적 SSD-1과 성능 지향적 SSD-2 두 구성으로 구현·평가된다(Table 3). 성능·에너지 평가는 Flash-Cosmos 기반 SSD 동작 모델과 파라미터를 사용하고, SSD 내부 DRAM은 CACTI7으로 모델링하며, 임베디드 SSD controller 코어는 Zsim과 Ramulator로 시뮬레이션한다. SSD 전력은 상용 제품과 Flash-Cosmos의 실칩 특성화 결과에 기반해 모델링하고, CPU-Real의 전력은 AMD μProf(CPU)와 DDR4 모델(DRAM)로 측정한다. 이 방법론은 시뮬레이션 및 모델 기반이며, 실제 SSD 프로토타입 상 실측 결과는 논문에서 확인되지 않는다.</p>
       <span class="source-ref">PDF p. 11</span>
     </article>
     
@@ -1057,35 +1084,35 @@
       
     <article class="content-item">
       <h3>CPU 대비 성능 (Figure 7)</h3>
-      <p>REIS-SSD1과 REIS-SSD2는 CPU-Real 대비 retrieval 성능(QPS)을 평균 13배, 최대 112배 향상시킨다. 특히 스토리지 I/O 오버헤드가 전혀 없다고 가정한 이상적 비교점 No-I/O 대비로도 평균 1.8배, 최대 5.3배 빠른데, 이는 REIS의 이득이 단순히 데이터 이동 제거뿐 아니라 스토리지 내부 병렬성 활용에서도 나옴을 의미한다. REIS-SSD2는 채널 수 2배·채널 대역폭 1.7배 증가에 힘입어 REIS-SSD1 대비 평균 2.6배, 최대 3.2배 빠르다.</p>
+      <p>저자들이 보고한 바에 따르면 REIS-SSD1과 REIS-SSD2는 CPU-Real 대비 retrieval 성능(QPS)을 평균 13배, 최대 112배 향상시킨다. 특히 스토리지 I/O 오버헤드가 전혀 없다고 가정한 이상적 비교점 No-I/O 대비로도 평균 1.8배, 최대 5.3배 빠른데, 이는 REIS의 이득이 단순히 데이터 이동 제거뿐 아니라 스토리지 내부 병렬성 활용에서도 나옴을 의미한다. REIS-SSD2는 채널 수 2배·채널 대역폭 1.7배 증가에 힘입어 REIS-SSD1 대비 평균 2.6배, 최대 3.2배 빠르다. 이 수치들은 Figure 7의 로그 스케일 막대그래프가 아니라 본문에 명시된 평균·최대값을 근거로 한다.</p>
       <span class="source-ref">PDF p. 11</span>
     </article>
     
 
     <article class="content-item">
       <h3>에너지 효율 (Figure 8)</h3>
-      <p>REIS는 CPU-Real 대비 에너지 효율(QPS/W)을 평균 55배, 최대 157배 향상시킨다. 근본 원인은 SSD가 CPU 대비 평균 29.7배 낮은 전력을 소비하기 때문이다. REIS-SSD2는 REIS-SSD1 대비 평균 2.2배, 최대 2.6배 높은 에너지 효율을 보인다.</p>
+      <p>저자들이 보고한 바에 따르면 REIS는 CPU-Real 대비 에너지 효율(QPS/W)을 평균 55배, 최대 157배 향상시킨다. 근본 원인은 SSD가 CPU 대비 평균 29.7배 낮은 전력을 소비하기 때문이다. REIS-SSD2는 REIS-SSD1 대비 평균 2.2배, 최대 2.6배 높은 에너지 효율을 보인다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>기존 ISP 가속기 대비 (Figure 10, 11)</h3>
-      <p>brute-force 검색에서 REIS는 모든 평가 설정에서 ICE 대비 10배를 초과하는 속도 향상을 달성한다. IVF에서는 목표 recall이 높을수록 격차가 벌어져, Section 6.4 본문 기준 SSD-2에서 ICE 대비 평균 7.1배(0.90 Recall@10) 및 22.9배(0.98 Recall@10)를 보고한다. ECC가 불필요한 이상화 버전 ICE-ESP 대비로도 BF에서 geomean 3.85배(SSD-1)/3.92배(SSD-2), IVF 0.9 recall에서 2.08배/2.29배, 0.98 recall에서 2.84배/3.18배의 향상을 달성한다. 그래프 기반 NDSearch 대비로는 billion-scale 데이터셋에서 평균 1.7배, 최대 2.6배 향상을 보인다. 단, ICE 대비 수치는 원문 내에서 서술 위치별로 값이 다르므로 unresolved 항목을 참고해야 한다.</p>
+      <p>brute-force 검색에서 REIS는 모든 평가 설정에서 ICE 대비 10배를 초과하는 속도 향상을 보고한다. IVF에서는 목표 recall이 높을수록 격차가 벌어지는데, Section 6.4 본문 기준으로는 SSD-2에서 ICE 대비 평균 7.1배(0.90 Recall@10) 및 22.9배(0.98 Recall@10)가 제시되어 있다. 다만 Abstract/Introduction에는 이와 다른 배수(24.2배/9.76배 등)가 함께 등장하며, 두 서술 간 조건 차이가 본문에 명시되어 있지 않아 어느 쪽이 대표값인지 확정할 수 없다(unresolved 참조). ECC가 불필요한 이상화 버전 ICE-ESP 대비로는 BF에서 geomean 3.85배(SSD-1)/3.92배(SSD-2), IVF 0.9 recall에서 2.08배/2.29배, 0.98 recall에서 2.84배/3.18배가 본문에 보고되어 있다. 그래프 기반 NDSearch 대비로는 billion-scale 데이터셋에서 평균 1.7배, 최대 2.6배의 향상이 보고된다.</p>
       <span class="source-ref">PDF p. 2, 13</span>
     </article>
     
 
     <article class="content-item">
       <h3>설계 선택의 기여도 (Figure 9, REIS-ASIC 비교)</h3>
-      <p>Sensitivity study에서 Distance Filtering이 No-OPT 대비 가장 큰 속도 향상 요인으로, 평균 4.7배(SSD-1)/5.7배(SSD-2), 최대 5.1배/6.5배의 향상을 제공한다. MPIBC는 DF+PL 대비 평균 6%(SSD-1) 및 26%(SSD-2)의 추가 향상을 주며, die당 plane 수가 많은 SSD에서 이득이 커진다. 한편 ESP 대신 ECC와 이상적 ASIC을 쓰는 REIS-ASIC은 모든 recall 값·데이터셋에서 REIS 대비 4.1×-5.0×(SSD-1), 3.9×-6.5×(SSD-2)의 속도 저하를 겪는데, 이는 plane 내부에서 연산하지 않고 controller로 데이터를 옮길 때의 비용을 정량화한 결과다.</p>
+      <p>Sensitivity study에서 Distance Filtering이 No-OPT 대비 가장 큰 속도 향상 요인으로 보고되며, 평균 4.7배(SSD-1)/5.7배(SSD-2), 최대 5.1배/6.5배의 향상을 제공한다. MPIBC는 DF+PL 대비 평균 6%(SSD-1) 및 26%(SSD-2)의 추가 향상을 주며, die당 plane 수가 많은 SSD에서 이득이 커진다. 한편 ESP 대신 ECC와 이상적 ASIC을 쓰는 REIS-ASIC은 모든 recall 값·데이터셋에서 REIS 대비 4.1×-5.0×(SSD-1), 3.9×-6.5×(SSD-2)의 속도 저하를 겪는데, 이는 plane 내부에서 연산하지 않고 controller로 데이터를 옮길 때의 비용을 정량화한 결과로 저자들이 제시한다.</p>
       <span class="source-ref">PDF p. 12, 13</span>
     </article>
     
 
     <article class="content-item">
       <h3>End-to-end RAG 파이프라인 영향 (Table 4)</h3>
-      <p>REIS는 Dataset Loading과 Search를 합친 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 감소시켜 RAG retrieval의 데이터 이동 병목을 사실상 제거한다. 그 결과 end-to-end 지연시간이 HotpotQA에서 1.25배(23.79초 → 18.97초), NQ에서 3.24배(61.69초 → 19.0초) 감소한다. REIS 적용 후에는 Generation 단계가 전체 지연시간의 92%를 차지하여 LLM 추론이 새로운 병목이 된다.</p>
+      <p>REIS는 Dataset Loading과 Search를 합친 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 감소시켜 RAG retrieval의 데이터 이동 병목을 사실상 제거한다고 저자들은 보고한다. Table 4에 제시된 수치를 기준으로 end-to-end 지연시간이 HotpotQA에서 1.25배(23.79초 → 18.97초), NQ에서 3.24배(61.69초 → 19.0초) 감소한다. REIS 적용 후에는 Generation 단계가 전체 지연시간의 92%를 차지하여 LLM 추론이 새로운 병목이 된다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
@@ -1208,52 +1235,52 @@ flowchart TD
           <h2>정량 결과</h2>
           
             <article class="visual-card">
-              <h3>REIS의 retrieval 성능 향상 (CPU-Real 대비 정규화 QPS)</h3>
+              <h3>REIS의 retrieval 성능 향상 (CPU-Real 대비 정규화 QPS, 저자 보고 수치)</h3>
               <div class="chart-container">
                 <canvas id="chart-0"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 1, 2, 11 · Figure 7 · REIS-SSD1/SSD2, NQ/HotpotQA/wiki_en/wiki_full, BF 및 IVF(Recall@10=0.98/0.94/0.90) 전체 평균 및 최대값. 원문 그래프는 로그 스케일이며 개별 막대 수치는 확인 불가하므로 본문에 명시된 평균/최대값만 사용함.
+                PDF p. 1, 2, 11 · Figure 7 · REIS-SSD1/SSD2, NQ/HotpotQA/wiki_en/wiki_full, BF 및 IVF(Recall@10=0.98/0.94/0.90) 전체 평균 및 최대값. 원문 그래프는 로그 스케일이며 개별 막대 수치는 확인할 수 없어, 본문에 텍스트로 명시된 평균/최대값만 사용했다. 실측 검증값이 아니라 저자가 본문에 기술한 요약 수치임에 유의해야 한다.
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>REIS의 에너지 효율 향상 (CPU-Real 대비 정규화 QPS/W)</h3>
+              <h3>REIS의 에너지 효율 향상 (CPU-Real 대비 정규화 QPS/W, 저자 보고 수치)</h3>
               <div class="chart-container">
                 <canvas id="chart-1"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 1, 2, 12 · Figure 8 · REIS vs CPU-Real, 전체 데이터셋/설정 평균 및 최대값. &#x27;SSD 전력 감소&#x27;는 SSD가 CPU-Real 대비 소비 전력이 낮은 배수로, 에너지 효율 향상의 근본 원인으로 본문에 서술됨.
+                PDF p. 1, 2, 12 · Figure 8 · REIS vs CPU-Real, 전체 데이터셋/설정 평균 및 최대값(본문 명시 수치). &#x27;SSD 전력 감소&#x27;는 SSD가 CPU-Real 대비 소비 전력이 낮은 배수로, 에너지 효율 향상의 근본 원인으로 본문에 서술됨.
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>End-to-end RAG 파이프라인 지연시간 (REIS vs CPU+BQ)</h3>
+              <h3>End-to-end RAG 파이프라인 지연시간 (REIS vs CPU+BQ, Table 4 수치)</h3>
               <div class="chart-container">
                 <canvas id="chart-2"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 12 · Table 4 · REIS-SSD1 vs CPU 기반 Binary Quantization 시스템, end-to-end RAG 파이프라인 지연시간(초). 감소 배수는 HotpotQA 1.25×, NQ 3.24×.
+                PDF p. 12 · Table 4 · REIS-SSD1 vs CPU 기반 Binary Quantization 시스템, end-to-end RAG 파이프라인 지연시간(초). Table 4에 제시된 수치 기준 감소 배수는 HotpotQA 1.25×, NQ 3.24×.
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>Distance Filtering의 성능 기여도 (No-OPT 대비)</h3>
+              <h3>Distance Filtering의 성능 기여도 (No-OPT 대비, 저자 보고 수치)</h3>
               <div class="chart-container">
                 <canvas id="chart-3"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 12 · Figure 9 · wiki_full 데이터셋, No-OPT(DF/PL/MPIBC 미적용) 대비 Distance Filtering 단독 적용, CPU-Real 대비 정규화된 QPS 기준. MPIBC의 추가 이득(DF+PL 대비 6%/26%)은 단위가 달라 별도 표기하지 않음.
+                PDF p. 12 · Figure 9 · wiki_full 데이터셋, No-OPT(DF/PL/MPIBC 미적용) 대비 Distance Filtering 단독 적용, CPU-Real 대비 정규화된 QPS 기준(본문 명시 수치). MPIBC의 추가 이득(DF+PL 대비 6%/26%)은 단위가 달라 별도 표기하지 않음.
               </p>
             </article>
             
             <article class="visual-card">
-              <h3>기존 ISP 기반 ANNS 가속기 대비 성능 향상</h3>
+              <h3>기존 ISP 기반 ANNS 가속기 대비 성능 향상 (본문 수치, 서술 위치별 값이 다를 수 있음)</h3>
               <div class="chart-container">
                 <canvas id="chart-4"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 13 · Figure 10, Figure 11 (ICE-ESP 비교는 Figure에 미표시, 본문 수치) · ICE 비교는 Section 6.4 본문 수치(전체 데이터셋 평균)를 사용했으며, Abstract/Introduction의 24.2×/9.76× 서술과 불일치가 존재한다(unresolved 참조). NDSearch 비교는 SIFT-1B(Recall@10=0.94) 및 DEEP-1B(Recall@10=0.93) 기준.
+                PDF p. 13 · Figure 10, Figure 11 (ICE-ESP 비교는 Figure에 미표시, 본문 수치) · ICE 비교는 Section 6.4 본문 수치를 사용했으며, Abstract/Introduction에는 이와 다른 배수(24.2×/9.76× 등)가 서술되어 있어 두 값 사이의 조건 차이가 본문에서 확인되지 않는다(unresolved 참조). 따라서 이 차트의 ICE 비교값을 논문 전체를 대표하는 단일 수치로 단정해서는 안 된다. NDSearch 비교는 SIFT-1B(Recall@10=0.94) 및 DEEP-1B(Recall@10=0.93) 기준.
               </p>
             </article>
             
@@ -1400,6 +1427,14 @@ flowchart TD
                 <span>hybrid SSD 구성(SLC 파티션에 binary 임베딩, TLC 파티션에 문서·INT8 임베딩)은 SLC 영역이 TLC 대비 저장 밀도가 낮으므로 실효 용량 측면의 비용을 수반할 것으로 보이나, 이 트레이드오프의 정량적 분석은 확인되지 않는다.</span>
               </div>
               <span class="source-ref">PDF p. 6, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>ICE 대비 성능 향상 배수는 Abstract/Introduction과 Section 6.4 본문 사이에 값이 일치하지 않으며, 이 차이를 설명하는 조건이 원문에 명시되어 있지 않다. 따라서 특정 단일 배수를 REIS의 대표 성능 향상치로 단정할 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 13</span>
             </li>
             
       </ul>
@@ -1604,7 +1639,7 @@ flowchart TD
             <div class="glossary-row">
               <dt>Distance Filtering (DF)</dt>
               <dd>
-                사전 정의된 threshold를 초과하는 먼 임베딩을 plane 내부에서 조기에 걸러내 SSD controller로 전송하지 않는 최적화. sensitivity study에서 가장 큰 성능 기여 요인이다(평균 4.7×-5.7×).
+                사전 정의된 threshold를 초과하는 먼 임베딩을 plane 내부에서 조기에 걸러내 SSD controller로 전송하지 않는 최적화. sensitivity study에서 가장 큰 성능 기여 요인으로 보고된다(평균 4.7×-5.7×).
                 <span class="source-ref">PDF p. 10, 12</span>
               </dd>
             </div>
@@ -1612,7 +1647,7 @@ flowchart TD
             <div class="glossary-row">
               <dt>MPIBC (Multi-Plane Input Broadcasting)</dt>
               <dd>
-                하나의 die 내 모든 plane에 query embedding을 동시에 broadcast하는 최적화. die당 plane 수가 많은 SSD에서 이득이 커지며, DF+PL 대비 평균 6%(SSD-1)/26%(SSD-2) 추가 향상을 준다.
+                하나의 die 내 모든 plane에 query embedding을 동시에 broadcast하는 최적화. die당 plane 수가 많은 SSD에서 이득이 커지며, DF+PL 대비 평균 6%(SSD-1)/26%(SSD-2) 추가 향상을 준다고 보고된다.
                 <span class="source-ref">PDF p. 10, 12</span>
               </dd>
             </div>
@@ -1656,7 +1691,7 @@ flowchart TD
       
         <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>Abstract/Introduction(REIS-SSD2 vs ICE 평균 24.2×/9.76× at Recall@10 0.98/0.90)과 Section 6.4/Figure 10 본문(SSD-2 vs ICE 평균 22.9×/7.1× at Recall@10 0.98/0.90) 사이에 수치 불일치가 원문에 존재하며, 이를 조정할 근거나 계산 조건 차이가 본문에 명시되어 있지 않다.</li><li>Contributions bullet의 &#x27;up to 24.1×&#x27;와 Introduction Key Results의 &#x27;24.2×&#x27;가 서로 다르게 표기되어 있다(원문 그대로 기록, 불일치의 원인은 본문에서 확인 불가).</li><li>Figure 5, 7, 8, 9, 10, 11은 로그 스케일 막대그래프로 제시되어 있어, 본문에 텍스트로 명시된 평균/최대값 이외의 개별 막대(데이터셋×Recall×SSD 조합별) 정확한 수치는 확인할 수 없다. 따라서 charts 배열에는 본문에 명시된 수치만 포함했다.</li><li>REIS-SSD1/SSD2의 정확한 내부 DRAM 용량, latch 크기, 임베디드 코어 클럭 속도 등 세부 스펙은 Table 3에 제시된 항목(채널·플레인·다이 수, 채널 대역폭, tR, 임베디드 코어 종류/개수) 외에는 본문에서 확인되지 않는다.</li><li>REIS-ASIC 비교 실험의 정확한 데이터셋별·recall별 개별 수치는 범위(4.1×-5.0×, 3.9×-6.5×)로만 제시되어 있어 세부 조건별 수치는 확인할 수 없다.</li><li>Distance Filtering threshold의 구체적 설정 방법과 그것이 Recall@10에 미치는 영향에 대한 정량 분석은 확인되지 않는다.</li><li>hybrid SSD 구성(SLC 파티션 + TLC 파티션)이 SSD 실효 용량에 미치는 영향과 그 비용에 대한 정량 분석은 확인되지 않는다.</li><li>OOB 영역 재사용 및 ESP 적용이 SSD 수명(endurance)과 신뢰성에 미치는 장기적 영향은 실측 근거로 확인되지 않는다.</li><li>REIS의 실제 하드웨어 프로토타입 구현 여부는 확인되지 않으며, 평가는 Flash-Cosmos 기반 모델·CACTI7·Zsim·Ramulator를 사용한 시뮬레이션에 기반한다.</li></ul>
+          <ul><li>Abstract/Introduction(REIS-SSD2 vs ICE 평균 24.2×/9.76× at Recall@10 0.98/0.90)과 Section 6.4/Figure 10 본문(SSD-2 vs ICE 평균 22.9×/7.1× at Recall@10 0.98/0.90) 사이에 수치 불일치가 원문에 존재하며, 이를 조정할 근거나 계산 조건 차이가 본문에 명시되어 있지 않다. 따라서 어느 쪽이 대표값인지 단정할 수 없다.</li><li>Contributions bullet의 &#x27;up to 24.1×&#x27;와 Introduction Key Results의 &#x27;24.2×&#x27;가 서로 다르게 표기되어 있다(원문 그대로 기록, 불일치의 원인은 본문에서 확인 불가).</li><li>Figure 5, 7, 8, 9, 10, 11은 로그 스케일 막대그래프로 제시되어 있어, 본문에 텍스트로 명시된 평균/최대값 이외의 개별 막대(데이터셋×Recall×SSD 조합별) 정확한 수치는 확인할 수 없다. 따라서 charts 배열에는 본문에 명시된 수치만 포함했다.</li><li>REIS-SSD1/SSD2의 정확한 내부 DRAM 용량, latch 크기, 임베디드 코어 클럭 속도 등 세부 스펙은 Table 3에 제시된 항목(채널·플레인·다이 수, 채널 대역폭, tR, 임베디드 코어 종류/개수) 외에는 본문에서 확인되지 않는다.</li><li>REIS-ASIC 비교 실험의 정확한 데이터셋별·recall별 개별 수치는 범위(4.1×-5.0×, 3.9×-6.5×)로만 제시되어 있어 세부 조건별 수치는 확인할 수 없다.</li><li>Distance Filtering threshold의 구체적 설정 방법과 그것이 Recall@10에 미치는 영향에 대한 정량 분석은 확인되지 않는다.</li><li>hybrid SSD 구성(SLC 파티션 + TLC 파티션)이 SSD 실효 용량에 미치는 영향과 그 비용에 대한 정량 분석은 확인되지 않는다.</li><li>OOB 영역 재사용 및 ESP 적용이 SSD 수명(endurance)과 신뢰성에 미치는 장기적 영향은 실측 근거로 확인되지 않는다.</li><li>REIS의 실제 하드웨어 프로토타입 구현 여부는 확인되지 않으며, 평가는 Flash-Cosmos 기반 모델·CACTI7·Zsim·Ramulator를 사용한 시뮬레이션에 기반한다.</li></ul>
         </section>
         
     </div>
@@ -1815,7 +1850,7 @@ flowchart TD
       });
     })();
 
-    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "REIS의 retrieval 성능 향상 (CPU-Real 대비 정규화 QPS)", "labels": ["vs CPU-Real (평균)", "vs CPU-Real (최대)", "vs No-I/O (평균)", "vs No-I/O (최대)", "SSD2 vs SSD1 (평균)", "SSD2 vs SSD1 (최대)"], "values": [13, 112, 1.8, 5.3, 2.6, 3.2], "unit": "×", "xLabel": "비교 항목", "yLabel": "속도 향상 배수"}, {"canvasId": "chart-1", "type": "bar", "title": "REIS의 에너지 효율 향상 (CPU-Real 대비 정규화 QPS/W)", "labels": ["vs CPU-Real (평균)", "vs CPU-Real (최대)", "SSD2 vs SSD1 (평균)", "SSD2 vs SSD1 (최대)", "SSD 전력 감소 (평균)"], "values": [55, 157, 2.2, 2.6, 29.7], "unit": "×", "xLabel": "비교 항목", "yLabel": "에너지 효율 향상 배수"}, {"canvasId": "chart-2", "type": "bar", "title": "End-to-end RAG 파이프라인 지연시간 (REIS vs CPU+BQ)", "labels": ["HotpotQA - CPU+BQ", "HotpotQA - REIS", "NQ - CPU+BQ", "NQ - REIS"], "values": [23.79, 18.97, 61.69, 19.0], "unit": "s", "xLabel": "데이터셋 및 시스템", "yLabel": "지연시간"}, {"canvasId": "chart-3", "type": "bar", "title": "Distance Filtering의 성능 기여도 (No-OPT 대비)", "labels": ["DF, SSD1 (평균)", "DF, SSD1 (최대)", "DF, SSD2 (평균)", "DF, SSD2 (최대)"], "values": [4.7, 5.1, 5.7, 6.5], "unit": "×", "xLabel": "구성", "yLabel": "속도 향상 배수"}, {"canvasId": "chart-4", "type": "bar", "title": "기존 ISP 기반 ANNS 가속기 대비 성능 향상", "labels": ["vs ICE, IVF R@10=0.90, SSD2", "vs ICE, IVF R@10=0.98, SSD2", "vs ICE-ESP, BF, SSD1", "vs ICE-ESP, BF, SSD2", "vs ICE-ESP, IVF R@10=0.9, SSD1", "vs ICE-ESP, IVF R@10=0.9, SSD2", "vs ICE-ESP, IVF R@10=0.98, SSD1", "vs ICE-ESP, IVF R@10=0.98, SSD2", "vs NDSearch, billion-scale (평균)", "vs NDSearch, billion-scale (최대)"], "values": [7.1, 22.9, 3.85, 3.92, 2.08, 2.29, 2.84, 3.18, 1.7, 2.6], "unit": "×", "xLabel": "비교 대상 및 조건", "yLabel": "속도 향상 배수"}];
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "REIS의 retrieval 성능 향상 (CPU-Real 대비 정규화 QPS, 저자 보고 수치)", "labels": ["vs CPU-Real (평균)", "vs CPU-Real (최대)", "vs No-I/O (평균)", "vs No-I/O (최대)", "SSD2 vs SSD1 (평균)", "SSD2 vs SSD1 (최대)"], "values": [13, 112, 1.8, 5.3, 2.6, 3.2], "unit": "×", "xLabel": "비교 항목", "yLabel": "속도 향상 배수"}, {"canvasId": "chart-1", "type": "bar", "title": "REIS의 에너지 효율 향상 (CPU-Real 대비 정규화 QPS/W, 저자 보고 수치)", "labels": ["vs CPU-Real (평균)", "vs CPU-Real (최대)", "SSD2 vs SSD1 (평균)", "SSD2 vs SSD1 (최대)", "SSD 전력 감소 (평균)"], "values": [55, 157, 2.2, 2.6, 29.7], "unit": "×", "xLabel": "비교 항목", "yLabel": "에너지 효율 향상 배수"}, {"canvasId": "chart-2", "type": "bar", "title": "End-to-end RAG 파이프라인 지연시간 (REIS vs CPU+BQ, Table 4 수치)", "labels": ["HotpotQA - CPU+BQ", "HotpotQA - REIS", "NQ - CPU+BQ", "NQ - REIS"], "values": [23.79, 18.97, 61.69, 19.0], "unit": "s", "xLabel": "데이터셋 및 시스템", "yLabel": "지연시간"}, {"canvasId": "chart-3", "type": "bar", "title": "Distance Filtering의 성능 기여도 (No-OPT 대비, 저자 보고 수치)", "labels": ["DF, SSD1 (평균)", "DF, SSD1 (최대)", "DF, SSD2 (평균)", "DF, SSD2 (최대)"], "values": [4.7, 5.1, 5.7, 6.5], "unit": "×", "xLabel": "구성", "yLabel": "속도 향상 배수"}, {"canvasId": "chart-4", "type": "bar", "title": "기존 ISP 기반 ANNS 가속기 대비 성능 향상 (본문 수치, 서술 위치별 값이 다를 수 있음)", "labels": ["vs ICE, IVF R@10=0.90, SSD2 (Sec 6.4)", "vs ICE, IVF R@10=0.98, SSD2 (Sec 6.4)", "vs ICE-ESP, BF, SSD1", "vs ICE-ESP, BF, SSD2", "vs ICE-ESP, IVF R@10=0.9, SSD1", "vs ICE-ESP, IVF R@10=0.9, SSD2", "vs ICE-ESP, IVF R@10=0.98, SSD1", "vs ICE-ESP, IVF R@10=0.98, SSD2", "vs NDSearch, billion-scale (평균)", "vs NDSearch, billion-scale (최대)"], "values": [7.1, 22.9, 3.85, 3.92, 2.08, 2.29, 2.84, 3.18, 1.7, 2.6], "unit": "×", "xLabel": "비교 대상 및 조건", "yLabel": "속도 향상 배수"}];
 
     for (const spec of chartSpecs) {
       const canvas = document.getElementById(spec.canvasId);

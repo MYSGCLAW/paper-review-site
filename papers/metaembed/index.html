@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -706,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 보였다(p. 9).</p>
+        <p>MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 논문이 보고한 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 저자들이 보였다(p. 9).</p>
         <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6, 7, 8, 9</span>
       </section>
 
@@ -734,7 +761,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>MMEB overall Precision@1에서 MetaEmbed-32B가 78.7%로 최고치를 기록했으며, baseline 최고치인 B3-7B의 72.0%를 크게 앞섰다.</span>
+                <span>논문이 보고한 MMEB overall Precision@1에서 MetaEmbed-32B가 78.7%로 최고치를 기록했으며, baseline 최고치인 B3-7B의 72.0%를 크게 앞섰다.</span>
               </div>
               <span class="source-ref">PDF p. 6</span>
             </li>
@@ -750,7 +777,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>MMR을 제거하면 낮은 budget인 (1,1)에서 ViDoRe v1 NDCG@5가 9.0점 하락하지만, full budget (16,64)에서는 MMEB 기준 오히려 NoMMR이 근소하게 높다. 즉 MMR의 가치는 &#x27;작은 budget에서도 잘 동작하게 만드는 것&#x27;이며 그 대가는 무시할 만한 수준이다.</span>
+                <span>MMR을 제거하면 낮은 budget인 (1,1)에서 ViDoRe v1 NDCG@5가 9.0점 하락하지만, full budget (16,64)에서는 MMEB 기준 오히려 NoMMR이 근소하게 높다. 즉 MMR의 가치는 &#x27;작은 budget에서도 잘 동작하게 만드는 것&#x27;이며 그 대가는 벤치마크에 따라 미미하거나 근소한 수준이다.</span>
               </div>
               <span class="source-ref">PDF p. 8, 15</span>
             </li>
@@ -758,7 +785,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>효율성 분석 결과 scoring latency는 최대 budget에서도 6.25ms인 반면 1024 토큰 이미지 쿼리 인코딩은 788ms가 걸려, 전체 파이프라인의 지연시간은 encoding이 지배한다. 따라서 멀티벡터화의 실질적 비용은 지연시간보다 인덱스 메모리(0.68→42.72 GiB)에 나타난다.</span>
+                <span>논문이 보고한 효율성 분석에서 scoring latency는 최대 budget에서도 6.25ms인 반면 1024 토큰 이미지 쿼리 인코딩은 788ms가 걸려, 전체 파이프라인의 지연시간은 encoding이 지배함을 저자들은 관찰했다. 따라서 멀티벡터화의 실질적 비용은 지연시간보다 인덱스 메모리(0.68→42.72 GiB)에 나타난다.</span>
               </div>
               <span class="source-ref">PDF p. 9</span>
             </li>
@@ -1099,7 +1126,7 @@
       
     <article class="content-item">
       <h3>MMEB 종합 성능</h3>
-      <p>MMEB overall Precision@1에서 MetaEmbed-3B(Qwen2.5-VL)는 69.1%, 7B는 76.6%, 32B는 78.7%를 기록했으며 32B가 전체 모델 중 최고 점수다. baseline 중 최고는 B3-7B의 72.0%였고 MoCa-7B는 71.5%, mmE5는 69.8%였다. 저자들은 MetaEmbed-3B가 MoCa-3B(67.5%) 대비 앞섰다는 점을 &#x27;+1.6% relative improvement&#x27;로 표현했고, MetaEmbed-7B(76.6%)는 MoCa-7B와 mmE5를 &#x27;5-7점 이상&#x27; 앞섰다고 서술한다.</p>
+      <p>논문이 보고한 MMEB overall Precision@1은 MetaEmbed-3B(Qwen2.5-VL) 69.1%, 7B 76.6%, 32B 78.7%이며 32B가 전체 모델 중 최고 점수다. baseline 중 최고는 B3-7B의 72.0%였고 MoCa-7B는 71.5%, mmE5는 69.8%였다. 저자들은 MetaEmbed-3B가 MoCa-3B(67.5%) 대비 앞섰다는 점을 &#x27;+1.6% relative improvement&#x27;로 표현했으나 이는 절대 차이(1.6점)를 가리키는 것으로 보이며, 통상적 상대 개선율로는 약 2.4%에 해당한다. 저자들은 또한 MetaEmbed-7B(76.6%)가 MoCa-7B와 mmE5를 &#x27;5-7점 이상&#x27; 앞섰다고 서술하는데, 보고된 overall 값 기준 실제 차이는 각각 5.1점, 6.8점이다.</p>
       <span class="source-ref">PDF p. 6, 7</span>
     </article>
     
@@ -1120,7 +1147,7 @@
 
     <article class="content-item">
       <h3>Test-time scaling의 효과</h3>
-      <p>test-time 검색 비용 대비 성능 곡선에서 MetaEmbed-3B는 (16,64) budget에서 최고 성능 단일벡터 baseline 대비 +3.3점의 상대적 이득을 보였고, MetaEmbed-32B는 +6.6점으로 가장 두드러진(most pronounced) 이득을 보였다. 즉 모델이 커질수록 멀티벡터 표현의 추가 이득이 더 커진다.</p>
+      <p>test-time 검색 비용 대비 성능 곡선에서 MetaEmbed-3B는 (16,64) budget에서 최고 성능 단일벡터 baseline 대비 +3.3점의 상대적 이득을 보였고, MetaEmbed-32B는 +6.6점으로 가장 두드러진(most pronounced) 이득을 보였다. 다만 부록 Table 5에서 동일 조건(single-last 대비 Δ)의 3B 값은 +3.5점으로 다르게 기재되어 있어, 두 수치는 산출 근거가 정확히 일치하지 않을 수 있다. 전반적으로 모델이 커질수록 멀티벡터 표현의 추가 이득이 더 커지는 경향을 저자들은 보고한다.</p>
       <span class="source-ref">PDF p. 8</span>
     </article>
     
@@ -1134,7 +1161,7 @@
 
     <article class="content-item">
       <h3>MMR ablation</h3>
-      <p>MMR 없이 학습한 MetaEmbed-3B를 단일 벡터 검색 모델로 사용((r_q, r_c) = (1,1))했을 때 ViDoRe v1 average NDCG@5가 MMR 적용 모델 대비 9.0점 하락했다. budget이 커지면 격차는 좁아지지만, ViDoRe v1에서는 full budget에서도 MMR 모델이 근소하게 우세했다. 다만 Appendix Table 5의 MMEB 결과에서는 (16,64) 기준 NoMMR이 오히려 근소하게 높아(3B 69.3 vs 69.1, 7B 77.0 vs 76.6, 32B 79.1 vs 78.7, 11B 66.2 vs 65.1), 저자들은 이를 &#x27;MMR이 무시할 만한(negligible) 성능 저하만을 유발한다&#x27;고 설명한다. 종합하면 MMR은 낮은 budget에서 큰 이득을 주고 full budget에서는 비용이 거의 없다.</p>
+      <p>MMR 없이 학습한 MetaEmbed-3B를 단일 벡터 검색 모델로 사용((r_q, r_c) = (1,1))했을 때 ViDoRe v1 average NDCG@5가 MMR 적용 모델 대비 9.0점 하락했다. budget이 커지면 격차는 좁아지지만, ViDoRe v1에서는 full budget에서도 MMR 모델이 근소하게 우세했다고 본문은 서술한다. 다만 Appendix Table 5의 MMEB 결과에서는 (16,64) 기준 NoMMR이 오히려 근소하게 높아(3B 69.3 vs 69.1, 7B 77.0 vs 76.6, 32B 79.1 vs 78.7, 11B 66.2 vs 65.1), 두 벤치마크의 결과가 서로 다른 방향을 보인다. 저자들은 이를 &#x27;MMR이 무시할 만한(negligible) 성능 저하만을 유발한다&#x27;고 설명하지만, 이 상반된 결과가 벤치마크 특성 차이인지 측정 노이즈인지는 논문에서 확인되지 않는다. 종합하면 MMR은 낮은 budget에서 큰 이득을 주며, full budget에서의 비용은 벤치마크에 따라 미미하거나 근소한 손실로 나타난다.</p>
       <span class="source-ref">PDF p. 8, 15</span>
     </article>
     
@@ -1148,7 +1175,7 @@
 
     <article class="content-item">
       <h3>효율성 분석의 핵심 관찰</h3>
-      <p>budget (1,1)에서는 scoring FLOPs 0.71G, latency 1.67±0.13ms, index memory 0.68 GiB, MMEB Acc 71.3%였고, (16,64)에서는 733.89G, 6.25±0.07ms, 42.72 GiB, 76.6%였다. FLOPs는 1000배 가까이 늘지만 지연시간은 중간 budget들에서 거의 평탄하게 유지되어, (16,64)라는 극단적 경우 전까지는 scoring이 compute-bound가 아님을 보인다. 더 중요하게는 1024 토큰 이미지 쿼리 하나를 인코딩하는 데 42.72 TFLOPs와 788ms가 소요되어, scoring 비용보다 수십~수백 배 크다. 저자들은 따라서 효율 개선의 초점이 scoring이 아니라 encoding에 맞춰져야 한다고 결론짓는다.</p>
+      <p>논문이 제시한 Table 3에 따르면 budget (1,1)에서는 scoring FLOPs 0.71G, latency 1.67±0.13ms, index memory 0.68 GiB, MMEB Acc 71.3%였고, (16,64)에서는 733.89G, 6.25±0.07ms, 42.72 GiB, 76.6%였다. FLOPs는 1000배 가까이 늘지만 지연시간은 중간 budget들에서 거의 평탄하게 유지되어, (16,64)라는 극단적 경우 전까지는 scoring이 compute-bound가 아님을 시사한다. 더 중요하게는 1024 토큰 이미지 쿼리 하나를 인코딩하는 데 42.72 TFLOPs와 788ms가 소요되어, scoring 비용보다 수십~수백 배 크다고 저자들은 보고한다. 저자들은 이를 근거로 효율 개선의 초점이 scoring이 아니라 encoding에 맞춰져야 한다고 결론짓는다.</p>
       <span class="source-ref">PDF p. 9</span>
     </article>
     
@@ -1163,7 +1190,7 @@
       
     <article class="content-item">
       <h3>논문의 결론</h3>
-      <p>MetaEmbed는 소수의 학습 가능한 Meta Token과 Matryoshka 방식의 중첩 학습을 결합하여, 대규모 환경에서 임베딩 간 late interaction을 실용적으로 수행할 수 있게 한다. MMEB와 ViDoRe v2에서 state-of-the-art 성능을 달성하면서, 재학습 없이 정확도와 비용을 조절할 수 있는 test-time scaling을 제공한다.</p>
+      <p>MetaEmbed는 소수의 학습 가능한 Meta Token과 Matryoshka 방식의 중첩 학습을 결합하여, 대규모 환경에서 임베딩 간 late interaction을 실용적으로 수행할 수 있게 한다. 저자들은 MMEB와 ViDoRe v2에서 state-of-the-art 성능을 보고하며, 재학습 없이 정확도와 비용을 조절할 수 있는 test-time scaling을 제공한다고 주장한다.</p>
       <span class="source-ref">PDF p. 2, 9</span>
     </article>
     
@@ -1177,7 +1204,7 @@
 
     <article class="content-item">
       <h3>실무적 시사점</h3>
-      <p>효율성 분석은 다소 역설적인 결론을 제시한다. 논문이 해결한 문제는 멀티벡터 검색의 비용이지만, 정작 측정 결과 병목은 scoring이 아니라 query encoding이었다. 즉 MetaEmbed의 실질적 가치는 &#x27;검색을 빠르게 만든 것&#x27;보다 &#x27;검색 품질을 인덱스 크기 예산 안에서 조절 가능하게 만든 것&#x27;에 가깝다. 다만 이 결론은 후보 100,000개라는 규모에 기반한 것이므로, 후보 수가 훨씬 커지면 균형이 달라질 수 있다.</p>
+      <p>효율성 분석은 다소 역설적인 결론을 제시한다. 논문이 해결한 문제는 멀티벡터 검색의 비용이지만, 저자들이 측정한 결과 병목은 scoring이 아니라 query encoding이었다. 즉 MetaEmbed의 실질적 가치는 &#x27;검색을 빠르게 만든 것&#x27;보다 &#x27;검색 품질을 인덱스 크기 예산 안에서 조절 가능하게 만든 것&#x27;에 가깝다는 것이 분석자의 해석이다. 다만 이 결론은 후보 100,000개라는 규모에 기반한 것이므로, 후보 수가 훨씬 커지면 균형이 달라질 수 있다.</p>
       <span class="source-ref">PDF p. 9</span>
     </article>
     
@@ -1368,7 +1395,7 @@ flowchart TB
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>MMR의 효과를 낮은 budget과 full budget 양쪽에서 분리해 보고했다. (1,1)에서 9.0점 이득, (16,64)에서는 거의 무비용이라는 구분은 MMR이 언제 가치가 있는지를 명확히 한다.</span>
+                <span>MMR의 효과를 낮은 budget과 full budget 양쪽에서 분리해 보고했다. (1,1)에서 9.0점 이득, (16,64)에서는 벤치마크에 따라 미미하거나 근소한 손실이라는 구분은 MMR이 언제 가치가 있는지를 명확히 한다.</span>
               </div>
               <span class="source-ref">PDF p. 8, 15</span>
             </li>
