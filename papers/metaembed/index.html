@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MetaEmbed: Scaling Multimodal Retrieval at Test-Time with Flexible Late Interaction</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>MetaEmbed: Scaling Multimodal Retrieval at Test-Time with Flexible Late Interaction</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Zilin Xiao, Qi Ma, Mengting Gu, Jason Chen, Xintao Chen, Vicente Ordonez, Vijai Mohan</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2509.18095v2 [cs.IR]) — 동료심사 게재 정보는 확인되지 않음</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정 및 주요 구성요소</a>
+<a href="#algorithms">핵심 알고리즘 및 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론 및 종합 해석</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 보였다(p. 9).</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6, 7, 8, 9</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MetaEmbed는 소수의 학습 가능한 Meta Token을 입력에 덧붙여 VLM 마지막 레이어에서 고정 개수의 멀티벡터(Meta Embeddings)를 얻음으로써, 벡터 개수를 입력 길이로부터 분리한다. 이것이 이미지-이미지 검색까지 late interaction을 확장할 수 있게 한 핵심이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Matryoshka Multi-Vector Retrieval(MMR)은 G=5개 prefix-nested 그룹 (1,1)/(2,4)/(4,8)/(8,16)/(16,64)에 대해 InfoNCE loss를 병렬로 최적화하여, 재학습 없이 테스트 시점에 retrieval budget을 고를 수 있게 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MMEB overall Precision@1에서 MetaEmbed-32B가 78.7%로 최고치를 기록했으며, baseline 최고치인 B3-7B의 72.0%를 크게 앞섰다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>모델 규모가 커질수록 단일 벡터 baseline은 7B→32B에서 +0.5점으로 정체되는 반면 MetaEmbed는 +2.1점 상승해, 단일 벡터 표현이 대형 모델의 성능 병목임을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MMR을 제거하면 낮은 budget인 (1,1)에서 ViDoRe v1 NDCG@5가 9.0점 하락하지만, full budget (16,64)에서는 MMEB 기준 오히려 NoMMR이 근소하게 높다. 즉 MMR의 가치는 &#x27;작은 budget에서도 잘 동작하게 만드는 것&#x27;이며 그 대가는 무시할 만한 수준이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 15</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>효율성 분석 결과 scoring latency는 최대 budget에서도 6.25ms인 반면 1024 토큰 이미지 쿼리 인코딩은 788ms가 걸려, 전체 파이프라인의 지연시간은 encoding이 지배한다. 따라서 멀티벡터화의 실질적 비용은 지연시간보다 인덱스 메모리(0.68→42.72 GiB)에 나타난다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>논문의 실용적 메시지는 &#x27;하나의 모델과 하나의 인덱스로 여러 비용 지점을 서비스할 수 있다&#x27;는 것이며, 이는 서로 다른 SLA를 가진 다중 서비스를 운영하는 환경에서 모델 관리 비용을 줄이는 방향으로 해석된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 9</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>표현력과 확장성의 근본적 트레이드오프</h3>
+      <p>기존의 범용 멀티모달 임베딩 모델들은 쿼리와 후보를 단일 벡터로 압축하여 fine-grained 정보의 표현력이 제한되거나, 반대로 멀티벡터 방식을 채택하면 지나치게 많은 벡터가 생성되어 인덱스 크기(index size), 검색 지연시간(retrieval latency), 그리고 특히 쿼리와 후보 양쪽 모두 이미지를 포함하는 multimodal-to-multimodal 검색에서의 실행 가능성(feasibility) 측면에서 규모 확장이 어렵다. 즉 정확도를 얻으면 비용이 감당 불가능해지고, 비용을 낮추면 정확도를 잃는 구조적 딜레마가 문제의 핵심이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>왜 지금 이 문제가 중요한가</h3>
+      <p>멀티모달 임베딩 모델은 이미지 검색, 시각 질의응답(VQA), 시각 문서 검색(visual document retrieval) 등에서 핵심적 역할을 하며, foundation VLM의 hidden state에 contrastive learning을 적용해 의미 있는 표현을 학습할 수 있게 되었다. 그러나 대부분의 방법이 단일 벡터 검색에 의존하기 때문에 임베딩 크기 자체가 추가 성능 확장의 병목이 된다. 반면 텍스트 검색에서 성공적이었던 ColBERT류 late interaction 방식은 멀티모달, 특히 양측 모두 이미지를 포함하는 대규모 검색에서는 계산 비용이 과도해 그대로 적용하기 어렵다. 따라서 정확도와 효율성(지연시간·인덱스 크기)을 유연하게 절충할 수 있는, test-time scaling이 가능한 멀티모달 검색 방법이 필요하다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>목표하는 성질</h3>
+      <p>논문이 겨냥하는 이상적 시스템은 (a) 이미지-이미지를 포함한 임의의 modality 조합을 다룰 수 있고, (b) 소수의 벡터만으로 late interaction의 fine-grained 매칭 이점을 살리며, (c) 배포 환경의 지연시간·저장 예산이 바뀌어도 모델을 재학습하지 않고 검색 정밀도를 조절할 수 있는 시스템이다. 이 세 번째 성질이 논문에서 말하는 test-time scaling이다.</p>
+      <span class="source-ref">PDF p. 2, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Dual-encoder 계열(CLIP, BLIP, SigLIP)의 한계</h3>
+      <p>CLIP, BLIP, SigLIP 등 기존 dual-encoder 계열 방법은 cross-modal 검색에서 우수한 성능을 보였으나, 복잡하고 다양한 지시(instruction)가 포함된 입력 시나리오에서는 성능이 제한적이다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단일 벡터 압축의 정보 손실</h3>
+      <p>쿼리와 후보 전체를 하나의 벡터로 압축하는 common practice는 modality 간 fine-grained 정보를 손실시킨다(논문은 Yao et al., 2022; Thrush et al., 2022를 인용). 나아가 이러한 압축에는 이론적 한계도 존재한다고 서술한다(Weller et al., 2025 인용).</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ColBERT류 멀티벡터 방식의 비용</h3>
+      <p>ColBERT로 대표되는 멀티벡터(late interaction) 방식은 각 이미지가 수백 개의 patch embedding으로, 각 쿼리 텍스트가 여러 토큰 임베딩으로 인코딩되어 이 모두가 저장되고 비교되어야 한다. 그 결과 index size, retrieval latency, feasibility 측면에서 상당한 효율성 비용을 초래한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Multimodal-to-multimodal 검색에서의 실행 불가능성</h3>
+      <p>쿼리와 후보 양쪽 모두 이미지를 포함하는 경우, 수천 개의 쿼리 토큰과 수천 개의 후보 토큰 간 상호작용을 계산해야 하므로 학습과 추론 모두 계산량이 과도하여 비현실적(prohibitive)이다. ColPali, ColQwen 등 naive ColBERT 스타일 방법들은 text-image 검색에서는 여전히 지배적이지만, 쿼리 측에 수백 개의 이미지 토큰을 도입해야 하므로 학습·추론이 계산적으로 불가능해져 multimodal-to-multimodal 검색을 지원하지 못한다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>고정된 비용 구조라는 공통 문제</h3>
+      <p>분석자 관점에서 위 방법들의 공통점은 임베딩 개수가 모델 학습 시점에 사실상 고정된다는 점이다. 단일 벡터 모델은 1개, ColBERT류는 입력 길이에 비례하는 개수로 고정되므로, 배포 환경의 예산이 달라지면 각각 다른 모델을 새로 학습해야 한다. MetaEmbed의 MMR은 바로 이 고정성을 깨는 설계로 읽힌다.</p>
+      <span class="source-ref">PDF p. 2, 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1. MetaEmbed recipe (Meta Token / Meta Embeddings)</h3>
+      <p>쿼리와 후보 입력 시퀀스에 소수의 학습 가능한 Meta Token을 추가하고, VLM의 마지막 레이어 hidden state를 압축적이면서도 표현력 높은 멀티벡터 표현(Meta Embeddings)으로 사용하는 recipe를 제안한다. 벡터 개수가 입력 길이가 아니라 Meta Token 개수로 결정되므로 이미지 입력에서도 벡터 수가 폭증하지 않는다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2. Matryoshka Multi-Vector Retrieval(MMR)</h3>
+      <p>Matryoshka Representation Learning에서 영감을 받아 MMR 모듈을 설계했다. 학습 시 중첩된(prefix-nested) 벡터 그룹들에 대해 병렬로 contrastive 학습을 수행해 coarse-to-fine 멀티벡터 임베딩을 학습하고, 재학습 없이 테스트 시점에 retrieval budget을 선택할 수 있는 test-time scaling을 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3. 광범위한 벤치마크 검증</h3>
+      <p>MMEB와 ViDoRe v2 벤치마크에서의 광범위한 평가를 통해 MetaEmbed가 다양한 시나리오에서 state-of-the-art 검색 성능을 달성함을 확인했다.</p>
+      <span class="source-ref">PDF p. 2, 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4. 백본·규모에 대한 일반성 검증</h3>
+      <p>Qwen2.5-VL, PaliGemma, Llama-3.2-Vision 등 서로 다른 VLM 아키텍처와 최대 32B 파라미터 규모에서 MetaEmbed를 검증하여, 모델 크기가 커져도 test-time scaling의 이점이 미미하게만 감소함(minimal diminishing returns)을 보였다.</p>
+      <span class="source-ref">PDF p. 2, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 개요</h3>
+      <p>MetaEmbed는 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 추가하고, VLM이 이를 원본 입력과 함께 처리하도록 하여 마지막 레이어의 문맥화된 hidden state를 멀티벡터 표현(Meta Embeddings)으로 사용하는 late-interaction 검색 방법이다. MMR 모듈을 통해 Meta Embeddings에 prefix-nested 그룹 구조(G개의 그룹 크기)를 부여하고 여러 그룹에 대해 병렬로 contrastive 학습을 수행함으로써 coarse-to-fine 멀티벡터 임베딩을 학습한다. 결과적으로 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)을 선택해 정확도와 효율성(인덱스 크기·지연시간)을 절충할 수 있다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>이중 인코더 + late interaction의 하이브리드</h3>
+      <p>구조적으로 MetaEmbed는 쿼리와 후보를 각각 별도의 forward pass로 인코딩하는 dual-encoder 골격을 유지한다. 따라서 후보 인덱스를 오프라인으로 미리 구축할 수 있다는 dual-encoder의 실용적 장점을 그대로 가진다. 동시에 최종 점수 계산은 단일 내적이 아니라 여러 벡터 간 MaxSim 합으로 이루어지는 late interaction이어서, cross-encoder만큼은 아니지만 단일 벡터보다 훨씬 세밀한 매칭이 가능하다. 이 조합이 MetaEmbed의 구조적 위치를 규정한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>표현 압축의 위치</h3>
+      <p>핵심 설계 결정은 압축이 일어나는 지점이다. ColBERT류는 모든 입력 토큰의 표현을 그대로 남기고 검색 단계에서 비용을 치른다. MetaEmbed는 VLM 내부의 attention을 통해 원본 입력 정보를 소수의 Meta Token 위치로 흘려보낸 뒤, 그 위치의 hidden state만 추출한다. 즉 압축을 검색 단계가 아니라 인코딩 단계에서, 그것도 학습된 방식으로 수행한다는 점이 특징이다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정 및 주요 구성요소</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>구성요소 (1) Meta Tokens</h3>
+      <p>쿼리와 후보 입력 시퀀스에 추가되는 학습 가능한 토큰(query: M_q ∈ R^{R_q×D}, candidate: M_c ∈ R^{R_c×D})으로, VLM이 원본 입력(시각 패치, 텍스트)과 함께 처리해 문맥화된 표현을 생성하도록 하는 시드(seed) 역할을 한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 (2) Meta Embeddings</h3>
+      <p>Meta Token 위치에서 추출한 VLM 마지막 레이어 hidden state(L2 정규화 적용)로, 쿼리 측 E_meta^(q) ∈ R^{R_q×D} 및 후보 측 E_meta^(c) ∈ R^{R_c×D}의 압축적이고 문맥화된 멀티벡터 표현을 구성한다. 쿼리와 후보는 별도의 forward pass로 생성된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 (3) Late Interaction(MaxSim) 스코어링</h3>
+      <p>각 쿼리 벡터에 대해 후보 벡터들과의 최대 유사도(내적)를 구하고, 이를 모든 쿼리 벡터에 대해 합산하여 쿼리-후보 쌍의 유사도 점수를 계산하는 ColBERT 스타일 연산자다(Eq. 2, 3).</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 (4) Matryoshka Multi-Vector Retrieval(MMR)</h3>
+      <p>Meta Embeddings에 prefix-nested 구조(query: r_q^(1) &lt; ... &lt; r_q^(G) = R_q, candidate도 동일)를 부여해 앞쪽 벡터가 coarse summary를, 이후 벡터가 정교화된 표현을 형성하도록 하며, 그룹별 late-interaction 점수 s^(g)(q,c)를 계산한다(Eq. 4).</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 (5) 다중 그룹 InfoNCE 학습 목적함수</h3>
+      <p>각 그룹 g에 대해 in-batch negative와 명시적 hard negative를 포함하는 InfoNCE contrastive loss(Eq. 6)를 계산하고, 그룹별 가중치 w_g로 합산해 최종 손실(Eq. 7)을 구성하여 모든 그룹을 병렬로 최적화한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 (6) Test-time retrieval budget 선택 메커니즘</h3>
+      <p>인덱싱 시 후보별로 첫 r_c^(g)개의 벡터만 저장하고, 쿼리 시점에 지연시간 제약에 따라 (r_q^(g), r_c^(g)) 조합(retrieval budget)을 선택해 재학습 없이 정확도-효율성을 절충한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단계 1 — Meta Token 부착 및 인코딩</h3>
+      <p>쿼리와 후보 입력 시퀀스(텍스트/시각 패치 토큰) 뒤에 각각 학습 가능한 Meta Token(M_q, M_c)을 추가해 VLM에 입력한다. 쿼리와 후보는 별도의 forward pass로 처리된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단계 2 — Meta Embeddings 추출</h3>
+      <p>VLM의 마지막 레이어에서 Meta Token 위치의 hidden state를 추출하고 L2 정규화하여 Meta Embeddings(E_meta^(q), E_meta^(c))를 얻는다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단계 3 — 중첩 그룹 정의</h3>
+      <p>Meta Embeddings에 대해 prefix 길이 기준으로 G=5개의 중첩 그룹, 즉 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)를 정의한다. 각 그룹은 앞선 그룹의 벡터를 포함하는 prefix 관계다.</p>
+      <span class="source-ref">PDF p. 4, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단계 4 — 그룹별 병렬 contrastive 학습</h3>
+      <p>학습 시 각 그룹별로 late-interaction 점수(MaxSim 합)를 계산하고, in-batch negative 및 명시적 hard negative를 사용하는 InfoNCE loss를 그룹별로 산출한 뒤 그룹별 가중치(w_g=1)로 합산해 전체 손실을 역전파한다. 모든 그룹이 병렬로 최적화된다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단계 5 — 인덱싱 및 test-time budget 선택</h3>
+      <p>인덱싱 및 검색(테스트) 시점에는 지연시간/저장 제약에 맞는 retrieval budget (r_q^(g), r_c^(g))를 선택하여 해당 prefix 벡터만으로 late-interaction 점수를 계산해 후보를 랭킹한다. 이 과정은 재학습 없이 budget 변경이 가능하다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Late interaction 점수 (Eq. 2, 3)</h3>
+      <p>쿼리 임베딩 집합과 후보 임베딩 집합이 주어지면, 각 쿼리 벡터마다 모든 후보 벡터와의 내적 중 최댓값(MaxSim)을 취하고, 이 최댓값들을 모든 쿼리 벡터에 걸쳐 합산해 최종 유사도 점수를 만든다. 임베딩이 L2 정규화되어 있으므로 내적은 코사인 유사도와 같다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>그룹별 점수와 prefix-nested 구조 (Eq. 4)</h3>
+      <p>MMR은 쿼리 측 그룹 크기를 1 ≤ r_q^(1) &lt; r_q^(2) &lt; ... &lt; r_q^(G) = R_q로 고정하고, 후보 측도 동일한 방식으로 고정한다. 그룹 g의 점수 s^(g)(q,c)는 쿼리 임베딩의 앞 r_q^(g)개와 후보 임베딩의 앞 r_c^(g)개만을 사용해 계산한 late-interaction 점수다. 앞쪽 벡터들이 항상 모든 그룹에 포함되므로, 학습 과정에서 앞쪽 벡터에는 coarse한 요약 정보가, 뒤쪽 벡터에는 세부 정보가 자연스럽게 배치된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습 목적함수 (Eq. 5, 6, 7)</h3>
+      <p>미니배치 B = {(q^(b), c^(b), c^(b,-))}에서 각 쿼리는 하나의 positive 후보와 하나의 명시적 hard negative를 가진다. 그룹 g의 유사도는 온도 하이퍼파라미터 τ로 스케일되며(Eq. 5), softmax 분모는 (i) 모든 in-batch 후보와 (ii) 해당 쿼리의 hard negative를 포함한다. 각 그룹의 InfoNCE loss(Eq. 6)를 w_g로 가중 합산해 최종 손실(Eq. 7)을 만든다. 실험에서 τ = 0.03, w_g = 1로 설정했다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조의 함의</h3>
+      <p>인덱스는 후보당 최대 R_c = 64개의 벡터를 순서대로 저장한 배열이며, budget이 작아지면 단순히 앞쪽 prefix만 읽으면 된다. 즉 별도의 여러 인덱스를 만들 필요 없이 하나의 인덱스에서 절단(truncation)만으로 여러 비용 지점을 지원한다. 이는 분석자 해석으로, 논문은 인덱싱 시 첫 r_c^(g)개 벡터만 저장한다고 서술한다(p. 5). Table 3의 인덱스 메모리가 budget에 거의 비례해 증가하는 것도 이 구조와 일치한다.</p>
+      <span class="source-ref">PDF p. 5, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>ANN 인덱스와의 결합은 확인되지 않음</h3>
+      <p>논문의 효율성 분석은 100,000개 후보에 대한 exhaustive scoring을 전제로 하며, HNSW/IVF 같은 근사 최근접 이웃(ANN) 인덱스와의 결합 방식이나 그때의 성능은 문서에서 확인되지 않는다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋 및 워크로드</h3>
+      <p>MMEB(Massive Multimodal Embedding Benchmark)는 36개 태스크와 4개 범주(Classification / VQA / Retrieval / Visual Grounding)로 구성되며 MMEB-train으로 학습한다. ViDoRe v2(Visual Document Retrieval Benchmark v2)는 7개 태스크(ESG_Human, Eco_Mul, Bio, ESG_Syn, ESG_Syn_Mul, Bio_Mul, Eco)로 구성되며 ViDoRe-train으로 학습한다. ViDoRe v1은 MMR 효과 검증 ablation(average NDCG@5)에 사용된다.</p>
+      <span class="source-ref">PDF p. 6, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상 baseline</h3>
+      <p>CLIP, MagicLens, UniIR, ABC, MM-EMBED, GME, VLM2Vec, VLM2Vec-V2, MMRet, mmE5, MoCa-3B, MoCa-7B, B3-7B, SigLIP, VisRAG-Ret, ColPali, ColQwen2 등 외부 baseline과, single-last / single-mean / split-(16,64) 등 동일 학습 설정의 내부 ablation baseline을 함께 비교한다.</p>
+      <span class="source-ref">PDF p. 6, 7, 8, 15</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표</h3>
+      <p>MMEB에서는 Precision@1(%), ViDoRe v1/v2에서는 NDCG@5(%)를 사용한다. 효율성 측면에서는 Scoring FLOPs(G), Scoring Latency(ms), Index Memory(GiB)를 보고한다.</p>
+      <span class="source-ref">PDF p. 6, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습 설정</h3>
+      <p>MetaEmbed-7B는 32× NVIDIA H100 SXM5 96GB GPU에서 3,500 스텝, global batch size 2,048로 학습되며 약 30시간이 소요된다. 모든 학습에 LoRA(rank 32, α=32)를 사용한다. MMR 그룹은 G=5, (r_q, r_c) ∈ {(1,1), (2,4), (4,8), (8,16), (16,64)}이며 w_g = 1, τ = 0.03이다. 학습 데이터는 MMEB-train과 ViDoRe-train에 명시적 hard negative 1개를 결합한 것만 사용한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성 측정 조건</h3>
+      <p>Table 3의 효율성 분석은 A100 GPU, 쿼리당 후보 100,000개, scoring batch size 1,000, bfloat16 인덱스 조건에서 수행되었다. 지연시간은 scoring 단계만을 의미하며 쿼리 인코딩과 인덱스 생성 지연시간은 모든 변형에서 동일하므로 제외되었다. 10회 실행의 평균과 표준편차를 보고한다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>주 결과 보고 조건</h3>
+      <p>Table 1과 Table 2의 모든 MetaEmbed 결과는 쿼리 측 16개, 후보 측 64개 벡터, 즉 (r_q, r_c) = (16, 64)의 최대 budget에서 보고된 값이다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>MMEB 종합 성능</h3>
+      <p>MMEB overall Precision@1에서 MetaEmbed-3B(Qwen2.5-VL)는 69.1%, 7B는 76.6%, 32B는 78.7%를 기록했으며 32B가 전체 모델 중 최고 점수다. baseline 중 최고는 B3-7B의 72.0%였고 MoCa-7B는 71.5%, mmE5는 69.8%였다. 저자들은 MetaEmbed-3B가 MoCa-3B(67.5%) 대비 앞섰다는 점을 &#x27;+1.6% relative improvement&#x27;로 표현했고, MetaEmbed-7B(76.6%)는 MoCa-7B와 mmE5를 &#x27;5-7점 이상&#x27; 앞섰다고 서술한다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>백본 아키텍처 일반화</h3>
+      <p>Llama-3.2-Vision으로 초기화한 MetaEmbed-11B는 65.1%, PaliGemma로 초기화한 MetaEmbed-3B^Gemma는 65.4%를 기록했다. Qwen2.5-VL 계열보다는 낮지만 방법 자체는 서로 다른 VLM 아키텍처에 적용 가능함을 보인다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>시각 문서 검색 성능</h3>
+      <p>ViDoRe v2 평균 NDCG@5에서 MetaEmbed-3B는 60.3%, 7B는 61.3%를 기록해 baseline 최고치인 GME의 59.3%를 상회했다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Test-time scaling의 효과</h3>
+      <p>test-time 검색 비용 대비 성능 곡선에서 MetaEmbed-3B는 (16,64) budget에서 최고 성능 단일벡터 baseline 대비 +3.3점의 상대적 이득을 보였고, MetaEmbed-32B는 +6.6점으로 가장 두드러진(most pronounced) 이득을 보였다. 즉 모델이 커질수록 멀티벡터 표현의 추가 이득이 더 커진다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>모델 스케일링 곡선의 차이</h3>
+      <p>동일 학습 설정에서 MetaEmbed((16,64))의 MMEB overall은 3B→7B에서 +7.5점(69.1→76.6), 7B→32B에서 +2.1점(76.6→78.7) 상승했다. 반면 단일 벡터 baseline은 3B→7B에서 +6.0점(65.6→71.6), 7B→32B에서 +0.5점(71.6→72.1)만 상승했으며, 저자들은 7B→32B 구간의 개선이 더 이상 통계적으로 유의하지 않다고 설명한다. 이는 단일 벡터 표현이 큰 모델에서 병목으로 작용함을 시사한다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>MMR ablation</h3>
+      <p>MMR 없이 학습한 MetaEmbed-3B를 단일 벡터 검색 모델로 사용((r_q, r_c) = (1,1))했을 때 ViDoRe v1 average NDCG@5가 MMR 적용 모델 대비 9.0점 하락했다. budget이 커지면 격차는 좁아지지만, ViDoRe v1에서는 full budget에서도 MMR 모델이 근소하게 우세했다. 다만 Appendix Table 5의 MMEB 결과에서는 (16,64) 기준 NoMMR이 오히려 근소하게 높아(3B 69.3 vs 69.1, 7B 77.0 vs 76.6, 32B 79.1 vs 78.7, 11B 66.2 vs 65.1), 저자들은 이를 &#x27;MMR이 무시할 만한(negligible) 성능 저하만을 유발한다&#x27;고 설명한다. 종합하면 MMR은 낮은 budget에서 큰 이득을 주고 full budget에서는 비용이 거의 없다.</p>
+      <span class="source-ref">PDF p. 8, 15</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Meta Token 방식 자체의 이득</h3>
+      <p>Appendix Table 5 기준, retrieval budget (16,64)에서 MetaEmbed는 single-last baseline 대비 MMEB overall에서 3B +3.5점, 7B +5.0점, 32B +6.6점, 11B +5.0점의 차이(Δ)를 보였다.</p>
+      <span class="source-ref">PDF p. 15</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성 분석의 핵심 관찰</h3>
+      <p>budget (1,1)에서는 scoring FLOPs 0.71G, latency 1.67±0.13ms, index memory 0.68 GiB, MMEB Acc 71.3%였고, (16,64)에서는 733.89G, 6.25±0.07ms, 42.72 GiB, 76.6%였다. FLOPs는 1000배 가까이 늘지만 지연시간은 중간 budget들에서 거의 평탄하게 유지되어, (16,64)라는 극단적 경우 전까지는 scoring이 compute-bound가 아님을 보인다. 더 중요하게는 1024 토큰 이미지 쿼리 하나를 인코딩하는 데 42.72 TFLOPs와 788ms가 소요되어, scoring 비용보다 수십~수백 배 크다. 저자들은 따라서 효율 개선의 초점이 scoring이 아니라 encoding에 맞춰져야 한다고 결론짓는다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론 및 종합 해석</h2>
+        <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>MetaEmbed는 소수의 학습 가능한 Meta Token과 Matryoshka 방식의 중첩 학습을 결합하여, 대규모 환경에서 임베딩 간 late interaction을 실용적으로 수행할 수 있게 한다. MMEB와 ViDoRe v2에서 state-of-the-art 성능을 달성하면서, 재학습 없이 정확도와 비용을 조절할 수 있는 test-time scaling을 제공한다.</p>
+      <span class="source-ref">PDF p. 2, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>설계의 핵심 통찰</h3>
+      <p>분석자 관점에서 이 논문의 통찰은 &#x27;멀티벡터의 이점은 벡터가 많아서가 아니라 표현이 분산되어 있어서 생긴다&#x27;는 것이다. ColBERT는 벡터 개수를 입력 길이에 종속시켰지만, MetaEmbed는 개수를 하이퍼파라미터로 분리했다. 이 분리가 있었기에 Matryoshka 구조를 얹어 budget을 연속적으로 조절하는 것이 가능해졌다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>실무적 시사점</h3>
+      <p>효율성 분석은 다소 역설적인 결론을 제시한다. 논문이 해결한 문제는 멀티벡터 검색의 비용이지만, 정작 측정 결과 병목은 scoring이 아니라 query encoding이었다. 즉 MetaEmbed의 실질적 가치는 &#x27;검색을 빠르게 만든 것&#x27;보다 &#x27;검색 품질을 인덱스 크기 예산 안에서 조절 가능하게 만든 것&#x27;에 가깝다. 다만 이 결론은 후보 100,000개라는 규모에 기반한 것이므로, 후보 수가 훨씬 커지면 균형이 달라질 수 있다.</p>
+      <span class="source-ref">PDF p. 9</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 4, 5, 6</span>
+              </div>
+              <p>쿼리와 후보에 Meta Token을 부착해 VLM으로 인코딩하고, Meta Embeddings를 prefix-nested 그룹으로 나누어 그룹별 late interaction 점수와 InfoNCE loss로 학습한 뒤, 테스트 시점에 retrieval budget을 선택해 랭킹하는 전체 과정.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph ENC[&quot;인코딩 (별도 forward pass)&quot;]
+    Q[&quot;쿼리 입력\n텍스트 + 이미지 패치&quot;] --&gt; QT[&quot;Meta Token Mq 부착&quot;]
+    C[&quot;후보 입력\n텍스트 + 이미지 패치&quot;] --&gt; CT[&quot;Meta Token Mc 부착&quot;]
+    QT --&gt; VLM1[&quot;VLM forward&quot;]
+    CT --&gt; VLM2[&quot;VLM forward&quot;]
+    VLM1 --&gt; QE[&quot;Meta Embeddings Eq\n마지막 레이어 + L2 정규화&quot;]
+    VLM2 --&gt; CE[&quot;Meta Embeddings Ec\n마지막 레이어 + L2 정규화&quot;]
+  end
+  QE --&gt; NEST[&quot;MMR: prefix-nested 그룹 G=5\n(1,1)(2,4)(4,8)(8,16)(16,64)&quot;]
+  CE --&gt; NEST
+  NEST --&gt; SCORE[&quot;그룹별 late interaction\nMaxSim 합&quot;]
+  SCORE --&gt; TRAIN[&quot;학습: 그룹별 InfoNCE\nin-batch + hard negative\n가중합 wg=1&quot;]
+  SCORE --&gt; TEST[&quot;추론: retrieval budget 선택\nprefix 벡터만 사용&quot;]
+  TRAIN -.-&gt;|&quot;모든 그룹 병렬 최적화&quot;| NEST
+  TEST --&gt; IDX[&quot;인덱스: 후보당 앞 rc개 벡터 저장&quot;]
+  IDX --&gt; RANK[&quot;후보 랭킹 결과&quot;]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 MetaEmbed의 차이</h3>
+                <span class="source-ref">PDF p. 1, 2, 3, 4</span>
+              </div>
+              <p>단일 벡터 dual-encoder, ColBERT류 멀티벡터, MetaEmbed의 표현 방식과 비용 구조 비교. 벡터 개수가 무엇에 종속되는지가 핵심 차이다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph A[&quot;단일 벡터 dual-encoder&quot;]
+    A1[&quot;입력 전체&quot;] --&gt; A2[&quot;벡터 1개로 압축&quot;] --&gt; A3[&quot;내적 1회&quot;]
+    A3 --&gt; A4[&quot;저비용 / fine-grained 정보 손실&quot;]
+  end
+  subgraph B[&quot;ColBERT류 멀티벡터&quot;]
+    B1[&quot;입력 전체&quot;] --&gt; B2[&quot;토큰마다 벡터\n이미지=수백 패치&quot;] --&gt; B3[&quot;전 토큰 MaxSim&quot;]
+    B3 --&gt; B4[&quot;고정밀 / 인덱스·지연 과다\nMM-to-MM 실행 불가&quot;]
+  end
+  subgraph M[&quot;MetaEmbed&quot;]
+    M1[&quot;입력 + Meta Token&quot;] --&gt; M2[&quot;고정 개수 Meta Embeddings\nRq=16, Rc=64&quot;] --&gt; M3[&quot;prefix 선택 후 MaxSim&quot;]
+    M3 --&gt; M4[&quot;재학습 없이 정확도-비용 조절\nMM-to-MM 지원&quot;]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>Retrieval budget에 따른 MMEB 정확도 (MetaEmbed-7B)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · MetaEmbed-7B, A100 GPU, 쿼리당 후보 100,000개, scoring batch size 1,000, bfloat16 인덱스
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Retrieval budget에 따른 인덱스 메모리 (MetaEmbed-7B)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · 후보 100,000개, bfloat16 정밀도로 저장 및 비교
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Retrieval budget에 따른 scoring 지연시간 (MetaEmbed-7B)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · A100 GPU, 후보 100,000개/쿼리, scoring batch size 1,000. 표준편차는 각각 ±0.13, ±0.12, ±0.12, ±0.12, ±0.07. 쿼리 인코딩·인덱스 생성 지연시간은 제외됨
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Retrieval budget에 따른 scoring FLOPs (MetaEmbed-7B)</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 9 · Table 3 · A100 GPU, 후보 100,000개/쿼리, scoring batch size 1,000
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>MMEB overall Precision@1: MetaEmbed 변형과 baseline 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6, 7 · Table 1 · MetaEmbed 결과는 모두 retrieval budget (rq, rc) = (16, 64) 기준
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe v2 평균 NDCG@5 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Table 2 · MetaEmbed 결과는 retrieval budget (rq, rc) = (16, 64) 기준, ViDoRe v2 7개 태스크 평균
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>모델 크기 확장에 따른 MMEB overall: MetaEmbed vs 단일 벡터 baseline</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Figure 4(a) · 동일 학습 설정, MetaEmbed는 (rq, rc) = (16, 64) budget
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Full budget (16,64)에서 MMR 적용 여부에 따른 MMEB overall</h3>
+              <div class="chart-container">
+                <canvas id="chart-7"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8, 15 · Table 5 (Appendix B) · MMEB, retrieval budget (rq, rc) = (16, 64). 저자들은 이 차이를 &#x27;negligible degradation&#x27;으로 해석함
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>벡터 개수를 입력 길이가 아니라 Meta Token 개수라는 독립적 하이퍼파라미터로 분리한 설계가 명료하다. 이 한 가지 결정이 multimodal-to-multimodal 검색 지원과 test-time scaling이라는 두 성과를 동시에 가능하게 했다는 점에서 설계의 경제성이 높다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>MMR 덕분에 하나의 학습된 모델과 하나의 인덱스로 여러 비용 지점을 서비스할 수 있어, 배포 예산이 바뀔 때마다 모델을 재학습하거나 별도 인덱스를 유지할 필요가 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MMEB(36개 태스크, 4개 범주)와 ViDoRe v2(7개 태스크) 양쪽에서 평가했고, Qwen2.5-VL·PaliGemma·Llama-3.2-Vision 세 백본과 3B~32B 규모를 함께 다루어 방법의 일반성을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 6, 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정확도만 보고하지 않고 scoring FLOPs, latency, index memory를 함께 측정하여 방법의 실제 비용 구조를 드러냈다. 특히 encoding이 지연시간을 지배한다는 관찰은 자기 방법에 유리하지만은 않은 사실까지 명시했다는 점에서 정직한 보고에 해당한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>MMR의 효과를 낮은 budget과 full budget 양쪽에서 분리해 보고했다. (1,1)에서 9.0점 이득, (16,64)에서는 거의 무비용이라는 구분은 MMR이 언제 가치가 있는지를 명확히 한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 15</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>모델 크기 확장 실험에서 단일 벡터 baseline이 7B→32B에서 +0.5점으로 정체하는 대조군을 함께 제시하여, &#x27;표현 용량이 병목&#x27;이라는 주장을 단순 성능 비교가 아닌 스케일링 곡선의 형태로 뒷받침했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Llama-3.2-Vision 백본으로 학습된 MetaEmbed-11B는 VQA 점수가 42.1%로 Qwen2.5-VL 기반 7B 모델(74.2%)보다 32점 이상 낮으며, 저자들은 기반 생성 모델 자체가 zero-shot VQA에서 경쟁력이 낮다는 점(Huang et al., 2025 인용)이 임베딩 모델인 MetaEmbed에도 그대로 전이(inherit)된 것이라고 설명한다. 이로 인해 MetaEmbed-11B의 overall 점수는 65.1%에 그친다. 즉 MetaEmbed의 성능은 백본 VLM의 능력에 강하게 종속된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>유연한 멀티벡터 검색 방법으로서 retrieval budget이 커질수록 index memory 사용량이 비례하여 증가하며, 저자들은 이것이 대규모 배포(large deployments) 시 어려움을 유발할 수 있다고 명시한다. 다만 균형 잡힌 retrieval budget 선택이나 인덱스 데이터의 CPU 메모리 오프로딩으로 완화 가능하다고 언급한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>효율성 분석은 쿼리당 후보 100,000개, scoring batch size 1,000이라는 단일 규모에서만 수행되었다. &#x27;scoring은 병목이 아니다&#x27;라는 결론은 이 규모에 조건부이며, 후보 수가 수백만~수십억으로 커질 때 (16,64) budget의 733.89G FLOPs와 42.72 GiB 인덱스가 어떻게 확장되는지는 논문에서 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>성능 평가는 exhaustive scoring을 전제로 하며, 실제 대규모 시스템에서 필수적인 ANN 인덱스(HNSW, IVF 등)와 MaxSim 기반 late interaction을 결합했을 때의 recall 손실이나 지연시간은 다루어지지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>G=5개의 그룹 크기 {(1,1), (2,4), (4,8), (8,16), (16,64)}는 &#x27;empirically choose&#x27;로 서술되며 §4.3에서 다른 옵션을 논의한다고 하지만, 이 특정 조합이 최적인 근거나 그룹 개수·간격에 대한 체계적 탐색은 제한적으로만 제시된다. 또한 최대 budget이 (16,64)로 고정되어 있어 그 이상으로 확장했을 때의 수익 체감 지점은 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>Meta Token이 어떤 정보를 학습하는지에 대한 해석 가능성 분석(예: 각 벡터가 이미지의 어느 영역이나 어떤 의미 축에 대응하는지)은 제시되지 않아, prefix-nested 구조가 실제로 coarse-to-fine 의미 위계를 형성하는지는 성능 지표를 통한 간접 증거에만 의존한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>학습 데이터가 MMEB-train과 ViDoRe-train으로 한정되고 평가도 같은 벤치마크 계열에서 이루어져, 학습 분포에서 크게 벗어난 도메인에 대한 일반화 성능은 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>후보 규모가 10^6~10^9로 확장될 때도 &#x27;scoring은 병목이 아니다&#x27;라는 결론이 유지되는가? 어느 후보 규모에서 (16,64) budget의 scoring 비용이 encoding 비용을 넘어서는가?</h3>
+              </div>
+              <p>Table 3의 효율성 분석은 후보 100,000개 단일 조건에서만 수행되었으며, scoring FLOPs는 후보 수에 선형 비례할 것으로 예상되나 encoding 비용은 그렇지 않다.</p>
+              <span class="source-ref">PDF p. 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>MaxSim 기반 late interaction을 ANN 인덱스와 결합할 때 prefix-nested 구조를 활용한 계층적 검색(작은 budget으로 후보를 좁힌 뒤 큰 budget으로 재랭킹)이 가능한가? 그때의 recall-latency 곡선은 어떠한가?</h3>
+              </div>
+              <p>MMR의 prefix 구조는 자연스럽게 cascade re-ranking에 적합해 보이지만, 논문은 각 budget을 독립적인 운영점으로만 제시하고 budget 간 조합 전략은 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 5, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Meta Token 각각이 실제로 어떤 정보를 담는가? prefix 순서에 따라 coarse-to-fine 위계가 형성된다는 가정이 표현 수준에서 검증되는가?</h3>
+              </div>
+              <p>MMR 설계는 앞쪽 벡터가 coarse summary를 형성한다고 전제하지만, 논문의 증거는 budget별 성능 곡선이라는 간접 지표뿐이며 표현 자체에 대한 분석은 제시되지 않는다.</p>
+              <span class="source-ref">PDF p. 4, 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>백본 VLM의 어떤 능력이 임베딩 품질로 전이되는가? MetaEmbed-11B의 VQA 점수 42.1%가 시사하듯, 생성 능력과 검색 임베딩 품질의 상관은 태스크 범주별로 어떻게 달라지는가?</h3>
+              </div>
+              <p>저자들은 백본의 zero-shot VQA 약점이 임베딩 모델로 전이된다고 설명하지만(p. 7), 이 전이가 어떤 메커니즘으로 일어나는지, 학습으로 보완 가능한지는 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>최대 budget을 (16,64) 이상으로 확장하면 성능은 계속 향상되는가, 아니면 수익 체감이 나타나는가? 그 포화 지점은 모델 크기에 따라 이동하는가?</h3>
+              </div>
+              <p>논문의 모든 실험은 R_q=16, R_c=64를 상한으로 하며, 32B 모델에서 test-time scaling 이득이 가장 컸다는 관찰(+6.6점)은 더 큰 모델이 더 큰 budget에서 이득을 볼 가능성을 시사한다.</p>
+              <span class="source-ref">PDF p. 6, 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Full budget에서 MMR 모델이 MMEB에서는 NoMMR보다 근소하게 낮고 ViDoRe v1에서는 근소하게 높은 상반된 결과는 무엇에서 기인하는가?</h3>
+              </div>
+              <p>본문(p. 8)은 ViDoRe v1에서 full budget에서도 MMR이 약간 우세하다고 서술하나, Appendix Table 5의 MMEB 결과에서는 네 모델 모두 NoMMR이 근소하게 높다. 벤치마크 특성 차이인지 측정 노이즈인지는 확인되지 않는다.</p>
+              <span class="source-ref">PDF p. 8, 15</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>인덱스 메모리 증가 문제를 product quantization 같은 벡터 압축 기법과 결합해 완화할 수 있는가? MMR의 prefix 구조와 양자화가 상호 보완적인가 상충하는가?</h3>
+              </div>
+              <p>저자들은 인덱스 메모리 증가를 명시적 한계로 인정하며 완화책으로 budget 조절과 CPU 오프로딩만 언급한다(p. 9). 현재 인덱스는 bfloat16으로 저장되어 추가 압축 여지가 있다.</p>
+              <span class="source-ref">PDF p. 9</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Meta Token</dt>
+              <dd>
+                쿼리와 후보 입력 시퀀스 끝에 덧붙이는 소수의 학습 가능한 토큰(query: M_q ∈ R^{R_q×D}, candidate: M_c ∈ R^{R_c×D}). VLM이 원본 입력과 함께 처리하여 문맥화된 표현을 생성하도록 하는 시드 역할을 한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Meta Embeddings</dt>
+              <dd>
+                Meta Token 위치에서 추출한 VLM 마지막 레이어 hidden state에 L2 정규화를 적용한 멀티벡터 표현. 쿼리 측 E_meta^(q), 후보 측 E_meta^(c)로 구성되며 벡터 개수가 입력 길이와 무관하게 고정된다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late Interaction</dt>
+              <dd>
+                쿼리와 후보를 각각 독립적으로 인코딩한 뒤, 점수 계산 단계에서 여러 벡터 간 세밀한 상호작용을 수행하는 방식. ColBERT에서 제안되었으며 dual-encoder의 인덱싱 효율과 cross-encoder의 정밀도 사이에 위치한다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MaxSim</dt>
+              <dd>
+                각 쿼리 벡터에 대해 모든 후보 벡터와의 내적 중 최댓값을 취하고, 이를 모든 쿼리 벡터에 걸쳐 합산해 쿼리-후보 유사도를 계산하는 late interaction 연산자(Eq. 2, 3).
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Matryoshka Multi-Vector Retrieval (MMR)</dt>
+              <dd>
+                Meta Embeddings에 prefix-nested 구조를 부여해 앞쪽 벡터가 coarse summary를, 뒤쪽 벡터가 정교화된 표현을 형성하도록 학습하는 모듈. Matryoshka Representation Learning(Kusupati et al., 2022)에서 착안했으며, G개 그룹의 손실을 병렬로 최적화한다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Retrieval Budget (r_q, r_c)</dt>
+              <dd>
+                테스트 시점에 선택하는 쿼리 측 벡터 개수와 후보 측 벡터 개수의 조합. 논문은 G=5개 그룹 {(1,1), (2,4), (4,8), (8,16), (16,64)}를 사용하며, 재학습 없이 이 값을 바꿔 정확도와 비용을 절충한다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Test-time Scaling</dt>
+              <dd>
+                모델을 재학습하지 않고 추론 시점에 계산·저장 자원 투입량을 조절해 성능을 조절하는 능력. MetaEmbed에서는 retrieval budget 선택으로 구현된다.
+                <span class="source-ref">PDF p. 2, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Prefix-nested 구조</dt>
+              <dd>
+                그룹 크기가 1 ≤ r^(1) &lt; r^(2) &lt; ... &lt; r^(G) = R을 만족하여, 작은 그룹의 벡터 집합이 항상 큰 그룹의 앞부분(prefix)에 포함되는 중첩 구조. 하나의 인덱스를 절단하는 것만으로 여러 budget을 지원할 수 있게 한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>InfoNCE Loss</dt>
+              <dd>
+                positive 쌍의 유사도를 negative 쌍 대비 높이는 contrastive 학습 손실(Oord et al., 2018). MetaEmbed는 각 그룹 g마다 in-batch negative와 명시적 hard negative 1개를 분모에 포함해 계산하며, 온도 τ = 0.03을 사용한다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>MMEB (Massive Multimodal Embedding Benchmark)</dt>
+              <dd>
+                36개 태스크와 4개 범주(Classification, VQA, Retrieval, Visual Grounding)로 구성된 멀티모달 임베딩 벤치마크. Precision@1로 평가한다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ViDoRe (Visual Document Retrieval Benchmark)</dt>
+              <dd>
+                시각 문서 검색 벤치마크. v2는 7개 태스크(ESG_Human, Eco_Mul, Bio, ESG_Syn, ESG_Syn_Mul, Bio_Mul, Eco)로 구성되며 NDCG@5로 평가한다. v1은 MMR ablation에 사용되었다.
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multimodal-to-multimodal 검색</dt>
+              <dd>
+                쿼리와 후보 양쪽 모두가 이미지를 포함하는 검색 시나리오. 기존 ColBERT 스타일 방법은 수천 대 수천 토큰 상호작용이 필요해 학습·추론이 계산적으로 비현실적(prohibitive)이었다.
+                <span class="source-ref">PDF p. 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>single-last / single-mean</dt>
+              <dd>
+                논문의 내부 ablation baseline. 동일 학습 설정에서 마지막 토큰의 hidden state 하나만 사용하거나(single-last), 전체 토큰 hidden state의 평균을 사용하는(single-mean) 단일 벡터 방식이다.
+                <span class="source-ref">PDF p. 8, 15</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문에 별도의 명시적 &#x27;Limitations&#x27; 섹션은 존재하지 않으며, author_limit으로 표시한 항목들은 §4.2(Main Results)와 §5(Discussion) 본문에서 저자가 언급한 내용을 추출한 것이다.</li><li>본 논문이 정식 게재된 동료심사 학회/저널 정보는 확인되지 않는다. 문서 상 확인 가능한 것은 arXiv 프리프린트(arXiv:2509.18095v2 [cs.IR], 상단 표기 &#x27;Date: April 8, 2026&#x27;, arXiv 버전 표기 &#x27;6 Apr 2026&#x27;)뿐이다.</li><li>MetaEmbed-7B의 학습 global batch size는 본문(6페이지)에서 &#x27;2,048&#x27;로 명시되어 있으나, 부록 Table 4(15페이지)에서는 &#x27;1,536&#x27;으로 명시되어 있어 두 값이 상이하다. 학습 비용 &#x27;32 H100s for 30h&#x27;는 양쪽에서 일치한다.</li><li>Figure 3(a)의 &#x27;MetaEmbed-3B, (16,64) 대비 단일벡터 baseline 이득&#x27;은 본문에 &#x27;+3.3점&#x27;으로 명시되어 있으나, 부록 Table 5의 동일 조건(single-last 대비 Δ) 값은 &#x27;+3.5점&#x27;으로 되어 있어 두 수치의 산출 근거가 정확히 일치하지 않는다. 두 값을 각각의 출처와 함께 별도로 기재했다.</li><li>Figure 4(b)에서 &#x27;w/ MMR&#x27;과 &#x27;w/o MMR&#x27; 각 곡선의 (2,4)/(4,8)/(8,16)/(16,64) budget별 개별 데이터 포인트 값은 텍스트 추출 시 라벨이 중첩되어 정확히 확정할 수 없었다. 본문에 명시된 (1,1) budget에서의 &#x27;9.0점 하락&#x27;만 확인되었으므로 해당 곡선의 차트는 생성하지 않았다.</li><li>MMEB overall 점수 중 MetaEmbed 및 주요 baseline 값은 확인되었으나, extraction.json에 포함되지 않은 개별 태스크 범주별(Classification / Retrieval / Visual Grounding) 세부 점수는 이 보고서에서 다루지 않았다. 확인된 범주별 값은 MetaEmbed-11B의 VQA 42.1%와 MetaEmbed-7B의 VQA 74.2%뿐이다.</li><li>&#x27;MetaEmbed-7B가 MoCa-7B, mmE5를 5-7점 이상 앞섰다&#x27;는 저자 서술의 정확한 산출 기준(어떤 지표 조합인지)은 명확히 확인되지 않는다. 보고된 overall 값(76.6 vs 71.5, 69.8)의 차이는 각각 5.1점, 6.8점이다.</li><li>저자들이 MetaEmbed-3B와 MoCa-3B의 차이(69.1 vs 67.5, 절대 차이 1.6점)를 &#x27;relative improvement&#x27;로 표현했으나, 통상적 상대 개선율(약 2.4%)과는 다른 용법이므로 원문 표현을 그대로 인용하되 절대 차이임을 명시했다.</li><li>§4.3에서 논의한다고 언급된 &#x27;다른 group size 옵션&#x27;의 구체적 실험 결과는 extraction.json에 포함되지 않아 이 보고서에서 다루지 않았다.</li><li>ANN 인덱스 결합, 벡터 양자화, 후보 규모 확장 시의 동작 등 배포 관점의 주요 사항들은 논문에서 다루어지지 않아 research_questions로 분류했다.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "Retrieval budget에 따른 MMEB 정확도 (MetaEmbed-7B)", "labels": ["(1, 1)", "(2, 4)", "(4, 8)", "(8, 16)", "(16, 64)"], "values": [71.3, 72.0, 72.9, 74.3, 76.6], "unit": "%", "xLabel": "Retrieval budget (rq, rc)", "yLabel": "MMEB Precision@1"}, {"canvasId": "chart-1", "type": "bar", "title": "Retrieval budget에 따른 인덱스 메모리 (MetaEmbed-7B)", "labels": ["(1, 1)", "(2, 4)", "(4, 8)", "(8, 16)", "(16, 64)"], "values": [0.68, 2.67, 5.34, 10.68, 42.72], "unit": "GiB", "xLabel": "Retrieval budget (rq, rc)", "yLabel": "Index Memory"}, {"canvasId": "chart-2", "type": "bar", "title": "Retrieval budget에 따른 scoring 지연시간 (MetaEmbed-7B)", "labels": ["(1, 1)", "(2, 4)", "(4, 8)", "(8, 16)", "(16, 64)"], "values": [1.67, 1.66, 1.67, 1.92, 6.25], "unit": "ms", "xLabel": "Retrieval budget (rq, rc)", "yLabel": "Scoring Latency (평균, 10회 실행)"}, {"canvasId": "chart-3", "type": "bar", "title": "Retrieval budget에 따른 scoring FLOPs (MetaEmbed-7B)", "labels": ["(1, 1)", "(2, 4)", "(4, 8)", "(8, 16)", "(16, 64)"], "values": [0.71, 5.73, 22.94, 91.75, 733.89], "unit": "G", "xLabel": "Retrieval budget (rq, rc)", "yLabel": "Scoring FLOPs"}, {"canvasId": "chart-4", "type": "bar", "title": "MMEB overall Precision@1: MetaEmbed 변형과 baseline 비교", "labels": ["MetaEmbed-32B", "MetaEmbed-7B", "B3-7B (baseline)", "MoCa-7B (baseline)", "mmE5 (baseline)", "MetaEmbed-3B", "MoCa-3B (baseline)", "MetaEmbed-3B^Gemma", "MetaEmbed-11B (Llama-3.2-V)"], "values": [78.7, 76.6, 72.0, 71.5, 69.8, 69.1, 67.5, 65.4, 65.1], "unit": "%", "xLabel": "모델", "yLabel": "MMEB overall Precision@1"}, {"canvasId": "chart-5", "type": "bar", "title": "ViDoRe v2 평균 NDCG@5 비교", "labels": ["MetaEmbed-7B", "MetaEmbed-3B", "GME (best baseline)"], "values": [61.3, 60.3, 59.3], "unit": "%", "xLabel": "모델", "yLabel": "평균 NDCG@5 (7개 태스크)"}, {"canvasId": "chart-6", "type": "bar", "title": "모델 크기 확장에 따른 MMEB overall: MetaEmbed vs 단일 벡터 baseline", "labels": ["3B / MetaEmbed", "3B / 단일벡터", "7B / MetaEmbed", "7B / 단일벡터", "32B / MetaEmbed", "32B / 단일벡터"], "values": [69.1, 65.6, 76.6, 71.6, 78.7, 72.1], "unit": "%", "xLabel": "모델 크기 / 방식", "yLabel": "MMEB overall Precision@1"}, {"canvasId": "chart-7", "type": "bar", "title": "Full budget (16,64)에서 MMR 적용 여부에 따른 MMEB overall", "labels": ["3B / w/ MMR", "3B / NoMMR", "7B / w/ MMR", "7B / NoMMR", "32B / w/ MMR", "32B / NoMMR", "11B / w/ MMR", "11B / NoMMR"], "values": [69.1, 69.3, 76.6, 77.0, 78.7, 79.1, 65.1, 66.2], "unit": "%", "xLabel": "모델 / MMR 여부", "yLabel": "MMEB overall Precision@1"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>29</small>
+          <small>30</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>5</small>
+          <small>4</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 29편</span>
-        <span class="stat">전체 항목 43개</span>
+        <span class="stat">논문 30편</span>
+        <span class="stat">전체 항목 44개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>29개 문서</small>
+      <small>30개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>29</small>
+          <small>30</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>5</small>
+          <small>4</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,7 +923,7 @@
     </div>
 
     <span class="pending-queue-count">
-      5편 대기 중
+      4편 대기 중
     </span>
   </div>
 
@@ -935,7 +935,7 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>metaembed.pdf</strong>
+            <strong>REIS.pdf</strong>
             <span>등록 시각 · 2026-07-20 15:27</span>
           </div>
 
@@ -957,28 +957,6 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>REIS.pdf</strong>
-            <span>등록 시각 · 2026-07-20 15:27</span>
-          </div>
-
-          <div class="pending-queue-size">
-            1.2 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
-          </div>
-
-          <div class="pending-queue-paper">
             <strong>Towards Storage-Efficient Visual Document Retrieval An Empirical Study.pdf</strong>
             <span>등록 시각 · 2026-07-20 15:27</span>
           </div>
@@ -997,7 +975,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -1019,7 +997,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            5
+            4
           </div>
 
           <div class="pending-queue-paper">
@@ -1052,7 +1030,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">29개</span>
+        <span class="section-count">30개</span>
       </div>
 
       <div class="library-grid">
@@ -1312,6 +1290,32 @@
       </p>
 
       <a class="open-link" href="papers/lemur-learned-multi-vector-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/metaembed/">
+            MetaEmbed: Scaling Multimodal Retrieval at Test-Time with Flexible Late Interaction
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Zilin Xiao, Qi Ma, Mengting Gu, Jason Chen, Xintao Chen, Vicente Ordonez, Vijai Mohan</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2509.18095v2 [cs.IR]) — 동료심사 게재 정보는 확인되지 않음</p>
+
+      <p class="summary">
+        MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 보였다(p. 9).
+      </p>
+
+      <a class="open-link" href="papers/metaembed/">
         보고서 열기 →
       </a>
     </article>
