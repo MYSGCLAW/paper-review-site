@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sculpting the Vector Space: Towards Efficient Multi-Vector Visual Document Retrieval via PRUNE-THEN-MERGE Framework</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>Sculpting the Vector Space: Towards Efficient Multi-Vector Visual Document Retrieval via PRUNE-THEN-MERGE Framework</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Yibo Yan, Mingdong Ou, Yi Cao, Xin Zou, Jiahao Huo, Shuliang Liu, James Kwok, Xuming Hu</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2602.19549) — 정식 게재 venue는 논문에 명시되지 않음</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조와 주요 구성요소</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘과 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 시사점</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다.</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6, 7, 8, 9</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>핵심 원리는 &#x27;first refine, then compress&#x27;이다. adaptive pruning으로 저정보 patch를 먼저 제거한 뒤 hierarchical merging으로 남은 고품질 patch만 압축한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>DocPruner 대비 near-lossless compression range를 평균 10 percentage point 확장하여 [50-60%]에서 [60-70%]로 옮겼다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>ViDoRe-V1(k=-0.75, m=4)에서 nDCG@5 평균 -0.45% 하락으로 storage를 평균 54.60% 절감했다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초, 평균 +51.42%)에 국한되며 online 검색 비용에는 영향이 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 34</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>80% 이상 고압축률에서 pruning-only 방법의 sharp performance cliff를 회피한다(ViDoRe-V1/ColQwen2.5 ~84-87%에서 0.86 vs DocPruner 0.77).</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>g=gm∘gp 분해가 naive single-stage merging보다 true signal distortion을 낮춘다는 것을 Theorem D.1, D.2, Corollary 1로 증명한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 23, 24</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>재학습이나 아키텍처 변경이 필요 없는 query-agnostic offline 기법이므로, 기존 late-interaction 검색 스택에 그대로 적용 가능한 구조이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Multi-vector VDR의 저장 비용 병목</h3>
+      <p>보고서, 슬라이드, 학술 논문처럼 시각적으로 풍부한 문서(visually-rich documents)가 지배적인 환경에서 VDR은 enterprise search와 domain-specific Retrieval-Augmented Generation(RAG)의 핵심 과제이다. ColPali로 대표되는 multi-vector(patch-level) paradigm은 late-interaction(MaxSim) 메커니즘으로 patch 단위의 세밀한 매칭을 수행하여 single-vector 방식이 놓치는 지역적(localized) 세부 정보를 포착한다. 그러나 문서 페이지 하나당 Np개의 patch embedding을 모두 저장해야 하므로 페이지당 O(Np×D)의 저장 및 연산 비용이 발생하고, 이는 single-vector 모델의 O(D)와 비교해 압도적으로 커서 대규모 배포(large-scale deployment)를 비현실적이고 비용이 큰 일로 만든다. 논문은 이를 &#x27;치명적인 효율성 병목(critical efficiency bottleneck)&#x27;으로 규정한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>문제의 형식화</h3>
+      <p>논문은 이 문제를, 원본 embedding 집합 D(크기 Np)를 압축된 집합 D&#x27;&#x27;(크기 Np&#x27;&#x27;≪Np)로 매핑하되 저장 비용을 대폭 줄이면서 검색 성능(nDCG@5) 저하를 최소화하는 문제로 공식화한다. 여기서 핵심 긴장은 압축률(compression rate)과 특징 충실도(feature fidelity) 사이의 trade-off이며, 기존 기법들은 이 trade-off를 불완전하게(imperfectly) 해결한다는 것이 논문의 출발점이다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>OCR 파이프라인과 single-vector 검색</h3>
+      <p>OCR 기반 파이프라인은 문서 이미지에서 텍스트만 추출해 색인하므로 brittle하며, 레이아웃과 비텍스트 정보를 버리기 때문에 복잡한 문서에서 효과가 제한된다. Single-vector(page-level) retrieval은 문서의 시각적 무결성은 보존하지만 페이지 전체를 벡터 하나로 압축하므로 정밀 매칭에 필요한 fine-grained 세부 정보를 포착하지 못한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Pruning 계열의 성능 절벽</h3>
+      <p>DocPruner와 같은 pruning 기반 방법은 intra-document attention을 이용해 중요도가 낮은 patch를 제거하며, 중간 수준의 pruning rate에서는 near-lossless 성능을 달성한다. 그러나 압축률이 높아지면 성능이 급격히 무너지는 sharp performance cliff를 겪는다. 논문의 실험에서 MMLongBench-Doc의 경우 DocPruner는 77% pruning rate에서 baseline 0.54가 0.48로 하락했고, REAL-MM-RAG Financial Report(Jina-v4)에서는 84% pruning rate에서 baseline 0.69가 0.44로 약 36% 상대 하락했다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Merging 계열의 특징 희석</h3>
+      <p>Light-ColPali/ColQwen 계열이나 Sem-Cluster 같은 merging 기반 방법은 고압축률에서 상대적으로 완만한 성능 저하를 보인다. 그러나 조악한(crude/naive) 병합 과정에서 두드러진(salient) patch의 판별적 특징(discriminative feature)이 저정보 patch와 섞여 희석되기 때문에, 정작 near-lossless여야 할 저·중간 압축률 구간의 성능이 불안정해진다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>학습 기반 압축의 도입 비용</h3>
+      <p>MetaEmbed은 Matryoshka embedding처럼 예산 기반(budget-based) 압축률로 토큰을 압축하지만, 별도의 정교한 학습(training)과 아키텍처 변경(architecture change)을 요구한다. 이는 이미 배포된 기존 multi-vector 모델에 그대로 얹기 어렵다는 실무적 제약을 낳는다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>PRUNE-THEN-MERGE 프레임워크 제안</h3>
+      <p>pruning의 정밀성과 merging의 고압축 능력을 결합(synergize)하는 two-stage 프레임워크를 제안한다. 핵심 원리는 &#x27;first refine, then compress&#x27;로, adaptive pruning으로 저정보 patch를 먼저 제거한 뒤 hierarchical merging으로 남은 고품질 patch만을 압축한다. 프레임워크는 query-agnostic하며 base 모델의 재학습이나 아키텍처 변경을 요구하지 않는다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>정보이론적 정당화</h3>
+      <p>Information Bottleneck(IB) 원리와 Rate-Distortion(RD) 이론에 근거하여, 전체 압축 매핑 g: D→D&#x27;&#x27;를 pruning map gp와 merging map gm의 합성 g=gm∘gp로 분해하는 이론적 근거를 제시한다. Theorem D.1, D.2 및 Corollary 1을 통해 이 분해가 naive single-stage merging보다 참 신호(true signal)에 대한 distortion을 더 낮춘다는 시너지 효과를 증명한다.</p>
+      <span class="source-ref">PDF p. 4, 5, 23, 24</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>대규모 실증</h3>
+      <p>6개 벤치마크에 걸친 29개 VDR 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 가지 대표 multi-vector 모델과 결합한 광범위한 실험을 수행하여 두 가지를 보인다. ❶ DocPruner 대비 near-lossless compression range를 평균 10 percentage point 확장하여 [50-60%]에서 [60-70%]로 늘린다. ❷ 80% 이상 고압축률에서 pruning-only 방법이 겪는 급격한 성능 붕괴를 회피하며 모든 baseline을 일관되게 능가한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조와 주요 구성요소</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 구조 개요</h3>
+      <p>PRUNE-THEN-MERGE는 query와 무관하게 색인 시점에 한 번 수행되는 offline compression framework이다. 두 단계가 순차적으로 적용된다. (1) adaptive pruning stage는 LVLM의 내부 attention을 이용해 저정보 patch를 걸러낸다. (2) merging stage는 남은 semantically rich patch들을 hierarchical clustering으로 압축한다. Online 검색 시에는 압축된 embedding 집합에 대해서만 MaxSim 연산을 수행하므로 저장 비용과 온라인 연산 비용이 함께 줄어든다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 1 — Adaptive Pruning (Stage 1)</h3>
+      <p>LVLM encoder의 마지막 transformer layer attention weight A(L)을 H개 head에 대해 평균하여 attention map을 얻고, global token([EOS])이 각 patch에 부여하는 attention을 patch importance score I(dj)로 정의한다. 문서마다 importance score의 평균 µd와 표준편차 σd를 계산하고 adaptive threshold τd=µd+k·σd를 정한 뒤, 이 threshold 이하의 patch를 제거하여 중간 집합 D&#x27;(크기 Np&#x27;)을 만든다. threshold가 문서별 통계에서 유도되므로 문서 복잡도에 따라 남는 patch 수가 자동으로 달라진다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 2 — Hierarchical Merging (Stage 2)</h3>
+      <p>D&#x27;의 embedding을 L2-normalize한 뒤 cosine distance 기반 pairwise distance matrix Δ를 계산하고, Ward&#x27;s method 등 linkage 알고리즘으로 hierarchical agglomerative clustering을 수행하여 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 분할한다. 각 cluster의 member embedding 평균(centroid)을 계산해 최종 압축 집합 D&#x27;&#x27;를 생성한다. merging factor m이 최종 압축률을 직접 통제한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 3 — Online Scoring (Pruned-and-Merged MaxSim)</h3>
+      <p>온라인 단계에서 query q는 token-level embedding Q로 인코딩되고, 각 query token에 대해 D&#x27;&#x27;의 centroid들과의 similarity 중 최댓값을 취해 합산하는 MaxSim 연산으로 relevance score s&#x27;&#x27;(q,d)를 계산한다. 비교 대상 벡터 수가 Np에서 Np&#x27;&#x27;로 줄어들기 때문에 온라인 연산 비용도 함께 감소한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 4 — 이론적 프레임워크</h3>
+      <p>전체 압축 매핑 g를 g=gm∘gp로 분해하고, pruning(gp)은 query-agnostic한 정보 필터링으로(Theorem D.1), merging(gm)은 필터링된 집합에 대한 Rate-Distortion 관점의 최적 vector quantization으로(Theorem D.2) 정당화한다. Corollary 1은 이 분해가 naive single-stage merge보다 true signal에 대한 distortion을 낮춘다는 시너지 우위를 보인다.</p>
+      <span class="source-ref">PDF p. 4, 5, 23, 24</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 — Encoding과 attention 추출</h3>
+      <p>VLM encoder Φ(·)로 문서 이미지 d에 대한 forward pass를 수행하여 초기 patch embedding 집합 D={dj}(Np개)와 마지막 layer의 attention weight A를 함께 추출한다. attention을 별도로 계산하지 않고 인코딩 과정에서 얻은 값을 재사용한다는 점이 중요하다.</p>
+      <span class="source-ref">PDF p. 3, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 — Importance score 계산</h3>
+      <p>H개 attention head에 대해 평균 낸 attention map에서, global token([EOS])이 각 patch j에 주는 attention 값을 patch importance score I(dj)로 정의하고 이를 모아 importance score vector Id를 구성한다.</p>
+      <span class="source-ref">PDF p. 3, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 — Adaptive threshold 적용</h3>
+      <p>Id의 평균 µd와 표준편차 σd로 document-specific adaptive threshold τd=µd+k·σd를 계산하고, I(dj)&gt;τd를 만족하는 patch만 남겨 예비 pruned set D̂&#x27;를 만든다. adaptation factor k가 pruning 강도를 조절하며, 논문의 주요 설정은 k=-0.75이다.</p>
+      <span class="source-ref">PDF p. 3, 8, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 — Robustness guarantee</h3>
+      <p>D̂&#x27;가 공집합이 되는 극단적인 경우에는 importance score가 가장 높은 patch 1개만 유지하고, 그렇지 않으면 D&#x27;=D̂&#x27;로 확정한다. 이렇게 Np&#x27;개(Np&#x27;&lt;Np) patch로 구성된 중간 집합 D&#x27;를 얻는다.</p>
+      <span class="source-ref">PDF p. 3, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 — 목표 cluster 수 결정</h3>
+      <p>merging factor m을 이용해 목표 cluster 수 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))를 결정한다. 단 Np&#x27;&lt;m이거나 m≤1이면 merging을 건너뛰고 D&#x27;&#x27;=D&#x27;로 설정하여 과도한 병합을 방지한다.</p>
+      <span class="source-ref">PDF p. 4, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 — Hierarchical clustering</h3>
+      <p>D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 거리행렬 Δ를 계산한 뒤 hierarchical agglomerative clustering(예: Ward&#x27;s linkage)을 적용해 Np&#x27;&#x27;개 cluster로 분할한다.</p>
+      <span class="source-ref">PDF p. 4, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>7단계 — Centroid 생성과 색인 종료</h3>
+      <p>각 cluster에 속한 embedding들의 centroid(평균 벡터)를 계산하여 최종 압축 embedding 집합 D&#x27;&#x27;(Np&#x27;&#x27;개)를 만든다. 여기서 offline indexing phase가 종료되며, 이후 저장되는 것은 D&#x27;&#x27;뿐이다.</p>
+      <span class="source-ref">PDF p. 4, 21</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>8단계 — Online retrieval</h3>
+      <p>질의 시점에 query q를 token-level embedding Q로 인코딩하고, 각 query token에 대해 D&#x27;&#x27;의 모든 centroid와의 similarity 중 최댓값을 구해 합산하는 MaxSim 연산으로 최종 relevance score s&#x27;&#x27;(q,d)를 계산한다.</p>
+      <span class="source-ref">PDF p. 4, 22</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘과 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Adaptive attention threshold</h3>
+      <p>핵심 알고리즘은 두 개의 하이퍼파라미터로 기술된다. 첫째는 adaptation factor k로, τd=µd+k·σd라는 문서별 임계값을 정한다. 고정 비율(fixed ratio)로 상위 N%를 남기는 방식과 달리, 정보가 조밀한 문서에서는 더 많은 patch가 임계값을 넘고 여백이 많은 문서에서는 더 적게 남는다. 논문의 variant analysis는 이 adaptive 방식이 non-adaptive 방식보다 우수함을 보였다(ViDoRe-V2, Jina-v4, 약 55% pruning rate에서 adaptive 0.56 vs attention-threshold-nfp 0.52, attention-ratio 0.51).</p>
+      <span class="source-ref">PDF p. 3, 30</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Cosine-distance hierarchical agglomerative clustering</h3>
+      <p>둘째는 merging factor m으로, 남은 patch 수 Np&#x27;을 m으로 나눈 값을 목표 cluster 수로 삼는다. 병합 기준은 L2-normalized embedding 사이의 cosine distance이며 Ward&#x27;s linkage 등의 agglomerative 방식으로 bottom-up 병합한다. 이때 pruning을 먼저 수행했기 때문에 clustering 입력 자체가 이미 정보량이 높은 patch들로 한정되어, 저정보 patch가 centroid를 끌어당겨 판별 특징을 희석시키는 현상이 억제된다는 것이 논문의 설명이다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>인덱스 구조와 저장 형태</h3>
+      <p>인덱스에는 문서당 Np&#x27;&#x27;개의 centroid 벡터만 저장된다. 별도의 학습된 파라미터나 코드북이 필요 없고, 검색 연산은 기존 late-interaction MaxSim을 그대로 사용하므로 기존 multi-vector 검색 스택에 그대로 얹을 수 있는 구조이다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>IB/RD 기반 최적성 논증</h3>
+      <p>이론 파트는 pruning을 query-agnostic 정보 필터링으로 보고(Theorem D.1), merging을 필터링된 집합에 대한 Rate-Distortion 최적 vector quantization으로 본다(Theorem D.2). Corollary 1은 같은 최종 벡터 예산 하에서 g=gm∘gp가 naive single-stage merge보다 true signal 기준 distortion이 낮음을 보인다. 즉 &#x27;순서&#x27;가 성능 차이의 원인이라는 주장의 근거이다.</p>
+      <span class="source-ref">PDF p. 4, 5, 23, 24</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>벤치마크와 데이터셋</h3>
+      <p>6개 벤치마크, 총 29개 데이터셋에서 평가한다. ViDoRe-V1(ArXivQA, DocVQA, InfoVQA, TabFQuAD, TAT-DQA, ShiftProject, SyntheticDocQA-AI/Energy/Government/Healthcare 등 10개 sub-dataset), ViDoRe-V2(esg_reports_v2, biomedical_lectures_v2, economics_reports_v2, esg_reports_human_labeled_v2), JinaVDR-Bench(9개 다국어 데이터셋), REAL-MM-RAG(FinReport, FinSlides, TechReport, TechSlides), ViDoSeek, MMLongBench-Doc으로 구성된다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Base model과 baseline</h3>
+      <p>base multi-vector 모델은 ColQwen2.5, ColNomic, Jina-v4 세 가지이다. baseline은 미압축 Base Models(성능 상한이자 저장 비용 상한), Random(무작위 patch pruning), Attention-plus-Similarity, Pivot-Threshold, DocPruner(state-of-the-art pruning baseline), Sem-Cluster(hierarchical clustering merging), 1D-Pooling, 2D-Pooling이다. 즉 pruning 계열과 merging 계열을 모두 포함한다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지표</h3>
+      <p>주요 검색 성능 지표는 nDCG@5이며, 효율성 지표로 base 대비 상대적 storage 감소율(%)과 문서당 평균 encoding latency(초)를 함께 보고한다. 본문 주요 설정은 adaptation factor k=-0.75, merging factor m=4이며, 압축률을 바꿔가며 성능 곡선을 그리는 방식으로 baseline과 비교한다.</p>
+      <span class="source-ref">PDF p. 6, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Near-lossless 구간의 확장</h3>
+      <p>가장 핵심적인 결과는 near-lossless compression range가 DocPruner 대비 평균 10 percentage point 확장되어 [50-60%]에서 [60-70%]로 옮겨졌다는 것이다. ViDoRe-V1/ColQwen2.5에서는 embedding을 68% 압축한 뒤에도 base nDCG@5 0.87을 그대로 유지했다.</p>
+      <span class="source-ref">PDF p. 2, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>고압축률에서의 붕괴 회피</h3>
+      <p>고압축 영역에서 격차가 가장 뚜렷하다. ViDoRe-V1/ColQwen2.5의 약 84-87% pruning rate에서 PRUNE-THEN-MERGE는 nDCG@5 0.86을 유지한 반면 DocPruner는 0.77로 급락했다(Figure 3). REAL-MM-RAG/ColQwen2.5의 84% 압축률에서는 PRUNE-THEN-MERGE 0.65, Sem-Cluster 0.61, DocPruner 0.56이었다(Figure 5). REAL-MM-RAG Financial Report/Jina-v4에서 DocPruner는 84% pruning rate에서 baseline 0.69가 0.44로 약 36% 상대 하락한 반면, PRUNE-THEN-MERGE는 83% 압축률에서 0.66으로 완만히 저하했다. ViDoSeek과 MMLongBench-Doc에서는 Jina-v4 기준 75% pruning rate까지 base 성능을 완전히 유지했으며, MMLongBench-Doc에서 DocPruner는 77% pruning rate에서 0.54→0.48로 떨어졌다.</p>
+      <span class="source-ref">PDF p. 6, 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>다국어 일반화</h3>
+      <p>JinaVDR 다국어 벤치마크 overall에서 ColQwen2.5 기준 84% 압축률에서 nDCG@5 0.52를 기록했고, DocPruner는 그보다 낮은 80% 압축률에서 이미 0.46이었다(Figure 4). 개별 언어에서도 ColNomic 기준 일본어 문서 89% 압축률에서 0.82(Sem-Cluster 0.76), 중국어 문서 89% 압축률에서 0.95(Sem-Cluster 0.94, near-lossless)를 보였다. Hindi(baseline 0.47)에서는 83% 압축률에서 0.46을 유지한 반면 DocPruner는 0.40으로 붕괴했고, Dutch에서는 82% 압축률까지 baseline 0.68을 유지한 반면 DocPruner는 0.56으로 떨어졌다.</p>
+      <span class="source-ref">PDF p. 7, 30</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>효율성 비용 구조</h3>
+      <p>ViDoRe-V1(k=-0.75, m=4) 기준 base 대비 nDCG@5 하락은 ColQwen2.5 -0.27%, ColNomic -0.51%, JinaV4 -0.57%로 평균 -0.45%에 그쳤고, storage는 각각 -58.88%, -52.16%, -52.77%로 평균 54.60% 감소했다(Table 1). 대가는 offline indexing 비용으로, 문서당 평균 encoding latency가 0.46초에서 0.69초로 늘어 평균 +51.42% 증가했다(ColQwen2.5 +56.10%, ColNomic +51.11%, JinaV4 +47.06%). 논문은 이 증가가 offline 색인 단계에 국한되며 online 검색 비용에는 영향이 없다고 명시한다.</p>
+      <span class="source-ref">PDF p. 8, 34</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>두 단계의 기여 분리</h3>
+      <p>variant analysis는 merging stage가 실제로 기여함을 보인다. ViDoRe-V2/Jina-v4의 약 80% 압축률에서 전체 프레임워크는 nDCG@5 0.55를 유지한 반면 pruning-only variant(attention-threshold-adap)는 0.51로 떨어졌다(Figure 6). 세부 데이터셋에서는 격차가 달라져 esg_reports_human_labeled_v2에서는 0.60 vs 0.54로 컸고, economics_reports_v2에서는 0.51 vs 0.49로 좁았다.</p>
+      <span class="source-ref">PDF p. 8, 30, 31</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 시사점</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>논문은 pruning과 merging을 대립하는 선택지가 아니라 순차적으로 결합해야 할 보완적 연산으로 재정의하고, &#x27;first refine, then compress&#x27;라는 단순한 원리만으로 기존 state-of-the-art를 넘는 compression-performance trade-off를 얻을 수 있음을 보인다. 학습이나 아키텍처 변경 없이 3개 base model, 6개 벤치마크, 29개 데이터셋, 다국어 환경 전반에서 일관되게 동작한다는 점을 실용적 가치로 내세운다.</p>
+      <span class="source-ref">PDF p. 2, 8, 9</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자의 해석</h3>
+      <p>(analyst_inference) 이 논문의 기여는 새로운 모듈의 발명이라기보다 기존 두 연산의 &#x27;적용 순서&#x27;가 성능을 지배한다는 관찰과 그에 대한 정보이론적 설명에 가깝다. 즉 clustering 이전에 저정보 patch를 걸러내면 centroid가 noise 쪽으로 끌리지 않는다는 것이 핵심 메커니즘이며, 이는 attention이 patch 중요도의 신뢰할 만한 proxy라는 전제 위에 성립한다. 그 전제가 흔들리는 도메인에서는 이득이 줄어들 수 있다.</p>
+      <span class="source-ref">PDF p. 4, 5, 9</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름 (offline 색인 + online 검색)</h3>
+                <span class="source-ref">PDF p. 3, 4, 21, 22</span>
+              </div>
+              <p>문서 이미지 인코딩부터 attention 기반 adaptive pruning, hierarchical merging, centroid 저장, 그리고 online MaxSim 스코어링까지의 전체 파이프라인. 논문 Sec. 3의 Stage 1/Stage 2 구성과 Appendix의 알고리즘 기술을 따른다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph OFF[&quot;Offline Indexing&quot;]
+    A[&quot;문서 이미지 d&quot;] --&gt; B[&quot;VLM Encoder&quot;]
+    B --&gt; C[&quot;patch embedding D (Np개)&quot;]
+    B --&gt; D[&quot;마지막 layer attention A&quot;]
+    D --&gt; E[&quot;head 평균 후 [EOS] attention 추출&quot;]
+    E --&gt; F[&quot;importance score I(dj)&quot;]
+    F --&gt; G[&quot;문서별 통계 mu_d, sigma_d&quot;]
+    G --&gt; H[&quot;adaptive threshold tau_d = mu_d + k*sigma_d&quot;]
+    C --&gt; I{&quot;I(dj) &gt; tau_d ?&quot;}
+    H --&gt; I
+    I -- &quot;yes&quot; --&gt; J[&quot;pruned set D&#x27; (Np&#x27;개)&quot;]
+    I -- &quot;모두 제외됨&quot; --&gt; K[&quot;최고 점수 patch 1개 유지&quot;]
+    K --&gt; J
+    J --&gt; L{&quot;Np&#x27; &lt; m 또는 m &lt;= 1 ?&quot;}
+    L -- &quot;yes&quot; --&gt; P[&quot;merging 생략, D&#x27;&#x27; = D&#x27;&quot;]
+    L -- &quot;no&quot; --&gt; M[&quot;L2 정규화 + cosine 거리행렬&quot;]
+    M --&gt; N[&quot;hierarchical agglomerative clustering&quot;]
+    N --&gt; O[&quot;Np&#x27;&#x27; = max(1, floor(Np&#x27;/m)) 클러스터&quot;]
+    O --&gt; Q[&quot;cluster centroid 계산&quot;]
+    Q --&gt; P2[&quot;압축 집합 D&#x27;&#x27; 저장&quot;]
+    P --&gt; P2
+  end
+  subgraph ON[&quot;Online Retrieval&quot;]
+    R[&quot;query q&quot;] --&gt; S[&quot;token embedding Q&quot;]
+    S --&gt; T[&quot;MaxSim(Q, D&#x27;&#x27;)&quot;]
+    P2 --&gt; T
+    T --&gt; U[&quot;relevance score s&#x27;&#x27;(q,d)&quot;]
+  end
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 제안 방식의 차이</h3>
+                <span class="source-ref">PDF p. 1, 2, 3, 6, 7</span>
+              </div>
+              <p>pruning-only 계열과 merging-only 계열이 각각 겪는 실패 양상, 그리고 두 연산을 순차 결합한 제안 방식의 차이를 나타낸다. 실패 양상 서술은 논문 Introduction과 실험 결과에 근거한다.</p>
+              <div class="mermaid">
+flowchart LR
+  A[&quot;원본 patch embedding D (Np개)&quot;] --&gt; B[&quot;Pruning-only (예: DocPruner)&quot;]
+  A --&gt; C[&quot;Merging-only (예: Sem-Cluster, Pooling)&quot;]
+  A --&gt; D[&quot;PRUNE-THEN-MERGE&quot;]
+  B --&gt; B1[&quot;중간 압축률: near-lossless&quot;]
+  B --&gt; B2[&quot;고압축률: sharp performance cliff&quot;]
+  C --&gt; C1[&quot;고압축률: 완만한 저하&quot;]
+  C --&gt; C2[&quot;salient patch 특징 희석, near-lossless 구간 불안정&quot;]
+  D --&gt; D1[&quot;Stage 1: adaptive pruning으로 저정보 patch 제거&quot;]
+  D1 --&gt; D2[&quot;Stage 2: 고품질 patch만 clustering 후 centroid&quot;]
+  D2 --&gt; D3[&quot;near-lossless 구간 확장 + 고압축 붕괴 회피&quot;]
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>ViDoRe-V1: base 대비 storage 감소율 (모델별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 1 · ViDoRe-V1, adaptation factor k=-0.75, merging factor m=4
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe-V1: base 대비 nDCG@5 상대적 하락폭 (모델별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Table 1 · ViDoRe-V1, k=-0.75, m=4 (값이 작을수록 손실이 적음)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe-V1: offline encoding latency 증가율 (모델별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8, 34 · Table 1 (본문); Table 2 (Appendix) · ViDoRe-V1, k=-0.75, m=4, offline indexing 단계 한정 (평균 0.46초 → 0.69초)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>REAL-MM-RAG: 84% 압축률에서의 nDCG@5 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 7 · Figure 5 · REAL-MM-RAG, ColQwen2.5, 84% compression rate
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe-V1: 약 84-87% pruning rate에서의 nDCG@5 비교</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 6 · Figure 3 · ViDoRe-V1, ColQwen2.5, ~84-87% pruning rate (Base는 미압축 상한값 0.87)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>ViDoRe-V2: 약 80% 압축률에서 전체 프레임워크 vs pruning-only</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 8 · Figure 6 · ViDoRe-V2, Jina-v4, ~80% compression rate
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>JinaVDR 다국어: 고압축률에서의 nDCG@5 (제안 방식)</h3>
+              <div class="chart-container">
+                <canvas id="chart-6"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 30 · Figure 4 (본문); Appendix Tables 9-11 · JinaVDR 언어별 데이터셋, 각 라벨에 표시된 압축률. 비교값 — 일본어 Sem-Cluster 0.76, 중국어 Sem-Cluster 0.94, Dutch DocPruner 0.56, Hindi DocPruner 0.40(baseline 0.47)
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>pruning과 merging을 대립 관계가 아니라 순차 보완 관계로 재배치했다는 문제 재정의 자체가 명료하며, &#x27;first refine, then compress&#x27;라는 원리가 실험 결과와 직접 대응된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>경험적 휴리스틱에 머물지 않고 Information Bottleneck과 Rate-Distortion 이론으로 2단계 분해를 정당화하며, Corollary 1로 naive single-stage merging 대비 distortion 우위를 명시적으로 주장한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 23, 24</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>6개 벤치마크·29개 데이터셋·3개 base model(ColQwen2.5, ColNomic, Jina-v4)에 걸친 평가 범위가 넓고, 다국어(중국어, 일본어, Hindi, Dutch 등)까지 포함해 일반성 주장이 뒷받침된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6, 7, 30</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>재학습이나 아키텍처 변경을 요구하지 않는 query-agnostic offline 기법이어서 MetaEmbed류 학습 기반 압축 대비 도입 장벽이 낮고, 기존 late-interaction 검색 스택에 그대로 얹을 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>추가 연산 비용이 offline indexing에만 발생한다는 점을 비용 구조로 분리해 보고한다(0.46초→0.69초). online latency가 중요한 서비스 관점에서 실무적으로 유리한 절충이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>pruning-only variant와의 비교(Figure 6)를 통해 merging stage 자체의 기여를 분리해 보여주어, 성능 향상이 단순히 pruning 튜닝 때문이 아님을 확인시킨다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 30, 31</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>pruned set이 공집합이 되는 경우와 Np&#x27;&lt;m인 경우에 대한 fallback(최고 점수 patch 1개 유지, merging 생략)을 명시해 알고리즘의 경계 조건이 정의되어 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 21</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Pruning stage의 효과가 base LVLM의 내부 attention을 patch importance의 proxy로 사용하는 데 전적으로 의존한다. 저자들은 gradient 기반 importance 같은 더 정교하고 query-independent한 ranking metric을 향후 연구로 제시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>compression-performance trade-off가 adaptation factor(k)와 merging factor(m) 같은 사전 정의된 hyperparameter에 의존한다. 저자들은 문서 복잡도와 레이아웃 특성에 따라 스스로 조절되는 data-driven 전략 개발을 향후 과제로 밝힌다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>offline encoding latency가 평균 51.42% 증가한다(0.46초→0.69초). 논문은 online 비용에 영향이 없다고 하지만, 대규모 코퍼스의 초기 색인이나 문서가 자주 갱신되는 환경에서는 재색인 비용으로 누적될 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8, 34</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>압축이 query-agnostic하게 한 번 고정되므로, 색인 시점에 저정보로 판정되어 제거된 patch를 나중에 특정 질의가 필요로 하는 경우 복구할 수 없다. 이는 구조적으로 되돌릴 수 없는 정보 손실이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>merging stage가 pairwise cosine distance 행렬과 hierarchical agglomerative clustering을 사용하므로 pruning 후 patch 수 Np&#x27;에 대해 비용이 초선형으로 증가한다. 논문은 고해상도로 Np가 매우 커지는 문서에서의 확장성을 별도로 다루지 않는다(확인되지 않음).</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>merging stage의 이득 크기가 데이터셋에 따라 달라진다. esg_reports_human_labeled_v2에서는 pruning-only 대비 0.60 vs 0.54로 격차가 컸지만 economics_reports_v2에서는 0.51 vs 0.49로 좁아, 이득을 결정하는 문서 특성이 무엇인지는 규명되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 30, 31</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>정식 게재 venue가 논문 본문에 명시되어 있지 않으며 preprint 상태로 추정된다. 따라서 동료 심사를 거친 검증 여부는 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 1</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>[EOS] global token의 attention 대신 gradient 기반 saliency나 대조 학습 기반 importance를 사용하면 pruning 품질과 최종 near-lossless 구간이 얼마나 더 확장되는가?</h3>
+              </div>
+              <p>저자들이 명시한 첫 번째 한계이자 향후 계획. attention proxy 의존성이 프레임워크 성능의 상한을 결정할 가능성이 있다.</p>
+              <span class="source-ref">PDF p. 3, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>adaptation factor k와 merging factor m을 문서별로 자동 결정하는 data-driven 정책을 학습하면, 고정 하이퍼파라미터(k=-0.75, m=4) 설정 대비 압축률-성능 곡선이 실제로 개선되는가?</h3>
+              </div>
+              <p>저자들이 명시한 두 번째 한계. 문서 복잡도가 크게 다른 코퍼스(슬라이드 vs 조밀한 재무보고서)에서 단일 설정이 최적일 이유가 없다.</p>
+              <span class="source-ref">PDF p. 8, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>merging stage의 이득 폭이 데이터셋마다 달라지는 원인(레이아웃 밀도, 중복 patch 비율, 질의 유형 등)은 무엇이며, 사전에 예측 가능한가?</h3>
+              </div>
+              <p>esg_reports_human_labeled_v2(0.60 vs 0.54)와 economics_reports_v2(0.51 vs 0.49)의 격차 차이가 논문에서 설명되지 않았다.</p>
+              <span class="source-ref">PDF p. 30, 31</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>&#x27;prune-then-merge&#x27; 순서를 3단계 이상으로 반복하거나(점진적 refine-compress), 압축 예산에 따라 두 단계의 비중을 동적으로 배분하면 추가 이득이 있는가?</h3>
+              </div>
+              <p>논문의 이론적 논증(g=gm∘gp)이 2단계 분해에 한정되어 있어, 더 깊은 분해의 이론적/실증적 효과는 다뤄지지 않았다.</p>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>hierarchical agglomerative clustering의 초선형 비용이 매우 큰 Np를 갖는 고해상도 문서에서 offline indexing을 병목으로 만드는가? 근사 clustering으로 대체해도 성능이 유지되는가?</h3>
+              </div>
+              <p>pairwise distance matrix 계산이 필요한 구조이며, latency 증가(0.46→0.69초)가 이미 관측되었다. 논문은 스케일링 특성을 별도로 보고하지 않는다.</p>
+              <span class="source-ref">PDF p. 4, 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>압축된 D&#x27;&#x27;를 end-to-end RAG 파이프라인에 투입했을 때 최종 answer quality가 검색 지표(nDCG@5)만큼 잘 보존되는가?</h3>
+              </div>
+              <p>논문의 동기는 domain-specific RAG이지만 평가는 검색 지표에 한정되어 있어, 다운스트림 생성 품질에 대한 영향은 확인되지 않음.</p>
+              <span class="source-ref">PDF p. 1, 6</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>PRUNE-THEN-MERGE를 scalar/product quantization 같은 벡터 차원 압축과 결합하면 효과가 곱해지는가, 아니면 상쇄되는가?</h3>
+              </div>
+              <p>본 기법은 벡터 개수(Np)를 줄이고 quantization은 벡터 당 비트수(D)를 줄이므로 직교적으로 보이지만, 논문은 조합 실험을 수행하지 않았다.</p>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>Visual Document Retrieval (VDR)</dt>
+              <dd>
+                문서를 OCR로 텍스트화하지 않고 페이지 이미지 자체를 인코딩하여 질의에 관련된 문서/페이지를 검색하는 과제. 레이아웃, 표, 그림 등 비텍스트 정보를 보존한다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Multi-vector retrieval (patch-level)</dt>
+              <dd>
+                문서 페이지 하나를 Np개의 patch-level embedding으로 표현하는 방식. 세밀한 매칭이 가능한 대신 페이지당 O(Np×D)의 저장 비용이 든다. ColPali가 대표적이다.
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Single-vector retrieval (page-level)</dt>
+              <dd>
+                페이지 전체를 벡터 하나(O(D))로 표현하는 방식. 저장 효율은 높지만 fine-grained 세부 정보를 놓친다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Late interaction / MaxSim</dt>
+              <dd>
+                query token embedding 각각에 대해 문서 측 모든 embedding과의 similarity 중 최댓값을 구해 합산하여 relevance score를 계산하는 스코어링 방식. multi-vector 검색의 핵심 연산이다.
+                <span class="source-ref">PDF p. 2, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Patch importance score I(dj)</dt>
+              <dd>
+                LVLM encoder 마지막 layer attention을 head 평균한 뒤, global token([EOS])이 patch j에 부여하는 attention 값. 본 논문에서 pruning 기준으로 사용된다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Adaptive threshold τd = µd + k·σd</dt>
+              <dd>
+                문서별 importance score의 평균 µd와 표준편차 σd로 계산되는 pruning 임계값. 고정 비율 방식과 달리 문서 특성에 따라 남는 patch 수가 달라진다. k는 adaptation factor.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Merging factor m</dt>
+              <dd>
+                merging 강도를 결정하는 하이퍼파라미터. 목표 cluster 수는 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))로 정해지며, m≤1이거나 Np&#x27;&lt;m이면 merging을 건너뛴다. 논문 주요 설정은 m=4.
+                <span class="source-ref">PDF p. 4, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Hierarchical agglomerative clustering</dt>
+              <dd>
+                각 embedding을 개별 cluster로 시작해 가장 가까운 것부터 bottom-up으로 병합하는 군집화. 본 논문은 L2-normalized embedding에 cosine distance와 Ward&#x27;s linkage 등을 사용한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Near-lossless compression range</dt>
+              <dd>
+                base 모델 대비 검색 성능 저하가 사실상 무시할 수준인 압축률 구간. 본 논문은 이 구간을 DocPruner의 [50-60%]에서 [60-70%]로 평균 10 percentage point 확장했다고 주장한다.
+                <span class="source-ref">PDF p. 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Sharp performance cliff</dt>
+              <dd>
+                압축률이 일정 수준을 넘어서면 검색 성능이 급격히 무너지는 현상. pruning-only 방법의 대표적 실패 양상이다.
+                <span class="source-ref">PDF p. 1, 2, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Information Bottleneck (IB)</dt>
+              <dd>
+                입력에서 목표 변수와 무관한 정보는 버리고 관련 정보만 유지하는 최적 압축 표현을 찾는 정보이론 원리. 본 논문에서 pruning stage를 정당화하는 근거이다.
+                <span class="source-ref">PDF p. 4, 5, 23</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Rate-Distortion (RD) theory</dt>
+              <dd>
+                주어진 비트 예산(rate) 하에서 재구성 왜곡(distortion)을 최소화하는 이론적 틀. 본 논문에서 merging stage를 최적 vector quantization으로 해석하는 근거이다.
+                <span class="source-ref">PDF p. 4, 5, 24</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Query-agnostic offline compression</dt>
+              <dd>
+                질의 내용과 무관하게 색인 시점에 한 번 수행되는 압축. 온라인 비용이 없는 대신, 제거된 정보를 질의 시점에 복구할 수 없다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>DocPruner</dt>
+              <dd>
+                intra-document attention 기반 adaptive pruning 기법으로, 본 논문의 주요 state-of-the-art pruning baseline이다.
+                <span class="source-ref">PDF p. 3, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Sem-Cluster</dt>
+              <dd>
+                hierarchical clustering으로 patch embedding을 병합하는 merging 계열 baseline.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>nDCG@5</dt>
+              <dd>
+                상위 5개 검색 결과의 순위 품질을 평가하는 normalized Discounted Cumulative Gain 지표. 본 논문의 주요 성능 지표이다.
+                <span class="source-ref">PDF p. 6</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>정식 게재 학회 또는 저널(venue)은 논문 본문에 명시되어 있지 않다. 논문 각주에 &#x27;upon acceptance&#x27;라는 표현이 있어 아직 정식 게재 전(preprint) 상태로 추정되며, 현재 확인 가능한 것은 arXiv 식별자(arXiv:2602.19549v2, 2026-04-20)뿐이다.</li><li>Appendix Table 12, 13, 14(REAL-MM-RAG 세부 데이터셋별 수치)와 Table 9, 10, 11(JinaVDR 다국어 세부 데이터)의 전체 셀 값은 본문 및 부록 서술(prose)을 통해서만 확인했으며, 표 전체를 직접 대조하지는 못했다.</li><li>Table 3-20에 수록된 각 baseline의 세부 hyperparameter 조합별 전체 성능 수치는 부분적으로만 확인했으며, 본 보고서에서는 본문 및 부록 서술에서 명시적으로 인용된 수치만 사용했다.</li><li>Figure 3, 4, 5, 6 및 Appendix Figure 13, 14, 17, 18의 성능-압축률 곡선 전체 형태는 본문에 인용된 특정 지점(예: 84% 압축률에서의 값)만 확보했으며, 곡선상의 다른 지점 수치는 그래프에서 눈으로 추정하지 않았다.</li><li>merging stage에 사용된 linkage 방식이 모든 실험에서 Ward&#x27;s method로 통일되었는지, 아니면 데이터셋별로 달랐는지는 확인되지 않음.</li><li>offline indexing latency 증가가 pruning stage와 merging stage 중 어느 쪽에서 주로 발생하는지에 대한 분해(breakdown)는 확인되지 않음.</li><li>압축된 인덱스를 실제 RAG 파이프라인에 적용했을 때의 다운스트림 answer quality는 논문에서 평가되지 않았다.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "ViDoRe-V1: base 대비 storage 감소율 (모델별)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [58.88, 52.16, 52.77, 54.6], "unit": "%", "xLabel": "Base model", "yLabel": "Storage 감소율"}, {"canvasId": "chart-1", "type": "bar", "title": "ViDoRe-V1: base 대비 nDCG@5 상대적 하락폭 (모델별)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [0.27, 0.51, 0.57, 0.45], "unit": "%", "xLabel": "Base model", "yLabel": "nDCG@5 하락폭"}, {"canvasId": "chart-2", "type": "bar", "title": "ViDoRe-V1: offline encoding latency 증가율 (모델별)", "labels": ["ColQwen2.5", "ColNomic", "Jina-v4", "평균"], "values": [56.1, 51.11, 47.06, 51.42], "unit": "%", "xLabel": "Base model", "yLabel": "Latency 증가율"}, {"canvasId": "chart-3", "type": "bar", "title": "REAL-MM-RAG: 84% 압축률에서의 nDCG@5 비교", "labels": ["PRUNE-THEN-MERGE", "Sem-Cluster", "DocPruner"], "values": [0.65, 0.61, 0.56], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "nDCG@5"}, {"canvasId": "chart-4", "type": "bar", "title": "ViDoRe-V1: 약 84-87% pruning rate에서의 nDCG@5 비교", "labels": ["Base (미압축)", "PRUNE-THEN-MERGE", "DocPruner"], "values": [0.87, 0.86, 0.77], "unit": "nDCG@5", "xLabel": "방법", "yLabel": "nDCG@5"}, {"canvasId": "chart-5", "type": "bar", "title": "ViDoRe-V2: 약 80% 압축률에서 전체 프레임워크 vs pruning-only", "labels": ["PRUNE-THEN-MERGE (전체)", "Pruning-only (attention-threshold-adap)"], "values": [0.55, 0.51], "unit": "nDCG@5", "xLabel": "구성", "yLabel": "nDCG@5"}, {"canvasId": "chart-6", "type": "bar", "title": "JinaVDR 다국어: 고압축률에서의 nDCG@5 (제안 방식)", "labels": ["중국어 @89% (ColNomic)", "일본어 @89% (ColNomic)", "Dutch @82%", "Hindi @83%"], "values": [0.95, 0.82, 0.68, 0.46], "unit": "nDCG@5", "xLabel": "데이터셋 / 조건", "yLabel": "nDCG@5"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
