@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Paper Discovery - 2026-07-20</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-hover: #252b3d;
+      --border: #2d3548;
+      --text: #e1e4eb;
+      --muted: #8892a4;
+      --accent: #58a6ff;
+      --max-width: 1100px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+    .page-shell { width: min(calc(100% - 32px), var(--max-width)); margin: 0 auto; }
+    header { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .back-link { color: var(--accent); font-weight: 700; }
+    .eyebrow {
+      margin: 28px 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.2; }
+    .summary { max-width: 760px; color: var(--muted); }
+    main { padding: 32px 0 80px; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .library-card {
+      display: flex;
+      min-height: 320px;
+      flex-direction: column;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .library-card:hover { background: var(--surface-hover); }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+    h2 a:hover, .open-link { color: var(--accent); }
+    .status-badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(174, 184, 198, 0.13);
+      color: #aeb8c6;
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .authors { margin: 14px 0 0; font-size: 0.92rem; }
+    .metadata { margin: 4px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .card-summary { margin: 22px 0; color: var(--muted); font-size: 0.94rem; }
+    .open-link { margin-top: auto; font-weight: 700; font-size: 0.9rem; }
+    @media (max-width: 640px) {
+      .library-grid { grid-template-columns: 1fr; }
+      .library-card { min-height: auto; }
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+  </style>
+</head>
+<body class="auth-locked">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header>
+    <div class="page-shell">
+      <a class="back-link" href="../../">← 홈페이지</a>
+      <p class="eyebrow">Paper Discovery</p>
+      <h1>Daily Paper Discovery - 2026-07-20</h1>
+      <p class="summary">오늘 추천 후보 16개: REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing, Sculpting the Vector Space: Towards Efficient Multi-Vector Visual Document Retrieval via Prune-then-Merge Framework, In-Storage Acceleration of Retrieval Augmented Generation as a Service</p>
+    </div>
+  </header>
+  <main class="page-shell">
+    <div class="library-grid">
+      
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3695053.3731116">
+            REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Kangqi Chen, Andreas Kosmas Kakolyris, Rakesh Nadig, Manos Frouzakis, Nika Mansouri Ghiasi, Yu Liang, Haiyu Mao, Jisung Park, et al.</p>
+      <p class="metadata">2026-07-20 · 2025 · ISCA 2025 (52nd International Symposium on Computer Architecture) · top-tier · official proceedings · Score 88</p>
+      <p class="metadata">인용 근거: ISCA 2025 proceedings, DOI: 10.1145/3695053.3731116; arXiv: 2506.16444</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">near-data/placement</span><span class="tag">runtime/kernel/serving</span><span class="tag">ISCA는 컴퓨터 아키텍처 최상위 학회</span><span class="tag">storage-side ANNS와 data placement를 다룬 최신 시스템 논문</span><span class="tag">ACM DL 공식 프로시딩과 arXiv 모두 확인</span></div>
+
+      <p class="summary">
+        REIS는 RAG의 검색 단계에서 발생하는 host-storage 간 데이터 이동 병목을 해결하기 위한 최초의 RAG 전용 In-Storage Processing 시스템이다. embedding-문서 매핑 레이아웃, plane 단위 embedding 배치, 경량 FTL, 그리고 storage 내부 연산 자원을 활용하는 ANNS 엔진을 결합해 서버급 시스템 대비 13배 성능, 55배 에너지 효율 향상을 달성했다. 기존 ISP-ANNS 가속기 대비도 21~24배 빠르다.
+      </p>
+      <p class="summary">
+        candidate embedding을 host로 옮기지 않고 storage 내부에서 ANNS와 데이터 배치를 수행하는 구조는 현재 연구의 near-data/CSD scoring 및 candidate ID pushdown 질문과 직접 연결된다. multi-vector가 아닌 단일 embedding 기반이지만 storage-side execution placement 설계의 핵심 참조점이다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3695053.3731116">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2506.16444">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2602.19549">
+            Sculpting the Vector Space: Towards Efficient Multi-Vector Visual Document Retrieval via Prune-then-Merge Framework
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yibo Yan, Mingdong Ou, Yi Cao, Xin Zou, Jiahao Huo, Shuliang Liu, James Kwok, Xuming Hu</p>
+      <p class="metadata">2026-07-20 · 2026 · ACL 2026 Findings · top-tier · arXiv / ACL Findings acceptance · Score 82</p>
+      <p class="metadata">인용 근거: ACL 2026 Findings (Association for Computational Linguistics); arXiv: 2602.19549</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">ACL은 NLP/IR 최상위 학회이며 Findings로 정식 게재 확정</span><span class="tag">patch-level pruning+merging 조합은 visual multi-vector storage 최적화의 최신 사례</span></div>
+
+      <p class="summary">
+        이 논문은 단일 단계 patch 압축이 시각 문서 검색에서 특징 손상을 유발한다고 지적하며, adaptive pruning으로 저정보 patch를 먼저 제거한 뒤 hierarchical merging으로 남은 embedding을 추가 압축하는 2단계 Prune-then-Merge 프레임워크를 제안한다. 29개 visual document retrieval 데이터셋에서 기존 단일 단계 압축 기법보다 넓은 압축 범위에서 일관되게 우수한 성능을 보인다.
+      </p>
+      <p class="summary">
+        visual document의 patch 수 증가에 따른 storage 비용을 pruning과 merging 두 단계로 줄이는 접근은 현재 연구의 visual document storage footprint 질문(3, 5)과 정확히 겹친다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2602.19549">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3695053.3731032">
+            In-Storage Acceleration of Retrieval Augmented Generation as a Service
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Rohan Mahapatra, Harsha Santhanam, Christopher Priebe, Hanyang Xu, Hadi Esmaeilzadeh</p>
+      <p class="metadata">2026-07-20 · 2025 · ISCA 2025 (52nd International Symposium on Computer Architecture) · top-tier · official proceedings · Score 80</p>
+      <p class="metadata">인용 근거: ISCA 2025 proceedings, DOI: 10.1145/3695053.3731032</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">near-data/placement</span><span class="tag">runtime/kernel/serving</span><span class="tag">ISCA 2025 공식 프로시딩</span><span class="tag">RAG service 환경에서의 storage-side acceleration을 다룸</span><span class="tag">REIS와 상호보완적 관점 제공</span></div>
+
+      <p class="summary">
+        이 논문은 지속적으로 커지는 지식 베이스를 메모리가 아닌 persistent storage에 두는 RAG-as-a-service 환경을 대상으로, retrieval 단계를 storage 내부에서 가속하는 아키텍처를 제안한다. 목표는 host-storage 데이터 이동을 줄이고 대규모 벡터 데이터베이스에 대한 서비스 비용 효율을 높이는 것이다. 정확한 세부 수치는 원문 확인이 필요하다.
+      </p>
+      <p class="summary">
+        REIS와 같은 ISCA 2025 세션에서 발표된 자매 논문으로, service 환경에서의 concurrent query와 storage-side retrieval acceleration을 다뤄 현재 연구의 concurrency/serving 질문(30, 33)과도 연결된다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3695053.3731032">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://christopherpriebe.com/assets/pdf/in_storage_acceleration_rag_ISCA_2025.pdf">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://github.com/facebookresearch/MetaEmbed">
+            MetaEmbed: Scaling Multimodal Retrieval at Test-Time with Flexible Late Interaction
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Zilin Xiao, Qi Ma, Mengting Gu, Chun-cheng Jason Chen, Xintao Chen, Vicente Ordonez, Vijai Mohan</p>
+      <p class="metadata">2026-07-20 · 2026 · ICLR 2026 (Oral) · top-tier · official conference acceptance (Oral) · Score 79</p>
+      <p class="metadata">인용 근거: ICLR 2026 (Oral), github.com/facebookresearch/MetaEmbed; arXiv: 2509.18095</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">ICLR 2026 Oral로 공식 채택 확인(GitHub 저장소에 명시)</span><span class="tag">test-time budget 조절 가능한 late interaction 설계는 storage/serving trade-off 연구에 중요한 참조점</span></div>
+
+      <p class="summary">
+        MetaEmbed는 학습 가능한 Meta Token을 시퀀스에 추가해 마지막 층의 문맥화된 표현을 compact multi-vector embedding으로 사용한다. Matryoshka Multi-Vector Retrieval 학습을 통해 하나의 모델이 정보를 세분화 수준별로 조직화하여, 추론 시점에 인덱싱·상호작용에 사용할 vector 수를 선택함으로써 검색 품질과 저장·연산 비용을 조절할 수 있다. MMEB, ViDoRe 벤치마크에서 32B 규모 모델까지 SOTA를 달성했으며 ICLR 2026 Oral로 채택됐다.
+      </p>
+      <p class="summary">
+        문서당 vector 수를 test-time에 조절 가능하게 만드는 설계는 현재 연구의 variable-length multi-vector representation과 storage/serving 비용 트레이드오프 질문(4, 23-26)에 직접 연결된다.
+      </p>
+
+      <a class="open-link" href="https://github.com/facebookresearch/MetaEmbed">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2509.18095">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://aclanthology.org/2025.findings-acl.1003/">
+            Towards Storage-Efficient Visual Document Retrieval: An Empirical Study on Reducing Patch-Level Embeddings
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yubo Ma, Jinsong Li, Yuhang Zang, Xiaobao Wu, Xiaoyi Dong, Pan Zhang, Yuhang Cao, Haodong Duan, et al.</p>
+      <p class="metadata">2026-07-20 · 2025 · ACL 2025 Findings · top-tier · official ACL Anthology · Score 78</p>
+      <p class="metadata">인용 근거: ACL 2025 Findings, aclanthology.org/2025.findings-acl.1003; arXiv: 2506.04997</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">storage/data movement</span><span class="tag">compression/pruning</span><span class="tag">ACL Anthology 공식 게재 확인</span><span class="tag">patch-level embedding storage 절감을 정량적으로 분석한 실증 연구</span></div>
+
+      <p class="summary">
+        이 논문은 ColPali/ColQwen2 계열 visual document retrieval의 patch-level embedding을 줄이기 위해 token merging과 pruning 전략을 체계적으로 실험한다. hierarchical agglomerative clustering 기반 병합으로 만든 Light-ColPali/ColQwen2는 원본 메모리의 11.8%만으로 NDCG@5의 98.2%를 유지하며, 2.8% 메모리에서도 94.6% 성능을 보인다. ACL 2025 Findings 정식 게재 논문이다.
+      </p>
+      <p class="summary">
+        visual document의 patch embedding storage footprint를 실증적으로 줄이는 연구로, 현재 연구의 visual document storage 비용 질문(3, 5)과 candidate embedding fetch 비용 절감에 직접적인 baseline을 제공한다.
+      </p>
+
+      <a class="open-link" href="https://aclanthology.org/2025.findings-acl.1003/">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2506.04997">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3539618.3591977">
+            SLIM: Sparsified Late Interaction for Multi-Vector Retrieval with Inverted Indexes
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Minghan Li, Sheng-Chieh Lin, Xueguang Ma, Jimmy Lin</p>
+      <p class="metadata">2026-07-20 · 2023 · SIGIR 2023 (46th International ACM SIGIR Conference) · top-tier · official proceedings · Score 76</p>
+      <p class="metadata">인용 근거: SIGIR 2023 proceedings, DOI: 10.1145/3539618.3591977; arXiv: 2302.06587</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">compression/pruning</span><span class="tag">runtime/kernel/serving</span><span class="tag">SIGIR 정식 프로시딩, DOI 확인 완료</span><span class="tag">late-interaction retrieval의 대표적 inverted-index 기반 시스템으로 candidate generation 비교 대상으로 적합</span></div>
+
+      <p class="summary">
+        SLIM은 ColBERT 스타일 token embedding을 sparse lexical space로 매핑해 inverted index 기반 검색 라이브러리로 late interaction을 근사하는 2단계 구조를 제안한다. inverted index retrieval 이후 score refinement 모듈로 실제 late interaction 점수를 근사하며, MS MARCO/BEIR에서 ColBERT와 대등한 정확도를 CPU에서 더 작고 빠르게 달성한다.
+      </p>
+      <p class="summary">
+        candidate generation과 exact late-interaction scoring 사이의 gap을 inverted-index 기반 근사로 메우는 접근은 현재 연구의 candidate generation·approximate scoring 질문(6-8)의 대표적 base로 사용할 수 있다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3539618.3591977">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2302.06587">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2512.04449">
+            AXLE: Coordinated Offloading with Asynchronous Back-Streaming in Computational Memory Systems
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Suyeon Lee, et al.</p>
+      <p class="metadata">2026-07-20 · 2026 · ISCA 2026 (accepted) · top-tier · arXiv / conference acceptance notice · Score 74</p>
+      <p class="metadata">인용 근거: arXiv: 2512.04449; ISCA 2026 (accepted, per arXiv listing)</p>
+      <div class="tag-row"><span class="tag">near-data/placement</span><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">ISCA 2026 게재 확정 근-데이터 처리 시스템 논문</span><span class="tag">host-device 비동기 offloading 프로토콜은 CSD scoring pushdown 설계에 참고 가치가 큼</span></div>
+
+      <p class="summary">
+        AXLE는 CXL 기반 computational memory 장치와 host 사이에서 CXL.io와 CXL.mem을 조합해 결과를 비동기적으로 스트리밍 반환하는 offloading 프로토콜을 제안한다. 이를 통해 host-CCM 상호작용을 경량화하면서 연산과 데이터 이동을 파이프라이닝한다. ISCA 2026 발표 예정 논문으로 근-데이터 처리 아키텍처의 최신 사례다.
+      </p>
+      <p class="summary">
+        host-CCM 비동기 파이프라이닝과 result back-streaming 설계는 CSD-side MaxSim/Chamfer scoring 후 score만 반환하는 현재 연구의 near-data 질문(27, 28)과 아키텍처적으로 직접 대응된다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2512.04449">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3731569.3764798">
+            LSM-VEC: A Large-Scale Disk-Based System for Dynamic Vector Search
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Shurui Zhong, Dingheng Mo, Siqiang Luo</p>
+      <p class="metadata">2026-07-20 · 2025 · SOSP 2025 (31st ACM Symposium on Operating Systems Principles) · top-tier · official proceedings · Score 72</p>
+      <p class="metadata">인용 근거: SOSP 2025 proceedings; arXiv: 2505.17152</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">SOSP는 시스템 분야 최상위 학회</span><span class="tag">out-of-core vector index의 storage layout/재정렬 기법이 multi-vector storage layout 설계와 직결</span></div>
+
+      <p class="summary">
+        LSM-VEC는 LSM-tree와 디스크 기반 그래프 인덱스를 결합해 대규모 벡터 검색에서 효율적인 삽입/삭제와 높은 recall을 동시에 달성하는 시스템이다. 샘플링 기반 확률적 탐색과 connectivity-aware 그래프 재배치로 전역 재구축 없이 I/O를 줄이며, billion-scale 데이터셋에서 메모리 사용량을 66% 이상 절감한다. SOSP 2025 공식 발표 논문이다.
+      </p>
+      <p class="summary">
+        SSD-resident, out-of-core vector index 설계와 graph reordering을 통한 locality 개선은 현재 연구의 storage layout·candidate ID reordering 질문(11-13)에 직접 참고할 수 있는 top-tier 시스템 사례다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3731569.3764798">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2505.17152">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://github.com/DBGroup-SUSTech/multi-vector-retrieval">
+            GIGP+: A CPU-GPU Co-Processing Engine for Multi-Vector Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Zheng Bian, Man Lung Yiu, Bo Tang</p>
+      <p class="metadata">2026-07-20 · 2026 · SIGIR 2026 · top-tier · conference page / related-work citation · Score 70</p>
+      <p class="metadata">인용 근거: SIGIR 2026 (per TileMaxSim related work citation); GitHub: DBGroup-SUSTech/multi-vector-retrieval</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">near-data/placement</span><span class="tag">runtime/kernel/serving</span><span class="tag">SIGIR 2026 게재로 확인됨(동일 저자 그룹의 GitHub 저장소 및 후속 논문의 인용 근거)</span><span class="tag">CPU-GPU heterogeneous execution을 다루는 multi-vector 엔진으로 연구 목표와 정확히 일치</span></div>
+
+      <p class="summary">
+        GIGP+는 ColBERT 계열 multi-vector retrieval을 위한 CPU 엔진 IGP를 GPU로 확장한 CPU-GPU 공동 처리 엔진이다. 단일 스레드 CPU 구현보다 빠르면서도 동일한 검색 결과를 보장하는 것을 목표로 한다. SIGIR 2026 발표 예정 논문으로, 원문 초록은 직접 확인하지 못해 관련 논문의 인용과 저자 GitHub 저장소를 근거로 추정했다.
+      </p>
+      <p class="summary">
+        candidate embedding gather와 scoring을 CPU와 GPU 사이에서 어떻게 분배할지 결정하는 co-processing 구조는 현재 연구의 execution placement 질문(23-26)과 가장 직접적으로 맞닿아 있다.
+      </p>
+
+      <a class="open-link" href="https://github.com/DBGroup-SUSTech/multi-vector-retrieval">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2602.21202">
+            Multi-Vector Index Compression in Any Modality
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Hanxiang Qin, Alexander Martin, Rohan Jha, Chunsheng Zuo, Reno Kriz, Benjamin Van Durme</p>
+      <p class="metadata">2026-07-20 · 2026 · arXiv preprint · preprint · arXiv · Score 71</p>
+      <p class="metadata">인용 근거: arXiv: 2602.21202</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">text/visual document/video를 아우르는 범용 multi-vector compression 프레임워크로 연구 범위와 정합성이 높음</span><span class="tag">JHU HLTCOE 그룹의 2026년 최신 연구, 학회 게재 확인 전이라 preprint로 분류</span></div>
+
+      <p class="summary">
+        이 논문은 text, image, visual document, video를 아우르는 late interaction에서 문서 길이에 비례해 커지는 연산·저장 비용을 줄이기 위한 index compression 기법들을 비교한다. sequence resizing, memory token, hierarchical pooling과 함께 attention을 이용해 의미적으로 중요한 영역을 centroid로 선택하는 새로운 attention-guided clustering(AGC)을 제안하며, text(BEIR)·visual document(ViDoRe)·video(MSR-VTT, MultiVENT 2.0) 전반에서 AGC가 가장 우수했다.
+      </p>
+      <p class="summary">
+        text와 visual/video modality를 모두 지원하는 공통 compression 프레임워크는 현재 연구가 강조하는 &#x27;text와 image multi-vector workload를 모두 지원하는 retrieval engine&#x27; 목표와 정확히 일치한다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2602.21202">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://link.springer.com/article/10.1007/s11227-025-07118-9">
+            Storage Access Optimization for Efficient GPU-Centric Information Retrieval (ESPN-LIVE)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Authors unconfirmed (ESPN follow-up group)</p>
+      <p class="metadata">2026-07-20 · 2025 · The Journal of Supercomputing (Springer) · strong · journal (Springer Nature Link) · Score 69</p>
+      <p class="metadata">인용 근거: Journal of Supercomputing, DOI: 10.1007/s11227-025-07118-9</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">near-data/placement</span><span class="tag">multi-vector/late interaction</span><span class="tag">Springer 저널 정식 게재(DOI 확인)</span><span class="tag">GPUDirect Storage 기반 multi-vector embedding 저장/전송 최적화를 다루는 드문 후속 연구</span></div>
+
+      <p class="summary">
+        이 저널 논문은 SSD에서 GPU로 GPUDirect Storage를 이용해 직접 데이터를 전송하는 GPU-centric ESPN 아키텍처를 ESPN-LIVE로 확장한 연구다. prefetching과 on-demand embedding 계산으로 storage latency를 GPU throughput에 맞추며, ESPN은 기존 대비 최대 16배 지연 감소·68% 처리량 향상을, ESPN-LIVE는 multi-vector embedding을 저장하지 않고 동적으로 계산해 저장 비용을 최대 16배 절감한다고 보고된다.
+      </p>
+      <p class="summary">
+        이미 리뷰된 ESPN의 후속·확장판으로, GPUDirect Storage 기반 SSD-to-GPU 직접 전송과 multi-vector embedding을 저장 대신 동적 계산으로 대체하는 아이디어는 현재 연구의 storage-to-GPU data movement 질문(11, GPUDirect Storage)과 직접 연결된다.
+      </p>
+
+      <a class="open-link" href="https://link.springer.com/article/10.1007/s11227-025-07118-9">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2604.28142">
+            Efficient Multivector Retrieval with Token-Aware Clustering and Hierarchical Indexing (TACHIOM)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Silvio Martinico, Franco Maria Nardini, Cosimo Rulli, Rossano Venturini</p>
+      <p class="metadata">2026-07-20 · 2026 · arXiv preprint (submitted for SIGIR 2026) · preprint · arXiv · Score 68</p>
+      <p class="metadata">인용 근거: arXiv: 2604.28142 (submitted for SIGIR 2026)</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">compression/pruning</span><span class="tag">runtime/kernel/serving</span><span class="tag">PLAID/WARP 계열 저자 그룹(Nardini, Rulli, Venturini)의 최신 후속 연구</span><span class="tag">SIGIR 2026 제출 명시, 아직 공식 채택 확인 전이라 preprint로 분류</span></div>
+
+      <p class="summary">
+        TACHIOM은 k-means 대신 token 빈도와 의미적 분산에 기반해 centroid를 할당하는 Token-Aware Clustering(TAC)을 사용해 수백만 개 centroid까지 확장 가능한 multivector retrieval 시스템이다. centroid 기반 그래프 인덱스와 최적화된 product quantization을 결합해 token-level 연산 없이 centroid만으로 정확한 문서 점수를 계산하며, k-means 대비 최대 247배 빠른 클러스터링과 9.8배의 end-to-end 검색 가속을 달성한다.
+      </p>
+      <p class="summary">
+        candidate generation을 위한 centroid 기반 clustering과 이후 product quantization scoring을 결합한 구조는 현재 연구의 candidate generation-storage traffic 연결 질문(6-8)과 quantization 기반 scoring 질문(20)에 밀접하다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2604.28142">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2512.22838">
+            OrchANN: A Unified I/O Orchestration Framework for Skewed Out-of-Core Vector Search
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Lizheng Chen, Pinhuan Wang, Shaonan Ma, Jie Zhang, Qing Wang, Zhengyi Yang, Heng Zhang, Mingxing Zhang, et al.</p>
+      <p class="metadata">2026-07-20 · 2025 · arXiv preprint (cs.DB / cs.IR) · preprint · arXiv · Score 66</p>
+      <p class="metadata">인용 근거: arXiv: 2512.22838</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">out-of-core vector search의 I/O orchestration을 다루는 2025년 말 최신 연구</span><span class="tag">학회 게재 확인 전이라 preprint로 분류하나 SSD read scheduling 설계가 연구 질문과 매우 밀접</span></div>
+
+      <p class="summary">
+        OrchANN은 데이터가 메모리를 초과하는 billion-scale ANN 검색에서 SSD I/O를 통합 관리하는 프레임워크다. SSD에 클러스터 파티션을 유지하면서 메모리 내 그래프로 query hotness와 cluster 우선순위를 활용해 저가치 클러스터를 가지치기하고 접근 지역성을 높이며, SSD 읽기 전에 다단계 pruning을 적용한다. 엄격한 메모리 제약에서 DiskANN, Starling, SPANN, PipeANN 대비 최대 17.2배 QPS, 25배 낮은 지연을 달성했다.
+      </p>
+      <p class="summary">
+        candidate ID를 storage locality 기준으로 재배치하고 query-aware하게 SSD read를 orchestration하는 설계는 현재 연구의 candidate embedding fetch 질문(11-16)에 직접 적용 가능한 out-of-core I/O 스케줄링 사례다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2512.22838">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2505.11471">
+            CRISP: Clustering Multi-Vector Representations for Denoising and Pruning
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">João Veneroso, Rajesh Jayaram, Jinmeng Rao, Gustavo Hernández Ábrego, Majid Hadian, Daniel Cer</p>
+      <p class="metadata">2026-07-20 · 2025 · arXiv preprint · preprint · arXiv · Score 65</p>
+      <p class="metadata">인용 근거: arXiv: 2505.11471</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">compression/pruning</span><span class="tag">MUVERA 저자 그룹의 후속 연구로 candidate representation compression 방향에서 중요</span><span class="tag">학회 게재 여부 미확인으로 preprint 분류</span></div>
+
+      <p class="summary">
+        CRISP은 사후 클러스터링 대신 학습 과정에서 clusterable한 token 표현을 직접 학습하는 multi-vector 학습 기법이다. 모든 표현 크기에서 사후 클러스터링과 다른 token pruning 기법을 능가하며, BEIR에서 약 3배 vector 수 감소로도 원본 미압축 모델을 상회하고, 11배 감소 시에도 품질 저하가 미미하다.
+      </p>
+      <p class="summary">
+        저자 중 Rajesh Jayaram은 MUVERA의 저자로, 이 논문은 학습 단계에서부터 storage 친화적인 clusterable 표현을 만드는 접근이라 candidate compression/token pruning 질문(5)과 밀접하다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2505.11471">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2606.07654">
+            MM-Matryoshka: Towards Budget-Elastic Visual Document Retrieval via a 2D Multimodal Matryoshka Training Framework
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Haowen Xiang, Yibo Yan, Jiahao Huo, Yu Huang, Yi Cao, Mingdong Ou, Xuming Hu</p>
+      <p class="metadata">2026-07-20 · 2026 · arXiv preprint · preprint · arXiv · Score 63</p>
+      <p class="metadata">인용 근거: arXiv: 2606.07654</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">ColPali 계열 visual document multi-vector storage 절감을 다루는 2026년 최신 연구</span><span class="tag">아직 공식 학회 게재 확인 전이라 preprint로 분류</span></div>
+
+      <p class="summary">
+        MM-Matryoshka는 ColPali 스타일 multi-vector 시각 문서 검색기가 embedding 차원과 layer 두 축 모두에서 탄력적으로 동작하도록 하는 2D Matryoshka 학습 프레임워크다. 하나의 모델을 학습해두면 추론 시점에 재학습 없이 2차원 budget을 선택할 수 있으며, 단순 truncation보다 품질을 훨씬 잘 보존하면서 저장·연산 부담을 줄인다.
+      </p>
+      <p class="summary">
+        visual document의 storage/serving 비용을 배포 시점에 유연하게 조절 가능한 elastic budget 설계는 현재 연구의 variable-length embedding storage 및 serving 비용 질문(4, 23)과 관련이 크다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2606.07654">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3805634">
+            d-HNSW: A High-performance Vector Search Engine on Disaggregated Memory
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yi Liu, et al.</p>
+      <p class="metadata">2026-07-20 · 2026 · ACM SIGMETRICS 2026 (POMACS) · strong · official proceedings (POMACS) · Score 62</p>
+      <p class="metadata">인용 근거: POMACS 2026, DOI: 10.1145/3805634; HotStorage 2025 workshop version, DOI: 10.1145/3736548.3737822; arXiv: 2603.13591</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">SIGMETRICS/POMACS는 시스템 측정·성능 분야에서 권위 있는 ACM 저널</span><span class="tag">disaggregated memory에서의 transfer-compute overlap 설계가 storage-compute overlap 질문에 참고 가치가 큼</span></div>
+
+      <p class="summary">
+        d-HNSW는 disaggregated memory 환경에서 RDMA 기반으로 HNSW 그래프 벡터 검색을 수행하는 엔진이다. pointer-chasing으로 인한 네트워크 비효율, 동적 삽입에 따른 메모리 레이아웃 변화, 배치 워크로드의 중복 전송, 순차 실행에 따른 자원 저활용 문제를 balanced clustering, RDMA 친화적 그래프 레이아웃, query-aware 데이터 로딩, transfer-compute 파이프라이닝으로 해결한다. 94% recall에서 기존 대비 최대 100배 이상 처리량 향상을 보였다.
+      </p>
+      <p class="summary">
+        네트워크 너머의 메모리에서 벡터 인덱스를 가져오고 transfer와 compute를 파이프라이닝하는 구조는 현재 연구의 host-storage/host-device 데이터 이동 overlap 질문(20, DMA/compute overlap)과 유사한 설계 패턴을 제공한다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3805634">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2603.13591">Preprint 열기 →</a>
+    </article>
+    
+    </div>
+  </main>
+  
+  <script>
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+  </script>
+
+</body>
+</html>
