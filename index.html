@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>27</small>
+          <small>28</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>7</small>
+          <small>6</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 27편</span>
-        <span class="stat">전체 항목 41개</span>
+        <span class="stat">논문 28편</span>
+        <span class="stat">전체 항목 42개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>27개 문서</small>
+      <small>28개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>27</small>
+          <small>28</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>7</small>
+          <small>6</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,7 +923,7 @@
     </div>
 
     <span class="pending-queue-count">
-      7편 대기 중
+      6편 대기 중
     </span>
   </div>
 
@@ -935,12 +935,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>espnlive.pdf</strong>
+            <strong>In-Storage Acceleration of Retrieval Augmented Generation as a Service.pdf</strong>
             <span>등록 시각 · 2026-07-20 15:27</span>
           </div>
 
           <div class="pending-queue-size">
-            1.7 MB
+            2.3 MB
           </div>
 
           <div>
@@ -954,28 +954,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>In-Storage Acceleration of Retrieval Augmented Generation as a Service.pdf</strong>
-            <span>등록 시각 · 2026-07-20 15:27</span>
-          </div>
-
-          <div class="pending-queue-size">
-            2.3 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -997,7 +975,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -1019,7 +997,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            5
+            4
           </div>
 
           <div class="pending-queue-paper">
@@ -1041,7 +1019,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            6
+            5
           </div>
 
           <div class="pending-queue-paper">
@@ -1063,7 +1041,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            7
+            6
           </div>
 
           <div class="pending-queue-paper">
@@ -1096,7 +1074,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">27개</span>
+        <span class="section-count">28개</span>
       </div>
 
       <div class="library-grid">
@@ -1720,6 +1698,32 @@
       </p>
 
       <a class="open-link" href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/espnlive/">
+            Storage access optimization for efficient GPU-centric information retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Susav Shrestha, Aayush Gautam, Narasimha Reddy</p>
+      <p class="metadata">2025 · The Journal of Supercomputing</p>
+
+      <p class="summary">
+        이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 custom CUDA MaxSim 커널이 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 ESPN은 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다.
+      </p>
+
+      <a class="open-link" href="papers/espnlive/">
         보고서 열기 →
       </a>
     </article>
