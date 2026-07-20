@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>24</small>
+          <small>25</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>0</small>
+          <small>2</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 24편</span>
-        <span class="stat">전체 항목 38개</span>
+        <span class="stat">논문 25편</span>
+        <span class="stat">전체 항목 39개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>24개 문서</small>
+      <small>25개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>24</small>
+          <small>25</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>0</small>
+          <small>2</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,16 +923,55 @@
     </div>
 
     <span class="pending-queue-count">
-      0편 대기 중
+      2편 대기 중
     </span>
   </div>
 
   <div class="pending-queue-list">
     
-      <div class="pending-queue-empty">
-        현재 분석을 기다리는 논문이 없습니다.
-      </div>
-    
+        <div class="pending-queue-item">
+          <div class="pending-queue-order">
+            1
+          </div>
+
+          <div class="pending-queue-paper">
+            <strong>NVM-Express-Computational-Programs-Command-Set-Specification-Revision-1.2-2025.08.01-Ratified.pdf</strong>
+            <span>등록 시각 · 2026-07-19 23:46</span>
+          </div>
+
+          <div class="pending-queue-size">
+            714.7 KB
+          </div>
+
+          <div>
+            <span class="pending-queue-status queue-next">
+              다음 분석
+            </span>
+          </div>
+        </div>
+        
+
+        <div class="pending-queue-item">
+          <div class="pending-queue-order">
+            2
+          </div>
+
+          <div class="pending-queue-paper">
+            <strong>NVM-Express-Subsystem-Local-Memory-Command-Set-Specification-Revision-1.2-2025.08.01-Ratified.pdf</strong>
+            <span>등록 시각 · 2026-07-19 23:46</span>
+          </div>
+
+          <div class="pending-queue-size">
+            545.0 KB
+          </div>
+
+          <div>
+            <span class="pending-queue-status queue-waiting">
+              대기 중
+            </span>
+          </div>
+        </div>
+        
   </div>
 </section>
 <!-- PENDING_QUEUE_SECTION_END -->
@@ -947,7 +986,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">24개</span>
+        <span class="section-count">25개</span>
       </div>
 
       <div class="library-grid">
@@ -1077,6 +1116,32 @@
       </p>
 
       <a class="open-link" href="papers/colbertsar/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/snia-computational-storage-architecture-and-programming-model-1-2/">
+            Computational Storage Architecture and Programming Model (Version 1.2)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">SNIA Computational Storage Technical Working Group</p>
+      <p class="metadata">2026 · SNIA Standard</p>
+
+      <p class="summary">
+        이 문서는 학술 논문이 아니라 SNIA(Storage Networking Industry Association)의 Computational Storage Technical Working Group이 작성한 표준 명세(standard specification)로, Computational Storage 장치와 호스트 사이의 아키텍처 모델(architecture model)과 프로그래밍 모델(programming model)을 정의한다. 핵심 아이디어는 전통적인 compute &amp; memory 아키텍처 바깥의 연산 자원을 스토리지에 직접 결합하거나 host와 storage 사이에 배치함으로써 application 성능 및 infrastructure efficiency를 개선하고, parallel computation을 가능하게 하며 기존 compute/memory/storage/I-O 제약을 완화하는 것이다(17페이지). 이를 위해 문서는 CSx(Computational Storage Device: CSP/CSD/CSA)라는 상위 개념 아래 CSR(Computational Storage Resource), CSE(Computational Storage Engine), CSEE(Computational Storage Engine Environment), CSF(Computational Storage Function), Resource Repository, FDM/AFDM(Function Data Memory / Allocated Function Data Memory)이라는 계층적 용어 체계를 정의한다(14, 17–19페이지). 동작 이론(Theory of Operation)은 Discovery → Configuration/Activation → Security → CSF Usage(Direct / Indirect) → Sequencing(aggregator CSF) → Completion Handling의 흐름으로 구성되며(20–39페이지), 특히 CSEE를 CSE에 activate하고 그 위에 CSF를 activate하는 2단계 활성화 구조와, 여러 CSF를 host 개입 없이 순차·병렬로 묶어 실행하는 aggregator CSF 개념이 프로그래밍 모델의 중심축이다(19, 33–36페이지). 문서는 host–CSx 인터페이스의 물리적 특성이나 storage protocol을 특정하지 않는 벤더 중립적(vendor-neutral)·상호운용 가능(interoperable) 추상화를 목표로 하며(11–12페이지), 따라서 성능 실험이나 정량적 평가 결과는 포함하지 않는다.
+      </p>
+
+      <a class="open-link" href="papers/snia-computational-storage-architecture-and-programming-model-1-2/">
         보고서 열기 →
       </a>
     </article>
