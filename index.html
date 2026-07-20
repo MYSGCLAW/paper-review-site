@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>26</small>
+          <small>27</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>1</small>
+          <small>0</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 26편</span>
-        <span class="stat">전체 항목 40개</span>
+        <span class="stat">논문 27편</span>
+        <span class="stat">전체 항목 41개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>26개 문서</small>
+      <small>27개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>26</small>
+          <small>27</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>1</small>
+          <small>0</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,33 +923,16 @@
     </div>
 
     <span class="pending-queue-count">
-      1편 대기 중
+      0편 대기 중
     </span>
   </div>
 
   <div class="pending-queue-list">
     
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            1
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>NVM-Express-Subsystem-Local-Memory-Command-Set-Specification-Revision-1.2-2025.08.01-Ratified.pdf</strong>
-            <span>등록 시각 · 2026-07-19 23:46</span>
-          </div>
-
-          <div class="pending-queue-size">
-            545.0 KB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-next">
-              다음 분석
-            </span>
-          </div>
-        </div>
-        
+      <div class="pending-queue-empty">
+        현재 분석을 기다리는 논문이 없습니다.
+      </div>
+    
   </div>
 </section>
 <!-- PENDING_QUEUE_SECTION_END -->
@@ -964,7 +947,7 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">26개</span>
+        <span class="section-count">27개</span>
       </div>
 
       <div class="library-grid">
@@ -1562,6 +1545,32 @@
       </p>
 
       <a class="open-link" href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
+            NVM Express® Subsystem Local Memory Command Set Specification, Revision 1.2
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors"></p>
+      <p class="metadata">2025</p>
+
+      <p class="summary">
+        본 문서는 학술 논문이 아니라 NVM Express, Inc.가 발행한 산업 표준 명세서(specification)이다. NVM Express Base Specification은 호스트가 memory-based transport 및 message-based transport를 통해 NVM subsystem과 통신하기 위한 인터페이스를 정의하는데, 본 명세는 이를 확장하는 특정 NVMe I/O Command Set인 Subsystem Local Memory(SLM) Command Set을 정의한다(p.6). SLM은 NVM subsystem 내부에 존재하는 volatile byte addressable memory이며, 호스트는 CSI(Command Set Identifier) 값 03h를 갖는 이 command set을 통해 memory namespace에 dword aligned/dword granular 방식으로 접근한다(p.8). 제공되는 I/O 커맨드는 Memory Read, Memory Write(mandatory)와 Memory Fill, Memory Copy(optional)의 4가지이며, 이를 통해 Host↔SLM, SLM↔NVM, SLM↔SLM 간 데이터 전송과 SLM의 fill 동작을 수행한다(p.8, p.10, p.20, p.21). SLM은 Controller Memory Buffer(CMB)나 Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않고 오직 본 명세가 정의하는 커맨드를 통해서만 접근된다(p.8). 이 memory는 Computational Programs Command Set이 사용하는 데이터의 이동을 포함한 다양한 용도로 활용될 수 있으며, compute namespace의 compute resource는 memory namespace 데이터에 대해 byte-addressable, byte-granular한 read/write를 수행할 수 있다(p.8, p.9). 명세는 커맨드 정의 외에도 Copy Descriptor Format(2h/3h/4h), I/O Command Set specific Identify Namespace 데이터 구조(CNS 05h, CSI 03h)와 Controller 데이터 구조(CNS 06h, CSI 03h), 그리고 커맨드 특정 상태 값들을 규정한다(p.14~p.16, p.19, p.23~p.25). 실증적 실험이나 정량적 성능 평가는 원문에 존재하지 않는다.
+      </p>
+
+      <a class="open-link" href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
         보고서 열기 →
       </a>
     </article>
