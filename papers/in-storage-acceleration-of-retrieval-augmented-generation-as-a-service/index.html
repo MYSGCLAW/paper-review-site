@@ -733,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과, 저자들은 CPU-NVMe 대비 최대 4.3배(500M에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 보고한다(p.1-2, p.11-12).</p>
+        <p>이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과(500M 설정은 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 것으로, 실제 코퍼스 전체가 5억 passage 규모로 존재하는 것은 아니다), 저자들은 CPU-NVMe 대비 최대 4.3배(50M 기준; 이 500M 증강 설정에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 보고한다(p.1-2, p.11-12).</p>
         <span class="source-ref">PDF p. 1, 2, 5, 6, 7, 8, 9, 11, 12</span>
       </section>
 
@@ -777,7 +777,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>저자들이 보고한 이득은 데이터베이스 규모에 비례해 커진다: CPU-NVMe 대비 0.5M에서 1.6배, 50M에서 4.3배, 500M에서 5.7배.</span>
+                <span>저자들이 보고한 이득은 데이터베이스 규모에 비례해 커진다: CPU-NVMe 대비 0.5M에서 1.6배, 50M에서 4.3배, 500M(PubMed 50M을 randomly generated embeddings로 증강한 설정)에서 5.7배.</span>
               </div>
               <span class="source-ref">PDF p. 11</span>
             </li>
@@ -793,7 +793,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>멀티 드라이브 확장 시 디바이스별 private HNSW를 사용해 디바이스 간 통신을 제거했고, 그 결과 이더넷 기반 네트워크 저장장치 구성에서도 8드라이브 2.5배 향상이 유지된다.</span>
+                <span>멀티 드라이브 확장 시 디바이스별 private HNSW를 사용해 디바이스 간 통신을 제거했고, 그 결과 5M passages 기준 이더넷 네트워크 저장장치 구성에서도 8드라이브 2.5배 향상이 유지된다.</span>
               </div>
               <span class="source-ref">PDF p. 6, 13, 14</span>
             </li>
@@ -941,7 +941,7 @@
 
     <article class="content-item">
       <h3>6. 대규모 end-to-end 평가</h3>
-      <p>LLAMA2(34B)를 사용하는 5종 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 PubMed/BioASQ(최대 5억 passage, 질의 3,800개)로 평가하여 CPU-NVMe 대비 최대 4.3배, A100 GPU-DRAM 대비 최대 1.5배의 처리량 향상을 보고했고, LLM 크기(13B~70B)와 데이터베이스 크기(0.5M~500M)에 대한 민감도 분석을 수행했다.</p>
+      <p>LLAMA2(34B)를 사용하는 5종 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 PubMed/BioASQ(최대 5억 passage, 질의 3,800개; 500M 지점은 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 설정)로 평가하여 CPU-NVMe 대비 최대 4.3배(50M 기준; 500M 증강 설정 기준으로는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 처리량 향상을 보고했고, LLM 크기(13B~70B)와 데이터베이스 크기(0.5M~500M)에 대한 민감도 분석을 수행했다.</p>
       <span class="source-ref">PDF p. 1, 2, 11, 12</span>
     </article>
     
@@ -1085,7 +1085,7 @@
       
     <article class="content-item">
       <h3>워크로드와 데이터셋</h3>
-      <p>RAGGED benchmark suite 기반의 5종 end-to-end RAG 벤치마크(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)를 사용하며, 모든 벤치마크의 Referenced Generation은 LLAMA2 34B로 통일되어 있다(Table 1). 데이터베이스는 PubMed biomedical database를 0.5M / 5M / 50M / 500M passage 규모로 사용했고, 500M은 50M을 임의 생성 임베딩으로 증강해 구성했다. 질의는 BioASQ 3,800개다.</p>
+      <p>RAGGED benchmark suite 기반의 5종 end-to-end RAG 벤치마크(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)를 사용하며, 모든 벤치마크의 Referenced Generation은 LLAMA2 34B로 통일되어 있다(Table 1). 데이터베이스는 PubMed biomedical database를 0.5M / 5M / 50M / 500M passage 규모로 사용했고, 500M은 50M을 임의 생성 임베딩(randomly generated embeddings)으로 증강해 구성했다. 즉 500M 지점은 실제 PubMed/BioASQ 코퍼스가 그 규모로 존재해서가 아니라, 50M PubMed 데이터를 합성 확장한 설정이다. 질의는 BioASQ 3,800개다.</p>
       <span class="source-ref">PDF p. 10, 11</span>
     </article>
     
@@ -1128,7 +1128,7 @@
       
     <article class="content-item">
       <h3>데이터베이스 규모에 따른 처리량 향상</h3>
-      <p>저자들이 보고한 값에 따르면 RAGX는 CPU-NVMe 대비 기하평균 처리량이 0.5M에서 1.6배, 5M에서 2.3배, 50M에서 4.3배, 500M에서 5.7배 향상된다(Figure 9, p.11; GTR-LLAMA2의 500M 분석은 메모리 요구량 문제로 측정 불가). 500M은 0.5M 대비 평균 3.6배 더 큰 개선폭을 보인다. 즉 데이터베이스가 클수록 저장장치 접근이 더 지배적이 되고, 그만큼 in-storage 가속의 이득이 커진다는 것이 저자들이 제시하는 핵심 경향이다.</p>
+      <p>저자들이 보고한 값에 따르면 RAGX는 CPU-NVMe 대비 기하평균 처리량이 0.5M에서 1.6배, 5M에서 2.3배, 50M에서 4.3배, 500M(PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 설정)에서 5.7배 향상된다(Figure 9, p.11; GTR-LLAMA2의 500M 분석은 메모리 요구량 문제로 측정 불가). 500M은 0.5M 대비 평균 3.6배 더 큰 개선폭을 보인다. 즉 데이터베이스가 클수록 저장장치 접근이 더 지배적이 되고, 그만큼 in-storage 가속의 이득이 커진다는 것이 저자들이 제시하는 핵심 경향이나, 실제 코퍼스 규모가 아닌 500M 지점의 수치는 이러한 증강 조건을 감안해 읽어야 한다.</p>
       <span class="source-ref">PDF p. 11</span>
     </article>
     
@@ -1142,14 +1142,14 @@
 
     <article class="content-item">
       <h3>retriever별 차이</h3>
-      <p>GTR(5M) 기준 RAGX는 CPU-NVMe 대비 임베딩 생성 시간을 12배, 유사도 계산 시간을 37.6배 단축해 3.1배의 처리량 향상을 낸다고 저자들은 보고한다. SPLADEv2는 0.5M에서 Search &amp; Retrieval이 종단간 시간의 32%에 불과하고 그중 82%가 질의 임베딩이라 이득이 1.1배에 그치지만, 50M에서는 Search &amp; Retrieval 비중이 93%로 올라가고 500M에서는 이득이 6.8배까지 커진다. 데이터셋이 0.5M→500M로 커질 때 GTR-LLAMA2의 개선도는 BM25-LLAMA2보다 1.9~2.7배 더 크다.</p>
+      <p>GTR(5M) 기준 RAGX는 CPU-NVMe 대비 임베딩 생성 시간을 12배, 유사도 계산 시간을 37.6배 단축해 3.1배의 처리량 향상을 낸다고 저자들은 보고한다. SPLADEv2는 0.5M에서 Search &amp; Retrieval이 종단간 시간의 32%에 불과하고 그중 82%가 질의 임베딩이라 이득이 1.1배에 그치지만, 50M에서는 Search &amp; Retrieval 비중이 93%로 올라가고 500M(위와 동일한 증강 설정)에서는 이득이 6.8배까지 커진다. 데이터셋이 0.5M→500M로 커질 때 GTR-LLAMA2의 개선도는 BM25-LLAMA2보다 1.9~2.7배 더 크다.</p>
       <span class="source-ref">PDF p. 11, 12</span>
     </article>
     
 
     <article class="content-item">
       <h3>다른 배포 방식 대비 비교와 비용</h3>
-      <p>50M 기준 저자들은 RAGX가 CPU-DRAM 대비 1.5배, Disag-NVMe 대비 4.3배, Disag-DRAM 대비 1.7배, GPU-DRAM 대비 1.4배의 처리량 향상을 달성했다고 보고한다(Figure 11, p.12). 이때 GPU-DRAM은 질의당 비용이 119% 더 높다. CPU-DRAM은 50M에서 비용이 266%, 500M에서 391% 더 비싸며, RAGX는 평가된 모든 시스템 중 가장 낮은 질의당 비용을 기록한다. 500M에서는 임베딩이 A100 DRAM에 들어가지 않아 GPU-DRAM 결과 자체를 얻을 수 없었다.</p>
+      <p>50M 기준(실제 PubMed 50M passage 규모) 저자들은 RAGX가 CPU-DRAM 대비 1.5배, Disag-NVMe 대비 4.3배, Disag-DRAM 대비 1.7배, GPU-DRAM 대비 1.4배의 처리량 향상을 달성했다고 보고한다(Figure 11, p.12). 이때 GPU-DRAM은 질의당 비용이 119% 더 높다. CPU-DRAM은 50M에서 비용이 266%, 500M(증강 설정)에서 391% 더 비싸며, RAGX는 평가된 모든 시스템 중 가장 낮은 질의당 비용을 기록한다. 500M에서는 임베딩이 A100 DRAM에 들어가지 않아 GPU-DRAM 결과 자체를 얻을 수 없었다.</p>
       <span class="source-ref">PDF p. 12</span>
     </article>
     
@@ -1163,7 +1163,7 @@
 
     <article class="content-item">
       <h3>정확도와 확장성</h3>
-      <p>저자들의 보고에 따르면 드라이브를 2/4/8개로 늘려도 embedding-based retriever의 recall@100은 저하되지 않고 오히려 ColBERT는 13%, GTR은 4% 향상된다(Figure 13(b), 5M). 종단간 정확도(Unigram F1)는 keyword-based retriever에서 1→8 드라이브 확장 시 변화가 없고, embedding-based는 2~3% 증가한다. 50M 기준 처리량 향상도 드라이브 2개에서 4.4배, 4개 또는 8개에서 4.3배로 유지되며(8 드라이브 개별로는 BM25 3.2배, GTR 4.1배), 표현이 이더넷 네트워크 저장장치에 분산되어도 8드라이브 기준 2.5배 향상을 일관되게 유지한다(드라이브 간 통신이 없기 때문).</p>
+      <p>저자들의 보고에 따르면 드라이브를 2/4/8개로 늘려도 embedding-based retriever의 recall@100은 저하되지 않고 오히려 ColBERT는 13%, GTR은 4% 향상된다(Figure 13(b), 5M). 종단간 정확도(Unigram F1)는 keyword-based retriever에서 1→8 드라이브 확장 시 변화가 없고, embedding-based는 2~3% 증가한다. 50M 기준 처리량 향상도 드라이브 2개에서 4.4배, 4개 또는 8개에서 4.3배로 유지되며(8 드라이브 개별로는 BM25 3.2배, GTR 4.1배). 별도로 5M passages 기준 네트워크 저장장치(이더넷) 민감도 분석에서는 표현이 분산되어도 8드라이브에서 2.5배 향상을 일관되게 유지한다(드라이브 간 통신이 없기 때문).</p>
       <span class="source-ref">PDF p. 12, 13, 14</span>
     </article>
     
@@ -1185,7 +1185,7 @@
       
     <article class="content-item">
       <h3>논문의 결론</h3>
-      <p>논문은 RAG 서비스가 저장장치 기반 배포로 전환됨에 따라 Search &amp; Retrieval이 종단간 지연의 지배적 요인이 되었으며, 이를 해결하기 위해 저장장치 내부에 shape-shifting metamorphic 가속기를 두는 RAGX를 제안한다고 정리한다. 저자들은 평가 결과로 CPU-NVMe 대비 최대 4.3배, GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 보고한다.</p>
+      <p>논문은 RAG 서비스가 저장장치 기반 배포로 전환됨에 따라 Search &amp; Retrieval이 종단간 지연의 지배적 요인이 되었으며, 이를 해결하기 위해 저장장치 내부에 shape-shifting metamorphic 가속기를 두는 RAGX를 제안한다고 정리한다. 저자들은 평가 결과로 CPU-NVMe 대비 최대 4.3배(실제 규모 데이터셋 기준; 합성 증강한 500M 설정에서는 5.7배), GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 보고한다.</p>
       <span class="source-ref">PDF p. 1, 14</span>
     </article>
     
@@ -1199,7 +1199,7 @@
 
     <article class="content-item">
       <h3>분석자 해석: 비용이 실질적 논거</h3>
-      <p>저자들이 보고한 수치만 놓고 보면 RAGX와 CPU-DRAM/GPU-DRAM의 순수 처리량 격차는 1.4~1.6배 수준이다. 논문이 더 강하게 내세우는 축은 오히려 비용으로, CPU-DRAM은 데이터셋이 커질수록 RAGX 대비 119%~391% 더 비싸진다. 즉 RAGX의 주장은 &#x27;가장 빠르다&#x27;보다 &#x27;동등 이상 성능을 훨씬 낮은 비용과 15 W 예산 안에서 달성한다&#x27;에 가깝게 읽힌다. 다만 이 비용 수치 역시 실제 클라우드 청구가 아니라 대리 지표(proxy) 기반 추정값임을 함께 감안해야 한다.</p>
+      <p>저자들이 보고한 수치만 놓고 보면 RAGX와 CPU-DRAM/GPU-DRAM의 순수 처리량 격차는 1.4~1.6배 수준이다(50M, 실제 코퍼스 규모 기준). 논문이 더 강하게 내세우는 축은 오히려 비용으로, CPU-DRAM은 데이터셋이 커질수록 RAGX 대비 119%~391% 더 비싸진다. 즉 RAGX의 주장은 &#x27;가장 빠르다&#x27;보다 &#x27;동등 이상 성능을 훨씬 낮은 비용과 15 W 예산 안에서 달성한다&#x27;에 가깝게 읽힌다. 다만 이 비용 수치 역시 실제 클라우드 청구가 아니라 대리 지표(proxy) 기반 추정값임을 함께 감안해야 한다.</p>
       <span class="source-ref">PDF p. 5, 12</span>
     </article>
     
@@ -1275,7 +1275,7 @@ flowchart LR
                 <canvas id="chart-0"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 11 · Figure 9 · PubMed, LLAMA2 34B, 5종 RAG 벤치마크 기하평균, CPU-NVMe 대비 정규화. 500M은 GTR-LLAMA2 제외(메모리 요구량으로 측정 불가). cycle-level 시뮬레이션과 AWS 실측을 결합한 방법론에 따른 저자 보고 수치이며 물리적 실배포 측정값은 아니다.
+                PDF p. 11 · Figure 9 · PubMed, LLAMA2 34B, 5종 RAG 벤치마크 기하평균, CPU-NVMe 대비 정규화. 500M은 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 설정이며, GTR-LLAMA2는 제외(메모리 요구량으로 측정 불가). cycle-level 시뮬레이션과 AWS 실측을 결합한 방법론에 따른 저자 보고 수치이며 물리적 실배포 측정값은 아니다.
               </p>
             </article>
             
@@ -1285,7 +1285,7 @@ flowchart LR
                 <canvas id="chart-1"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 11 · Figure 10 · PubMed 0.5M/5M/50M/500M passages, RAGX vs CPU-NVMe
+                PDF p. 11 · Figure 10 · PubMed 0.5M/5M/50M/500M passages, RAGX vs CPU-NVMe. 500M은 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 설정이다.
               </p>
             </article>
             
@@ -1295,7 +1295,7 @@ flowchart LR
                 <canvas id="chart-2"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 11, 12 · Figure 11 · 50M passages. GPU-DRAM은 질의당 비용이 RAGX 대비 119% 높고, CPU-DRAM은 266% 높음.
+                PDF p. 11, 12 · Figure 11 · 50M passages(실제 PubMed 규모, 증강 없음). GPU-DRAM은 질의당 비용이 RAGX 대비 119% 높고, CPU-DRAM은 266% 높음.
               </p>
             </article>
             
@@ -1315,7 +1315,7 @@ flowchart LR
                 <canvas id="chart-4"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 5, 12 · HNSW 기반 embedding retriever, PubMed. ColBERT 5M 값(395회)은 특성화 절(p.5), 나머지는 평가 절(p.12) 서술.
+                PDF p. 5, 12 · HNSW 기반 embedding retriever, PubMed. ColBERT 5M 값(395회)은 특성화 절(p.5), 나머지는 평가 절(p.12) 서술. ColBERT 500M 값은 PubMed 50M passages를 randomly generated embeddings로 증강한 설정 기준.
               </p>
             </article>
             
@@ -1325,7 +1325,7 @@ flowchart LR
                 <canvas id="chart-5"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 13 · Figure 15 · 50M passages, Referenced Generation GPU 구성 변경. 별도로 2×A100·출력 512 토큰에서는 1.2배(FlashAttention-2 적용 시 1.9배).
+                PDF p. 13 · Figure 15 · 50M passages(실제 PubMed 규모), Referenced Generation GPU 구성 변경. 별도로 2×A100·출력 512 토큰에서는 1.2배(FlashAttention-2 적용 시 1.9배).
               </p>
             </article>
             
@@ -1437,7 +1437,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-author_limit">저자 명시 한계</span>
-                <span>GTR-LLAMA2의 500M 데이터셋 분석은 메모리 요구량 문제로 수행할 수 없었고(infeasible), GPU-DRAM baseline 역시 500M 임베딩이 A100 GPU DRAM 용량에 들어가지 않아 결과를 얻을 수 없었다. 즉 최대 규모 지점의 비교는 불완전하다.</span>
+                <span>500M passage 지점은 실제 PubMed/BioASQ 코퍼스가 그 규모로 존재해서 평가된 것이 아니라, PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 설정이다. 또한 GTR-LLAMA2의 500M 분석은 메모리 요구량 문제로 수행할 수 없었고(infeasible), GPU-DRAM baseline 역시 500M 임베딩이 A100 GPU DRAM 용량에 들어가지 않아 결과를 얻을 수 없었다. 즉 최대 규모 지점의 비교는 합성 확장 데이터에 기반하며 동시에 불완전하다.</span>
               </div>
               <span class="source-ref">PDF p. 11, 12</span>
             </li>
@@ -1729,7 +1729,7 @@ flowchart LR
       
         <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>Abstract 및 서론은 &#x27;A100 GPU with DRAM&#x27;(GPU-DRAM) 대비 최대 1.5배 향상을 명시하지만, 본문 평가(5.2.1, Figure 11)에서는 50M passage 기준 GPU-DRAM 비교치가 1.4배로 서술되고 1.5배는 CPU-DRAM과의 비교(50M)로 기술된다. 두 수치의 정확한 대응 관계와 GPU-DRAM 비교가 1.5배에 도달하는 조건은 본문에서 확인되지 않음.</li><li>Figure 17(배치 크기 민감도) 본문의 &#x27;GPU-NVMe&#x27;는 Table 2에 정의된 6개 시스템(CPU-NVMe, CPU-DRAM, Disag-NVMe, Disag-DRAM, GPU-DRAM, RAGX) 중 어디에도 해당하지 않으며, &#x27;small batches&#x27;가 가리키는 정확한 배치 크기(1, 8, 64 중 어느 것)도 명시되어 있지 않아 확인되지 않음.</li><li>Figure 9, 10, 11, 13(c) 등 그래프의 개별 막대 중 본문 서술에서 다시 언급되지 않는 값들(예: Figure 13(c) 종단간 정확도의 벤치마크별 정확한 % 값)은 텍스트로 확인할 수 없어 charts에 포함하지 않았다. 그래프에서 수치를 육안 추정하지 않았음.</li><li>논문에는 별도의 &#x27;Limitations&#x27; 절이 없다. limitations 배열의 author_limit 항목들은 평가 절(5.2 계열)과 방법론 서술에 흩어져 있는 트레이드오프·infeasible 서술에서 도출한 것이며, 저자가 한계로 명시적 표제화한 것은 아니다.</li><li>LLM 크기(13B~70B) 민감도 분석이 수행되었다고 contribution에 명시되어 있으나, extraction.json의 key_results에는 해당 실험의 구체적 수치가 포함되어 있지 않아 본 보고서에서 정량적으로 서술하지 않았다.</li><li>메타모픽 가속기의 면적(area) 오버헤드, 온칩 스크래치패드 용량, systolic 배열의 정확한 차원 등 마이크로아키텍처 파라미터의 구체적 수치는 extraction.json에 포함되어 있지 않아 확인되지 않음.</li><li>동적 인덱스 갱신(문서 추가/삭제), 다중 테넌트 자원 격리, 생의학 외 도메인 일반화, 가속기 발열이 NAND 데이터 보존에 미치는 영향은 논문에서 다루어지지 않았으며, limitations의 analyst_inference 항목으로 분리 표기했다.</li></ul>
+          <ul><li>Abstract 및 서론은 &#x27;A100 GPU with DRAM&#x27;(GPU-DRAM) 대비 최대 1.5배 향상을 명시하지만, 본문 평가(5.2.1, Figure 11)에서는 50M passage 기준 GPU-DRAM 비교치가 1.4배로 서술되고 1.5배는 CPU-DRAM과의 비교(50M)로 기술된다. 두 수치의 정확한 대응 관계와 GPU-DRAM 비교가 1.5배에 도달하는 조건은 본문에서 확인되지 않음.</li><li>Figure 17(배치 크기 민감도) 본문의 &#x27;GPU-NVMe&#x27;는 Table 2에 정의된 6개 시스템(CPU-NVMe, CPU-DRAM, Disag-NVMe, Disag-DRAM, GPU-DRAM, RAGX) 중 어디에도 해당하지 않으며, &#x27;small batches&#x27;가 가리키는 정확한 배치 크기(1, 8, 64 중 어느 것)도 명시되어 있지 않아 확인되지 않음.</li><li>Figure 9, 10, 11, 13(c) 등 그래프의 개별 막대 중 본문 서술에서 다시 언급되지 않는 값들(예: Figure 13(c) 종단간 정확도의 벤치마크별 정확한 % 값)은 텍스트로 확인할 수 없어 charts에 포함하지 않았다. 그래프에서 수치를 육안 추정하지 않았음.</li><li>논문에는 별도의 &#x27;Limitations&#x27; 절이 없다. limitations 배열의 author_limit 항목들은 평가 절(5.2 계열)과 방법론 서술에 흩어져 있는 트레이드오프·infeasible 서술에서 도출한 것이며, 저자가 한계로 명시적 표제화한 것은 아니다.</li><li>LLM 크기(13B~70B) 민감도 분석이 수행되었다고 contribution에 명시되어 있으나, extraction.json의 key_results에는 해당 실험의 구체적 수치가 포함되어 있지 않아 본 보고서에서 정량적으로 서술하지 않았다.</li><li>메타모픽 가속기의 면적(area) 오버헤드, 온칩 스크래치패드 용량, systolic 배열의 정확한 차원 등 마이크로아키텍처 파라미터의 구체적 수치는 extraction.json에 포함되어 있지 않아 확인되지 않음.</li><li>동적 인덱스 갱신(문서 추가/삭제), 다중 테넌트 자원 격리, 생의학 외 도메인 일반화, 가속기 발열이 NAND 데이터 보존에 미치는 영향은 논문에서 다루어지지 않았으며, limitations의 analyst_inference 항목으로 분리 표기했다.</li><li>500M passage 지점의 결과(처리량 5.7배, 저장장치 접근 비중 40%, SPLADEv2 6.8배, ColBERT 저장장치 접근 3023회 등)는 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 설정에 기반하며, 실제 5억 규모 PubMed/BioASQ 코퍼스로 수행된 측정이 아니다. 이 증강이 recall/정확도나 저장장치 접근 패턴의 현실성에 미치는 영향은 논문에서 별도로 검증되지 않았다.</li></ul>
         </section>
         
     </div>

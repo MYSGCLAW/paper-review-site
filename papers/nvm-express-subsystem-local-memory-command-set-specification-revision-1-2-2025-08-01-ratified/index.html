@@ -732,7 +732,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>본 문서는 학술 논문이 아니라 NVM Express, Inc.가 발행한 산업 표준 명세서(specification)이다. NVM Express Base Specification은 호스트가 memory-based transport 및 message-based transport를 통해 NVM subsystem과 통신하기 위한 인터페이스를 정의하는데, 본 명세는 이를 확장하는 특정 NVMe I/O Command Set인 Subsystem Local Memory(SLM) Command Set을 정의한다(p.6). SLM은 NVM subsystem 내부에 존재하는 volatile byte addressable memory이며, 호스트는 CSI(Command Set Identifier) 값 03h를 갖는 이 command set을 통해 memory namespace에 dword aligned/dword granular 방식으로 접근한다(p.8). 제공되는 I/O 커맨드는 Memory Read, Memory Write(mandatory)와 Memory Fill, Memory Copy(optional)의 4가지이며, 이를 통해 Host↔SLM, SLM↔NVM, SLM↔SLM 간 데이터 전송과 SLM의 fill 동작을 수행한다(p.8, p.10, p.20, p.21). SLM은 Controller Memory Buffer(CMB)나 Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않고 오직 본 명세가 정의하는 커맨드를 통해서만 접근된다(p.8). 이 memory는 Computational Programs Command Set이 사용하는 데이터의 이동을 포함한 다양한 용도로 활용될 수 있으며, compute namespace의 compute resource는 memory namespace 데이터에 대해 byte-addressable, byte-granular한 read/write를 수행할 수 있다(p.8, p.9). 명세는 커맨드 정의 외에도 Copy Descriptor Format(2h/3h/4h), I/O Command Set specific Identify Namespace 데이터 구조(CNS 05h, CSI 03h)와 Controller 데이터 구조(CNS 06h, CSI 03h), 그리고 커맨드 특정 상태 값들을 규정한다(p.14~p.16, p.19, p.23~p.25). 실증적 실험이나 정량적 성능 평가는 원문에 존재하지 않는다.</p>
+        <p>본 문서는 학술 논문이 아니라 NVM Express, Inc.가 발행한 산업 표준 명세서(specification)이다. NVM Express Base Specification은 호스트가 memory-based transport 및 message-based transport를 통해 NVM subsystem과 통신하기 위한 인터페이스를 정의하는데, 본 명세는 이를 확장하는 특정 NVMe I/O Command Set인 Subsystem Local Memory(SLM) Command Set을 정의한다(p.6). SLM은 NVM subsystem 내부에 존재하는 volatile byte addressable memory이며, 호스트는 CSI(Command Set Identifier) 값 03h를 갖는 이 command set을 통해 memory namespace에 dword aligned/dword granular 방식으로 접근한다(p.8). 제공되는 I/O 커맨드는 Memory Read, Memory Write(mandatory)와 Memory Fill, Memory Copy(optional)의 4가지이며, 이를 통해 Host↔SLM, SLM↔NVM, SLM↔SLM 간 데이터 전송과 SLM의 fill 동작을 수행한다(p.8, p.10, p.20, p.21). SLM은 Controller Memory Buffer(CMB)나 Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않으며, memory namespace의 데이터는 SLM Command Set 명령뿐 아니라 Computational Programs Command Set의 compute namespace 접근, 그리고 Copy command를 포함하는 적격 LBA 기반 I/O Command Set(예: NVM Command Set, Zoned Namespace Command Set)을 통해서도 접근될 수 있다(p.8). 이 memory는 Computational Programs Command Set이 사용하는 데이터의 이동을 포함한 다양한 용도로 활용될 수 있으며, compute namespace의 compute resource는 memory namespace 데이터에 대해 byte-addressable, byte-granular한 read/write를 수행할 수 있다(p.8, p.9). 명세는 커맨드 정의 외에도 Copy Descriptor Format(2h/3h/4h), I/O Command Set specific Identify Namespace 데이터 구조(CNS 05h, CSI 03h)와 Controller 데이터 구조(CNS 06h, CSI 03h), 그리고 커맨드 특정 상태 값들을 규정한다(p.14~p.16, p.19, p.23~p.25). 실증적 실험이나 정량적 성능 평가는 원문에 존재하지 않는다.</p>
         <span class="source-ref">PDF p. 6, 8, 9, 10, 12, 13, 14, 19, 20, 21, 23, 24, 25</span>
       </section>
 
@@ -752,7 +752,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>SLM은 CMB 및 PMR과 달리 PCIe BAR에 매핑되지 않으며, 본 명세가 정의하는 커맨드를 통해서만 접근된다.</span>
+                <span>SLM은 CMB 및 PMR과 달리 PCIe BAR에 매핑되지 않으며, SLM Command Set 명령뿐 아니라 compute namespace 접근, Copy command를 포함하는 적격 LBA 기반 I/O Command Set을 통해서도 접근될 수 있다.</span>
               </div>
               <span class="source-ref">PDF p. 8</span>
             </li>
@@ -839,7 +839,7 @@
       
     <article class="content-item">
       <h3>CMB/PMR과의 구조적 차이</h3>
-      <p>본 명세는 SLM이 NVM Express Base Specification에 정의된 Controller Memory Buffer(CMB) 및 Persistent Memory Region(PMR)과 다르다고 명시한다. SLM은 PCIe BAR에 매핑되지 않으며, 오직 본 명세에서 정의하는 방법(즉 커맨드)을 통해서만 접근된다.</p>
+      <p>본 명세는 SLM이 NVM Express Base Specification에 정의된 Controller Memory Buffer(CMB) 및 Persistent Memory Region(PMR)과 다르다고 명시한다. SLM은 PCIe BAR에 매핑되지 않으며, Section 2.1에 설명된 방법, 즉 SLM Command Set 명령, Computational Programs Command Set의 compute namespace 접근, Copy command를 포함하는 적격 LBA 기반 I/O Command Set을 통해 접근된다.</p>
       <span class="source-ref">PDF p. 8</span>
     </article>
     
@@ -911,14 +911,14 @@
 
     <article class="content-item">
       <h3>memory namespace에 대한 다른 접근 경로</h3>
-      <p>memory namespace는 SLM 커맨드 외에도 Computational Programs Command Set의 compute namespace에 의한 byte 단위 접근, 또는 NVM Command Set이 정의하는 Copy 커맨드를 포함하는 LBA 기반 I/O Command Set을 통해서도 접근될 수 있다.</p>
+      <p>memory namespace는 SLM 커맨드 외에도 Computational Programs Command Set의 compute namespace에 의한 byte 단위 접근, 또는 논리 블록을 규정하고 NVM Command Set이 정의하는 Copy 커맨드를 포함하는 I/O Command Set(예: NVM Command Set, Zoned Namespace Command Set)을 통해서도 접근될 수 있다.</p>
       <span class="source-ref">PDF p. 8, 9, 12, 13</span>
     </article>
     
 
     <article class="content-item">
       <h3>CMB/PMR과의 위치 차이</h3>
-      <p>SLM은 Controller Memory Buffer(CMB)/Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않으며, 본 명세가 정의하는 커맨드 경로로만 접근된다.</p>
+      <p>SLM은 Controller Memory Buffer(CMB)/Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않는다. 대신 SLM Command Set 명령, Computational Programs Command Set의 compute namespace 접근, Copy command를 포함하는 적격 LBA 기반 I/O Command Set이라는 Section 2.1에 서술된 복수의 경로로만 접근된다.</p>
       <span class="source-ref">PDF p. 8</span>
     </article>
     
@@ -953,7 +953,7 @@
 
     <article class="content-item">
       <h3>Copy Descriptor Format 및 Identify 데이터 구조</h3>
-      <p>Copy Descriptor Format 2h/3h는 LBA 기반 namespace(NVM Command Set 정의)를 source로, 4h는 byte addressing 기반 SLM namespace를 source로 기술하며 SNSID, SADDR, NBYTE, SOPT/FCO 필드로 구성된다(명세 본문의 예시는 Source Range 0~127을 제시하나, 이것이 아키텍처적 상한인지 여부는 본 분석에서 확정하지 못했으며 실제 상한은 MCMSRC 필드로 discover해야 한다). I/O Command Set specific Identify Namespace data structure(CNS 05h, CSI 03h)는 namespace 크기(NSZE), 지원 포맷 수(NF), 최적 write granularity(NOWG), Memory Copy 관련 제한 값(MCMCL, MCMSSRL, MCMSRC), SLM Format List(F0-F31)를 기술한다. I/O Command Set specific Controller data structure(CNS 06h, CSI 03h)는 controller가 지원하는 SLM Command Set 명세 버전(VER, Specification Version Descriptor)을 보고한다.</p>
+      <p>Copy Descriptor Format 2h/3h는 LBA 기반 namespace를 source로 기술하며, 그 Source Range Entry 형식은 NVM Express NVM Command Set Specification에서 별도로 정의된다. Format 4h는 byte addressing 기반 SLM namespace를 source로 기술하며, 각 Source Range Entry는 SNSID, SADDR, NBYTE, SOPT 필드로 구성된다(명세 본문의 예시는 Source Range 0~127을 제시하나, 이것이 아키텍처적 상한인지 여부는 본 분석에서 확정하지 못했으며 실제 상한은 MCMSRC 필드로 discover해야 한다). I/O Command Set specific Identify Namespace data structure(CNS 05h, CSI 03h)는 namespace 크기(NSZE), 지원 포맷 수(NF), 최적 write granularity(NOWG), Memory Copy 관련 제한 값(MCMCL, MCMSSRL, MCMSRC), SLM Format List(F0-F31)를 기술한다. I/O Command Set specific Controller data structure(CNS 06h, CSI 03h)는 controller가 지원하는 SLM Command Set 명세 버전(VER, Specification Version Descriptor)을 보고한다.</p>
       <span class="source-ref">PDF p. 14, 15, 16, 23, 24, 25</span>
     </article>
     
@@ -982,7 +982,7 @@
 
     <article class="content-item">
       <h3>3단계: Source Range Entry 해석</h3>
-      <p>Data Pointer(DPTR)가 가리키는 데이터는 Source Range Entries 목록이다. Copy Descriptor Format 4h의 경우 각 Source Range Entry는 Source Namespace Identifier(SNSID), Starting Address(SADDR), Number of Bytes(NBYTE), Source Options(SOPT, 예: Fast Copy Only 비트)로 복사할 소스 데이터를 기술한다(명세 본문 예시는 Source Range 0부터 127까지를 제시한다).</p>
+      <p>Data Pointer(DPTR)가 가리키는 데이터는 Source Range Entries 목록이다. Copy Descriptor Format 4h의 경우 각 Source Range Entry는 Source Namespace Identifier(SNSID), Starting Address(SADDR), Number of Bytes(NBYTE), Source Options(SOPT, 예: Fast Copy Only 비트)로 복사할 소스 데이터를 기술한다(명세 본문 예시는 Source Range 0부터 127까지를 제시한다). Format 2h/3h의 Source Range Entry 형식은 NVM Command Set Specification을 따른다.</p>
       <span class="source-ref">PDF p. 14, 16</span>
     </article>
     
@@ -1018,7 +1018,7 @@
 
     <article class="content-item">
       <h3>Source Range Entry 리스트</h3>
-      <p>Memory Copy의 알고리즘적 핵심은 &#x27;gather-to-contiguous&#x27; 형태이다. 즉 여러 source range(서로 다른 namespace일 수 있음)에서 읽은 바이트들을 Source Range Entry 목록의 나열 순서대로 이어붙여 단일 연속 destination 주소 범위에 기록한다. Copy Descriptor Format 2h/3h는 LBA 기반 source를, 4h는 byte addressing 기반 SLM source를 기술한다.</p>
+      <p>Memory Copy의 알고리즘적 핵심은 &#x27;gather-to-contiguous&#x27; 형태이다. 즉 여러 source range(서로 다른 namespace일 수 있음)에서 읽은 바이트들을 Source Range Entry 목록의 나열 순서대로 이어붙여 단일 연속 destination 주소 범위에 기록한다. Copy Descriptor Format 2h/3h는 LBA 기반 source를(형식은 NVM Command Set Specification에서 정의), 4h는 byte addressing 기반 SLM source를(SNSID, SADDR, NBYTE, SOPT 필드) 기술한다.</p>
       <span class="source-ref">PDF p. 14, 15, 16, 18</span>
     </article>
     
@@ -1098,7 +1098,7 @@
       
     <article class="content-item">
       <h3>요지</h3>
-      <p>SLM Command Set Revision 1.2는 NVM subsystem 내부의 휘발성 byte addressable 메모리를, PCIe BAR 매핑이 아닌 명시적 NVMe I/O 커맨드 경로로 노출하는 표준을 정의한다. 접근 단위는 dword이며, 4개의 커맨드와 Identify 기반 능력 discovery, 그리고 세밀한 오류 상태 코드로 구성된다.</p>
+      <p>SLM Command Set Revision 1.2는 NVM subsystem 내부의 휘발성 byte addressable 메모리를, PCIe BAR 매핑이 아닌 명시적 NVMe I/O 커맨드 경로들(SLM Command Set 명령, compute namespace 접근, 적격 LBA 기반 I/O Command Set의 Copy 커맨드)로 노출하는 표준을 정의한다. 접근 단위는 dword이며, 4개의 커맨드와 Identify 기반 능력 discovery, 그리고 세밀한 오류 상태 코드로 구성된다.</p>
       <span class="source-ref">PDF p. 6, 8, 10, 19, 23</span>
     </article>
     
@@ -1141,7 +1141,7 @@ flowchart TD
                 <h3>CMB/PMR 접근 경로와 SLM 접근 경로의 차이</h3>
                 <span class="source-ref">PDF p. 8, 9, 12, 13</span>
               </div>
-              <p>CMB/PMR은 PCIe BAR에 매핑되는 반면, SLM은 BAR에 매핑되지 않고 본 명세가 정의하는 커맨드를 통해서만 접근된다는 원문 서술(p.8)을 도식화한 것. memory namespace에 대한 대안 접근 경로(compute namespace, LBA 기반 I/O Command Set)도 함께 표시한다(p.8, p.9, p.12, p.13).</p>
+              <p>CMB/PMR은 PCIe BAR에 매핑되는 반면, SLM은 BAR에 매핑되지 않고 SLM Command Set 명령, compute namespace 접근, Copy command를 포함하는 적격 LBA 기반 I/O Command Set이라는 복수의 경로를 통해 접근된다는 원문 서술(p.8)을 도식화한 것.</p>
               <div class="mermaid">
 flowchart LR
   H[&quot;Host&quot;] --&gt; BAR[&quot;PCIe BAR 매핑&quot;]
@@ -1150,7 +1150,7 @@ flowchart LR
   CMD --&gt; NS[&quot;Memory Namespace\n(volatile, byte addressable)&quot;]
   NS --&gt; SLM[&quot;Subsystem Local Memory\n(BAR에 매핑되지 않음)&quot;]
   COMP[&quot;Compute Namespace\n(Computational Programs Command Set)&quot;] --&gt; NS
-  LBA[&quot;LBA 기반 I/O Command Set\n(NVM Command Set Copy 등)&quot;] --&gt; NS
+  LBA[&quot;적격 LBA 기반 I/O Command Set\n(NVM Command Set Copy 등)&quot;] --&gt; NS
               </div>
             </article>
             
@@ -1264,7 +1264,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>구조상 예상되는 한계: SLM이 PCIe BAR에 매핑되지 않으므로 호스트는 load/store로 직접 접근할 수 없고 항상 커맨드 제출-완료 왕복을 거쳐야 한다. 이는 접근 제어와 이식성 면에서는 이점이지만 소량 접근의 지연 특성에는 불리할 수 있다. 원문에 관련 성능 논의는 없다(확인되지 않음).</span>
+                <span>구조상 예상되는 한계: SLM이 PCIe BAR에 매핑되지 않으므로 호스트는 load/store로 직접 접근할 수 없고 SLM Command Set 명령을 통한 커맨드 제출-완료 왕복(또는 compute namespace/LBA 기반 I/O Command Set 경로)을 거쳐야 한다. 이는 접근 제어와 이식성 면에서는 이점이지만 소량 접근의 지연 특성에는 불리할 수 있다. 원문에 관련 성능 논의는 없다(확인되지 않음).</span>
               </div>
               <span class="source-ref">PDF p. 8</span>
             </li>
@@ -1366,7 +1366,7 @@ flowchart LR
             <div class="glossary-row">
               <dt>Subsystem Local Memory (SLM)</dt>
               <dd>
-                NVM subsystem 내부에 존재하는 volatile byte addressable memory. PCIe BAR에 매핑되지 않으며 본 명세가 정의하는 커맨드를 통해서만 접근된다. storage 크기는 byte 단위로 측정된다.
+                NVM subsystem 내부에 존재하는 volatile byte addressable memory. PCIe BAR에 매핑되지 않으며, SLM Command Set 명령, Computational Programs Command Set의 compute namespace 접근, Copy command를 포함하는 적격 LBA 기반 I/O Command Set을 통해 접근된다. storage 크기는 byte 단위로 측정된다.
                 <span class="source-ref">PDF p. 8</span>
               </dd>
             </div>
@@ -1414,7 +1414,7 @@ flowchart LR
             <div class="glossary-row">
               <dt>Copy Descriptor Format (2h/3h/4h)</dt>
               <dd>
-                Memory Copy의 source 데이터를 기술하는 descriptor 포맷. 2h/3h는 LBA 기반 namespace를, 4h는 byte addressing 기반 SLM namespace를 source로 기술한다.
+                Memory Copy의 source 데이터를 기술하는 descriptor 포맷. 2h/3h는 LBA 기반 namespace를 source로 기술하며 그 Source Range Entry 형식은 NVM Command Set Specification에서 정의된다. 4h는 byte addressing 기반 SLM namespace를 source로 기술하며 SNSID, SADDR, NBYTE, SOPT 필드를 갖는다.
                 <span class="source-ref">PDF p. 14, 15, 16</span>
               </dd>
             </div>
@@ -1422,7 +1422,7 @@ flowchart LR
             <div class="glossary-row">
               <dt>Source Range Entry (SNSID, SADDR, NBYTE, SOPT)</dt>
               <dd>
-                Copy Descriptor Format 4h에서 하나의 소스 구간을 기술하는 엔트리. Source Namespace Identifier, Starting Address, Number of Bytes, Source Options(예: Fast Copy Only 비트)로 구성된다.
+                Copy Descriptor Format 4h에서 하나의 소스 구간을 기술하는 엔트리. Source Namespace Identifier, Starting Address, Number of Bytes, Source Options(예: Fast Copy Only 비트)로 구성된다. Format 2h/3h의 Source Range Entry는 이와 별도로 NVM Command Set Specification에서 정의된 LBA 기반 형식을 따른다.
                 <span class="source-ref">PDF p. 14, 16</span>
               </dd>
             </div>
