@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -733,8 +760,8 @@
             
             <li>
               <div class="list-main">
-                <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>입력 토큰 길이는 약 3500 토큰, 출력 토큰 길이는 약 500 토큰 부근에 집중되어, prefill 비용이 지배적인 긴 입력 워크로드임을 보인다.</span>
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>입력 토큰 길이는 약 3500 토큰, 출력 토큰 길이는 약 500 토큰 부근에 집중되어, 긴 입력에 의해 prefill 비용이 중요해질 가능성이 큰 워크로드임을 시사한다. 다만 이는 토큰 길이 분포로부터의 해석이며, 실측 prefill/decode 비용 분해 결과로 확인된 것은 아니다.</span>
               </div>
               <span class="source-ref">PDF p. 2</span>
             </li>
@@ -1085,7 +1112,7 @@
       
     <article class="content-item">
       <h3>결과 1 — 입력/출력 토큰 길이의 집중 (Figure 2)</h3>
-      <p>입력 및 출력 토큰 길이는 뚜렷한 집중(concentration) 경향을 보인다. 입력 토큰 길이는 주로 약 3500 토큰 부근에 몰려 있고, 출력 토큰 길이는 약 500 토큰 부근에 집중된다. 의미: RAG 워크로드는 일반 채팅 워크로드와 달리 검색 문맥이 붙기 때문에 입력이 길고 예측 가능한 범위에 분포하며, 이는 prefill 비용이 지배적인 워크로드임을 시사한다.</p>
+      <p>입력 및 출력 토큰 길이는 뚜렷한 집중(concentration) 경향을 보인다. 입력 토큰 길이는 주로 약 3500 토큰 부근에 몰려 있고, 출력 토큰 길이는 약 500 토큰 부근에 집중된다. 의미(분석자 해석): RAG 워크로드는 일반 채팅 워크로드와 달리 검색 문맥이 붙기 때문에 입력이 길고 예측 가능한 범위에 분포하며, 긴 입력으로 인해 prefill 비용이 중요해질 가능성이 큰 워크로드임을 시사한다. 다만 논문은 실제 prefill/decode 비용 분해나 실측 TTFT/TPOT 수치를 제시하지 않으므로, 이는 토큰 길이 분포로부터의 추정일 뿐 실험으로 확인된 결론은 아니다.</p>
       <span class="source-ref">PDF p. 2</span>
     </article>
     
@@ -1220,7 +1247,7 @@ flowchart LR
                 <canvas id="chart-0"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 2 · Figure 2 · 전체 7,106건 요청의 input/output token length CDF에서 본문이 명시한 집중(clustering) 지점. 분포의 평균이나 중앙값이 아니라 본문 서술상의 집중 값이다.
+                PDF p. 2 · Figure 2 · 전체 7,106건 요청의 input/output token length CDF에서 본문이 명시한 집중(clustering) 지점. 분포의 평균이나 중앙값이 아니라 본문 서술상의 집중 값이며, 이로부터 prefill 비용 비중을 정량적으로 추정할 수는 없다.
               </p>
             </article>
             
@@ -1334,7 +1361,7 @@ flowchart LR
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-analyst_inference">분석자 해석</span>
-                <span>구조상 예상되는 한계 — 데이터셋 유용성이 정량적으로 입증되지 않음: 논문은 TTFT/TPOT 지표 정의와 리플레이 방법론을 제시하지만 실제 측정된 성능 수치를 보고하지 않는다. 따라서 &#x27;이 트레이스로 평가하면 범용 트레이스와 다른 결론이 나온다&#x27;는 핵심 주장이 실험으로 직접 증명되지는 않았다.</span>
+                <span>구조상 예상되는 한계 — 데이터셋 유용성이 정량적으로 입증되지 않음: 논문은 TTFT/TPOT 지표 정의와 리플레이 방법론을 제시하지만 실제 측정된 성능 수치를 보고하지 않는다. 따라서 &#x27;이 트레이스로 평가하면 범용 트레이스와 다른 결론이 나온다&#x27;는 핵심 주장이 실험으로 직접 증명되지는 않았으며, 입력 길이 분포로부터 도출한 &#x27;prefill 비용이 중요할 것&#x27;이라는 해석 역시 실측 비용 분해로 뒷받침되지 않는다.</span>
               </div>
               <span class="source-ref">PDF p. 4</span>
             </li>
@@ -1552,7 +1579,7 @@ flowchart LR
       
         <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>논문이 정식 게재되었거나 게재 예정인 학회 또는 저널명 (본문에서는 arXiv preprint 정보만 확인됨)</li><li>Figure 3에 나타난 QPS 및 Tokens/s의 구체적 피크 수치 (본문 서술에는 정성적 주기성 설명만 있고 정확한 수치는 명시되지 않음)</li><li>Figure 5(a) CDF of Passage Frequency 및 Figure 5(b) Document Overlap Ratio의 구체적 정량 수치 (본문에 수치가 명시되지 않음)</li><li>벤치마킹 플랫폼(§4.4~4.5)에서 실제로 측정된 TTFT/TPOT 실측 결과값 (본문에는 지표 정의와 측정 방법론만 제시되고 실측 결과 수치는 보고되지 않음)</li><li>Twen 시스템 전체 요청량(모집단) 대비 공개된 7,106건 샘플이 차지하는 비율 및 샘플링 방법</li><li>논문에 별도의 &#x27;Limitations&#x27;라는 제목의 절이 존재하지 않아, 한계점 관련 서술이 본문 각주 및 여러 절에 산재되어 있음</li><li>트레이스에 포함된 요청의 언어 구성 및 세션당 평균 요청 수 등 세션 수준 통계 (본문에 제시되지 않음)</li><li>Figure 2, 4, 5의 분포에 대한 평균·중앙값·백분위수 등 요약 통계량 (본문에는 집중 지점과 임계 비율만 서술됨)</li></ul>
+          <ul><li>논문이 정식 게재되었거나 게재 예정인 학회 또는 저널명 (본문에서는 arXiv preprint 정보만 확인됨)</li><li>Figure 3에 나타난 QPS 및 Tokens/s의 구체적 피크 수치 (본문 서술에는 정성적 주기성 설명만 있고 정확한 수치는 명시되지 않음)</li><li>Figure 5(a) CDF of Passage Frequency 및 Figure 5(b) Document Overlap Ratio의 구체적 정량 수치 (본문에 수치가 명시되지 않음)</li><li>벤치마킹 플랫폼(§4.4~4.5)에서 실제로 측정된 TTFT/TPOT 실측 결과값 (본문에는 지표 정의와 측정 방법론만 제시되고 실측 결과 수치는 보고되지 않음)</li><li>Twen 시스템 전체 요청량(모집단) 대비 공개된 7,106건 샘플이 차지하는 비율 및 샘플링 방법</li><li>논문에 별도의 &#x27;Limitations&#x27;라는 제목의 절이 존재하지 않아, 한계점 관련 서술이 본문 각주 및 여러 절에 산재되어 있음</li><li>트레이스에 포함된 요청의 언어 구성 및 세션당 평균 요청 수 등 세션 수준 통계 (본문에 제시되지 않음)</li><li>Figure 2, 4, 5의 분포에 대한 평균·중앙값·백분위수 등 요약 통계량 (본문에는 집중 지점과 임계 비율만 서술됨)</li><li>입력 토큰 길이 분포(약 3500 토큰 집중)로부터 prefill 비용이 실제로 시스템 병목의 지배적 요인인지 여부 (본문에 prefill/decode 비용 분해나 실측 성능 수치가 제시되지 않아 확인 불가)</li></ul>
         </section>
         
     </div>

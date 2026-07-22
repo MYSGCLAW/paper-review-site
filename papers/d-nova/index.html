@@ -598,45 +598,72 @@
       }
     }
   </style>
-</head>
-
-<body class="auth-locked index-hidden">
-<!-- verification-status:start -->
+<!-- verification-style:start -->
 <style>
 .verification-status {
-    max-width: 1100px;
-    margin: 18px auto;
-    padding: 14px 18px;
-    border-radius: 10px;
+    margin: 16px auto 22px;
+    padding: 13px 16px;
     border: 1px solid;
+    border-radius: 10px;
+    line-height: 1.5;
     box-sizing: border-box;
-    font-family: inherit;
 }
+
 .verification-status strong {
-    display: inline-block;
     margin-right: 8px;
 }
+
 .verification-status.pending {
-    background: #fff8e1;
-    border-color: #e6b800;
-    color: #6d5200;
+    background: #fff8dc;
+    border-color: #b58900;
+    color: #5f4b00;
 }
+
 .verification-status.verified {
     background: #e8f5e9;
     border-color: #2e7d32;
     color: #1b5e20;
 }
+
 .verification-status.failed {
     background: #ffebee;
     border-color: #c62828;
-    color: #8e0000;
+    color: #7f0000;
+}
+
+.verification-index-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.verification-index-badge.pending {
+    background: #fff3cd;
+    color: #6b5200;
+}
+
+.verification-index-badge.verified {
+    background: #dff3e3;
+    color: #176b2c;
+}
+
+.verification-index-badge.failed {
+    background: #fde2e5;
+    color: #941b28;
 }
 </style>
-<div class="verification-status pending">
-    <strong>미검증</strong>
-    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
-</div>
+<!-- verification-style:end -->
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<div class="verification-status failed" role="status"><strong>검증 보류</strong><span>자동 검증에서 확인 또는 수정이 필요한 항목이 발견되었습니다.</span></div>
 <!-- verification-status:end -->
+
   
   <section class="login-gate" aria-label="로그인">
     <form class="login-panel" id="login-form">
@@ -706,7 +733,7 @@
     <div class="article-width">
       <section id="summary" class="summary-card">
         <h2>핵심 요약</h2>
-        <p>D-NOVA는 RAG(Retrieval-Augmented Generation) 파이프라인의 지배적 병목인 dense vector retrieval의 데이터 이동(data movement)을 제거하기 위해, 검색 연산 자체를 3D NAND 플래시 배열 내부로 내리는 in-storage 검색 가속기이다. 핵심 아이디어는 NAND의 multi-level cell(QLC)에 INT4로 인코딩된 임베딩 값과 질의로부터 유도된 wordline 전압을 직접 비교하여, MLC 값을 여러 번 읽어내는 반복 read 없이 단순한 binary sensing만으로 유사도를 평가하는 것이다. 이를 위해 저자들은 NAND string의 직렬 on/off 특성에 맞춘 전용 거리 척도 DTS(Dual-bound Tight Similarity Sensing)를 제안한다. DTS는 Upper-Bound Similarity Sensing(UBS)과 그 complement 버전(Comp UBS)을 결합하여, 기존의 느슨한 Lower-Bound Sensing이 유발하던 false positive를 억제하면서 상한·하한을 동시에 좁힌다. DTS는 cosine/L2와 다른 척도이므로 recall 손실이 발생하는데, 이를 offline에서 한 번만 contrastive(InfoNCE) 학습되는 경량 query-side adapter로 보정하여 임베딩을 DTS-정렬 공간으로 투영한다. 전체 검색은 centroid search → coarse Top-K2 search → fine Top-K1 re-ranking의 3단계 IVF 계층 파이프라인으로 수행되며, 각 단계마다 동시에 센싱하는 wordline 수 m을 다르게 설정(stage-aware m-adaptive sensing)하여 정확도와 처리량을 단계별로 절충한다. SSD 컨트롤러는 quickselect/quicksort 같은 경량 정렬과 메타데이터 관리만 담당하고, 최종적으로 문서 텍스트까지 스토리지 내부에서 fetch하여 결과 문서만 host로 전송한다. 논문은 NQ·HotpotQA에서 CPU baseline 대비 33.3–41.7배 처리량, 58.8–71배 에너지 절감, SOTA in-storage 가속기 REIS 대비 4.3–12.1배 처리량, 1.1–1.26배 에너지 이점을 보고한다.</p>
+        <p>D-NOVA는 RAG(Retrieval-Augmented Generation) 파이프라인에서 데이터베이스 규모가 커질수록 지배적 병목이 되는 dense vector retrieval의 데이터 이동(data movement)을 제거하기 위해, 검색 연산 자체를 3D NAND 플래시 배열 내부로 내리는 in-storage 검색 가속기이다. 핵심 아이디어는 NAND의 multi-level cell(QLC)에 INT4로 인코딩된 임베딩 값과 질의로부터 유도된 wordline 전압을 직접 비교하여, MLC 값을 여러 번 읽어내는 반복 read 없이 단순한 binary sensing만으로 유사도를 평가하는 것이다. 이를 위해 저자들은 NAND string의 직렬 on/off 특성에 맞춘 전용 거리 척도 DTS(Dual-bound Tight Similarity Sensing)를 제안한다. DTS는 Upper-Bound Similarity Sensing(UBS)과 그 complement 버전(Comp UBS)을 결합하여, 기존의 느슨한 Lower-Bound Sensing이 유발하던 false positive를 억제하면서 상한·하한을 동시에 좁힌다. DTS는 cosine/L2와 다른 척도이므로 recall 손실이 발생하는데, 이를 offline에서 한 번만 contrastive(InfoNCE) 학습되는 경량 query-side adapter로 보정하여 임베딩을 DTS-정렬 공간으로 투영한다. 전체 검색은 centroid search → coarse Top-K2 search → fine Top-K1 re-ranking의 3단계 IVF 계층 파이프라인으로 수행되며, 각 단계마다 동시에 센싱하는 wordline 수 m을 다르게 설정(stage-aware m-adaptive sensing)하여 정확도와 처리량을 단계별로 절충한다. SSD 컨트롤러는 quickselect/quicksort 같은 경량 정렬과 메타데이터 관리만 담당하고, 최종적으로 문서 텍스트까지 스토리지 내부에서 fetch하여 결과 문서만 host로 전송한다. 논문은 NQ·HotpotQA에서 CPU baseline 대비 33.3–41.7배 낮은 지연시간과 58.8–71배 낮은 에너지 소비를, SOTA in-storage 가속기 REIS 대비로는 4.3–12.1배 높은 처리량(QPS)과 1.1–1.26배 낮은 에너지 소비를 보고한다. 별도로 대규모 배치 steady-state 조건에서는 CPU 대비 약 481–679배의 QPS도 제시한다.</p>
         <span class="source-ref">PDF p. 1, 2, 4, 5, 6, 7, 8, 13</span>
       </section>
 
@@ -718,7 +745,7 @@
             <li>
               <div class="list-main">
                 <span class="claim-badge claim-paper_claim">논문 주장</span>
-                <span>RAG의 병목은 generation이 아니라 retrieval이며, DB 규모가 커질수록 심화된다 — retrieval 비중이 16GB에서 20.36%, 120GB에서 69.46%, 1TB에서 94.26%로 증가한다(Fig. 1(b)).</span>
+                <span>대규모 벡터 DB로 갈수록 RAG의 병목은 generation이 아니라 retrieval로 이동한다 — retrieval 비중이 16GB(HotpotQA)에서는 20.36%로 generation(76.57%)보다 작지만, 120GB(wiki_en/NQ)에서는 69.46%로 역전되고 1TB(synthetic)에서는 94.26%까지 증가한다(Fig. 1(b)).</span>
               </div>
               <span class="source-ref">PDF p. 1</span>
             </li>
@@ -791,8 +818,8 @@
       </div>
       
     <article class="content-item">
-      <h3>RAG의 병목은 생성이 아니라 검색이다</h3>
-      <p>LLM의 지식은 사전학습 데이터 시점에 고정되어 최신화가 어렵고, RAG는 외부 지식 베이스를 검색해 이를 보완한다. 그러나 질의 하나마다 수십억 개 규모의 고차원 임베딩을 탐색해야 하므로 검색(retrieval) 단계가 시스템 비용을 지배한다. 논문의 Fig. 1(b)는 데이터베이스 규모가 커질수록 이 경향이 심해짐을 보여준다: HotpotQA(16GB)에서는 retrieval이 end-to-end 지연시간의 20.36%지만, wiki_en/NQ(120GB)에서는 69.46%, 1TB 규모의 synthetic dataset에서는 94.26%까지 증가한다. 즉 대규모 벡터 DB에서는 generation이 아니라 retrieval이 전체 파이프라인 지연시간의 대부분을 차지한다.</p>
+      <h3>대규모 벡터 DB로 갈수록 병목은 생성이 아니라 검색이다</h3>
+      <p>LLM의 지식은 사전학습 데이터 시점에 고정되어 최신화가 어렵고, RAG는 외부 지식 베이스를 검색해 이를 보완한다. 질의 하나마다 수십억 개 규모의 고차원 임베딩을 탐색해야 하므로, 벡터 DB 규모가 커질수록 검색(retrieval) 단계가 시스템 비용을 지배하게 된다. 논문의 Fig. 1(b)는 이 경향을 보여준다: HotpotQA(16GB)에서는 retrieval이 end-to-end 지연시간의 20.36%인 반면 generation이 76.57%로 아직 더 큰 비중을 차지하지만, wiki_en/NQ(120GB)에서는 retrieval이 69.46%로 역전되고, 1TB 규모의 synthetic dataset에서는 94.26%까지 증가한다. 즉 소규모 DB에서는 generation이 더 큰 비중을 차지하지만, 대규모 벡터 DB로 갈수록 retrieval이 전체 파이프라인 지연시간의 대부분을 차지하게 된다.</p>
       <span class="source-ref">PDF p. 1, 2</span>
     </article>
     
@@ -892,7 +919,7 @@
 
     <article class="content-item">
       <h3>5) Cross-layer co-design의 실증</h3>
-      <p>회로(sensing)–아키텍처(파이프라인/매핑)–알고리즘(거리 척도/adapter)에 걸친 cross-layer co-design을 통해 대규모 semantic retrieval을 거의 전적으로 in-storage에서 수행하여 데이터 이동을 효과적으로 제거하면서도 높은 정확도를 유지함을 입증했다. NQ와 HotpotQA에서 CPU baseline 및 SOTA(REIS) 대비 각각 33.3–41.7배/4.3–12.1배 높은 처리량과 58.8–71배/1.1–1.26배 낮은 에너지 소비를 달성했다.</p>
+      <p>회로(sensing)–아키텍처(파이프라인/매핑)–알고리즘(거리 척도/adapter)에 걸친 cross-layer co-design을 통해 대규모 semantic retrieval을 거의 전적으로 in-storage에서 수행하여 데이터 이동을 효과적으로 제거하면서도 높은 정확도를 유지함을 입증했다. NQ와 HotpotQA에서 CPU baseline 대비 33.3–41.7배 낮은 지연시간과 58.8–71배 낮은 에너지 소비를, SOTA(REIS) 대비 4.3–12.1배 높은 처리량(QPS)과 1.1–1.26배 낮은 에너지 소비를 달성했다.</p>
       <span class="source-ref">PDF p. 2, 13</span>
     </article>
     
@@ -914,7 +941,7 @@
 
     <article class="content-item">
       <h3>스토리지 계층 구성</h3>
-      <p>NC개의 독립 채널이 각각 MCP 내 ND개 다이에 연결되고, 다이당 NP개 plane이 H-Tree bus로 연결되며, plane마다 3D NAND block(16K BL, 128 WL, 16 SSL) 배열이 배치된다. 이 계층이 채널/plane 수준의 병렬 in-storage 검색을 위한 연산 기본 단위 역할을 한다. 임베딩 벡터와 원문 document chunk는 모두 QLC에 저장되며, 임베딩은 INT4 값으로 각 cell에 인코딩된다. 즉 벡터와 문서가 같은 디바이스 안에 있으므로, 최종 결과 문서까지 host 개입 없이 내부에서 fetch할 수 있다.</p>
+      <p>NC개의 독립 채널이 각각 MCP 내 ND개 다이에 연결되고, 다이당 NP개 plane이 H-Tree bus로 연결되며, plane마다 3D NAND block(16K BL, 128 WL, 16 SSL) 배열이 배치된다. 이 계층이 채널/plane 수준의 병렬 in-storage 검색을 위한 연산 기본 단위 역할을 한다. 임베딩 벡터와 원문 document chunk는 모두 QLC에 저장되며, 임베딩은 INT4 값으로 각 cell에 인코딩된다. 즉 벡터와 문서가 같은 디바이스 안에 있으므로, 최종 결과 문서까지 host 개입 없이 내부에서 fetch할 수 있다. 논문의 시뮬레이터 구성(Table 2)에서는 8채널, 채널당 8다이, 다이당 12 plane, plane당 256 block으로 이 계층이 구체화된다.</p>
       <span class="source-ref">PDF p. 4</span>
     </article>
     
@@ -1050,7 +1077,7 @@
 
     <article class="content-item">
       <h3>평가 지표 및 실험 설정</h3>
-      <p>정확도는 Recall@25와 Recall@100(FP32-IVF 대비 gap)으로, 성능은 질의당 지연시간, 질의당 에너지, 초당 질의 처리량(QPS)으로 측정한다. 특별한 언급이 없으면 DTS tolerance margin은 α=2로 설정한다. 하드웨어 오버헤드는 ASAP7 7nm standard-cell library와 OpenROAD flow(1GHz)로 합성 평가했고, sensing 신뢰성은 QLC의 VTH 잡음(0.1≤σ≤0.35)에 대해 σ당 1,000회 Monte Carlo 시뮬레이션으로 검증했다. 플래시 채널은 8채널(채널당 2.0 GB/s, 총 16 GB/s) 구성이다.</p>
+      <p>정확도는 Recall@25와 Recall@100(FP32-IVF 대비 gap)으로, 성능은 질의당 지연시간, 질의당 에너지, 초당 질의 처리량(QPS)으로 측정한다. 모든 시스템은 동일한 IVF-Flat 인덱스와 데이터셋별 탐색 파라미터를 사용한다: Nnlist=1024(NQ, FiQA, wiki_en), 2048(HotpotQA, FEVER), 8192(MIRACL-English)이며, Nnprobe는 NQ {64,128}, FiQA·wiki_en {32,64}, HotpotQA·FEVER {128,256}, MIRACL-English {256,512}로 평가한다. 모든 데이터셋에서 coarse 후보 K2=1000, 최종 결과 K1=100을 FP32-IVF와 모든 DTS 설정에 공통으로 고정하여, recall 차이가 탐색 노력의 차이가 아니라 DTS 척도·adapter·센싱 설정 자체에서 비롯되도록 했다. 특별한 언급이 없으면 DTS tolerance margin은 α=2로 설정한다. 하드웨어 오버헤드는 ASAP7 7nm standard-cell library와 OpenROAD flow(1GHz)로 합성 평가했고, sensing 신뢰성은 QLC의 VTH 잡음(0.1≤σ≤0.35)에 대해 σ당 1,000회 Monte Carlo 시뮬레이션으로 검증했다. 시뮬레이터 구성(Table 2)은 8채널(채널당 2.0 GB/s, 총 16 GB/s), 채널당 8다이, 다이당 12 plane, plane당 256 block, block당 128 WL/16K BL/16 SSL이다.</p>
       <span class="source-ref">PDF p. 9, 10, 11, 12</span>
     </article>
     
@@ -1143,7 +1170,7 @@
       
     <article class="content-item">
       <h3>논문의 결론</h3>
-      <p>D-NOVA는 회로·아키텍처·알고리즘에 걸친 cross-layer co-design을 통해 대규모 semantic retrieval을 거의 전적으로 in-storage에서 수행함으로써 데이터 이동을 효과적으로 제거하면서도 높은 정확도를 유지할 수 있음을 입증했다. NQ와 HotpotQA에서 CPU baseline 대비 33.3–41.7배, SOTA(REIS) 대비 4.3–12.1배 높은 처리량과 각각 58.8–71배, 1.1–1.26배 낮은 에너지 소비를 달성하여, 확장 가능하고 에너지 효율적인 in-storage retrieval 가속의 새로운 방향을 제시한다.</p>
+      <p>D-NOVA는 회로·아키텍처·알고리즘에 걸친 cross-layer co-design을 통해 대규모 semantic retrieval을 거의 전적으로 in-storage에서 수행함으로써 데이터 이동을 효과적으로 제거하면서도 높은 정확도를 유지할 수 있음을 입증했다. NQ와 HotpotQA에서 CPU baseline 대비 33.3–41.7배 낮은 지연시간과 58.8–71배 낮은 에너지 소비를, SOTA(REIS) 대비로는 4.3–12.1배 높은 처리량과 1.1–1.26배 낮은 에너지 소비를 달성하여, 확장 가능하고 에너지 효율적인 in-storage retrieval 가속의 새로운 방향을 제시한다.</p>
       <span class="source-ref">PDF p. 2, 13</span>
     </article>
     
@@ -1245,7 +1272,7 @@ flowchart LR
                 <canvas id="chart-0"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 1 · Figure 1(b) · IVF-Flat 파이프라인, 데이터베이스 규모별 (16GB / 120GB / 1TB)
+                PDF p. 1 · Figure 1(b) · IVF-Flat 파이프라인, 데이터베이스 규모별 (16GB / 120GB / 1TB). 소규모(16GB)에서는 generation 비중(76.57%)이 retrieval(20.36%)보다 크며, DB가 커질수록 retrieval 비중이 역전·증가한다.
               </p>
             </article>
             
@@ -1285,7 +1312,7 @@ flowchart LR
                 <canvas id="chart-4"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 12 · Figure 16 · REIS baseline 대비. 개별 stage별 stacked bar 수치는 추출 불확실하여 본문 명시 배율 범위만 사용
+                PDF p. 12 · Figure 16 · REIS baseline 대비 지연시간 감소 배율. 개별 stage별 stacked bar 수치는 추출 불확실하여 본문 명시 배율 범위만 사용
               </p>
             </article>
             
@@ -1295,7 +1322,7 @@ flowchart LR
                 <canvas id="chart-5"></canvas>
               </div>
               <p class="chart-source">
-                PDF p. 12 · Figure 17 · 대규모 배치 steady-state 처리량 기준, REIS baseline 대비
+                PDF p. 12 · Figure 17 · 대규모 배치 steady-state 처리량(QPS) 기준, REIS baseline 대비
               </p>
             </article>
             
@@ -1550,7 +1577,7 @@ flowchart LR
             <div class="glossary-row">
               <dt>RAG (Retrieval-Augmented Generation)</dt>
               <dd>
-                LLM이 사전학습 지식만 사용하는 대신 외부 지식 베이스에서 관련 문서를 검색해 함께 입력하는 기법. 지식 최신화가 쉽지만 검색 단계가 시스템 비용을 지배하게 된다.
+                LLM이 사전학습 지식만 사용하는 대신 외부 지식 베이스에서 관련 문서를 검색해 함께 입력하는 기법. 지식 최신화가 쉽지만, DB 규모가 커질수록 검색 단계가 시스템 비용을 지배하게 된다.
                 <span class="source-ref">PDF p. 1</span>
               </dd>
             </div>
@@ -1614,8 +1641,8 @@ flowchart LR
             <div class="glossary-row">
               <dt>IVF (Inverted File Index)</dt>
               <dd>
-                벡터 공간을 Nnlist개 cluster로 분할하고 질의 시 Nnprobe개 cluster만 탐색하는 ANN 인덱스(예: 1024 → 64). 접근 패턴이 구조적이어서 NAND의 block/plane 병렬성에 매핑하기 좋다.
-                <span class="source-ref">PDF p. 1, 7</span>
+                벡터 공간을 Nnlist개 cluster로 분할하고 질의 시 Nnprobe개 cluster만 탐색하는 ANN 인덱스. 평가에서는 데이터셋별로 Nnlist=1024/2048/8192, Nnprobe∈{32...512}가 사용되며, coarse 후보 K2=1000, 최종 결과 K1=100은 전 데이터셋 공통 고정값이다. 접근 패턴이 구조적이어서 NAND의 block/plane 병렬성에 매핑하기 좋다.
+                <span class="source-ref">PDF p. 1, 7, 10</span>
               </dd>
             </div>
             
@@ -1682,7 +1709,7 @@ flowchart LR
       
         <section id="unresolved" class="report-section warning-section">
           <h2>확인이 필요한 내용</h2>
-          <ul><li>논문 헤더에 ACM DOI/ISBN이 &#x27;XXXXXXX&#x27;/&#x27;978-X-XXXX-XXXX-X/XX/XX&#x27; placeholder로 표기되어 있어 최종 출판 식별자는 본 문서만으로 확인 불가.</li><li>Figure 13((DTS-(UBS+LBS)) Recall@100 차이)의 개별 막대 값과 dataset/encoder/nprobe 조건 간 정확한 매핑은 텍스트/이미지 추출만으로 확정할 수 없어, 본문에 명시된 정성적 서술(&#x27;m1=4에서 4% 이상 차이&#x27;)만 사용함.</li><li>Figure 15의 각 곡선(2nd/3rd stage, locality-aware 적용/미적용)별 개별 QPS 배율 값과 조건 간 정확한 매핑은 확정할 수 없어, 본문에 명시된 median 감소율 수치만 차트에 사용함.</li><li>Figure 16의 정규화 지연시간/에너지 stacked bar에서 시스템별·stage별 개별 수치는 다열 레이아웃 텍스트 추출 문제로 조건별 매핑이 불확실하여, 본문에 명시된 배수 범위(3.01–3.79× 등)만 사용함.</li><li>Fig. 1(b)에 사용된 &#x27;Synthetic Dataset(1TB)&#x27;의 구체적 생성 방법 및 구성은 본문에서 상세히 설명되지 않음(동기부여용 그림에만 사용됨).</li><li>Figure 11(6개 데이터셋별 R@25/R@100 개별 값)의 데이터셋·인코더별 정확한 수치는 추출 텍스트로 확정할 수 없어, Table 3의 평균값만 차트화함.</li><li>NC(채널 수), ND(다이 수), NP(plane 수)의 구체적 평가 설정값은 추출 근거에서 8채널(총 16 GB/s)만 확인되며 다이/plane 수의 정확한 값은 확인되지 않음.</li><li>Top-K1, Top-K2의 구체적 K 값과 Nnlist/Nnprobe의 데이터셋별 전체 설정표는 일부 조건(NQ nlist=1024/nprobe=64, HotpotQA nlist=2048/nprobe=128)만 확인되며 전체는 확정 불가.</li><li>NAND 쓰기 내구성(P/E cycle) 및 임베딩 갱신 시 write amplification에 대한 정량 분석은 추출 근거에서 확인되지 않음.</li><li>다중 질의 동시 실행 시의 tail latency(p99 등) 분포는 추출 근거에서 확인되지 않으며, 보고된 QPS는 steady-state 배치 조건 기준임.</li></ul>
+          <ul><li>논문 헤더에 ACM DOI/ISBN이 &#x27;XXXXXXX&#x27;/&#x27;978-X-XXXX-XXXX-X/XX/XX&#x27; placeholder로 표기되어 있어 최종 출판 식별자는 본 문서만으로 확인 불가.</li><li>Figure 13((DTS-(UBS+LBS)) Recall@100 차이)의 개별 막대 값과 dataset/encoder/nprobe 조건 간 정확한 매핑은 텍스트/이미지 추출만으로 확정할 수 없어, 본문에 명시된 정성적 서술(&#x27;m1=4에서 4% 이상 차이&#x27;)만 사용함.</li><li>Figure 15의 각 곡선(2nd/3rd stage, locality-aware 적용/미적용)별 개별 QPS 배율 값과 조건 간 정확한 매핑은 확정할 수 없어, 본문에 명시된 median 감소율 수치만 차트에 사용함.</li><li>Figure 16의 정규화 지연시간/에너지 stacked bar에서 시스템별·stage별 개별 수치는 다열 레이아웃 텍스트 추출 문제로 조건별 매핑이 불확실하여, 본문에 명시된 배수 범위(3.01–3.79× 등)만 사용함.</li><li>Fig. 1(b)에 사용된 &#x27;Synthetic Dataset(1TB)&#x27;의 구체적 생성 방법 및 구성은 본문에서 상세히 설명되지 않음(동기부여용 그림에만 사용됨).</li><li>Figure 11(6개 데이터셋별 R@25/R@100 개별 값)의 데이터셋·인코더별 정확한 수치는 추출 텍스트로 확정할 수 없어, Table 3의 평균값만 차트화함.</li><li>NAND 쓰기 내구성(P/E cycle) 및 임베딩 갱신 시 write amplification에 대한 정량 분석은 추출 근거에서 확인되지 않음.</li><li>다중 질의 동시 실행 시의 tail latency(p99 등) 분포는 추출 근거에서 확인되지 않으며, 보고된 QPS는 steady-state 배치 조건 기준임.</li></ul>
         </section>
         
     </div>
