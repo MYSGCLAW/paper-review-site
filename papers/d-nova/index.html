@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>D-NOVA: In-Storage Retrieval Accelerator via Dual-Bound 3D NAND-Optimized Similarity Search with Vector Adaptation</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>D-NOVA: In-Storage Retrieval Accelerator via Dual-Bound 3D NAND-Optimized Similarity Search with Vector Adaptation</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Chang Eun Song, Sumukh Pinge, Tianqi Zhang, Sung Eun Kim, Tajana S Rosing, Mingu Kang</span>
+        <span><strong>출처</strong> · MICRO 2026, Athens, Greece (arXiv:2607.17538v1 [cs.AR])</span>
+        <span><strong>연도</strong> · 2026</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">주요 구성요소와 단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 및 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론 및 종합 평가</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>D-NOVA는 RAG(Retrieval-Augmented Generation) 파이프라인의 지배적 병목인 dense vector retrieval의 데이터 이동(data movement)을 제거하기 위해, 검색 연산 자체를 3D NAND 플래시 배열 내부로 내리는 in-storage 검색 가속기이다. 핵심 아이디어는 NAND의 multi-level cell(QLC)에 INT4로 인코딩된 임베딩 값과 질의로부터 유도된 wordline 전압을 직접 비교하여, MLC 값을 여러 번 읽어내는 반복 read 없이 단순한 binary sensing만으로 유사도를 평가하는 것이다. 이를 위해 저자들은 NAND string의 직렬 on/off 특성에 맞춘 전용 거리 척도 DTS(Dual-bound Tight Similarity Sensing)를 제안한다. DTS는 Upper-Bound Similarity Sensing(UBS)과 그 complement 버전(Comp UBS)을 결합하여, 기존의 느슨한 Lower-Bound Sensing이 유발하던 false positive를 억제하면서 상한·하한을 동시에 좁힌다. DTS는 cosine/L2와 다른 척도이므로 recall 손실이 발생하는데, 이를 offline에서 한 번만 contrastive(InfoNCE) 학습되는 경량 query-side adapter로 보정하여 임베딩을 DTS-정렬 공간으로 투영한다. 전체 검색은 centroid search → coarse Top-K2 search → fine Top-K1 re-ranking의 3단계 IVF 계층 파이프라인으로 수행되며, 각 단계마다 동시에 센싱하는 wordline 수 m을 다르게 설정(stage-aware m-adaptive sensing)하여 정확도와 처리량을 단계별로 절충한다. SSD 컨트롤러는 quickselect/quicksort 같은 경량 정렬과 메타데이터 관리만 담당하고, 최종적으로 문서 텍스트까지 스토리지 내부에서 fetch하여 결과 문서만 host로 전송한다. 논문은 NQ·HotpotQA에서 CPU baseline 대비 33.3–41.7배 처리량, 58.8–71배 에너지 절감, SOTA in-storage 가속기 REIS 대비 4.3–12.1배 처리량, 1.1–1.26배 에너지 이점을 보고한다.</p>
+        <span class="source-ref">PDF p. 1, 2, 4, 5, 6, 7, 8, 13</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>RAG의 병목은 generation이 아니라 retrieval이며, DB 규모가 커질수록 심화된다 — retrieval 비중이 16GB에서 20.36%, 120GB에서 69.46%, 1TB에서 94.26%로 증가한다(Fig. 1(b)).</span>
+              </div>
+              <span class="source-ref">PDF p. 1</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>기존 in-storage SOTA(REIS)의 근본 한계는 binary coarse search의 낮은 정확도를 보완하기 위한 컨트롤러 측 INT8 re-ranking이며, 이것이 전체 검색 시간의 약 70%를 차지한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>DTS는 UBS와 Complement UBS라는 두 개의 엄격한 all-pass 조건을 결합해, 느슨한 LBS가 유발하던 false positive를 제거하고 binary sensing만으로 세밀한 유사도를 평가한다(Eq.1–4).</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>DTS는 센싱 시간 TDTS=(D/m)×2로 QLC 전형적 read(TQLC=D×Nrd) 대비 sensing cycle을 최대 9.3배 줄이며, 추가 저장공간 오버헤드가 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 6</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>0.4M 파라미터의 query-side contrastive adapter가 FP32-IVF 대비 Recall@100 gap을 3.77–4.54%에서 1.43–1.76%로 줄이며, query encoding 오버헤드는 0.5–1%에 불과하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>stage-aware m-adaptive sensing은 정확도 민감 단계(1·3단계)에 작은 m, 데이터 볼륨이 큰 2단계에 큰 m을 배정하는 knob이며, m1·m3가 16에 근접하면 Recall@100이 10% 이상 붕괴한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>최종 re-ranking이 전체 지연시간·에너지의 0.1% 미만으로 축소된 것이 REIS 대비 성능 우위의 직접적 원인으로 해석된다 — 즉 성능 이득은 연산 가속이 아니라 데이터 이동 제거에서 나온다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 7, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>하드웨어 오버헤드는 plane 면적의 1.5% 미만(0.023mm²/plane)이며 accumulation 지연시간(0.25μs)은 sensing(약 30μs) 대비 무시 가능하고 파이프라이닝으로 은닉된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>RAG의 병목은 생성이 아니라 검색이다</h3>
+      <p>LLM의 지식은 사전학습 데이터 시점에 고정되어 최신화가 어렵고, RAG는 외부 지식 베이스를 검색해 이를 보완한다. 그러나 질의 하나마다 수십억 개 규모의 고차원 임베딩을 탐색해야 하므로 검색(retrieval) 단계가 시스템 비용을 지배한다. 논문의 Fig. 1(b)는 데이터베이스 규모가 커질수록 이 경향이 심해짐을 보여준다: HotpotQA(16GB)에서는 retrieval이 end-to-end 지연시간의 20.36%지만, wiki_en/NQ(120GB)에서는 69.46%, 1TB 규모의 synthetic dataset에서는 94.26%까지 증가한다. 즉 대규모 벡터 DB에서는 generation이 아니라 retrieval이 전체 파이프라인 지연시간의 대부분을 차지한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>근본 원인은 메모리 계층 전반의 데이터 이동</h3>
+      <p>dense vector retrieval의 비용은 연산량이 아니라 storage → DRAM → processor로 이어지는 메모리 계층 전반의 대규모 데이터 이동에서 발생한다. 벡터 데이터가 계층을 오르내리는 과정에서 지연시간과 에너지가 함께 소모되며, 대역폭이 성능 상한을 결정한다. 저자들이 GPU baseline을 평가에서 제외한 근거도 동일하다 — 병목이 연산 처리량이 아니라 메모리/I-O 대역폭이라는 선행 연구와 일치한다는 판단이다.</p>
+      <span class="source-ref">PDF p. 1, 2, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>기존 in-storage 가속기조차 여전히 외부 프로세서에 의존한다</h3>
+      <p>이미 제안된 in-storage 가속기들도 배열(array) 외부의 host 또는 embedded processor에 연산을 의존하기 때문에, 전체 검색 시간의 약 70%를 이 외부 처리 단계에서 소비한다. 결과적으로 대역폭 한계를 완전히 극복하지 못하고 또 다른 memory bottleneck을 만들어낸다. 논문이 목표로 하는 것은 &#x27;스토리지 근처&#x27;가 아니라 &#x27;스토리지 배열 내부&#x27;에서 검색을 끝내는 것이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>ANN 인덱스 자체의 한계 (HNSW, IVF)</h3>
+      <p>HNSW는 높은 recall 정확도를 달성하지만 irregular pointer-chasing과 예측 불가능한 접근 패턴 때문에 병렬 하드웨어에 효율적으로 매핑하기 어렵다. IVF는 접근 패턴이 훨씬 구조적이어서 하드웨어 친화적이지만, HNSW와 IVF 모두 대량의 벡터 데이터가 메모리/스토리지 계층을 계속 이동해야 한다는 data movement overhead에 근본적으로 제약된다. D-NOVA가 IVF 계열을 택한 이유도 이 구조적 접근 패턴 때문이다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Near-storage 가속기 (RAGX, SmartSSD)</h3>
+      <p>RAGX, SmartSSD 같은 near-storage 가속기는 연산을 스토리지 가까이 옮기지만, 상당한 아키텍처 수정이 필요하고 동기화 및 최종 re-ranking을 위해 여전히 host CPU/GPU에 의존한다. 제한된 on-device 메모리 용량과 엄격한 전력 제약 때문에 경량 데이터 파이프라인 이상으로 확장하기 어렵다. 또한 파이프라인의 여러 단계에 걸쳐 near-storage processor로 중간 데이터를 전송해야 하므로 data movement는 여전히 지배적 병목으로 남는다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>SOTA in-storage 가속기 REIS의 재순위화 비용</h3>
+      <p>REIS는 binary quantization을 이용해 coarse ANN search를 NAND 내부에서 수행한다. 그러나 binary 표현의 정확도가 제한적이어서, flash로부터 SSD 컨트롤러/DRAM으로 고정밀 데이터를 끌어와 INT8 re-ranking을 수행하는 값비싼 단계가 반드시 필요하다. 이 재순위화 단계가 전체 검색 시간의 약 70%를 차지하며, MLC read 지연시간과 데이터 이동에 의해 지배된다. 게다가 정확도를 유지하려면 큰 Nnlist와 큰 재순위화 후보 집합이 필요해, 결과적으로 대량의 중간 데이터가 SSD 컨트롤러로 이동해야 한다. D-NOVA는 바로 이 &#x27;고정밀 재순위화를 위해 배열 밖으로 데이터를 꺼내야 한다&#x27;는 지점을 공략한다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>DRAM-SSD 하이브리드 (SPANN, FusionANNS)</h3>
+      <p>SPANN은 centroid를 host DRAM에, 대규모 inverted list를 SSD에 저장하는 하이브리드 설계이며, FusionANNS는 이를 CPU/GPU/SSD 계층으로 확장한다. 그러나 두 경우 모두 후반부 후보 처리(candidate processing)가 host 측에 남아 있어 storage와 host 메모리 간 중간 데이터 이동이 여전히 필요하다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>아날로그 PIM 기법을 NAND에 그대로 옮길 수 없다</h3>
+      <p>ReRAM/PCM crossbar 기반 아날로그 PIM은 여러 셀에서 병렬로 흐르는 전류를 아날로그적으로 누적(analog current accumulation)하는 데 의존한다. 반면 NAND flash는 string이 직렬로 연결/차단되는 discrete state로 동작하기 때문에 이러한 crossbar식 전류 누적이 물리적으로 비현실적이다. 또한 NAND 셀은 1-transistor의 극도로 컴팩트한 구조라 셀에 추가 기능을 넣기 어렵고, 이것이 NAND 기반 ISP(in-storage processing)의 역량을 근본적으로 제한해 왔다. 이 제약이 곧 D-NOVA가 &#x27;아날로그 누적&#x27; 대신 &#x27;디지털 on/off 판정&#x27;으로 유사도를 정의하게 된 이유다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1) 진정한 in-storage searching and retrieval</h3>
+      <p>D-NOVA는 NAND의 multi-level cell 내부에서 저장된 cell 값과 query-driven wordline 전압을 비교하여 유사도를 배열 내부에서 직접 평가한다. 기존 주변 회로(peripheral circuit)를 재사용해 local group-wise 비교를 수행하므로 하드웨어 오버헤드가 무시할 수준이다. 동작은 완전히 digital하며 on/off 판정에 기반하므로 아날로그 도메인 처리에서 나타나는 non-ideality를 회피한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2) DTS — NAND string에 맞춘 정확한 거리 척도</h3>
+      <p>NAND string 내부 검색 연산을 위한 맞춤형 거리 척도인 DTS(Dual-bound Tight Similarity Sensing) 프레임워크를 제안한다. DTS는 검색 시 tight한 dual bound(upper/lower)를 적용해 후보 집합을 좁히며, multi-level cell을 읽기 위한 반복적 read 과정 대신 단순한 binary sensing만으로 세밀한 유사도 평가를 가능하게 한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3) Custom adapter를 통한 데이터베이스 도메인 변환</h3>
+      <p>임베딩을 DTS-정렬 공간으로 투영하는 adapter를 도입해, 널리 쓰이는 cosine/L2 척도와 DTS 사이의 격차를 해소한다. adapter는 document vector에 대한 contrastive objective로 offline에서 단 한 번만 학습되며, in-storage search 시점에는 거의 zero-overhead로 near-full IVF recall을 회복시킨다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4) 제어 가능한 효율-정확도 구성</h3>
+      <p>효율성과 정확도를 절충할 수 있는 controllable knob을 제공한다. block당 병렬로 센싱되는 wordline 수 m을, IVF 각 단계의 정확도 요구사항과 처리 데이터 볼륨에 따라 동적으로 조정하여 단계별 최적화를 수행한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5) Cross-layer co-design의 실증</h3>
+      <p>회로(sensing)–아키텍처(파이프라인/매핑)–알고리즘(거리 척도/adapter)에 걸친 cross-layer co-design을 통해 대규모 semantic retrieval을 거의 전적으로 in-storage에서 수행하여 데이터 이동을 효과적으로 제거하면서도 높은 정확도를 유지함을 입증했다. NQ와 HotpotQA에서 CPU baseline 및 SOTA(REIS) 대비 각각 33.3–41.7배/4.3–12.1배 높은 처리량과 58.8–71배/1.1–1.26배 낮은 에너지 소비를 달성했다.</p>
+      <span class="source-ref">PDF p. 2, 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 개요</h3>
+      <p>D-NOVA는 SSD 컨트롤러와 D-NOVA 스토리지 칩으로 구성된 완전 통합형 in-storage 가속기이다. centroid search → coarse Top-K2 search → fine Top-K1 re-ranking으로 이어지는 3단계 IVF 기반 계층적 검색 파이프라인을 NAND 메모리 배열 내부에 직접 임베딩하여 실행한다. 이를 가능하게 하는 것이 NAND string 탐색에 특화된 거리 척도 DTS이며, 여기에 임베딩 벡터를 DTS-친화적 도메인으로 매핑하는 경량 contrastive adapter를 결합해 software 수준에 근접한 recall을 유지한다. SSD 컨트롤러는 경량 scoring/sorting 연산만 담당한다.</p>
+      <span class="source-ref">PDF p. 1, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>스토리지 계층 구성</h3>
+      <p>NC개의 독립 채널이 각각 MCP 내 ND개 다이에 연결되고, 다이당 NP개 plane이 H-Tree bus로 연결되며, plane마다 3D NAND block(16K BL, 128 WL, 16 SSL) 배열이 배치된다. 이 계층이 채널/plane 수준의 병렬 in-storage 검색을 위한 연산 기본 단위 역할을 한다. 임베딩 벡터와 원문 document chunk는 모두 QLC에 저장되며, 임베딩은 INT4 값으로 각 cell에 인코딩된다. 즉 벡터와 문서가 같은 디바이스 안에 있으므로, 최종 결과 문서까지 host 개입 없이 내부에서 fetch할 수 있다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>SSD 컨트롤러의 역할 축소</h3>
+      <p>SSD 컨트롤러는 채널별 flash controller와 SRAM에 연결된 embedded processor로 구성된다. 역할은 quicksort/quickselect 같은 경량 정렬과, cluster centroid 및 Top-K 후보 리스트에 대한 metadata 관리로 한정된다. 각 질의는 컨트롤러가 모든 활성 채널로 브로드캐스트한다. 기존 in-storage 설계에서 컨트롤러가 담당하던 무거운 고정밀 re-ranking이 배열 내부로 흡수되었다는 점이 구조적 차별점이다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>주요 구성요소와 단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>구성요소 A: DTS(Dual-Bound Tight Similarity Sensing) 엔진</h3>
+      <p>DTS는 두 종류의 센싱을 결합한다. 첫째, Upper-Bound Similarity Sensing(UBS)은 wordline 전압을 VWL=qi+α로 인가하고, m-cell group 내 모든 cell이 ri&lt;qi+α를 만족할 때만 pass로 판정한다(Eq.1). NAND string은 직렬 연결이므로 하나라도 조건을 어기면 string이 차단되고, 이것이 자연스럽게 &#x27;all-pass&#x27; 논리를 만든다. 둘째, Complement UBS는 4비트 complement 값(ri&#x27;=15-ri, qi&#x27;=15-qi)에 동일한 all-pass 조건을 적용한다(Eq.3). 기존 Lower-Bound Sensing(LBS, Eq.2)은 group 내 단 하나의 cell만 조건을 만족해도 pass가 되어 m이 커질수록 false positive를 유발하는데, DTS는 이 느슨한 LBS를 엄격한 Comp UBS로 대체한다. 최종 점수는 ScoreDTS=Σ(UBSscore_j+CompUBSscore_j)(Eq.4)로 산출된다.</p>
+      <span class="source-ref">PDF p. 4, 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 B: page-buffer deficit accumulator (ΔScoreDTS)</h3>
+      <p>각 m-cell group에서 나온 1-bit DTS 결과는 SA(sense amplifier)→SL→CL 경로를 거쳐 기존 QLC 4-bit data latch(DL)에 누적된다. 이때 절대 점수 대신 window-level 최댓값 Smax 대비 부족분인 deficit ΔScoreDTS=Smax-S를 계산하는데, 이 표현 덕분에 per-BL로 넓은 추가 저장공간 없이 4-bit 이내의 compact score를 유지할 수 있다. accumulator는 256개 BL마다 1개를 공유하는 시분할 방식으로 배치되어 면적 오버헤드를 최소화한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 C: stage-aware m-adaptive sensing</h3>
+      <p>단계별로 병렬 센싱하는 wordline 수(m1, m2, m3)를 다르게 설정하는 아키텍처 knob이다. 정확도에 민감한 centroid 선택(1단계)과 재순위화(3단계)에는 작은 m(예: 1–4)을, 처리량이 중요한 coarse Top-K2 검색(2단계)에는 큰 m(예: 4–8)을 적용한다. 논문 표기 규칙상 DTS111은 m=(1,1,1), DTS242는 m=(2,4,2)를 의미하며, 더 공격적인 변형으로 D-NOVA-F(DTS282), D-NOVA-XF(DTS484)가 있다.</p>
+      <span class="source-ref">PDF p. 7, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 D: contrastive adapter</h3>
+      <p>nn.LayerNorm → nn.Linear → 활성화(GELU) → nn.Linear로 구성된 경량 query-side adapter다. DTS 검색 결과에서 채굴한 hard negative를 사용하는 retrieval-aware InfoNCE loss로 offline에서 한 번 학습된다. 인코더(all-MiniLM-L6-v2, all-mpnet-base-v2)의 출력을 DTS-정렬 표현으로 재구성하여 recall 저하를 완화한다. 중요한 설계 선택은 passage 임베딩은 3D NAND에 고정한 채 query 측에만 적용한다는 점으로, 이 덕분에 이미 기록된 대규모 벡터를 다시 쓰지 않아도 된다. 384-D 임베딩 기준 0.4M 파라미터에 불과하며 query encoding 시간에 0.5–1%의 오버헤드만 추가한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>구성요소 E: locality-aware mapping</h3>
+      <p>centroid 벡터들 사이를 greedy nearest-neighbor walk로 순회하여 similarity chain을 구성한 뒤, 그 순서를 따라 first-fit 규칙으로 IVF list를 sub-block에 배치한다. 함께 접근되는(co-access) cluster들이 인접 sub-block에 모이므로 질의당 활성화해야 하는 sub-block 수가 줄어든다.</p>
+      <span class="source-ref">PDF p. 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>1단계: Centroid search</h3>
+      <p>centroid 데이터는 각 plane의 첫 sub-block에 분산 저장된다. SSD 컨트롤러가 브로드캐스트한 query가 WL driver를 통해 wordline 전압으로 인가되고, 작은 m(1–4)으로 DTS 기반 centroid 매칭이 수행된다. segment별 1-bit 결과가 SA→SL→CL을 거쳐 page buffer DL에 ΔScoreDTS로 누적되고, 여러 plane의 점수가 SSD 컨트롤러에서 병합되어 centroid당 6-bit ΔScoreDTS와 경량 metadata({CID, DIST, CADR}, 약 37-bit)가 생성된다. 이후 embedded processor의 quickselect로 상위 Np(예: 64)개 cluster가 선택되며, SRAM footprint는 0.5KB 미만이다.</p>
+      <span class="source-ref">PDF p. 6, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계: Coarse Top-K2 search</h3>
+      <p>선택된 cluster에 속한 벡터만 평가하여 coarse Top-K2 후보 리스트를 만든다. CID는 cluster directory(lookup table)를 통해 물리적 NAND 주소로 변환되고, 해당 sub-block들이 더 큰 m(4–8)으로 DTS 비교를 수행한다. 부분 점수는 로컬에서 누적된 뒤 컨트롤러에서 병합되며, embedded processor가 quickselect로 Top-K2({EID, EADR})를 식별한다. 이 단계는 데이터 볼륨이 가장 크므로 큰 m으로 처리량을 우선한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계: Fine Top-K1 re-ranking 및 문서 반환</h3>
+      <p>Top-K2에 해당하는 소수의 plane/sub-block만 재활성화하여 작은 m(1–4)으로 정밀 재센싱을 수행하고, 누적 후 embedded processor가 최종 quicksort로 Top-K1 결과를 산출한다. 이 단계는 전체 지연시간·에너지의 0.1% 미만만 차지한다 — REIS에서 전체 검색 시간의 약 70%를 차지하던 재순위화가 사실상 사라진 것이 핵심 성과다. 이후 Top-K 식별자가 로컬에서 document 주소로 변환되어 해당 텍스트가 document region에서 직접 fetch되고, 결과 문서만 host로 전송된다.</p>
+      <span class="source-ref">PDF p. 4, 7</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>인덱스 구조: IVF-Flat 기반 2계층</h3>
+      <p>D-NOVA는 IVF-Flat을 기준 인덱스로 삼는다. 벡터 공간을 Nnlist개 cluster로 나누고, 질의 시 Nnprobe개 cluster만 탐색하는 구조(예: 1024 → 64)로, 접근 패턴이 예측 가능하고 sub-block 단위 물리 매핑과 잘 맞는다. HNSW의 pointer-chasing과 달리 NAND의 block/plane 병렬성에 직접 대응시킬 수 있다는 점이 채택 이유다.</p>
+      <span class="source-ref">PDF p. 1, 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>DTS의 핵심 수식</h3>
+      <p>UBS(Eq.1)는 VWL=qi+α로 인가했을 때 m-cell group의 모든 cell이 ri&lt;qi+α를 만족해야 pass한다. LBS(Eq.2)는 group 내 하나라도 조건을 만족하면 pass하는 느슨한 조건이라 false positive를 만든다. Comp UBS(Eq.3)는 4-bit complement 값 ri&#x27;=15-ri, qi&#x27;=15-qi에 대해 UBS와 동일한 all-pass 조건을 적용함으로써 반대 방향의 bound를 엄격하게 잡는다. 최종 점수는 ScoreDTS=Σ_j(UBSscore_j + CompUBSscore_j)(Eq.4)이다. 두 방향 bound를 모두 엄격한 all-pass로 구성했기 때문에 후보 집합이 tight하게 좁혀진다.</p>
+      <span class="source-ref">PDF p. 4, 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>센싱 사이클 절감 효과</h3>
+      <p>DTS의 센싱 시간은 TDTS=(D/m)×2로, 차원 수 D를 m개씩 묶어 처리하고 UBS/Comp UBS 2회를 수행한다. 반면 전형적인 QLC read는 TQLC=D×Nrd로 각 차원마다 여러 번의 read reference를 거쳐야 한다. 이 차이로 DTS는 QLC 전형적 read 대비 sensing cycle을 최대 9.3배 줄이며, 추가 저장공간 오버헤드 없이 REIS 대비 상응하는 speedup을 얻는다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Adapter 학습 알고리즘</h3>
+      <p>adapter는 retrieval-aware InfoNCE loss로 학습된다. 중요한 점은 negative sample을 무작위가 아니라 실제 DTS 검색 결과에서 채굴한 hard negative로 삼는다는 것이다. 즉 DTS가 실제로 혼동하는 사례를 직접 학습 신호로 사용하여 DTS 도메인에서의 순위를 교정한다. 학습은 base database에 대해 offline에서 한 번만 수행되고, 이후 검색 시에는 frozen 상태로 재사용된다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>데이터셋</h3>
+      <p>총 6개 데이터셋을 사용한다. BEIR 계열로 NQ(Natural Questions, 2.68M documents, open-domain QA), HotpotQA(5.23M, multi-hop QA), FEVER(5.42M, fact verification), FiQA(57.6K, financial QA)를 사용하고, AIR-Bench의 wiki_en(1.01M, open-domain QA), MIRACL의 MIRACL-English(32.9M, ad-hoc retrieval)를 추가한다. 인코더는 all-MiniLM-L6-v2와 all-mpnet-base-v2 두 가지를 사용한다.</p>
+      <span class="source-ref">PDF p. 8, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 baseline</h3>
+      <p>(1) CPU-IVF / FP32-IVF: FAISS IVF-Flat, dual-socket 128-core 서버, 1.5TB DDR4 DRAM, PCIe 4.0 SSD, FP32 cosine similarity로 software 성능 및 정확도 상한 기준. (2) REIS: NAND 내부 cluster 선택과 binary coarse search 후 컨트롤러 측 INT8 re-ranking을 수행하는 SOTA in-storage 가속기. (3) NSP: RAGX 유사 near-storage processor로, QLC NAND에 INT8 임베딩을 저장한 뒤 일반 read로 fetch하고 ASIC 가속기가 1·2단계 INT8 cosine similarity를 수행하며 3단계는 quicksort만 담당. 비교 공정성을 위해 REIS·NSP에 대해 동일한 Nnlist/Nnprobe 파라미터와 스케일된 프로세서 설정을 사용한다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표 및 실험 설정</h3>
+      <p>정확도는 Recall@25와 Recall@100(FP32-IVF 대비 gap)으로, 성능은 질의당 지연시간, 질의당 에너지, 초당 질의 처리량(QPS)으로 측정한다. 특별한 언급이 없으면 DTS tolerance margin은 α=2로 설정한다. 하드웨어 오버헤드는 ASAP7 7nm standard-cell library와 OpenROAD flow(1GHz)로 합성 평가했고, sensing 신뢰성은 QLC의 VTH 잡음(0.1≤σ≤0.35)에 대해 σ당 1,000회 Monte Carlo 시뮬레이션으로 검증했다. 플래시 채널은 8채널(채널당 2.0 GB/s, 총 16 GB/s) 구성이다.</p>
+      <span class="source-ref">PDF p. 9, 10, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가에서 제외된 baseline</h3>
+      <p>GPU 기반 baseline은 포함하지 않았다. 검색 단계의 병목이 연산 처리량이 아니라 메모리/I-O 대역폭이라는 선행 연구와 일치한다는 저자들의 판단 때문이다. DRAM-PIM 기반 ANN 가속기도 정량 비교에 직접 포함하지 않았는데, 휘발성 DRAM-상주 인덱스를 가정하고 IVF-PQ/LUT scoring을 사용해 D-NOVA의 IVF-Flat 기준과 정확도/저장공간 trade-off가 다르기 때문이다.</p>
+      <span class="source-ref">PDF p. 9, 10</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>정확도: adapter가 DTS의 recall 손실을 절반 이하로 줄인다</h3>
+      <p>6개 데이터셋과 2개 인코더에 걸쳐 평균한 결과, FP32-IVF 대비 Recall@100 gap이 adapter 미적용 시 3.77–4.54%였으나 adapter 적용 후 1.43–1.76%로 감소했다. Table 3에 따르면 DTS111 설정에서는 3.79% → 1.45%(↓2.34%p, Adapter Gain +11.48%), DTS242 설정에서는 4.48% → 1.75%(↓2.73%p, Adapter Gain +11.87%)이다. 즉 m을 키워 처리량을 높일 때 생기는 추가 손실의 상당 부분을 adapter가 회수한다는 것이 핵심이다.</p>
+      <span class="source-ref">PDF p. 8, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Adapter의 일반화: 데이터베이스 확장 스트레스 테스트</h3>
+      <p>NQ를 80%/20%로 나눠 base 80%로만 adapter를 학습한 뒤 확장된 DB에 그대로 적용하는 실험에서, DTS111-IVF의 R@100 gap이 4.95% → 2.93%로, DTS242-IVF는 6.40% → 3.04%로 감소했다(무작위 split 평균, MiniLM/mpnet, Nprobe∈{64,128}). 이는 고정된 adapter를 재학습 없이 재사용해도 이득이 유지됨을 보여준다.</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>DTS가 UBS+LBS보다 우월한 이유의 실증</h3>
+      <p>m=1일 때는 DTS와 UBS+LBS가 동일하지만, m1을 4로 늘리면 두 방식의 Recall@100 gap이 4% 이상으로 벌어지고 m이 커질수록 격차가 계속 확대된다(Fig. 13). 이는 LBS의 &#x27;one-pass&#x27; 조건이 group 크기가 커질수록 false positive를 급격히 늘린다는 설계 가설을 뒷받침한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>m 설정의 민감도</h3>
+      <p>m1=m3∈{1,2,4}로 좁게 유지하면 MiniLM에서 Recall@100 gap이 Nprobe=64에서 약 3.5% 이내, Nprobe=128에서 약 2% 이내이며, mpnet에서는 두 설정 모두 약 1% 이내다(Fig. 12). 반면 m1, m3가 16에 근접하면 MiniLM에서 Recall@100이 10% 이상 저하된다. 정확도 민감 단계에서는 반드시 작은 m을 써야 한다는 stage-aware 설계의 근거다.</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>센싱 신뢰성과 tolerance margin α</h3>
+      <p>QLC 임계 잡음 영역(σ≈0.2)에서 α=1의 sensing accuracy는 10% 이하로 붕괴하지만, α≥2 마진은 sensing 신뢰성을 회복시킨다(Fig. 14(a), Monte Carlo 1,000 trials/σ). 한편 adapter 미적용 상태에서 α=3의 Recall@100은 α=2 기준 대비 약 0.1% 이내 차이에 그친다(Fig. 14(b), NQ/MiniLM/DTS111). 따라서 α=2를 nominal 동작점으로 삼는다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Locality-aware mapping의 효과</h3>
+      <p>NQ(mpnet, nlist=1024, nprobe=64)에서 2·3단계 모두 median sub-block 활성화 수가 약 38% 감소했고, HotpotQA(mpnet, nlist=2048, nprobe=128)에서는 2단계 약 44%, 3단계 약 42% 감소했다(Fig. 15). 데이터베이스에 25%가 naive placement로 추가되는 incremental update 상황에서도 감소율이 NQ 약 30.4%, HotpotQA 33.6–35.2%로 유지되어, 매핑 이득이 갱신에 대해 비교적 견고함을 보인다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지연시간·에너지</h3>
+      <p>보수적 구성(DTS242)의 D-NOVA는 NSP 대비 지연시간 30배, 에너지 15–34배 감소를, CPU 대비 지연시간 33–41배, 에너지 58–71배 감소를 달성했다(Fig. 16). REIS 대비 지연시간은 D-NOVA 3.01–3.79배, D-NOVA-F 3.80–4.99배, D-NOVA-XF 5.98–7.53배 감소하며, 에너지는 REIS 대비 6–27% 추가 절감된다.</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>처리량(QPS)</h3>
+      <p>대규모 배치 steady-state 처리량 기준으로 D-NOVA/D-NOVA-F는 CPU 대비 약 481–679배, NSP 대비 약 42.7–67.9배의 QPS를 달성했다. REIS 대비로는 D-NOVA/D-NOVA-F가 약 4.3–6.1배, D-NOVA-XF가 8.6–12.1배 높은 QPS를 보였다(Fig. 17). 배치 처리 시 이득이 크게 벌어지는 것은 plane/채널 병렬성이 충분히 활용되기 때문으로 보인다.</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>하드웨어 오버헤드</h3>
+      <p>256개 BL마다 accumulator 1개를 공유하는 설계(plane당 64개)는 plane당 0.023mm²를 차지하며, 이는 1.476mm² plane 면적의 1.5% 미만이다. accumulation 지연시간은 256 BL @ 1GHz 기준 약 0.25μs로, 약 30μs인 sensing 지연시간 대비 무시할 수준이며 파이프라이닝으로 완전히 은닉된다. m=8로 다중 WL을 활성화해도 BL discharge 시간 기준 sensing 지연시간 차이는 5.6%에 불과하다. adapter 역시 0.4M 파라미터로 query encoding 시간의 0.5–1% 오버헤드만 추가한다.</p>
+      <span class="source-ref">PDF p. 8, 12</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론 및 종합 평가</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>D-NOVA는 회로·아키텍처·알고리즘에 걸친 cross-layer co-design을 통해 대규모 semantic retrieval을 거의 전적으로 in-storage에서 수행함으로써 데이터 이동을 효과적으로 제거하면서도 높은 정확도를 유지할 수 있음을 입증했다. NQ와 HotpotQA에서 CPU baseline 대비 33.3–41.7배, SOTA(REIS) 대비 4.3–12.1배 높은 처리량과 각각 58.8–71배, 1.1–1.26배 낮은 에너지 소비를 달성하여, 확장 가능하고 에너지 효율적인 in-storage retrieval 가속의 새로운 방향을 제시한다.</p>
+      <span class="source-ref">PDF p. 2, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>분석자 관점의 핵심 통찰</h3>
+      <p>이 논문의 본질적 기여는 &#x27;더 빠른 검색 회로&#x27;가 아니라 &#x27;거리 척도를 하드웨어에 맞춰 다시 정의하고, 그로 인한 정확도 손실을 학습으로 되사오는(buy back) 설계 패턴&#x27;이다. NAND의 직렬 string 구조가 자연스럽게 all-pass 논리를 제공한다는 물리적 사실을 거리 척도로 승격시킨 것이 DTS이고, 그렇게 만들어진 비표준 척도와 표준 임베딩 공간 사이의 간극을 offline contrastive adapter가 메운다. 특히 adapter를 query 측에만 적용해 이미 NAND에 기록된 passage 임베딩을 건드리지 않도록 한 선택은, 대규모 벡터 DB의 재기록 비용을 고려하면 실용성 측면에서 중요한 결정으로 보인다(analyst_inference).</p>
+      <span class="source-ref">PDF p. 4, 5, 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>D-NOVA 전체 동작 흐름 (3단계 in-storage IVF 파이프라인)</h3>
+                <span class="source-ref">PDF p. 4, 6, 7</span>
+              </div>
+              <p>질의 인코딩부터 adapter 투영, 3단계 in-storage DTS 검색, 문서 fetch까지의 전체 흐름. 회색 영역은 SSD 컨트롤러(경량 정렬만 담당), 나머지 검색 연산은 3D NAND 배열 내부에서 수행된다.</p>
+              <div class="mermaid">
+flowchart TD
+  Q[사용자 질의] --&gt; ENC[인코더 MiniLM/mpnet]
+  ENC --&gt; AD[Contrastive Adapter&lt;br/&gt;DTS 정렬 공간 투영]
+  AD --&gt; BC[SSD 컨트롤러&lt;br/&gt;전 채널 브로드캐스트]
+  BC --&gt; S1
+  subgraph NAND [3D NAND 배열 내부]
+    S1[1단계 Centroid search&lt;br/&gt;작은 m 1-4&lt;br/&gt;DTS 센싱]
+    S2[2단계 Coarse Top-K2&lt;br/&gt;큰 m 4-8&lt;br/&gt;선택 cluster만 센싱]
+    S3[3단계 Fine Top-K1&lt;br/&gt;작은 m 1-4&lt;br/&gt;정밀 재센싱]
+    DOC[Document region&lt;br/&gt;텍스트 fetch]
+  end
+  S1 --&gt; ACC1[Page buffer DL&lt;br/&gt;ΔScoreDTS 누적]
+  ACC1 --&gt; QS1[Embedded proc&lt;br/&gt;quickselect Np=64]
+  QS1 --&gt; DIR[Cluster directory&lt;br/&gt;CID → 물리 주소]
+  DIR --&gt; S2
+  S2 --&gt; ACC2[부분 점수 누적/병합]
+  ACC2 --&gt; QS2[quickselect Top-K2&lt;br/&gt;EID, EADR]
+  QS2 --&gt; S3
+  S3 --&gt; QS3[quicksort Top-K1&lt;br/&gt;전체 비용 0.1% 미만]
+  QS3 --&gt; DOC
+  DOC --&gt; HOST[결과 문서만 host 전송]
+  HOST --&gt; GEN[LLM Generation]
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>DTS 센싱 구조: UBS + Complement UBS</h3>
+                <span class="source-ref">PDF p. 4, 5, 6</span>
+              </div>
+              <p>m-cell group 단위 센싱의 논리 구조. 기존 LBS는 하나만 통과해도 pass가 되어 false positive를 유발하지만, DTS는 이를 엄격한 Complement UBS로 대체한다(Eq.1–4).</p>
+              <div class="mermaid">
+flowchart TD
+  QV[질의 차원 qi] --&gt; WL1[UBS: VWL = qi + α]
+  QV --&gt; CMP[Complement 변환&lt;br/&gt;qi&#x27; = 15 - qi]
+  CMP --&gt; WL2[Comp UBS: VWL = qi&#x27; + α]
+  WL1 --&gt; G1[m-cell group&lt;br/&gt;모든 cell ri &lt; qi+α 시 pass&lt;br/&gt;Eq.1]
+  WL2 --&gt; G2[m-cell group&lt;br/&gt;모든 cell ri&#x27; &lt; qi&#x27;+α 시 pass&lt;br/&gt;Eq.3]
+  G1 --&gt; SUM[ScoreDTS = Σ UBS + CompUBS&lt;br/&gt;Eq.4]
+  G2 --&gt; SUM
+  SUM --&gt; DEF[Deficit 표현&lt;br/&gt;ΔScoreDTS = Smax - S&lt;br/&gt;4-bit DL 누적]
+  LBSX[기존 LBS Eq.2&lt;br/&gt;하나만 통과해도 pass&lt;br/&gt;→ false positive] -.대체됨.-&gt; G2
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 D-NOVA의 데이터 이동 비교</h3>
+                <span class="source-ref">PDF p. 2, 3, 4, 7</span>
+              </div>
+              <p>REIS/NSP 등 기존 방식은 고정밀 재순위화를 위해 NAND 배열 밖으로 중간 데이터를 옮겨야 하지만(검색 시간의 약 70%), D-NOVA는 재순위화까지 배열 내부에서 수행하고 결과 문서만 host로 보낸다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph PRIOR [기존: REIS / NSP]
+    P1[NAND 배열&lt;br/&gt;binary coarse search] --&gt;|대량 중간 데이터 이동| P2[SSD 컨트롤러 / DRAM&lt;br/&gt;INT8 re-ranking&lt;br/&gt;검색 시간의 약 70%]
+    P2 --&gt; P3[Host CPU/GPU]
+  end
+  subgraph DNOVA [제안: D-NOVA]
+    D1[NAND 배열&lt;br/&gt;DTS 3단계 전 과정&lt;br/&gt;coarse + fine re-rank] --&gt;|경량 metadata 37-bit| D2[SSD 컨트롤러&lt;br/&gt;quickselect/quicksort만]
+    D2 --&gt; D3[Host&lt;br/&gt;결과 문서만 수신]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>IVF-Flat RAG 파이프라인의 단계별 end-to-end 지연시간 비중</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 1 · Figure 1(b) · IVF-Flat 파이프라인, 데이터베이스 규모별 (16GB / 120GB / 1TB)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Adapter 적용 전후 FP32-IVF 대비 평균 Recall@100 gap</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · Table 3 · 6개 데이터셋 × 2개 인코더(MiniLM, mpnet) 평균, α=2. Adapter Gain은 각각 +11.48%, +11.87%
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>NQ 80%/20% 데이터베이스 확장 스트레스 테스트에서의 R@100 gap</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 10 · NQ 80/20 expansion test, base 80%로만 학습된 frozen adapter 재사용, 무작위 split 평균, MiniLM/mpnet, Nprobe∈{64,128}
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Locality-aware mapping에 의한 median sub-block 활성화 감소율</h3>
+              <div class="chart-container">
+                <canvas id="chart-3"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Figure 15 · NQ: mpnet, nlist=1024, nprobe=64 / HotpotQA: mpnet, nlist=2048, nprobe=128. 본문에 명시된 근사 median 감소율(약 38%, 약 44%, 약 42%)
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>REIS 대비 지연시간 감소 배율 (D-NOVA 변형별)</h3>
+              <div class="chart-container">
+                <canvas id="chart-4"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Figure 16 · REIS baseline 대비. 개별 stage별 stacked bar 수치는 추출 불확실하여 본문 명시 배율 범위만 사용
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>REIS 대비 steady-state QPS 향상 배율</h3>
+              <div class="chart-container">
+                <canvas id="chart-5"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Figure 17 · 대규모 배치 steady-state 처리량 기준, REIS baseline 대비
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>하드웨어 물리 특성(NAND string의 직렬 on/off)을 회피 대상이 아니라 거리 척도의 설계 원리로 승격시킨 점이 이 논문의 가장 독창적인 부분이다. 아날로그 crossbar 누적을 NAND에 억지로 이식하는 대신, all-pass 논리를 그대로 유사도 정의에 사용하여 완전 digital 동작과 non-ideality 회피를 동시에 얻었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>비표준 거리 척도 도입에 따른 정확도 손실을 하드웨어를 복잡하게 만들어 해결하지 않고, 0.4M 파라미터짜리 offline adapter라는 소프트웨어 수단으로 되사온 설계 분업이 명확하다. 검색 시점 오버헤드가 query encoding의 0.5–1%에 그친다는 점에서 비용 배분이 합리적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>adapter를 query 측에만 적용하고 passage 임베딩은 NAND에 고정한 선택은, 수백만~수천만 문서 규모의 벡터를 재기록해야 하는 비용을 회피한다는 점에서 실제 배포 관점의 현실성이 높다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>검증이 다층적이다. 알고리즘 수준(6개 데이터셋 × 2개 인코더 recall), 회로 수준(ASAP7 7nm 합성, in-house DTS circuit simulator), 신뢰성 수준(QLC VTH 잡음에 대한 σ당 1,000회 Monte Carlo)을 모두 제시하여 cross-layer 주장의 각 층을 개별적으로 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10, 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>m이라는 단일 knob으로 정확도-처리량 곡선 위의 여러 동작점(DTS111/242/282/484)을 제시하여, 단일 최적점 주장이 아니라 설계 공간을 보여준다. 이는 서로 다른 SLA를 가진 배포 환경에 대응할 수 있음을 시사한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>성능 이득의 출처를 명시적으로 추적 가능하게 만들었다 — REIS에서 검색 시간의 약 70%였던 재순위화가 D-NOVA에서 0.1% 미만으로 축소되었다는 대비가 개선 배율의 근거를 설명한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 7</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>기존 주변 회로(SA/SL/CL, QLC 4-bit data latch)를 재사용하고 accumulator를 256 BL당 1개로 공유하여 plane 면적의 1.5% 미만이라는 낮은 오버헤드를 달성한 점은, in-storage 가속기의 제조 현실성 측면에서 중요한 강점이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6, 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>DTS의 tolerance margin α=1에서는 QLC 임계전압(VTH) 잡음 영역에서 sensing accuracy가 10% 이하로 붕괴하여 DTS가 사실상 무력화된다. 신뢰성 있는 동작을 위해 α≥2 마진이 필수적이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>센싱 마진 α를 3으로 높이면 정확도는 대체로 유지되지만, 특히 작은 Nprobe에서 추가적인 false positive를 허용하기 시작하는 trade-off가 존재한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>정확도에 민감한 1·3단계에서 병렬 센싱 수 m1, m3를 16에 근접하도록 크게 설정하면 (MiniLM 기준) Recall@100이 10% 이상 저하되므로, 이들 단계는 작은 m 값으로 제한해야 한다. 즉 처리량 확대 여지가 단계별로 비대칭적으로 제약된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>평가에서 GPU 기반 baseline은 고려하지 않았다. 검색 단계의 병목이 연산 처리량이 아니라 메모리/I-O 대역폭이라는 선행 연구와 일치한다는 저자들의 판단에 근거한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>DRAM-PIM 기반 ANN 가속기는 정량 비교 baseline에 직접 포함하지 않았다. 휘발성 DRAM-상주 인덱스를 가정하고 IVF-PQ/LUT scoring으로 인덱스 방식이 달라 D-NOVA의 IVF-Flat 기준과 정확도/저장공간 trade-off가 다르며, 대규모 RAG corpus에서는 SSD/NAND로부터 DRAM 사본을 populate·유지해야 한다는 것이 저자들의 근거다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Locality-aware mapping에서 동일 sub-block/plane에 대한 반복적 접근은 일시적인 temporal contention을 유발할 수 있다. 저자들은 plane 전반에 걸친 cluster 배치로 이를 완화한다고 언급하지만 완전히 제거하지는 못한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>질의/워크로드 분포를 크게 바꾸는 대규모 데이터베이스 업데이트가 발생하면, base database로만 학습된 frozen adapter를 offline으로 재학습(refresh)해야 할 수 있다. 다만 일반적인 문서 삽입 수준에서는 재학습이 필요 없다고 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>NAND 쓰기 내구성(P/E cycle endurance)과 write amplification이 임베딩 갱신 빈도에 미치는 영향은 본문에서 정량적으로 다뤄지지 않았다. 벡터 DB가 빈번히 갱신되는 운영 환경에서의 수명 특성은 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>성능 수치는 IVF-Flat을 기준 인덱스로 한 비교에 근거한다. HNSW 계열이나 PQ 기반 압축 인덱스를 사용하는 시스템과의 정확도-용량-속도 종합 비교는 제시되지 않아, 인덱스 선택이 다른 환경으로의 일반화 가능성은 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 9, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>임베딩을 INT4로 cell에 인코딩하는 양자화 자체가 유발하는 정보 손실과, DTS 척도가 유발하는 손실이 보고된 recall gap 안에서 분리되어 제시되지 않았다. 두 요인의 개별 기여도는 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 8, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>adapter는 all-MiniLM-L6-v2와 all-mpnet-base-v2 두 인코더에 대해서만 검증되었다. 임베딩 차원이나 분포 특성이 크게 다른 최신 대형 인코더에서도 동일한 gap 회복이 성립하는지는 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>다중 질의 동시 처리 시 채널/plane 자원 경합에 따른 tail latency 분포는 제시되지 않았다. 보고된 steady-state QPS 이득(CPU 대비 481–679배)은 대규모 배치 조건에서의 수치이므로, 저지연 단일 질의 서비스 환경의 특성은 별도 확인이 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>DTS 척도로 recall이 손실되는 구간과 adapter가 회복시키는 구간은 질의 유형별로 어떻게 다른가? 특히 multi-hop QA(HotpotQA)처럼 여러 문서를 함께 요구하는 워크로드에서 dual-bound의 tightness가 특정 질의 유형에 체계적으로 불리하게 작용하지는 않는가?</h3>
+              </div>
+              <p>논문은 6개 데이터셋 평균 gap(3.77–4.54% → 1.43–1.76%)을 제시하지만, 질의 유형별 오차 분포나 실패 사례 분석은 제시하지 않는다.</p>
+              <span class="source-ref">PDF p. 8, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>adapter의 재학습이 필요해지는 데이터베이스 분포 변화의 임계점은 어디인가? 논문은 NQ 80/20 확장에서 frozen adapter가 유효함을 보였지만, 도메인 자체가 바뀌는 수준의 갱신에 대한 임계 조건은 정의되지 않았다.</h3>
+              </div>
+              <p>저자들은 대규모 업데이트 시 offline refresh가 필요할 수 있다고 언급하나 그 판단 기준을 제시하지 않았다.</p>
+              <span class="source-ref">PDF p. 8, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>NAND 셀의 시간 경과에 따른 열화(retention loss, read disturb, P/E cycling에 따른 VTH 분포 이동)가 누적될 때 α=2 마진은 여전히 충분한가? 디바이스 수명 주기 전반에 걸쳐 α를 동적으로 조정하는 정책이 필요한가?</h3>
+              </div>
+              <p>Monte Carlo 검증은 0.1≤σ≤0.35 범위의 정적 잡음 모델에 대해 수행되었으며, 시간에 따른 열화 누적 시나리오는 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>DTS의 dual-bound 원리를 IVF-Flat이 아닌 다른 인덱스(예: graph 기반 HNSW의 이웃 후보 필터링, 또는 PQ의 코드북 거리 계산)에 적용할 수 있는가? 적용 가능하다면 in-storage 검색의 적용 범위가 크게 넓어진다.</h3>
+              </div>
+              <p>논문은 IVF의 구조적 접근 패턴을 전제로 파이프라인을 설계했으며, 다른 인덱스로의 확장은 논의되지 않았다.</p>
+              <span class="source-ref">PDF p. 1, 7</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>m을 정적 설정이 아니라 질의별 난이도나 실행 중 점수 분포에 따라 런타임에 적응시키면 추가 이득이 있는가? 현재는 단계별 고정값(DTS111/242/282/484)으로 운용된다.</h3>
+              </div>
+              <p>stage-aware m-adaptive sensing은 단계별 차등화까지만 다루며, 질의별 동적 조정은 평가되지 않았다.</p>
+              <span class="source-ref">PDF p. 7, 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>locality-aware mapping이 유발할 수 있는 temporal contention은 실제 다중 사용자 환경에서 tail latency에 얼마나 영향을 주는가? 인기 cluster가 편중 접근되는 skewed query 분포에서도 median 감소율(38–44%)이 유지되는가?</h3>
+              </div>
+              <p>저자들이 contention 존재를 인정했고, 평가는 median sub-block 접근 수 기준으로만 제시되어 분포의 꼬리 특성은 확인되지 않는다.</p>
+              <span class="source-ref">PDF p. 12</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>검색 결과 문서를 스토리지 내부에서 직접 fetch하는 구조를 더 밀어붙여, RAG의 후속 단계(예: reranker 모델 또는 프롬프트 구성) 일부까지 in-storage로 내리는 것이 유의미한가? Fig. 1(b) 기준 1TB 규모에서는 retrieval이 94.26%를 차지하므로 남은 개선 여지는 generation 측에 있다.</h3>
+              </div>
+              <p>논문은 retrieval 단계 최적화에 집중하며, 파이프라인의 나머지 단계에 대한 in-storage 확장은 다루지 않는다.</p>
+              <span class="source-ref">PDF p. 1, 7, 13</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>RAG (Retrieval-Augmented Generation)</dt>
+              <dd>
+                LLM이 사전학습 지식만 사용하는 대신 외부 지식 베이스에서 관련 문서를 검색해 함께 입력하는 기법. 지식 최신화가 쉽지만 검색 단계가 시스템 비용을 지배하게 된다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>DTS (Dual-bound Tight Similarity Sensing)</dt>
+              <dd>
+                이 논문이 제안한 NAND 전용 거리 척도. UBS와 Complement UBS라는 두 개의 엄격한 all-pass 조건을 결합해 상한·하한을 동시에 좁히며, MLC 반복 read 없이 binary sensing만으로 유사도를 평가한다(Eq.1–4).
+                <span class="source-ref">PDF p. 2, 4, 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>UBS (Upper-Bound Similarity Sensing)</dt>
+              <dd>
+                wordline 전압을 VWL=qi+α로 인가하고, m-cell group 내 모든 cell이 ri&lt;qi+α를 만족할 때만 pass로 판정하는 센싱(Eq.1). NAND string의 직렬 구조가 all-pass 논리를 자연스럽게 구현한다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Comp UBS (Complement UBS)</dt>
+              <dd>
+                4비트 complement 값(ri&#x27;=15-ri, qi&#x27;=15-qi)에 UBS와 동일한 all-pass 조건을 적용하는 센싱(Eq.3). 느슨한 LBS를 대체하여 false positive를 억제한다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>LBS (Lower-Bound Sensing)</dt>
+              <dd>
+                m-cell group 내 단 하나의 cell만 조건을 만족해도 pass로 판정하는 기존의 느슨한 센싱(Eq.2). m이 커질수록 false positive가 급증하여 DTS에서 Comp UBS로 대체되었다.
+                <span class="source-ref">PDF p. 5, 6, 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>α (tolerance margin)</dt>
+              <dd>
+                wordline 전압에 더해지는 센싱 여유 마진. QLC의 VTH 잡음에 대한 강건성을 결정하며, α=1은 잡음 영역에서 붕괴하고 α=2가 nominal 동작점으로 채택되었다.
+                <span class="source-ref">PDF p. 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>m (parallel-sensed wordline 수)</dt>
+              <dd>
+                block당 동시에 센싱되는 wordline 개수이자 정확도-처리량 절충의 핵심 knob. 논문 표기 DTS111은 m=(1,1,1), DTS242는 m=(2,4,2)를 뜻하며 D-NOVA-F는 DTS282, D-NOVA-XF는 DTS484이다.
+                <span class="source-ref">PDF p. 7, 11, 12</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>ΔScoreDTS (deficit score)</dt>
+              <dd>
+                window-level 최댓값 Smax 대비 부족분(Smax-S)으로 점수를 표현하는 방식. per-BL 추가 저장공간 없이 기존 QLC 4-bit data latch에 compact하게 누적할 수 있게 한다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>IVF (Inverted File Index)</dt>
+              <dd>
+                벡터 공간을 Nnlist개 cluster로 분할하고 질의 시 Nnprobe개 cluster만 탐색하는 ANN 인덱스(예: 1024 → 64). 접근 패턴이 구조적이어서 NAND의 block/plane 병렬성에 매핑하기 좋다.
+                <span class="source-ref">PDF p. 1, 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Contrastive adapter</dt>
+              <dd>
+                LayerNorm-Linear-GELU-Linear로 구성된 경량 query-side 투영 모듈. DTS 검색에서 채굴한 hard negative 기반 InfoNCE loss로 offline에서 한 번만 학습되어 임베딩을 DTS-정렬 공간으로 옮긴다.
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>QLC (Quad-Level Cell)</dt>
+              <dd>
+                cell당 4비트(16개 상태)를 저장하는 NAND 방식. D-NOVA는 임베딩을 INT4로 각 cell에 인코딩하며, 상태가 조밀해 VTH 잡음에 취약하다는 점이 α 설계의 배경이다.
+                <span class="source-ref">PDF p. 4, 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Locality-aware mapping</dt>
+              <dd>
+                centroid 간 greedy nearest-neighbor walk로 similarity chain을 만든 뒤 first-fit으로 IVF list를 sub-block에 배치하여, co-access되는 cluster를 인접 배치해 질의당 sub-block 활성화 수를 줄이는 기법.
+                <span class="source-ref">PDF p. 8, 12</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>REIS</dt>
+              <dd>
+                비교 대상 SOTA in-storage 가속기. NAND 내부에서 binary quantization 기반 coarse search를 수행하지만, 정확도 보완을 위한 컨트롤러 측 INT8 re-ranking이 전체 검색 시간의 약 70%를 차지한다.
+                <span class="source-ref">PDF p. 2, 3, 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>NSP (Near-Storage Processor)</dt>
+              <dd>
+                RAGX 유사 비교 baseline. QLC NAND에 INT8 임베딩을 저장한 뒤 일반 read로 fetch하고 별도 ASIC이 cosine similarity를 계산하는 방식으로, 배열 외부 처리에 의존한다.
+                <span class="source-ref">PDF p. 9</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Recall@K gap</dt>
+              <dd>
+                FP32-IVF(software 상한) 대비 Recall@K의 차이로 정의되는 정확도 손실 지표. 이 논문의 주 정확도 척도는 Recall@25와 Recall@100이다.
+                <span class="source-ref">PDF p. 8, 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Page buffer / SA-SL-CL</dt>
+              <dd>
+                NAND 주변 회로 경로. sense amplifier(SA)에서 감지된 1-bit DTS 결과가 SL, CL을 거쳐 data latch(DL)로 전달·누적되며, D-NOVA는 이 기존 경로를 재사용해 하드웨어 오버헤드를 최소화한다.
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문 헤더에 ACM DOI/ISBN이 &#x27;XXXXXXX&#x27;/&#x27;978-X-XXXX-XXXX-X/XX/XX&#x27; placeholder로 표기되어 있어 최종 출판 식별자는 본 문서만으로 확인 불가.</li><li>Figure 13((DTS-(UBS+LBS)) Recall@100 차이)의 개별 막대 값과 dataset/encoder/nprobe 조건 간 정확한 매핑은 텍스트/이미지 추출만으로 확정할 수 없어, 본문에 명시된 정성적 서술(&#x27;m1=4에서 4% 이상 차이&#x27;)만 사용함.</li><li>Figure 15의 각 곡선(2nd/3rd stage, locality-aware 적용/미적용)별 개별 QPS 배율 값과 조건 간 정확한 매핑은 확정할 수 없어, 본문에 명시된 median 감소율 수치만 차트에 사용함.</li><li>Figure 16의 정규화 지연시간/에너지 stacked bar에서 시스템별·stage별 개별 수치는 다열 레이아웃 텍스트 추출 문제로 조건별 매핑이 불확실하여, 본문에 명시된 배수 범위(3.01–3.79× 등)만 사용함.</li><li>Fig. 1(b)에 사용된 &#x27;Synthetic Dataset(1TB)&#x27;의 구체적 생성 방법 및 구성은 본문에서 상세히 설명되지 않음(동기부여용 그림에만 사용됨).</li><li>Figure 11(6개 데이터셋별 R@25/R@100 개별 값)의 데이터셋·인코더별 정확한 수치는 추출 텍스트로 확정할 수 없어, Table 3의 평균값만 차트화함.</li><li>NC(채널 수), ND(다이 수), NP(plane 수)의 구체적 평가 설정값은 추출 근거에서 8채널(총 16 GB/s)만 확인되며 다이/plane 수의 정확한 값은 확인되지 않음.</li><li>Top-K1, Top-K2의 구체적 K 값과 Nnlist/Nnprobe의 데이터셋별 전체 설정표는 일부 조건(NQ nlist=1024/nprobe=64, HotpotQA nlist=2048/nprobe=128)만 확인되며 전체는 확정 불가.</li><li>NAND 쓰기 내구성(P/E cycle) 및 임베딩 갱신 시 write amplification에 대한 정량 분석은 추출 근거에서 확인되지 않음.</li><li>다중 질의 동시 실행 시의 tail latency(p99 등) 분포는 추출 근거에서 확인되지 않으며, 보고된 QPS는 steady-state 배치 조건 기준임.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "IVF-Flat RAG 파이프라인의 단계별 end-to-end 지연시간 비중", "labels": ["HotpotQA 16GB - Encoding", "HotpotQA 16GB - Retrieval", "HotpotQA 16GB - Generation", "wiki_en/NQ 120GB - Encoding", "wiki_en/NQ 120GB - Retrieval", "wiki_en/NQ 120GB - Generation", "Synthetic 1TB - Encoding", "Synthetic 1TB - Retrieval", "Synthetic 1TB - Generation"], "values": [3.08, 20.36, 76.57, 1.19, 69.46, 29.35, 0.22, 94.26, 5.52], "unit": "%", "xLabel": "데이터셋 / 단계", "yLabel": "end-to-end 지연시간 비중"}, {"canvasId": "chart-1", "type": "bar", "title": "Adapter 적용 전후 FP32-IVF 대비 평균 Recall@100 gap", "labels": ["DTS111 (m=1,1,1) w/o adapter", "DTS111 (m=1,1,1) w/ adapter", "DTS242 (m=2,4,2) w/o adapter", "DTS242 (m=2,4,2) w/ adapter"], "values": [3.79, 1.45, 4.48, 1.75], "unit": "%", "xLabel": "DTS 설정 / adapter 적용 여부", "yLabel": "FP32-IVF 대비 Recall@100 gap"}, {"canvasId": "chart-2", "type": "bar", "title": "NQ 80%/20% 데이터베이스 확장 스트레스 테스트에서의 R@100 gap", "labels": ["DTS111 w/o adapter", "DTS111 w/ frozen adapter", "DTS242 w/o adapter", "DTS242 w/ frozen adapter"], "values": [4.95, 2.93, 6.4, 3.04], "unit": "%", "xLabel": "DTS 설정 / adapter 적용 여부", "yLabel": "확장 DB에서의 R@100 gap"}, {"canvasId": "chart-3", "type": "bar", "title": "Locality-aware mapping에 의한 median sub-block 활성화 감소율", "labels": ["NQ - 2단계", "NQ - 3단계", "HotpotQA - 2단계", "HotpotQA - 3단계"], "values": [38, 38, 44, 42], "unit": "%", "xLabel": "데이터셋 / 파이프라인 단계", "yLabel": "median sub-block 활성화 감소율"}, {"canvasId": "chart-4", "type": "bar", "title": "REIS 대비 지연시간 감소 배율 (D-NOVA 변형별)", "labels": ["D-NOVA (DTS242) 하한", "D-NOVA (DTS242) 상한", "D-NOVA-F (DTS282) 하한", "D-NOVA-F (DTS282) 상한", "D-NOVA-XF (DTS484) 하한", "D-NOVA-XF (DTS484) 상한"], "values": [3.01, 3.79, 3.8, 4.99, 5.98, 7.53], "unit": "×", "xLabel": "D-NOVA 변형", "yLabel": "REIS 대비 지연시간 감소 배율 (범위 하한/상한)"}, {"canvasId": "chart-5", "type": "bar", "title": "REIS 대비 steady-state QPS 향상 배율", "labels": ["D-NOVA / D-NOVA-F 하한", "D-NOVA / D-NOVA-F 상한", "D-NOVA-XF 하한", "D-NOVA-XF 상한"], "values": [4.3, 6.1, 8.6, 12.1], "unit": "×", "xLabel": "D-NOVA 변형", "yLabel": "REIS 대비 QPS 배율 (범위 하한/상한)"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

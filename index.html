@@ -754,7 +754,7 @@
         
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>33</small>
+          <small>34</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>4</small>
+          <small>3</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -809,8 +809,8 @@
       </p>
 
       <div class="statistics">
-        <span class="stat">논문 33편</span>
-        <span class="stat">전체 항목 47개</span>
+        <span class="stat">논문 34편</span>
+        <span class="stat">전체 항목 48개</span>
       </div>
     </div>
   </header>
@@ -821,7 +821,7 @@
     <a href="#papers" class="category-card">
       <h2>Research &amp; Analysis <span>논문</span></h2>
       <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
-      <small>33개 문서</small>
+      <small>34개 문서</small>
     </a>
     
 
@@ -865,7 +865,7 @@
       
         <a class="tab-link" href="#papers">
           <span>논문</span>
-          <small>33</small>
+          <small>34</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>4</small>
+          <small>3</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,7 +923,7 @@
     </div>
 
     <span class="pending-queue-count">
-      4편 대기 중
+      3편 대기 중
     </span>
   </div>
 
@@ -935,12 +935,12 @@
           </div>
 
           <div class="pending-queue-paper">
-            <strong>D-nova.pdf</strong>
+            <strong>hybrid vector retrieval.pdf</strong>
             <span>등록 시각 · 2026-07-22 11:49</span>
           </div>
 
           <div class="pending-queue-size">
-            6.6 MB
+            9.1 MB
           </div>
 
           <div>
@@ -954,28 +954,6 @@
         <div class="pending-queue-item">
           <div class="pending-queue-order">
             2
-          </div>
-
-          <div class="pending-queue-paper">
-            <strong>hybrid vector retrieval.pdf</strong>
-            <span>등록 시각 · 2026-07-22 11:49</span>
-          </div>
-
-          <div class="pending-queue-size">
-            9.1 MB
-          </div>
-
-          <div>
-            <span class="pending-queue-status queue-waiting">
-              대기 중
-            </span>
-          </div>
-        </div>
-        
-
-        <div class="pending-queue-item">
-          <div class="pending-queue-order">
-            3
           </div>
 
           <div class="pending-queue-paper">
@@ -997,7 +975,7 @@
 
         <div class="pending-queue-item">
           <div class="pending-queue-order">
-            4
+            3
           </div>
 
           <div class="pending-queue-paper">
@@ -1030,11 +1008,37 @@
           <h2>Paper Reviews</h2>
           <p>원본 논문 기반의 구조화된 분석 보고서입니다.</p>
         </div>
-        <span class="section-count">33개</span>
+        <span class="section-count">34개</span>
       </div>
 
       <div class="library-grid">
         
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/d-nova/">
+            D-NOVA: In-Storage Retrieval Accelerator via Dual-Bound 3D NAND-Optimized Similarity Search with Vector Adaptation
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          검증 전
+        </span>
+      </div>
+
+      <p class="authors">Chang Eun Song, Sumukh Pinge, Tianqi Zhang, Sung Eun Kim, Tajana S Rosing, Mingu Kang</p>
+      <p class="metadata">2026 · MICRO 2026, Athens, Greece (arXiv:2607.17538v1 [cs.AR])</p>
+
+      <p class="summary">
+        D-NOVA는 RAG(Retrieval-Augmented Generation) 파이프라인의 지배적 병목인 dense vector retrieval의 데이터 이동(data movement)을 제거하기 위해, 검색 연산 자체를 3D NAND 플래시 배열 내부로 내리는 in-storage 검색 가속기이다. 핵심 아이디어는 NAND의 multi-level cell(QLC)에 INT4로 인코딩된 임베딩 값과 질의로부터 유도된 wordline 전압을 직접 비교하여, MLC 값을 여러 번 읽어내는 반복 read 없이 단순한 binary sensing만으로 유사도를 평가하는 것이다. 이를 위해 저자들은 NAND string의 직렬 on/off 특성에 맞춘 전용 거리 척도 DTS(Dual-bound Tight Similarity Sensing)를 제안한다. DTS는 Upper-Bound Similarity Sensing(UBS)과 그 complement 버전(Comp UBS)을 결합하여, 기존의 느슨한 Lower-Bound Sensing이 유발하던 false positive를 억제하면서 상한·하한을 동시에 좁힌다. DTS는 cosine/L2와 다른 척도이므로 recall 손실이 발생하는데, 이를 offline에서 한 번만 contrastive(InfoNCE) 학습되는 경량 query-side adapter로 보정하여 임베딩을 DTS-정렬 공간으로 투영한다. 전체 검색은 centroid search → coarse Top-K2 search → fine Top-K1 re-ranking의 3단계 IVF 계층 파이프라인으로 수행되며, 각 단계마다 동시에 센싱하는 wordline 수 m을 다르게 설정(stage-aware m-adaptive sensing)하여 정확도와 처리량을 단계별로 절충한다. SSD 컨트롤러는 quickselect/quicksort 같은 경량 정렬과 메타데이터 관리만 담당하고, 최종적으로 문서 텍스트까지 스토리지 내부에서 fetch하여 결과 문서만 host로 전송한다. 논문은 NQ·HotpotQA에서 CPU baseline 대비 33.3–41.7배 처리량, 58.8–71배 에너지 절감, SOTA in-storage 가속기 REIS 대비 4.3–12.1배 처리량, 1.1–1.26배 에너지 이점을 보고한다.
+      </p>
+
+      <a class="open-link" href="papers/d-nova/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
