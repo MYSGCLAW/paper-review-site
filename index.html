@@ -760,7 +760,7 @@
 
         <a class="tab-link" href="#paper-discovery">
           <span>논문 추천</span>
-          <small>1</small>
+          <small>0</small>
         </a>
         
 
@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>2</small>
+          <small>4</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -810,7 +810,7 @@
 
       <div class="statistics">
         <span class="stat">논문 33편</span>
-        <span class="stat">전체 항목 48개</span>
+        <span class="stat">전체 항목 47개</span>
       </div>
     </div>
   </header>
@@ -828,7 +828,7 @@
     <a href="#paper-discovery" class="category-card">
       <h2>Research &amp; Analysis <span>논문 추천</span></h2>
       <p>오늘 검색된 논문 후보만 표시합니다. 이전 날짜 추천 목록은 홈페이지에 노출하지 않습니다.</p>
-      <small>1개 문서</small>
+      <small>0개 문서</small>
     </a>
     
 
@@ -871,7 +871,7 @@
 
         <a class="tab-link" href="#paper-discovery">
           <span>논문 추천</span>
-          <small>1</small>
+          <small>0</small>
         </a>
         
 
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>2</small>
+          <small>4</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,7 +923,7 @@
     </div>
 
     <span class="pending-queue-count">
-      2편 대기 중
+      4편 대기 중
     </span>
   </div>
 
@@ -972,6 +972,50 @@
           </div>
         </div>
         
+
+        <div class="pending-queue-item">
+          <div class="pending-queue-order">
+            3
+          </div>
+
+          <div class="pending-queue-paper">
+            <strong>ragcache.pdf</strong>
+            <span>등록 시각 · 2026-07-22 23:41</span>
+          </div>
+
+          <div class="pending-queue-size">
+            1.2 MB
+          </div>
+
+          <div>
+            <span class="pending-queue-status queue-waiting">
+              대기 중
+            </span>
+          </div>
+        </div>
+        
+
+        <div class="pending-queue-item">
+          <div class="pending-queue-order">
+            4
+          </div>
+
+          <div class="pending-queue-paper">
+            <strong>ragpulse.pdf</strong>
+            <span>등록 시각 · 2026-07-22 23:41</span>
+          </div>
+
+          <div class="pending-queue-size">
+            956.2 KB
+          </div>
+
+          <div>
+            <span class="pending-queue-status queue-waiting">
+              대기 중
+            </span>
+          </div>
+        </div>
+        
   </div>
 </section>
 <!-- PENDING_QUEUE_SECTION_END -->
@@ -999,8 +1043,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-failed">
-          검증 실패
+        <span class="status-badge status-passed">
+          검증 완료
         </span>
       </div>
 
@@ -1051,8 +1095,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-failed">
-          검증 실패
+        <span class="status-badge status-passed">
+          검증 완료
         </span>
       </div>
 
@@ -1103,8 +1147,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-failed">
-          검증 실패
+        <span class="status-badge status-passed">
+          검증 완료
         </span>
       </div>
 
@@ -1129,8 +1173,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-failed">
-          검증 실패
+        <span class="status-badge status-passed">
+          검증 완료
         </span>
       </div>
 
@@ -1155,8 +1199,8 @@
           </a>
         </h2>
 
-        <span class="status-badge status-failed">
-          검증 실패
+        <span class="status-badge status-passed">
+          검증 완료
         </span>
       </div>
 
@@ -1858,34 +1902,15 @@
           <h2>Today&#x27;s Paper Recommendations</h2>
           <p>오늘 검색된 논문 후보만 표시합니다. 이전 날짜 추천 목록은 홈페이지에 노출하지 않습니다.</p>
         </div>
-        <span class="section-count">1개</span>
+        <span class="section-count">0개</span>
       </div>
 
       <div class="library-grid">
         
-    <article class="library-card">
-      <div class="card-header">
-        <h2>
-          <a href="paper-discovery/2026-07-22/">
-            Daily Paper Discovery - 2026-07-22
-          </a>
-        </h2>
-
-        <span class="status-badge status-unverified">
-          오늘
-        </span>
-      </div>
-
-      <p class="metadata">2026-07-22 · 추천 후보 14개</p>
-
-      <p class="summary">
-        오늘 추천 후보 14개: D-NOVA: In-Storage Retrieval Accelerator via Dual-Bound 3D NAND-Optimized Similarity Search with Vector Adaptation, Hybrid-Vector Retrieval for Visually Rich Documents: Combining Single-Vector Efficiency and Multi-Vector Accuracy (HEAVEN), DistVS: Large-scale Vector Search with Compute-Memory Disaggregation
-      </p>
-
-      <a class="open-link" href="paper-discovery/2026-07-22/">
-        추천 문서 열기 →
-      </a>
-    </article>
+    <section class="empty-state">
+      <h2>오늘 생성된 논문 추천 목록이 없습니다.</h2>
+      <p>daily_paper_discovery.sh가 오늘 날짜 discovery JSON을 만들면 이곳에 표시됩니다.</p>
+    </section>
     
       </div>
     </section>
