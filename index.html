@@ -791,7 +791,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>0</small>
+          <small>2</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -902,7 +902,7 @@
 <!-- PENDING_QUEUE_NAV_START -->
         <a class="tab-link" href="#pending-queue">
           <span>대기열</span>
-          <small>0</small>
+          <small>2</small>
         </a>
 <!-- PENDING_QUEUE_NAV_END -->
 </nav>
@@ -923,16 +923,55 @@
     </div>
 
     <span class="pending-queue-count">
-      0편 대기 중
+      2편 대기 중
     </span>
   </div>
 
   <div class="pending-queue-list">
     
-      <div class="pending-queue-empty">
-        현재 분석을 기다리는 논문이 없습니다.
-      </div>
-    
+        <div class="pending-queue-item">
+          <div class="pending-queue-order">
+            1
+          </div>
+
+          <div class="pending-queue-paper">
+            <strong>D-nova.pdf</strong>
+            <span>등록 시각 · 2026-07-22 11:49</span>
+          </div>
+
+          <div class="pending-queue-size">
+            6.6 MB
+          </div>
+
+          <div>
+            <span class="pending-queue-status queue-next">
+              다음 분석
+            </span>
+          </div>
+        </div>
+        
+
+        <div class="pending-queue-item">
+          <div class="pending-queue-order">
+            2
+          </div>
+
+          <div class="pending-queue-paper">
+            <strong>hybrid vector retrieval.pdf</strong>
+            <span>등록 시각 · 2026-07-22 11:49</span>
+          </div>
+
+          <div class="pending-queue-size">
+            9.1 MB
+          </div>
+
+          <div>
+            <span class="pending-queue-status queue-waiting">
+              대기 중
+            </span>
+          </div>
+        </div>
+        
   </div>
 </section>
 <!-- PENDING_QUEUE_SECTION_END -->
@@ -952,6 +991,448 @@
 
       <div class="library-grid">
         
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/mm-matryoshka/">
+            MM-Matryoshka: Towards Budget-Elastic Visual Document Retrieval via a 2D Multimodal Matryoshka Training Framework
+          </a>
+        </h2>
+
+        <span class="status-badge status-failed">
+          검증 실패
+        </span>
+      </div>
+
+      <p class="authors">Haowen Xiang, Yibo Yan, Jiahao Huo, Yu Huang, Yi Cao, Mingdong Ou, Xuming Hu</p>
+      <p class="metadata">2026</p>
+
+      <p class="summary">
+        MM-Matryoshka는 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 리트리버가 배포 시 겪는 저장소·연산 비용 문제를, vector width(임베딩 차원)와 encoder depth(transformer layer 깊이)를 동시에 탄력적으로 만드는 2D Matryoshka training framework로 해결한다. 학습은 두 개의 목적함수로 구성된다. Dimension-level MRL loss(Lprefix)는 final layer에서 여러 prefix 차원 d가 각각 곧바로 late interaction에 사용될 수 있도록 in-batch cross-entropy로 학습시키고, Layer-level MRL loss(Ldistill)는 final layer의 in-batch score 분포를 teacher(stop-gradient)로 삼아 중간 layer(student)로 KL divergence 기반 score distillation을 수행한다. 두 손실은 강도 λ로 결합되어 단일 모델이 backbone별로 구성된(configured) 2D budget grid S×D 전체를 커버하도록 만든다. 추론 시에는 추가 학습 없이 이 grid 안에서 원하는 budget (ℓ,d)를 골라 해당 layer의 token vector를 뽑고 prefix truncation 후 재정규화한 뒤, 학습 때와 동일한 MaxSim late-interaction 함수로 점수를 매긴다. PaliGemma, Qwen2-VL, Qwen2.5-VL 세 backbone과 ViDoRe v1·v2의 14개 데이터셋에서 검증했으며, Qwen2.5-VL 기반 모델은 middle layer·32차원 budget에서 ViDoRe v1 retention 97.6%를 기록해 같은 조건의 ColQwen2.5 baseline 47.8%를 크게 앞선다.
+      </p>
+
+      <a class="open-link" href="papers/mm-matryoshka/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/vdr/">
+            Sculpting the Vector Space: Towards Efficient Multi-Vector Visual Document Retrieval via PRUNE-THEN-MERGE Framework
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Yibo Yan, Mingdong Ou, Yi Cao, Xin Zou, Jiahao Huo, Shuliang Liu, James Kwok, Xuming Hu</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2602.19549) — 정식 게재 venue는 논문에 명시되지 않음</p>
+
+      <p class="summary">
+        이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다고 주장한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, 논문은 DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다고 보고한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소한다고 논문은 제시하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다고 저자들은 명시한다.
+      </p>
+
+      <a class="open-link" href="papers/vdr/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/reis/">
+            REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing
+          </a>
+        </h2>
+
+        <span class="status-badge status-failed">
+          검증 실패
+        </span>
+      </div>
+
+      <p class="authors">Kangqi Chen, Rakesh Nadig, Manos Frouzakis, Nika Mansouri Ghiasi, Yu Liang, Haiyu Mao, Jisung Park, Mohammad Sadrosadati, Onur Mutlu</p>
+      <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), June 21-25, 2025, Tokyo, Japan</p>
+
+      <p class="summary">
+        REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소(DADR)를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계하며, 이 과정에서 INT8 재채점 주소(RADR)와 cluster tag가 OOB 영역에 추가로 저장되도록 linkage를 확장한다(이 확장분의 저장 비용은 0.7% 수치와 별개이며 본문에서 정량화되지 않는다). 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 저자들이 보고한 평가 결과에 따르면 REIS는 고성능 CPU 서버(CPU-Real; 논문은 Introduction에서 256-core라고 서술하지만 Methodology의 Table 3 스펙은 AMD EPYC 9554 2소켓 128코어로 제시되어 있어 두 서술이 서로 다르다) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 제공하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비로는 서술 위치(Abstract/Introduction vs. 본문 Section 6.4)에 따라 제시된 배수 값이 다르므로 단일 수치로 단정하기보다 SSD 구성과 목표 Recall@10에 따라 수 배에서 최대 20배 이상의 폭으로 RAG retrieval을 가속한다고 이해하는 것이 안전하다(세부 수치는 unresolved 참조). 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.
+      </p>
+
+      <a class="open-link" href="papers/reis/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/metaembed/">
+            MetaEmbed: Scaling Multimodal Retrieval at Test-Time with Flexible Late Interaction
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Zilin Xiao, Qi Ma, Mengting Gu, Jason Chen, Xintao Chen, Vicente Ordonez, Vijai Mohan</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2509.18095v2 [cs.IR]) — 동료심사 게재 정보는 확인되지 않음</p>
+
+      <p class="summary">
+        MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 논문이 보고한 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 저자들이 보였다(p. 9).
+      </p>
+
+      <a class="open-link" href="papers/metaembed/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/in-storage-acceleration-of-retrieval-augmented-generation-as-a-service/">
+            In-Storage Acceleration of Retrieval Augmented Generation as a Service
+          </a>
+        </h2>
+
+        <span class="status-badge status-failed">
+          검증 실패
+        </span>
+      </div>
+
+      <p class="authors">Rohan Mahapatra, Harsha Santhanam, Christopher Priebe, Hanyang Xu, Hadi Esmaeilzadeh</p>
+      <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), Tokyo, Japan (ACM)</p>
+
+      <p class="summary">
+        이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과(500M 설정은 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 것으로, 실제 코퍼스 전체가 5억 passage 규모로 존재하는 것은 아니다), 저자들은 CPU-NVMe 대비 최대 4.3배(50M 기준; 이 500M 증강 설정에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 보고한다(p.1-2, p.11-12).
+      </p>
+
+      <a class="open-link" href="papers/in-storage-acceleration-of-retrieval-augmented-generation-as-a-service/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/espnlive/">
+            Storage access optimization for efficient GPU-centric information retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-failed">
+          검증 실패
+        </span>
+      </div>
+
+      <p class="authors">Susav Shrestha, Aayush Gautam, Narasimha Reddy</p>
+      <p class="metadata">2025 · The Journal of Supercomputing</p>
+
+      <p class="summary">
+        이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 MaxSim 연산자가 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 저자들은 ESPN이 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다고 보고한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다고 저자들은 밝힌다.
+      </p>
+
+      <a class="open-link" href="papers/espnlive/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
+            NVM Express® Subsystem Local Memory Command Set Specification, Revision 1.2
+          </a>
+        </h2>
+
+        <span class="status-badge status-failed">
+          검증 실패
+        </span>
+      </div>
+
+      <p class="authors"></p>
+      <p class="metadata">2025</p>
+
+      <p class="summary">
+        본 문서는 학술 논문이 아니라 NVM Express, Inc.가 발행한 산업 표준 명세서(specification)이다. NVM Express Base Specification은 호스트가 memory-based transport 및 message-based transport를 통해 NVM subsystem과 통신하기 위한 인터페이스를 정의하는데, 본 명세는 이를 확장하는 특정 NVMe I/O Command Set인 Subsystem Local Memory(SLM) Command Set을 정의한다(p.6). SLM은 NVM subsystem 내부에 존재하는 volatile byte addressable memory이며, 호스트는 CSI(Command Set Identifier) 값 03h를 갖는 이 command set을 통해 memory namespace에 dword aligned/dword granular 방식으로 접근한다(p.8). 제공되는 I/O 커맨드는 Memory Read, Memory Write(mandatory)와 Memory Fill, Memory Copy(optional)의 4가지이며, 이를 통해 Host↔SLM, SLM↔NVM, SLM↔SLM 간 데이터 전송과 SLM의 fill 동작을 수행한다(p.8, p.10, p.20, p.21). SLM은 Controller Memory Buffer(CMB)나 Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않으며, memory namespace의 데이터는 SLM Command Set 명령뿐 아니라 Computational Programs Command Set의 compute namespace 접근, 그리고 Copy command를 포함하는 적격 LBA 기반 I/O Command Set(예: NVM Command Set, Zoned Namespace Command Set)을 통해서도 접근될 수 있다(p.8). 이 memory는 Computational Programs Command Set이 사용하는 데이터의 이동을 포함한 다양한 용도로 활용될 수 있으며, compute namespace의 compute resource는 memory namespace 데이터에 대해 byte-addressable, byte-granular한 read/write를 수행할 수 있다(p.8, p.9). 명세는 커맨드 정의 외에도 Copy Descriptor Format(2h/3h/4h), I/O Command Set specific Identify Namespace 데이터 구조(CNS 05h, CSI 03h)와 Controller 데이터 구조(CNS 06h, CSI 03h), 그리고 커맨드 특정 상태 값들을 규정한다(p.14~p.16, p.19, p.23~p.25). 실증적 실험이나 정량적 성능 평가는 원문에 존재하지 않는다.
+      </p>
+
+      <a class="open-link" href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
+            NVM Express® Computational Programs Command Set Specification, Revision 1.2
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">NVM Express, Inc. (NVM Express Workgroup)</p>
+      <p class="metadata">2025 · Technical specification (industry standard, ratified)</p>
+
+      <p class="summary">
+        본 문서는 연구 논문이 아니라 NVM Express가 2025년 7월 30일자로 발행한 산업 표준 규격서(Revision 1.2, ratified)이며, host에서 NVM subsystem으로 프로그램 실행을 오프로드(offload)하기 위한 Computational Programs Command Set을 정의한다(pp.9-10). 핵심 모델은 host-driven 방식이다. 즉 프로그램(program)은 device-defined이거나 host가 download한 것일 수 있고, 프로그램은 하나 이상의 memory namespace, 즉 Subsystem Local Memory(SLM) 내 데이터에 대해서만 동작하며, 프로그램의 입력 및 출력 데이터는 host가 발행하는 NVMe 커맨드를 통해 memory namespace로 staging된다(pp.9-10). 규격은 이를 위해 (1) 프로그램을 실행하는 주체인 compute namespace, (2) 데이터를 담는 memory namespace/SLM, (3) 프로그램이 접근 가능한 SLM 영역을 (NSID, offset, length) range들의 집합으로 한정하는 Memory Range Set, (4) compute namespace가 어떤 memory namespace에 도달 가능한지를 규정하는 reachability라는 네 가지 개념을 축으로 구조를 정의한다(pp.9-13). 커맨드 수준에서는 I/O 커맨드인 Execute Program(opcode 01h)과 Admin 커맨드인 Load Program, Program Activation Management, Memory Range Set Management가 정의되며, 프로그램은 PUID(64비트 Program Unique Identifier)로 기능이 식별되고 compute namespace 내에서는 PIND(Program Index)로 참조된다(pp.13-16, 25-27, 34-39). 동작 흐름은 capability 탐색 → 프로그램 load → activation → Memory Range Set 생성 → 입력 데이터 staging 후 Execute Program 발행 → completion queue entry에서 상태와 64비트 return value(RVAL) 확인 → 결과 데이터 회수의 순서로 진행된다(pp.17-22). 규격 문서의 특성상 정량적 실험 평가나 baseline 비교는 포함되어 있지 않다.
+      </p>
+
+      <a class="open-link" href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/snia-computational-storage-architecture-and-programming-model-1-2/">
+            Computational Storage Architecture and Programming Model (Version 1.2)
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">SNIA Computational Storage Technical Working Group</p>
+      <p class="metadata">2026 · SNIA Standard</p>
+
+      <p class="summary">
+        이 문서는 학술 논문이 아니라 SNIA(Storage Networking Industry Association)의 Computational Storage Technical Working Group이 작성한 표준 명세(standard specification)로, Computational Storage 장치와 호스트 사이의 아키텍처 모델(architecture model)과 프로그래밍 모델(programming model)을 정의한다. 핵심 아이디어는 전통적인 compute &amp; memory 아키텍처 바깥의 연산 자원을 스토리지에 직접 결합하거나 host와 storage 사이에 배치함으로써 application 성능 및 infrastructure efficiency를 개선하고, parallel computation을 가능하게 하며 기존 compute/memory/storage/I-O 제약을 완화하는 것이다(17페이지). 이를 위해 문서는 CSx(Computational Storage Device: CSP/CSD/CSA)라는 상위 개념 아래 CSR(Computational Storage Resource), CSE(Computational Storage Engine), CSEE(Computational Storage Engine Environment), CSF(Computational Storage Function), Resource Repository, FDM/AFDM(Function Data Memory / Allocated Function Data Memory)이라는 계층적 용어 체계를 정의한다(14, 17–19페이지). 동작 이론(Theory of Operation)은 Discovery → Configuration/Activation → Security → CSF Usage(Direct / Indirect) → Sequencing(aggregator CSF) → Completion Handling의 흐름으로 구성되며(20–39페이지), 특히 CSEE를 CSE에 activate하고 그 위에 CSF를 activate하는 2단계 활성화 구조와, 여러 CSF를 host 개입 없이 순차·병렬로 묶어 실행하는 aggregator CSF 개념이 프로그래밍 모델의 중심축이다(19, 33–36페이지). 문서는 host–CSx 인터페이스의 물리적 특성이나 storage protocol을 특정하지 않는 벤더 중립적(vendor-neutral)·상호운용 가능(interoperable) 추상화를 목표로 하며(11–12페이지), 따라서 성능 실험이나 정량적 평가 결과는 포함하지 않는다.
+      </p>
+
+      <a class="open-link" href="papers/snia-computational-storage-architecture-and-programming-model-1-2/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/cemu-enabling-full-system-emulation-of-computational-storage-beyond-hardware-limits/">
+            CEMU: Enabling Full-System Emulation of Computational Storage Beyond Hardware Limits
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Qiuyang Zhang, Jiapin Wang, You Zhou, Peng Xu, Kai Lu, Jiguang Wan, Fei Wu, Tao Lu</p>
+      <p class="metadata">2026 · ASPLOS &#x27;26 (31st ACM International Conference on Architectural Support for Programming Languages and Operating Systems), Volume 2, Pittsburgh, PA, USA</p>
+
+      <p class="summary">
+        CEMU는 computational storage drive(CSD) 연구를 위한 완전히 소프트웨어 기반의 오픈소스 full-system 에뮬레이션 플랫폼이다. 기존 CSD 연구 플랫폼은 (1) 고가이고 hardware-bounded인 하드웨어 플랫폼(예: OpenSSD, SmartSSD), (2) host CPU 성능에 종속되는(CPU-bounded) 소프트웨어 에뮬레이션, (3) full-system 실행을 지원하지 않아 page cache 같은 시스템 구성요소가 누락되는 소프트웨어 시뮬레이션(예: MQSim)으로 파편화되어 있어, 재현성과 전체 설계 공간(full design space) 탐구가 어렵다는 문제를 안고 있다. CEMU는 QEMU와 FEMU를 기반으로 guest VM 안에 표준 NVMe drive로 마운트되며, 핵심적으로 새로운 VM-freezing 메커니즘으로 host CPU/FPGA 성능을 초과하는 configurable computing capability를 에뮬레이트하고, 새로운 파일시스템 FDMFS를 중심으로 SNIA/NVMe 산업 표준을 준수하면서도 전통적 POSIX I/O 스택과 호환되는 CSD-oriented 소프트웨어 스택을 제공한다. 저자들은 CEMU가 Samsung SmartSSD와 ScaleFlux CSD2000 실제 하드웨어 대비 네 가지 synthetic benchmark(grep, kNN, LZ4, TPC-H sql)에서 평균 95% 이상의 종단간 정확도를 달성했다고 보고하며, LLM training과 LevelDB 두 full-system case study를 통해 수백 줄의 코드만으로 CSD 시스템을 프로토타이핑할 수 있는 민첩성과, 기존 플랫폼으로는 얻기 어려운 통찰(예: CSD 컴퓨팅 파워를 수백 배 늘려도 speedup은 약 2배에 그침, cache bypassing·I/O interference·inter-CSD 전송 오버헤드 등의 부작용)을 제시한다.
+      </p>
+
+      <a class="open-link" href="papers/cemu-enabling-full-system-emulation-of-computational-storage-beyond-hardware-limits/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/hierarchical-vision-language-reasoning-for-multimodal/">
+            Hierarchical Vision-Language Reasoning for Multimodal Multiple-Choice Question Answering
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Ao Zhou, Zebo Gu, Tenghao Sun, Jiawen Chen, Mingsheng Tu, Zifeng Cheng, Yafeng Yin, Zhiwei Jiang, Qing Gu</p>
+      <p class="metadata">2025 · Proceedings of the 33rd ACM International Conference on Multimedia (MM &#x27;25), Dublin, Ireland</p>
+
+      <p class="summary">
+        이 논문은 복잡한 레이아웃과 방대한 분량을 가진 일본어 PDF 문서에서, 10개의 선택지 중 정답을 고르는 ten-choice 질의응답(multiple-choice QA) 과제를 푸는 프레임워크를 제안한다. 핵심 아이디어는 (1) ColQwen2(ColPali 계열)를 이용한 vision-language 검색으로 전체 PDF에서 질의와 가장 관련 있는 상위 3개 페이지 이미지를 찾고 QwenVL2.5로 재필터링한 뒤, (2) 대규모 언어모델과 정교한 프롬프트로 원 질문을 여러 sub-question으로 분해(sub-question decomposition)하고 그 답을 검증하는 계층적(hierarchical) 추론을 수행하며, (3) bounding box 기반 crop 모듈로 검색 결과를 보정하는 것이다. 프롬프트는 언어 편향을 줄이기 위해 1단계는 영어·일본어 이중언어로, 2단계는 일본어 전용으로 설계되고, think/answer 필드를 가진 구조화된 JSON으로 추론 과정을 함께 출력한다. 저자들은 task-specific fine-tuning 없이 여러 최신 MLLM을 zero-shot으로 Public Score 지표에서 비교하였고, Qwen2.5-VL-72B·Kimi-VL-A3B-Thinking·GLM-4.1-9B-Thinking을 결합한 fusion이 0.59로 최고 성능을 기록했다. 실패 사례 분석에서는 retrieval precision이 주요 병목임을 확인하였다.
+      </p>
+
+      <a class="open-link" href="papers/hierarchical-vision-language-reasoning-for-multimodal/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/mordenbert/">
+            ModernVBERT: Towards Smaller Visual Document Retrievers
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Paul Teiletche, Quentin Macé, Max Conti, Antonio Loison, Gautier Viaud, Pierre Colombo, Manuel Faysse</p>
+      <p class="metadata">2025 · arXiv preprint (arXiv:2510.01149v3, cs.IR) — 정식 학회/저널 게재 명시 없음</p>
+
+      <p class="summary">
+        이 논문은 시각 문서 검색(Visual Document Retrieval, VDR) 모델을 대형 생성형 vision-language decoder를 재활용(repurposing)해 만드는 관행이 검색 성능과 효율을 병목시킨다는 점을 지적하고, 언어모델 modality alignment 단계부터 대조학습까지 전체 학습 파이프라인을 통제된 실험(controlled ablation)으로 재검토한다. 핵심 결론은 (1) causal attention은 문서 검색에 최적이 아니며 bidirectional masking이 multi-vector late interaction 세팅에서 큰 이득(+10.6 nDCG@5)을 주고, (2) token 수준 언어모델 목표가 단순히 강한 이미지 임베딩이 아니라 image-text token alignment를 강화해 검색을 돕고, (3) 이미지 해상도와 데이터 mix가 성능에 중요하다는 것이다. 이 통찰을 바탕으로 저자들은 사전학습된 텍스트 bidirectional encoder를 MLM(Masked Language Modeling)으로 vision encoder와 정렬한 250M 규모 소형 multimodal encoder ModernVBERT와 late-interaction 검색 모델 ColModernVBERT를 공개한다. ColModernVBERT는 10배 이상 큰 ColPali(2.92B)와 ViDoRe 평균 nDCG@5에서 0.6점 차이(68.6 vs 69.2)에 불과하면서 CPU 쿼리 인코딩 지연을 20ms로 7배 이상 단축한다.
+      </p>
+
+      <a class="open-link" href="papers/mordenbert/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/col-bandit/">
+            Col-Bandit: Query-Time Top-K Estimation for Late-Interaction Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Roi Pony, Adi Raz Goldfarb, Oshri Naparstek, Idan Friedman, Udi Barzelay, Eli Schwartz</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2602.02827v2 [cs.IR])</p>
+
+      <p class="summary">
+        Col-Bandit은 ColBERT류 late-interaction retriever의 rerank 단계를 가속하는 query-time 알고리즘이다. 핵심 관찰은 N개의 candidate document와 T개의 query token이 만드는 implicit N×T MaxSim Matrix H에서, 각 문서의 최종 점수 Si가 해당 행의 row-sum이라는 점이다(Eq. 3-5, p.3-4). 기존 exhaustive scorer는 이 행렬의 모든 cell을 계산하지만, 논문은 top-K 문서 집합을 &#x27;식별(identify)&#x27;하는 데에는 행렬 전체가 필요하지 않다고 본다(Figure 2, p.4). Col-Bandit은 이를 finite-population Top-K identification 문제로 정식화하고, 부분적으로 공개된(partially revealed) cell로부터 문서별 신뢰구간 [LCBi, UCBi]를 유지한다. 이 구간은 support [a,b]에서 나오는 deterministic hard bound와 empirical Bernstein–Serfling inequality(Bardenet and Maillard, 2015) 기반의 variance-adaptive radius r_i^eff(Eq. 7)를 결합한 hybrid interval이다(p.4). 매 round마다 공유된 random permutation π를 따라 B(=4)개의 query token cell을 active set 전체에 대해 한 번의 SIMD pass로 공개하고, UCB가 K번째로 큰 LCB(threshold τr) 아래로 떨어진 문서를 영구 제거한다(Algorithm 1, p.5). 남은 K+M명의 survivor는 Full-MaxSim과 동일한 fused kernel로 전체 T개 token에 대해 정확히 rescore되므로, 최종 점수는 exhaustive baseline과 bit-identical하다(p.5). relaxation knob αef는 compute–fidelity trade-off를 조절하는 단일 파라미터로, αef=1에서는 δ-PAC guarantee(Theorem 1)를 제공하고 배포 기본값 αef=0.2는 formal certificate 없이 calibrated된 운용점을 제공한다(p.5, p.9). 실험적으로 index 수정이나 retraining 없이 BEIR 5개 corpus와 REAL-MM-RAG 4개 corpus(최대 2.68M documents)에서 모든 corpus Overlap@5 ≥ 0.90을 유지하면서 서버 CPU(AMD EPYC 7763, AVX2)에서 single-thread 평균 7.0×, Apple M1 Max(NEON)에서 12.9× wall-clock speedup을 보고한다(p.2, p.8).
+      </p>
+
+      <a class="open-link" href="papers/col-bandit/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/tilemaxsim-io-aware-gpu-maxsim-scoring-with/">
+            TileMaxSim: IO-Aware GPU MaxSim Scoring with Dimension Tiling and Fused Product Quantization
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Ashutosh Sharma</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2606.26439v1, cs.IR)</p>
+
+      <p class="summary">
+        TileMaxSim은 ColBERT 계열 multi-vector retrieval의 핵심 연산인 MaxSim scoring을 GPU에서 IO-aware하게 재구현한 Triton kernel 계열이다. 저자는 현대 GPU에서 MaxSim에 대한 roofline analysis를 수행하여, naive 구현이 N_q×N_d 크기의 similarity matrix를 HBM에 명시적으로 materialize하기 때문에 peak HBM bandwidth의 5~18%만 사용한다는 점을 문제의 근본 원인으로 지목한다(pp.1-2). 해결책은 FlashAttention이 attention에 적용한 IO-aware paradigm을 MaxSim 고유의 matmul→max→sum reduction 구조에 맞게 재설계하는 것이다. 구체적으로 (1) query tile과 document tile을 동시에 tiling하여 BQ=N_q로 설정함으로써 각 document embedding을 HBM에서 정확히 한 번만 읽는 multi-query SRAM tiling(V2-MQ), (2) embedding dimension을 128-wide chunk로 분할해 d=64~768을 하나의 kernel family로 처리하는 dimension tiling, (3) shared-memory lookup table로 PQ 압축 문서를 명시적 decompression 없이 채점하는 fused PQ decompression+scoring(TileMaxSim-PQ)의 세 기법을 제시한다(pp.2-5). 실험(H100)에서 V2-MQ는 N_q=32, N_d=128, B=100K 조건에서 peak HBM bandwidth의 80.2%를 달성하고 PyTorch Loop 대비 220배, PyTorch Naive 대비 6.5배, PLAID의 실제 GPU scoring 경로 대비 1.7~1.9배 빠르며, 동일 노드에서 측정한 WARP(CPU) 대비 scoring throughput이 469배 높다(pp.6-10). 동시에 MS MARCO와 세 개 BEIR 데이터셋에서 reference PyTorch MaxSim과 동일한 ranking·retrieval metric을 산출하여 exact quality를 보존하며, PLAID의 scoring kernel을 drop-in 교체할 경우 100K candidates 기준 end-to-end pipeline latency가 약 98% 감소한다(pp.9-10).
+      </p>
+
+      <a class="open-link" href="papers/tilemaxsim-io-aware-gpu-maxsim-scoring-with/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/gem-a-native-graph-based-index-for-multi-vector-retrieval/">
+            GEM: A Native Graph-based Index for Multi-Vector Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Yao Tian, Zhoujin Tian, Xi Zhao, Ruiyuan Zhang, Xiaofang Zhou</p>
+      <p class="metadata">2026</p>
+
+      <p class="summary">
+        GEM은 multi-vector retrieval(질의와 문서를 모두 토큰 단위 벡터들의 집합, vector set으로 표현하는 검색)을 위해 vector set 자체를 그래프의 정점으로 삼는 최초의 native graph index이다. 기존 방식은 (1) 모든 개별 벡터를 단일 ANN 인덱스에 pooling하거나(PLAID, IGP 계열), (2) vector set을 단일 벡터로 사상하거나(MUVERA의 FDE), (3) LSH sketch로 압축(DESSERT)하는 식으로 단일 벡터용 인덱스를 재사용했는데, 이들은 set-level semantics를 보존하지 못하거나 pruning이 약해 느리다. GEM의 핵심 통찰은 그래프 기반 검색이 전제하는 metric 성질(삼각부등식)을 MaxSim/Chamfer(CH) 유사도가 만족하지 않는다는 점이며, 이를 metric decoupling으로 해결한다. 즉 그래프 구축(edge weight)에는 삼각부등식을 만족하고 CH(Q,P) &lt;= EMD(Q,P)를 만족하는 Earth Mover&#x27;s Distance(EMD)를 쓰고, 실제 relevance 산출과 탐색에는 원래의 Chamfer distance를 쓴다. 여기에 TF-IDF 기반 set-level clustering으로 각 set을 소수의 유의미한 cluster에만 할당해 index redundancy를 줄이고(예: MSMARCO에서 set당 평균 cluster membership 43.8 -&gt; 2.9), cluster 내부 local proximity graph를 cluster 간 bridge로 이어 붙여 globally navigable한 dual graph를 만든다. Chamfer 상으로는 가깝지만 EMD 그래프 상 멀리 떨어진 쌍은 학습 pair를 재사용한 semantic shortcut으로 직접 연결한다. 인덱싱과 검색 모두 centroid codebook 기반의 quantized EMD(qEMD)/quantized Chamfer(qCH) lookup으로 set-to-set 거리 계산 비용을 낮추며, 질의 시에는 cluster filtering -&gt; multi-entry 병렬 beam search -&gt; cluster 기반 early pruning -&gt; exact Chamfer rerank 순으로 처리한다. MSMARCO, LoTTE, OK-VQA, EVQA 네 벤치마크에서 GEM은 모든 품질 지표(R@100, S@100, MRR@10)에서 최고 성능을 내면서 지연시간도 가장 낮았고(MSMARCO 140ms vs PLAID 352ms), 동일 MRR@10 기준 최대 16배 speedup과 함께 index size는 PLAID/IGP와 비슷하거나 더 작다.
+      </p>
+
+      <a class="open-link" href="papers/gem-a-native-graph-based-index-for-multi-vector-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/lemur-learned-multi-vector-retrieval/">
+            LEMUR: Learned Multi-Vector Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Elias Jääsaari, Ville Hyvönen, Teemu Roos</p>
+      <p class="metadata">2026 · Proceedings of the 43rd International Conference on Machine Learning (ICML 2026), PMLR 306, Seoul, South Korea</p>
+
+      <p class="summary">
+        LEMUR는 ColBERT 계열 late interaction 모델의 multi-vector 유사도 검색(MaxSim search)을 supervised learning 문제로 재정식화하여, 결과적으로 single-vector 유사도 검색(MIPS)으로 환원하는 corpus-specific search reduction 프레임워크이다.\n\n핵심 착안점은 두 가지 관찰이다. 첫째, 질의 X와 문서 C_l의 MaxSim 유사도 f_l(X)=MaxSim(X,C_l)은 질의 토큰별 기여의 합 f(X)=Σ_{x∈X} g(x)로 분해되므로, 문서 수 m개의 출력을 갖는 multi-output regression 문제로 볼 수 있다. 둘째, 이 회귀 함수를 hidden layer가 하나뿐인 2-layer MLP ϕ(x)=Wψ(x)로 근사하면 출력층이 bias 없는 선형 계층이므로, 최종 추정치가 f(X)≈WΨ(X)=(⟨w_1,Ψ(X)⟩,...,⟨w_m,Ψ(X)⟩) 형태가 된다. 즉 출력층 가중치 행렬 W의 각 행 w_j가 문서 j의 single-vector latent 표현이 되고, pooled query 표현 Ψ(X)=Σψ(x)를 질의 벡터로 쓰는 d&#x27;차원 latent space 상의 MIPS 문제로 정확히 환원된다(pages 3-4).\n\n따라서 LEMUR는 기존의 고도로 최적화된 single-vector ANNS 라이브러리(본 논문에서는 HNSW 기반 Glass)를 그대로 재사용할 수 있다. 질의 시에는 ANNS로 top-k&#x27; 후보를 뽑고, 그 후보에 대해서만 exact MaxSim을 계산해 최종 top-k로 rerank한다(Algorithm 1, page 4). 대규모 corpus 확장을 위해 m&#x27;=8192개 문서를 auxiliary target으로 삼아 feature encoder ψ를 먼저 pretrain한 뒤, ψ를 고정하고 각 문서의 w_j를 closed-form OLS로 계산한다(Algorithm 2, page 5). 이로 인해 모든 토큰 임베딩을 클러스터링할 필요가 없어 CPU만으로도 8.8M 문서 corpus를 4.8시간에 인덱싱할 수 있다(page 5).\n\n실험적으로, 5개 multi-vector 텍스트 모델로 임베딩한 8개 BEIR 데이터셋과 2개 visual 모델로 임베딩한 ViDoRe V3에서, recall≥80%, k=100 기준 LEMUR는 최고 성능 baseline 대비 5~16배 높은 QPS를 달성했고(MSMARCO 799 vs MUVERA 150), d&#x27;=1024의 LEMUR 임베딩이 MUVERA의 10240차원 FDE보다 8개 중 7개 데이터셋에서 더 높은 Recall100@k&#x27;를 보였다(pages 7-9).
+      </p>
+
+      <a class="open-link" href="papers/lemur-learned-multi-vector-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/quantifying-and-expanding-the-theoretical-capacity-of-late-interaction-retrieval-models/">
+            Quantifying and Expanding the Theoretical Capacity of Late-Interaction Retrieval Models
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Julian Killingback, Varad Ingale, Hamed Zamani, Cameron Musco</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2607.05803v1 [cs.IR]), 본문에 &#x27;Preprint.&#x27;로만 명시됨 (정식 게재 여부 확인되지 않음)</p>
+
+      <p class="summary">
+        이 논문은 ColBERT 계열 late-interaction 검색 모델이 사용하는 MaxSim(Chamfer) 유사도의 이론적 표현력(representational power)을 구성적 증명(proof by construction)으로 정량화한다. 핵심 결과는 네 가지다. 첫째, 임의 차원(가산 무한 차원 포함)의 두 비음수(non-negative) k-sparse 벡터의 inner product를, R^3에 놓인 query 임베딩 k개와 document 임베딩 k+1개만으로 MaxSim이 정확히(exactly) 재현할 수 있음을 증명한다(Theorem 3.1). 구성의 핵심은 document 쪽 임베딩을 &#x27;해당 인덱스에서만 원하는 값을 갖고 다른 모든 정수 인덱스에서는 음수가 되는&#x27; 2차 다항식의 계수 벡터로 두고, query 쪽을 φ(i)=(1,i,i²)로 두는 것이다. 이렇게 하면 MaxSim의 max 연산이 인덱스가 일치하는 항만 선택하고, 불일치 항에서는 document 집합에 추가된 영벡터가 선택되어 기여가 0이 된다. 둘째, 반대로 표준 inner product 기반 단일 벡터 모델은 rank 논증에 의해 유한 차원에서 임의로 높은 차원의 sparse 벡터의 inner product를 보존할 수 없음을 증명해(Theorem 4.1) 두 패러다임 사이의 이론적 분리(separation)를 확립한다. 셋째, 표준 MaxSim은 sparsity에 임베딩 개수가 묶인 조건 아래서 실수 값(real-valued) inner product는 재현할 수 없음을 증명하고(Theorem 3.2), 이를 극복하기 위해 각 임베딩을 크기(magnitude)와 부호(sign)로 분해하여 max 연산은 크기에 대해서만 수행하고 부호는 max 이후에 곱하는 Signed MaxSim(S±)을 제안한다(Definition 3.4, Theorem 3.3). 넷째, 임베딩 차원을 절(clause) 크기에 비례해 키우면 Lagrange 보간 다항식으로 OR-clause 전체를 하나의 query 벡터에 인코딩할 수 있고, 이때 MaxSim은 weighted fuzzy OR의 합이 되며 이진 가중치에서는 부정 없는 CNF(positive CNF)의 순위 동등(rank-equivalent) 평가자가 된다(Theorem 5.1, 5.2). 실증 검증으로 Signed MaxSim으로 훈련한 모델(Fallon)을 부정(negation)이 포함된 LIMIT 형식 합성 검색 과제에서 ColBERT 베이스라인과 비교했고, vocabulary shift 조건에서 nDCG@10이 0.597→1.000, negation-only 쿼리에서 0.008→0.788로 개선되었다.
+      </p>
+
+      <a class="open-link" href="papers/quantifying-and-expanding-the-theoretical-capacity-of-late-interaction-retrieval-models/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
@@ -1007,8 +1488,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/cemu-enabling-full-system-emulation-of-computational-storage-beyond-hardware-limits/">
-            CEMU: Enabling Full-System Emulation of Computational Storage Beyond Hardware Limits
+          <a href="papers/visual-rag-at-scale-tile-level-spatial-pooling-for-efficient-multi-vector-document-retrieval/">
+            Visual RAG Toolkit: Scaling Multi-Vector Visual Retrieval with Training-Free Pooling and Multi-Stage Search
           </a>
         </h2>
 
@@ -1017,274 +1498,14 @@
         </span>
       </div>
 
-      <p class="authors">Qiuyang Zhang, Jiapin Wang, You Zhou, Peng Xu, Kai Lu, Jiguang Wan, Fei Wu, Tao Lu</p>
-      <p class="metadata">2026 · ASPLOS &#x27;26 (31st ACM International Conference on Architectural Support for Programming Languages and Operating Systems), Volume 2, Pittsburgh, PA, USA</p>
+      <p class="authors">Ara Yeroyan</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2602.12510v1 [cs.IR], 2026-02-13) — 동료심사(peer-review) 게재 여부는 논문에 명시되지 않음</p>
 
       <p class="summary">
-        CEMU는 computational storage drive(CSD) 연구를 위한 완전히 소프트웨어 기반의 오픈소스 full-system 에뮬레이션 플랫폼이다. 기존 CSD 연구 플랫폼은 (1) 고가이고 hardware-bounded인 하드웨어 플랫폼(예: OpenSSD, SmartSSD), (2) host CPU 성능에 종속되는(CPU-bounded) 소프트웨어 에뮬레이션, (3) full-system 실행을 지원하지 않아 page cache 같은 시스템 구성요소가 누락되는 소프트웨어 시뮬레이션(예: MQSim)으로 파편화되어 있어, 재현성과 전체 설계 공간(full design space) 탐구가 어렵다는 문제를 안고 있다. CEMU는 QEMU와 FEMU를 기반으로 guest VM 안에 표준 NVMe drive로 마운트되며, 핵심적으로 새로운 VM-freezing 메커니즘으로 host CPU/FPGA 성능을 초과하는 configurable computing capability를 에뮬레이트하고, 새로운 파일시스템 FDMFS를 중심으로 SNIA/NVMe 산업 표준을 준수하면서도 전통적 POSIX I/O 스택과 호환되는 CSD-oriented 소프트웨어 스택을 제공한다. 저자들은 CEMU가 Samsung SmartSSD와 ScaleFlux CSD2000 실제 하드웨어 대비 네 가지 synthetic benchmark(grep, kNN, LZ4, TPC-H sql)에서 평균 95% 이상의 종단간 정확도를 달성했다고 보고하며, LLM training과 LevelDB 두 full-system case study를 통해 수백 줄의 코드만으로 CSD 시스템을 프로토타이핑할 수 있는 민첩성과, 기존 플랫폼으로는 얻기 어려운 통찰(예: CSD 컴퓨팅 파워를 수백 배 늘려도 speedup은 약 2배에 그침, cache bypassing·I/O interference·inter-CSD 전송 오버헤드 등의 부작용)을 제시한다.
+        이 논문은 ColPali 계열의 multi-vector visual retriever(late interaction 기반 시각 문서 검색기)가 페이지당 수백~수천 개의 patch 벡터를 만들어 내면서 검색 및 색인 비용이 급격히 커지는 확장성 문제를 다룬다. 저자는 추가 학습 없이(training-free) 모델 아키텍처에 맞춘 정적 공간 풀링(static spatial pooling)을 적용해 페이지당 벡터 수를 약 1024개에서 약 32개(ColSmol은 약 832개에서 약 13개)로 줄이고, 이 압축된 표현으로 후보를 빠르게 뽑은 뒤(candidate generation) 원본 full patch embedding으로 정확한 MaxSim reranking을 수행하는 multi-stage retrieval을 제안한다. 모든 표현은 Qdrant의 named vector로 동일 collection에 저장되어 prefetch+query API를 통해 서버 사이드 단일 호출로 실행된다. 여기에 non-visual token(special/prompt/padding token)을 색인 시점에 제거하는 token hygiene과 여백 영역을 잘라내는 empty-region cropping 같은 전처리가 결합된다. ViDoRe v2의 세 데이터셋(총 3006페이지) 실험에서 3B급 모델(ColPali v1.3, ColQwen2.5)의 2-stage retrieval은 union scope 기준 QPS를 3.8~4.5배 높이면서 N@5, N@10, R@5, R@10을 1-stage baseline 대비 ±0.01 이내로 유지했고, 품질 저하는 주로 R@100(-0.02~-0.09)에 집중되었다. 반면 sub-1B 모델인 ColSmol-500M은 R@100에서 최대 -0.30까지 큰 저하를 보여, 공격적인 풀링이 손실 없이 동작하려면 일정 수준 이상의 representational capacity가 필요함을 시사한다. 논문은 시스템/툴킷 성격이 강하며(pip 패키지, CLI, SDK, Streamlit 데모), 학습이나 distillation 없이 소비자용 하드웨어에서 visual RAG를 실용화하는 것을 목표로 한다.
       </p>
 
-      <a class="open-link" href="papers/cemu-enabling-full-system-emulation-of-computational-storage-beyond-hardware-limits/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/col-bandit/">
-            Col-Bandit: Query-Time Top-K Estimation for Late-Interaction Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Roi Pony, Adi Raz Goldfarb, Oshri Naparstek, Idan Friedman, Udi Barzelay, Eli Schwartz</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2602.02827v2 [cs.IR])</p>
-
-      <p class="summary">
-        Col-Bandit은 ColBERT류 late-interaction retriever의 rerank 단계를 가속하는 query-time 알고리즘이다. 핵심 관찰은 N개의 candidate document와 T개의 query token이 만드는 implicit N×T MaxSim Matrix H에서, 각 문서의 최종 점수 Si가 해당 행의 row-sum이라는 점이다(Eq. 3-5, p.3-4). 기존 exhaustive scorer는 이 행렬의 모든 cell을 계산하지만, 논문은 top-K 문서 집합을 &#x27;식별(identify)&#x27;하는 데에는 행렬 전체가 필요하지 않다고 본다(Figure 2, p.4). Col-Bandit은 이를 finite-population Top-K identification 문제로 정식화하고, 부분적으로 공개된(partially revealed) cell로부터 문서별 신뢰구간 [LCBi, UCBi]를 유지한다. 이 구간은 support [a,b]에서 나오는 deterministic hard bound와 empirical Bernstein–Serfling inequality(Bardenet and Maillard, 2015) 기반의 variance-adaptive radius r_i^eff(Eq. 7)를 결합한 hybrid interval이다(p.4). 매 round마다 공유된 random permutation π를 따라 B(=4)개의 query token cell을 active set 전체에 대해 한 번의 SIMD pass로 공개하고, UCB가 K번째로 큰 LCB(threshold τr) 아래로 떨어진 문서를 영구 제거한다(Algorithm 1, p.5). 남은 K+M명의 survivor는 Full-MaxSim과 동일한 fused kernel로 전체 T개 token에 대해 정확히 rescore되므로, 최종 점수는 exhaustive baseline과 bit-identical하다(p.5). relaxation knob αef는 compute–fidelity trade-off를 조절하는 단일 파라미터로, αef=1에서는 δ-PAC guarantee(Theorem 1)를 제공하고 배포 기본값 αef=0.2는 formal certificate 없이 calibrated된 운용점을 제공한다(p.5, p.9). 실험적으로 index 수정이나 retraining 없이 BEIR 5개 corpus와 REAL-MM-RAG 4개 corpus(최대 2.68M documents)에서 모든 corpus Overlap@5 ≥ 0.90을 유지하면서 서버 CPU(AMD EPYC 7763, AVX2)에서 single-thread 평균 7.0×, Apple M1 Max(NEON)에서 12.9× wall-clock speedup을 보고한다(p.2, p.8).
-      </p>
-
-      <a class="open-link" href="papers/col-bandit/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/colbertsar/">
-            ColBERTSaR: Sparsified ColBERT Index via Product Quantization
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Eugene Yang, Andrew Yates, Dawn Lawrie, James Mayfield, Saron Samuel, Rohan Jha</p>
-      <p class="metadata">2026 · SIGIR &#x27;26 (49th International ACM SIGIR Conference), Melbourne, VIC, Australia; arXiv:2606.05568v1 [cs.IR]</p>
-
-      <p class="summary">
-        ColBERTSaR는 ColBERT 계열 multi-vector dense retrieval의 핵심 확장성(scalability) 문제인 거대한 index 크기를, PLAID가 저장하던 residual 벡터를 완전히 제거하는 residual-free product quantization으로 해결한다. 저자들은 MaxSim 점수를 anchor(centroid)와 query token의 내적만으로 근사하는 Score_S(Equation 3)를 유도하고, 이 식이 anchor를 sparse vocabulary로 보는 dynamic TF-IDF 형태임을 보여 embedding quantization을 적용한 ColBERT가 scoring mechanism을 제외하면 learned sparse retrieval(LSR)과 이론적으로 동등함을 확립한다. 구현은 retrieval 모델을 재학습하지 않는 PLAID의 drop-in replacement로서, K-means로 학습한 anchor에 각 문서 토큰을 할당해 inverted index와 forward index를 만들고 nprobe 기반 2단계 검색을 수행한다. proof-of-concept 실험에서 ColBERTSaR index는 1-bit PLAID 대비 50~70% 작으면서 monolingual(BEIR), CLIR·MLIR(NeuCLIRBench, NeuCLIRTech)에서 경쟁적인 retrieval 효과성을 유지한다.
-      </p>
-
-      <a class="open-link" href="papers/colbertsar/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/snia-computational-storage-architecture-and-programming-model-1-2/">
-            Computational Storage Architecture and Programming Model (Version 1.2)
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">SNIA Computational Storage Technical Working Group</p>
-      <p class="metadata">2026 · SNIA Standard</p>
-
-      <p class="summary">
-        이 문서는 학술 논문이 아니라 SNIA(Storage Networking Industry Association)의 Computational Storage Technical Working Group이 작성한 표준 명세(standard specification)로, Computational Storage 장치와 호스트 사이의 아키텍처 모델(architecture model)과 프로그래밍 모델(programming model)을 정의한다. 핵심 아이디어는 전통적인 compute &amp; memory 아키텍처 바깥의 연산 자원을 스토리지에 직접 결합하거나 host와 storage 사이에 배치함으로써 application 성능 및 infrastructure efficiency를 개선하고, parallel computation을 가능하게 하며 기존 compute/memory/storage/I-O 제약을 완화하는 것이다(17페이지). 이를 위해 문서는 CSx(Computational Storage Device: CSP/CSD/CSA)라는 상위 개념 아래 CSR(Computational Storage Resource), CSE(Computational Storage Engine), CSEE(Computational Storage Engine Environment), CSF(Computational Storage Function), Resource Repository, FDM/AFDM(Function Data Memory / Allocated Function Data Memory)이라는 계층적 용어 체계를 정의한다(14, 17–19페이지). 동작 이론(Theory of Operation)은 Discovery → Configuration/Activation → Security → CSF Usage(Direct / Indirect) → Sequencing(aggregator CSF) → Completion Handling의 흐름으로 구성되며(20–39페이지), 특히 CSEE를 CSE에 activate하고 그 위에 CSF를 activate하는 2단계 활성화 구조와, 여러 CSF를 host 개입 없이 순차·병렬로 묶어 실행하는 aggregator CSF 개념이 프로그래밍 모델의 중심축이다(19, 33–36페이지). 문서는 host–CSx 인터페이스의 물리적 특성이나 storage protocol을 특정하지 않는 벤더 중립적(vendor-neutral)·상호운용 가능(interoperable) 추상화를 목표로 하며(11–12페이지), 따라서 성능 실험이나 정량적 평가 결과는 포함하지 않는다.
-      </p>
-
-      <a class="open-link" href="papers/snia-computational-storage-architecture-and-programming-model-1-2/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
-            FLASH-MaxSim: IO-Aware Fused Kernels for Late-Interaction Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Roi Pony, Daniel Ezer, Adi Raz Goldfarb, Idan Friedman, Oshri Naparstek, Udi Barzelay</p>
-      <p class="metadata">2026</p>
-
-      <p class="summary">
-        이 논문은 ColBERT/ColPali로 대표되는 late-interaction retrieval의 핵심 연산인 MaxSim(쿼리 토큰마다 문서 토큰에 대해 max를 취하고, 다시 쿼리 토큰에 대해 sum하는 연산)을 GPU에서 효율적으로 계산하는 IO-aware fused 커널 FLASH-MaxSim(FM)을 제안한다. 표준 PyTorch 구현은 [Nq, B, Lq, Ld] 크기의 query×document 유사도 텐서 S를 HBM에 전부 만든 뒤 max·sum으로 줄이고 버리는데, 이 텐서는 오직 reduce되기 위해서만 존재하면서 추론 시 후보 집합 크기와 대조학습(contrastive training) 시 배치 크기를 제한하는 메모리 병목이 된다(예: ColPali 10K 문서에서 FP16 기준 21GB). 저자들은 FlashAttention의 IO-aware tiling 원리를 MaxSim이라는 hard-selection reduction(한 축에 max/min/arg, 다른 축에 sum)에 적용하여, forward에서는 유사도 텐서를 전혀 만들지 않고 SRAM 안에서 tile 단위 running max로 점수만 계산하고, backward에서는 forward가 저장한 argmax를 sparse bipartite routing graph로 취급하는 inverse-grid CSR 구조로 gradient 텐서 없이 정확한 gradient를 복원한다. 그 결과 추론 peak memory를 최대 9× 낮추고 학습 peak memory를 두 자릿수 배(orders of magnitude) 줄이면서, 모든 shape에서 naive PyTorch보다 빠르고(최대 A100 3.8×/H100 4.7×) FP32 정밀도 프로토콜 하에서 순위(ranking)를 BEIR·REAL-MM-RAG에서 nDCG@10 소수점 4자리까지 보존한다. 여기에 저장공간을 절반으로 줄이는 approximate INT8 경로와 d&gt;512에서의 SRAM-spill을 없애는 split-d forward가 서빙 지향 확장으로 추가된다.
-      </p>
-
-      <a class="open-link" href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/gem-a-native-graph-based-index-for-multi-vector-retrieval/">
-            GEM: A Native Graph-based Index for Multi-Vector Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Yao Tian, Zhoujin Tian, Xi Zhao, Ruiyuan Zhang, Xiaofang Zhou</p>
-      <p class="metadata">2026</p>
-
-      <p class="summary">
-        GEM은 multi-vector retrieval(질의와 문서를 모두 토큰 단위 벡터들의 집합, vector set으로 표현하는 검색)을 위해 vector set 자체를 그래프의 정점으로 삼는 최초의 native graph index이다. 기존 방식은 (1) 모든 개별 벡터를 단일 ANN 인덱스에 pooling하거나(PLAID, IGP 계열), (2) vector set을 단일 벡터로 사상하거나(MUVERA의 FDE), (3) LSH sketch로 압축(DESSERT)하는 식으로 단일 벡터용 인덱스를 재사용했는데, 이들은 set-level semantics를 보존하지 못하거나 pruning이 약해 느리다. GEM의 핵심 통찰은 그래프 기반 검색이 전제하는 metric 성질(삼각부등식)을 MaxSim/Chamfer(CH) 유사도가 만족하지 않는다는 점이며, 이를 metric decoupling으로 해결한다. 즉 그래프 구축(edge weight)에는 삼각부등식을 만족하고 CH(Q,P) &lt;= EMD(Q,P)를 만족하는 Earth Mover&#x27;s Distance(EMD)를 쓰고, 실제 relevance 산출과 탐색에는 원래의 Chamfer distance를 쓴다. 여기에 TF-IDF 기반 set-level clustering으로 각 set을 소수의 유의미한 cluster에만 할당해 index redundancy를 줄이고(예: MSMARCO에서 set당 평균 cluster membership 43.8 -&gt; 2.9), cluster 내부 local proximity graph를 cluster 간 bridge로 이어 붙여 globally navigable한 dual graph를 만든다. Chamfer 상으로는 가깝지만 EMD 그래프 상 멀리 떨어진 쌍은 학습 pair를 재사용한 semantic shortcut으로 직접 연결한다. 인덱싱과 검색 모두 centroid codebook 기반의 quantized EMD(qEMD)/quantized Chamfer(qCH) lookup으로 set-to-set 거리 계산 비용을 낮추며, 질의 시에는 cluster filtering -&gt; multi-entry 병렬 beam search -&gt; cluster 기반 early pruning -&gt; exact Chamfer rerank 순으로 처리한다. MSMARCO, LoTTE, OK-VQA, EVQA 네 벤치마크에서 GEM은 모든 품질 지표(R@100, S@100, MRR@10)에서 최고 성능을 내면서 지연시간도 가장 낮았고(MSMARCO 140ms vs PLAID 352ms), 동일 MRR@10 기준 최대 16배 speedup과 함께 index size는 PLAID/IGP와 비슷하거나 더 작다.
-      </p>
-
-      <a class="open-link" href="papers/gem-a-native-graph-based-index-for-multi-vector-retrieval/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
-            IRPAPERS: A Visual Document Benchmark for Scientific Retrieval and Question Answering
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Connor Shorten, Augustas Skaburskas, Daniel M. Jones, Charles Pierse, Roberto Esposito, John Trengrove, Etienne Dilocker, Bob van Luijt</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2602.17687v1 [cs.IR])</p>
-
-      <p class="summary">
-        IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다.
-      </p>
-
-      <a class="open-link" href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/lemur-learned-multi-vector-retrieval/">
-            LEMUR: Learned Multi-Vector Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Elias Jääsaari, Ville Hyvönen, Teemu Roos</p>
-      <p class="metadata">2026 · Proceedings of the 43rd International Conference on Machine Learning (ICML 2026), PMLR 306, Seoul, South Korea</p>
-
-      <p class="summary">
-        LEMUR는 ColBERT 계열 late interaction 모델의 multi-vector 유사도 검색(MaxSim search)을 supervised learning 문제로 재정식화하여, 결과적으로 single-vector 유사도 검색(MIPS)으로 환원하는 corpus-specific search reduction 프레임워크이다.\n\n핵심 착안점은 두 가지 관찰이다. 첫째, 질의 X와 문서 C_l의 MaxSim 유사도 f_l(X)=MaxSim(X,C_l)은 질의 토큰별 기여의 합 f(X)=Σ_{x∈X} g(x)로 분해되므로, 문서 수 m개의 출력을 갖는 multi-output regression 문제로 볼 수 있다. 둘째, 이 회귀 함수를 hidden layer가 하나뿐인 2-layer MLP ϕ(x)=Wψ(x)로 근사하면 출력층이 bias 없는 선형 계층이므로, 최종 추정치가 f(X)≈WΨ(X)=(⟨w_1,Ψ(X)⟩,...,⟨w_m,Ψ(X)⟩) 형태가 된다. 즉 출력층 가중치 행렬 W의 각 행 w_j가 문서 j의 single-vector latent 표현이 되고, pooled query 표현 Ψ(X)=Σψ(x)를 질의 벡터로 쓰는 d&#x27;차원 latent space 상의 MIPS 문제로 정확히 환원된다(pages 3-4).\n\n따라서 LEMUR는 기존의 고도로 최적화된 single-vector ANNS 라이브러리(본 논문에서는 HNSW 기반 Glass)를 그대로 재사용할 수 있다. 질의 시에는 ANNS로 top-k&#x27; 후보를 뽑고, 그 후보에 대해서만 exact MaxSim을 계산해 최종 top-k로 rerank한다(Algorithm 1, page 4). 대규모 corpus 확장을 위해 m&#x27;=8192개 문서를 auxiliary target으로 삼아 feature encoder ψ를 먼저 pretrain한 뒤, ψ를 고정하고 각 문서의 w_j를 closed-form OLS로 계산한다(Algorithm 2, page 5). 이로 인해 모든 토큰 임베딩을 클러스터링할 필요가 없어 CPU만으로도 8.8M 문서 corpus를 4.8시간에 인덱싱할 수 있다(page 5).\n\n실험적으로, 5개 multi-vector 텍스트 모델로 임베딩한 8개 BEIR 데이터셋과 2개 visual 모델로 임베딩한 ViDoRe V3에서, recall≥80%, k=100 기준 LEMUR는 최고 성능 baseline 대비 5~16배 높은 QPS를 달성했고(MSMARCO 799 vs MUVERA 150), d&#x27;=1024의 LEMUR 임베딩이 MUVERA의 10240차원 FDE보다 8개 중 7개 데이터셋에서 더 높은 Recall100@k&#x27;를 보였다(pages 7-9).
-      </p>
-
-      <a class="open-link" href="papers/lemur-learned-multi-vector-retrieval/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/metaembed/">
-            MetaEmbed: Scaling Multimodal Retrieval at Test-Time with Flexible Late Interaction
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Zilin Xiao, Qi Ma, Mengting Gu, Jason Chen, Xintao Chen, Vicente Ordonez, Vijai Mohan</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2509.18095v2 [cs.IR]) — 동료심사 게재 정보는 확인되지 않음</p>
-
-      <p class="summary">
-        MetaEmbed는 멀티모달 검색(multimodal retrieval)에서 단일 벡터(single-vector) 표현의 표현력 한계와 ColBERT류 멀티벡터(multi-vector) 표현의 과도한 비용 사이를 절충하는 방법이다. 핵심 아이디어는 두 가지다. 첫째, 쿼리와 후보 입력 시퀀스 끝에 소수의 학습 가능한 Meta Token을 덧붙이고, Vision-Language Model(VLM)이 이를 원본 입력(이미지 패치·텍스트 토큰)과 함께 처리하게 한 뒤, 마지막 레이어에서 Meta Token 위치의 hidden state만을 뽑아 L2 정규화하여 압축적인 멀티벡터 표현인 Meta Embeddings로 사용한다. 이렇게 하면 이미지의 수백 개 패치 임베딩을 모두 저장·비교할 필요 없이 고정된 소수의 벡터만으로 late interaction(MaxSim)을 수행할 수 있어, 기존 ColBERT류가 사실상 불가능했던 multimodal-to-multimodal 검색까지 다룰 수 있다(pp. 1-4). 둘째, Matryoshka Representation Learning에서 착안한 Matryoshka Multi-Vector Retrieval(MMR)을 도입해 Meta Embeddings에 prefix-nested 구조를 부여한다. 학습 시 G=5개의 중첩 그룹 (r_q, r_c) = (1,1), (2,4), (4,8), (8,16), (16,64)에 대해 각각 late-interaction 점수와 InfoNCE loss를 계산하고 이를 가중 합산해 병렬로 최적화하므로, 앞쪽 벡터는 coarse summary를, 뒤쪽 벡터는 정교한 표현을 담게 된다(pp. 4-6). 그 결과 테스트 시점에 재학습 없이 retrieval budget (r_q, r_c)를 골라 정확도와 비용(인덱스 크기·지연시간)을 절충하는 test-time scaling이 가능하다. 논문이 보고한 실험에서 MetaEmbed는 MMEB overall Precision@1에서 3B 69.1%, 7B 76.6%, 32B 78.7%를 기록해 baseline 최고치인 B3-7B의 72.0%를 넘어섰고, ViDoRe v2 평균 NDCG@5에서도 7B가 61.3%로 baseline 최고치 GME 59.3%를 상회했다(pp. 6-7). 효율성 분석에서는 budget을 (1,1)에서 (16,64)로 키울 때 인덱스 메모리가 0.68 GiB에서 42.72 GiB로, scoring latency가 1.67ms에서 6.25ms로 늘지만 MMEB 정확도는 71.3%에서 76.6%로 상승하며, 1024 토큰 이미지 쿼리 인코딩 하나가 788ms를 소모한다는 점에서 scoring이 아닌 encoding이 전체 지연시간을 지배함을 저자들이 보였다(p. 9).
-      </p>
-
-      <a class="open-link" href="papers/metaembed/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/mm-matryoshka/">
-            MM-Matryoshka: Towards Budget-Elastic Visual Document Retrieval via a 2D Multimodal Matryoshka Training Framework
-          </a>
-        </h2>
-
-        <span class="status-badge status-failed">
-          검증 실패
-        </span>
-      </div>
-
-      <p class="authors">Haowen Xiang, Yibo Yan, Jiahao Huo, Yu Huang, Yi Cao, Mingdong Ou, Xuming Hu</p>
-      <p class="metadata">2026</p>
-
-      <p class="summary">
-        MM-Matryoshka는 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 리트리버가 배포 시 겪는 저장소·연산 비용 문제를, vector width(임베딩 차원)와 encoder depth(transformer layer 깊이)를 동시에 탄력적으로 만드는 2D Matryoshka training framework로 해결한다. 학습은 두 개의 목적함수로 구성된다. Dimension-level MRL loss(Lprefix)는 final layer에서 여러 prefix 차원 d가 각각 곧바로 late interaction에 사용될 수 있도록 in-batch cross-entropy로 학습시키고, Layer-level MRL loss(Ldistill)는 final layer의 in-batch score 분포를 teacher(stop-gradient)로 삼아 중간 layer(student)로 KL divergence 기반 score distillation을 수행한다. 두 손실은 강도 λ로 결합되어 단일 모델이 backbone별로 구성된(configured) 2D budget grid S×D 전체를 커버하도록 만든다. 추론 시에는 추가 학습 없이 이 grid 안에서 원하는 budget (ℓ,d)를 골라 해당 layer의 token vector를 뽑고 prefix truncation 후 재정규화한 뒤, 학습 때와 동일한 MaxSim late-interaction 함수로 점수를 매긴다. PaliGemma, Qwen2-VL, Qwen2.5-VL 세 backbone과 ViDoRe v1·v2의 14개 데이터셋에서 검증했으며, Qwen2.5-VL 기반 모델은 middle layer·32차원 budget에서 ViDoRe v1 retention 97.6%를 기록해 같은 조건의 ColQwen2.5 baseline 47.8%를 크게 앞선다.
-      </p>
-
-      <a class="open-link" href="papers/mm-matryoshka/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/nemotron-colembed-v2-top-performing-late-interaction/">
-            Nemotron ColEmbed V2: Top-Performing Late Interaction Embedding Models for Visual Document Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Gabriel de Souza P. Moreira, Ronay Ak, Mengyao Xu, Oliver Holworthy, Benedikt Schifferer, Zhiding Yu, Yauhen Babakhin, Radek Osmulski, Jiarui Cai, Ryan Chesler, Bo Liu, Even Oldridge</p>
-      <p class="metadata">2026 · Proceedings of the 1st Late Interaction Workshop (LIR) @ ECIR 2026</p>
-
-      <p class="summary">
-        이 논문은 NVIDIA가 공개한 Nemotron ColEmbed V2, 즉 시각 문서 검색(Visual Document Retrieval, VDR)을 위한 late interaction 기반 VLM 임베딩 모델 패밀리(3B/4B/8B)를 소개한다. RAG(Retrieval-Augmented Generation) 파이프라인에서 기업이 보유한 PDF·슬라이드 등 문서를 검색하려면 기존 텍스트 검색 모델은 OCR/텍스트 추출에 의존해 표·차트·인포그래픽 같은 시각 정보를 잃는다. 저자들은 페이지 이미지를 직접 임베딩하는 VLM 백본(3B: NVIDIA Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)을 초기화한 뒤, 디코더의 causal attention을 bidirectional attention으로 교체하고, ColBERT 스타일 late interaction(MaxSim) 유사도로 contrastive learning을 수행한다. 성능을 끌어올리기 위해 cluster-based 데이터 샘플링, positive-aware hard-negative mining, cross-lingual 번역 증강, (3B 전용) two-stage training, model merging(model soup)을 결합한다. 그 결과 nemotron-colembed-vl-8b-v2는 2026년 2월 3일 기준 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성하고, 4B/3B 모델도 동급 크기에서 최고 성능을 보인다. 마지막으로 저자들은 late interaction이 유발하는 저장공간·지연시간 오버헤드를 정량적으로 분석하고, 임베딩 차원 축소(512/128차원) ablation을 통해 정확도-저장공간 트레이드오프를 논의한다.
-      </p>
-
-      <a class="open-link" href="papers/nemotron-colembed-v2-top-performing-late-interaction/">
+      <a class="open-link" href="papers/visual-rag-at-scale-tile-level-spatial-pooling-for-efficient-multi-vector-document-retrieval/">
         보고서 열기 →
       </a>
     </article>
@@ -1319,8 +1540,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/quantifying-and-expanding-the-theoretical-capacity-of-late-interaction-retrieval-models/">
-            Quantifying and Expanding the Theoretical Capacity of Late-Interaction Retrieval Models
+          <a href="papers/espn-memory-efficient-multi-vector-information-retrieval/">
+            ESPN: Memory-Efficient Multi-Vector Information Retrieval
           </a>
         </h2>
 
@@ -1329,14 +1550,14 @@
         </span>
       </div>
 
-      <p class="authors">Julian Killingback, Varad Ingale, Hamed Zamani, Cameron Musco</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2607.05803v1 [cs.IR]), 본문에 &#x27;Preprint.&#x27;로만 명시됨 (정식 게재 여부 확인되지 않음)</p>
+      <p class="authors">Susav Shrestha, Narasimha Reddy, Zongwang Li</p>
+      <p class="metadata">2023 · Under review (arXiv:2312.05417v1)</p>
 
       <p class="summary">
-        이 논문은 ColBERT 계열 late-interaction 검색 모델이 사용하는 MaxSim(Chamfer) 유사도의 이론적 표현력(representational power)을 구성적 증명(proof by construction)으로 정량화한다. 핵심 결과는 네 가지다. 첫째, 임의 차원(가산 무한 차원 포함)의 두 비음수(non-negative) k-sparse 벡터의 inner product를, R^3에 놓인 query 임베딩 k개와 document 임베딩 k+1개만으로 MaxSim이 정확히(exactly) 재현할 수 있음을 증명한다(Theorem 3.1). 구성의 핵심은 document 쪽 임베딩을 &#x27;해당 인덱스에서만 원하는 값을 갖고 다른 모든 정수 인덱스에서는 음수가 되는&#x27; 2차 다항식의 계수 벡터로 두고, query 쪽을 φ(i)=(1,i,i²)로 두는 것이다. 이렇게 하면 MaxSim의 max 연산이 인덱스가 일치하는 항만 선택하고, 불일치 항에서는 document 집합에 추가된 영벡터가 선택되어 기여가 0이 된다. 둘째, 반대로 표준 inner product 기반 단일 벡터 모델은 rank 논증에 의해 유한 차원에서 임의로 높은 차원의 sparse 벡터의 inner product를 보존할 수 없음을 증명해(Theorem 4.1) 두 패러다임 사이의 이론적 분리(separation)를 확립한다. 셋째, 표준 MaxSim은 sparsity에 임베딩 개수가 묶인 조건 아래서 실수 값(real-valued) inner product는 재현할 수 없음을 증명하고(Theorem 3.2), 이를 극복하기 위해 각 임베딩을 크기(magnitude)와 부호(sign)로 분해하여 max 연산은 크기에 대해서만 수행하고 부호는 max 이후에 곱하는 Signed MaxSim(S±)을 제안한다(Definition 3.4, Theorem 3.3). 넷째, 임베딩 차원을 절(clause) 크기에 비례해 키우면 Lagrange 보간 다항식으로 OR-clause 전체를 하나의 query 벡터에 인코딩할 수 있고, 이때 MaxSim은 weighted fuzzy OR의 합이 되며 이진 가중치에서는 부정 없는 CNF(positive CNF)의 순위 동등(rank-equivalent) 평가자가 된다(Theorem 5.1, 5.2). 실증 검증으로 Signed MaxSim으로 훈련한 모델(Fallon)을 부정(negation)이 포함된 LIMIT 형식 합성 검색 과제에서 ColBERT 베이스라인과 비교했고, vocabulary shift 조건에서 nDCG@10이 0.597→1.000, negation-only 쿼리에서 0.008→0.788로 개선되었다.
+        ColBERT류의 멀티벡터(late interaction) 검색 모델은 문서를 토큰 단위 멀티벡터로 인코딩하고 MaxSim 연산으로 유사도를 계산해 단일 벡터·lexical 모델보다 검색 품질(MRR@10)을 크게 높이지만, 재랭킹용 임베딩 인덱스 크기가 BM25 대비 한 자릿수 이상(예: ColBERTv1은 210배, ColBERTv2·ColBERTer도 26-34배) 커지면서 대규모 데이터셋에서 메모리 확장성이 심각한 병목이 된다.\n이 논문은 ESPN(Embedding from Storage Pipelined Network)을 제안한다. 핵심은 방대한 bag-of-word(BOW) 재랭킹 임베딩 테이블 전체를 SSD로 오프로드하되, Nvidia GPUDirect Storage(GDS)로 SSD에서 GPU 메모리로 직접(peer-to-peer) 데이터를 전송하고, ANN(근사 최근접 이웃) 탐색의 특성을 이용한 소프트웨어 프리페처(prefetcher)로 스토리지 지연을 ANN 연산과 오버랩시키는 것이다. 프리페처는 90%를 넘는 히트율을 달성하고, 조기 재랭킹(early re-ranking)과 부분 재랭킹(partial re-ranking)을 결합해 대역폭 요구량을 줄인다.\n결과적으로 ESPN은 전체 리트리벌 인덱스의 6-19%만 메모리에 유지하면서도 완전 메모리 기반 솔루션 대비 1.02배 수준의 end-to-end 지연시간을 유지하고, 메모리 요구량을 quantization factor에 따라 5-16배 줄이며, 메모리 용량 근처에서 mmap 대비 3.1-3.9배 빠른 지연을 달성한다.
       </p>
 
-      <a class="open-link" href="papers/quantifying-and-expanding-the-theoretical-capacity-of-late-interaction-retrieval-models/">
+      <a class="open-link" href="papers/espn-memory-efficient-multi-vector-information-retrieval/">
         보고서 열기 →
       </a>
     </article>
@@ -1345,8 +1566,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/vdr/">
-            Sculpting the Vector Space: Towards Efficient Multi-Vector Visual Document Retrieval via PRUNE-THEN-MERGE Framework
+          <a href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
+            IRPAPERS: A Visual Document Benchmark for Scientific Retrieval and Question Answering
           </a>
         </h2>
 
@@ -1355,14 +1576,14 @@
         </span>
       </div>
 
-      <p class="authors">Yibo Yan, Mingdong Ou, Yi Cao, Xin Zou, Jiahao Huo, Shuliang Liu, James Kwok, Xuming Hu</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2602.19549) — 정식 게재 venue는 논문에 명시되지 않음</p>
+      <p class="authors">Connor Shorten, Augustas Skaburskas, Daniel M. Jones, Charles Pierse, Roberto Esposito, John Trengrove, Etienne Dilocker, Bob van Luijt</p>
+      <p class="metadata">2026 · arXiv preprint (arXiv:2602.17687v1 [cs.IR])</p>
 
       <p class="summary">
-        이 논문은 ColPali 계열의 multi-vector Visual Document Retrieval(VDR) 모델이 갖는 저장/연산 병목을 해결하는 query-agnostic offline 압축 프레임워크 PRUNE-THEN-MERGE를 제안한다. Multi-vector VDR은 문서 페이지 하나를 Np개의 patch-level embedding으로 표현하고 late-interaction(MaxSim)으로 세밀한 매칭을 수행하기 때문에 검색 품질은 최고 수준이지만 페이지당 O(Np×D)의 저장 비용이 발생한다. 기존 효율화 연구는 크게 두 갈래인데, pruning 계열(예: DocPruner)은 중간 압축률에서는 near-lossless이지만 고압축률에서 급격한 성능 절벽(sharp performance cliff)을 겪고, merging 계열(예: Sem-Cluster, pooling 기반)은 고압축률에서 완만하게 저하되지만 조악한 병합이 두드러진 patch의 판별적 특징을 희석시켜 near-lossless 구간이 불안정하다. 저자들의 핵심 아이디어는 &#x27;first refine, then compress&#x27;로, 두 계열을 경쟁 관계가 아니라 순차적 보완 관계로 배치한다. 먼저 LVLM encoder 마지막 layer의 attention에서 global token([EOS])이 각 patch에 주는 attention을 patch importance score로 삼고, 문서별 통계(µd, σd)로 계산한 adaptive threshold τd=µd+k·σd로 저정보 patch를 제거해 고품질 부분집합 D&#x27;를 만든다. 그다음 D&#x27;의 embedding을 L2-normalize하고 cosine distance 기반 hierarchical agglomerative clustering(Ward&#x27;s linkage 등)으로 Np&#x27;&#x27;=max(1, floor(Np&#x27;/m))개 cluster로 묶어 centroid를 최종 embedding 집합 D&#x27;&#x27;로 사용한다. 저자들은 이 2단계 분해를 Information Bottleneck과 Rate-Distortion 이론으로 정당화하여, 전체 압축 매핑 g를 g=gm∘gp로 분해하는 것이 naive single-stage merging보다 참 신호에 대한 distortion을 낮춘다는 것을 Theorem D.1, D.2와 Corollary 1로 증명한다고 주장한다. 6개 벤치마크·29개 데이터셋에서 ColQwen2.5, ColNomic, Jina-v4 세 base model과 결합한 실험 결과, 논문은 DocPruner 대비 near-lossless 압축 구간을 평균 10 percentage point 확장([50-60%]→[60-70%])하고, 80% 이상 고압축률에서 pruning-only 방법의 성능 붕괴를 회피한다고 보고한다. 비용 측면에서 ViDoRe-V1 기준 nDCG@5는 평균 -0.45%만 떨어지면서 storage는 평균 54.60% 감소한다고 논문은 제시하며, 추가 비용은 offline indexing 단계의 문서당 encoding latency 증가(0.46초→0.69초)에 국한되어 online 검색 비용에는 영향이 없다고 저자들은 명시한다.
+        IRPAPERS는 과학 문헌에 대한 시각 문서 검색(visual document retrieval)과 질의응답(question answering)을 평가하기 위한 벤치마크이다. 166편의 정보검색(IR) 논문에서 추출한 3,230페이지를 각 페이지의 이미지와 OCR 텍스트 전사(transcription) 형태로 함께 제공하며, needle-in-the-haystack 방식으로 만든 180개의 정밀한 방법론적 질문을 포함한다. 저자들은 동일 코퍼스 위에서 이미지 기반 검색(ColModernVBERT 다중벡터 임베딩)과 텍스트 기반 검색(Arctic 2.0 dense 임베딩, BM25, 그리고 이 둘의 hybrid search)을 직접 비교한다. 오픈소스 기준으로 텍스트 검색은 46% Recall@1, 이미지 검색은 43% Recall@1로 상단 순위에서는 텍스트가 근소하게 앞서지만, 깊은 recall에서는 이미지가 대등하거나 앞선다(이미지 93% vs 텍스트 91% Recall@20). 두 모달리티는 서로 다른 질의에서 실패하는 상호보완적 실패 양상(complementary failure modes)을 보이며, 이를 융합한 multimodal hybrid search가 49% Recall@1, 95% Recall@20으로 단일 모달리티를 능가한다. 또한 다중벡터 저장 비용을 줄이는 MUVERA 인코딩의 효율-성능 tradeoff와 폐쇄형(closed-source) 모델(Cohere Embed v4, Voyage 3 Large)을 함께 평가한다. 질의응답(RAG)에서는 텍스트 입력(0.82)이 이미지 입력(0.71)보다 우수하며, 두 모달리티 모두 검색 깊이 증가로 크게 이득을 보아 k=5 검색이 oracle 단일 문서 검색보다도 높은 성능을 낸다.
       </p>
 
-      <a class="open-link" href="papers/vdr/">
+      <a class="open-link" href="papers/irpapers-a-visual-document-benchmark-for-scientific/">
         보고서 열기 →
       </a>
     </article>
@@ -1371,8 +1592,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/tilemaxsim-io-aware-gpu-maxsim-scoring-with/">
-            TileMaxSim: IO-Aware GPU MaxSim Scoring with Dimension Tiling and Fused Product Quantization
+          <a href="papers/nemotron-colembed-v2-top-performing-late-interaction/">
+            Nemotron ColEmbed V2: Top-Performing Late Interaction Embedding Models for Visual Document Retrieval
           </a>
         </h2>
 
@@ -1381,144 +1602,14 @@
         </span>
       </div>
 
-      <p class="authors">Ashutosh Sharma</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2606.26439v1, cs.IR)</p>
+      <p class="authors">Gabriel de Souza P. Moreira, Ronay Ak, Mengyao Xu, Oliver Holworthy, Benedikt Schifferer, Zhiding Yu, Yauhen Babakhin, Radek Osmulski, Jiarui Cai, Ryan Chesler, Bo Liu, Even Oldridge</p>
+      <p class="metadata">2026 · Proceedings of the 1st Late Interaction Workshop (LIR) @ ECIR 2026</p>
 
       <p class="summary">
-        TileMaxSim은 ColBERT 계열 multi-vector retrieval의 핵심 연산인 MaxSim scoring을 GPU에서 IO-aware하게 재구현한 Triton kernel 계열이다. 저자는 현대 GPU에서 MaxSim에 대한 roofline analysis를 수행하여, naive 구현이 N_q×N_d 크기의 similarity matrix를 HBM에 명시적으로 materialize하기 때문에 peak HBM bandwidth의 5~18%만 사용한다는 점을 문제의 근본 원인으로 지목한다(pp.1-2). 해결책은 FlashAttention이 attention에 적용한 IO-aware paradigm을 MaxSim 고유의 matmul→max→sum reduction 구조에 맞게 재설계하는 것이다. 구체적으로 (1) query tile과 document tile을 동시에 tiling하여 BQ=N_q로 설정함으로써 각 document embedding을 HBM에서 정확히 한 번만 읽는 multi-query SRAM tiling(V2-MQ), (2) embedding dimension을 128-wide chunk로 분할해 d=64~768을 하나의 kernel family로 처리하는 dimension tiling, (3) shared-memory lookup table로 PQ 압축 문서를 명시적 decompression 없이 채점하는 fused PQ decompression+scoring(TileMaxSim-PQ)의 세 기법을 제시한다(pp.2-5). 실험(H100)에서 V2-MQ는 N_q=32, N_d=128, B=100K 조건에서 peak HBM bandwidth의 80.2%를 달성하고 PyTorch Loop 대비 220배, PyTorch Naive 대비 6.5배, PLAID의 실제 GPU scoring 경로 대비 1.7~1.9배 빠르며, 동일 노드에서 측정한 WARP(CPU) 대비 scoring throughput이 469배 높다(pp.6-10). 동시에 MS MARCO와 세 개 BEIR 데이터셋에서 reference PyTorch MaxSim과 동일한 ranking·retrieval metric을 산출하여 exact quality를 보존하며, PLAID의 scoring kernel을 drop-in 교체할 경우 100K candidates 기준 end-to-end pipeline latency가 약 98% 감소한다(pp.9-10).
+        이 논문은 NVIDIA가 공개한 Nemotron ColEmbed V2, 즉 시각 문서 검색(Visual Document Retrieval, VDR)을 위한 late interaction 기반 VLM 임베딩 모델 패밀리(3B/4B/8B)를 소개한다. RAG(Retrieval-Augmented Generation) 파이프라인에서 기업이 보유한 PDF·슬라이드 등 문서를 검색하려면 기존 텍스트 검색 모델은 OCR/텍스트 추출에 의존해 표·차트·인포그래픽 같은 시각 정보를 잃는다. 저자들은 페이지 이미지를 직접 임베딩하는 VLM 백본(3B: NVIDIA Eagle 2 + Llama 3.2 3B, 4B/8B: Qwen3-VL)을 초기화한 뒤, 디코더의 causal attention을 bidirectional attention으로 교체하고, ColBERT 스타일 late interaction(MaxSim) 유사도로 contrastive learning을 수행한다. 성능을 끌어올리기 위해 cluster-based 데이터 샘플링, positive-aware hard-negative mining, cross-lingual 번역 증강, (3B 전용) two-stage training, model merging(model soup)을 결합한다. 그 결과 nemotron-colembed-vl-8b-v2는 2026년 2월 3일 기준 ViDoRe V3 리더보드에서 NDCG@10 63.42로 1위(2위 대비 +3%)를 달성하고, 4B/3B 모델도 동급 크기에서 최고 성능을 보인다. 마지막으로 저자들은 late interaction이 유발하는 저장공간·지연시간 오버헤드를 정량적으로 분석하고, 임베딩 차원 축소(512/128차원) ablation을 통해 정확도-저장공간 트레이드오프를 논의한다.
       </p>
 
-      <a class="open-link" href="papers/tilemaxsim-io-aware-gpu-maxsim-scoring-with/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/visual-rag-at-scale-tile-level-spatial-pooling-for-efficient-multi-vector-document-retrieval/">
-            Visual RAG Toolkit: Scaling Multi-Vector Visual Retrieval with Training-Free Pooling and Multi-Stage Search
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Ara Yeroyan</p>
-      <p class="metadata">2026 · arXiv preprint (arXiv:2602.12510v1 [cs.IR], 2026-02-13) — 동료심사(peer-review) 게재 여부는 논문에 명시되지 않음</p>
-
-      <p class="summary">
-        이 논문은 ColPali 계열의 multi-vector visual retriever(late interaction 기반 시각 문서 검색기)가 페이지당 수백~수천 개의 patch 벡터를 만들어 내면서 검색 및 색인 비용이 급격히 커지는 확장성 문제를 다룬다. 저자는 추가 학습 없이(training-free) 모델 아키텍처에 맞춘 정적 공간 풀링(static spatial pooling)을 적용해 페이지당 벡터 수를 약 1024개에서 약 32개(ColSmol은 약 832개에서 약 13개)로 줄이고, 이 압축된 표현으로 후보를 빠르게 뽑은 뒤(candidate generation) 원본 full patch embedding으로 정확한 MaxSim reranking을 수행하는 multi-stage retrieval을 제안한다. 모든 표현은 Qdrant의 named vector로 동일 collection에 저장되어 prefetch+query API를 통해 서버 사이드 단일 호출로 실행된다. 여기에 non-visual token(special/prompt/padding token)을 색인 시점에 제거하는 token hygiene과 여백 영역을 잘라내는 empty-region cropping 같은 전처리가 결합된다. ViDoRe v2의 세 데이터셋(총 3006페이지) 실험에서 3B급 모델(ColPali v1.3, ColQwen2.5)의 2-stage retrieval은 union scope 기준 QPS를 3.8~4.5배 높이면서 N@5, N@10, R@5, R@10을 1-stage baseline 대비 ±0.01 이내로 유지했고, 품질 저하는 주로 R@100(-0.02~-0.09)에 집중되었다. 반면 sub-1B 모델인 ColSmol-500M은 R@100에서 최대 -0.30까지 큰 저하를 보여, 공격적인 풀링이 손실 없이 동작하려면 일정 수준 이상의 representational capacity가 필요함을 시사한다. 논문은 시스템/툴킷 성격이 강하며(pip 패키지, CLI, SDK, Streamlit 데모), 학습이나 distillation 없이 소비자용 하드웨어에서 visual RAG를 실용화하는 것을 목표로 한다.
-      </p>
-
-      <a class="open-link" href="papers/visual-rag-at-scale-tile-level-spatial-pooling-for-efficient-multi-vector-document-retrieval/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
-            ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Kaili Huang, Thejas Venkatesh, Uma Dingankar, Antonio Mallia, Daniel Campos, Jian Jiao, Christopher Potts, Matei Zaharia, Kwabena Boahen, Omar Khattab, Saarthak Sarup, Keshav Santhanam</p>
-      <p class="metadata">2025 · ECIR 2025 (Advances in Information Retrieval, Lecture Notes in Computer Science, vol 15575)</p>
-
-      <p class="summary">
-        ColBERT과 같은 multi-vector late-interaction retriever는 높은 검색 품질을 보이지만, PLAID로 인코딩된 ColBERTv2 인덱스를 완전히 메모리에 올리려면 Wikipedia 규모(2000만 passage)에서 거의 100GB의 RAM이 필요해, 저사양·저비용 서버에서 다수의 동시 사용자를 서빙하기 어렵다는 문제가 있다. 이 논문은 ColBERT-serve라는 서빙 시스템을 제안하는데, (1) 압축된 ColBERTv2 임베딩 텐서에 memory-mapping을 적용해 인덱스 대부분을 디스크에 두고 필요한 페이지만 OS가 온디맨드로 메모리에 올리도록 하며, (2) SPLADEv2를 1단계 검색기로 사용하는 multi-stage retrieval로 memory-mapped 인덱스에 대한 접근(페이지 미스)을 최소화하고, (3) SPLADEv2와 ColBERTv2 점수를 z-norm 정규화 후 선형 보간(hybrid scoring)하여 재랭킹만 사용할 때보다도 품질을 개선하며, (4) Python GIL 해제와 서버-클라이언트 구조로 동시 요청을 병렬 처리한다. 그 결과, MS MARCO와 Wikipedia에서 모델 로딩에 필요한 RAM을 각각 90%, 92% 절감하고 머신 비용을 78%, 68% 절감하면서도, MS MARCO Dev/Test와 LoTTE Lifestyle에서는 완전 인메모리 ColBERTv2보다 오히려 높은 품질을 달성했고, 초당 최대 4~5개의 쿼리를 낮은 지연시간으로 서빙할 수 있음을 실증했다.
-      </p>
-
-      <a class="open-link" href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
-            ColPali: Efficient Document Retrieval with Vision Language Models
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Manuel Faysse, Hugues Sibille, Tony Wu, Bilel Omrani, Gautier Viaud, Céline Hudelot, Pierre Colombo</p>
-      <p class="metadata">2025 · ICLR 2025 (arXiv:2407.01449)</p>
-
-      <p class="summary">
-        이 논문은 문서(document)를 텍스트로 추출·색인하는 기존 파이프라인 대신, 문서 페이지 이미지를 Vision Language Model(VLM)로 직접 임베딩하여 검색하는 새로운 개념 &#x27;Retrieval in Vision Space&#x27;를 제안한다. 저자들은 먼저 시각적으로 풍부한 문서 검색을 평가하기 위한 벤치마크 ViDoRe(다양한 도메인·언어·모달리티의 페이지 단위 검색 태스크)를 공개한다. 그리고 PaliGemma-3B를 확장하여 텍스트·이미지 토큰 모두에 대해 ColBERT 스타일의 multi-vector 임베딩(차원 D=128)을 생성하는 ColPali 모델을 제안하고, 여기에 late interaction 매칭(각 쿼리 벡터가 문서 벡터들과의 최대 내적을 취해 합산하는 MaxSim)을 결합한다. 이 방식은 OCR·레이아웃 분석·청킹·captioning 등 복잡한 전처리를 제거하여 색인이 훨씬 단순·빠르면서도, ViDoRe에서 nDCG@5 평균 81.3으로 최고 baseline(Unstructured+Captioning BGE-M3 67.0)을 크게 능가한다. 또한 end-to-end로 학습 가능하고, 온라인 쿼리 지연은 낮게 유지되며, late interaction 히트맵으로 해석 가능성(interpretability)도 제공한다.
-      </p>
-
-      <a class="open-link" href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/docpruner-a-storage-efficient-framework/">
-            DocPruner: A Storage-Efficient Framework for Multi-Vector Visual Document Retrieval via Adaptive Patch-Level Embedding Pruning
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Yibo Yan, Guangwei Xu, Xin Zou, Shuliang Liu, James Kwok, Xuming Hu</p>
-      <p class="metadata">2025 · arXiv preprint (arXiv:2509.23883v1, cs.CL). &#x27;Preprint&#x27; 헤더로 표기되어 있으며 정식 학회/저널 게재 정보는 확인되지 않음</p>
-
-      <p class="summary">
-        DocPruner는 다중 벡터(multi-vector) 기반 시각 문서 검색(Visual Document Retrieval, VDR)에서 발생하는 막대한 저장(storage) 오버헤드를 완화하기 위해 제안된 경량 plug-and-play 프레임워크이다. ColBERT 스타일 late interaction을 사용하는 patch-level 검색기(ColPali, ColQwen, ColNomic, Jina Embeddings v4 등)는 문서 페이지마다 수백~수천 개의 patch embedding을 저장해야 하므로 대규모 배포가 비용이 많이 들고 비현실적이라는 병목이 있다.\nDocPruner의 핵심 아이디어는 오프라인 색인(offline indexing) 단계에서, 질의(query) 없이도 VLM이 global token([EOS])을 통해 각 patch에 부여하는 attention 가중치를 patch importance score로 사용하고, 문서별 importance score의 평균 μd와 표준편차 σd로부터 만든 통계적 임계값 τd = μd + k·σd를 적용해 중요도가 낮은 patch embedding을 동적으로 제거하는 것이다. 이 방식은 query-agnostic(질의 무관)하고 document-adaptive(문서별 적응적)하며, 모델 재학습이 필요 없다.\n저자들은 ViDoRe-V2와 JinaVDR-Bench(다국어 포함)에서 세 개의 선도적 base 모델과 결합해 평균 50-60%의 patch를 pruning하면서도 near-lossless한 nDCG@5 성능을 유지함을 보였고, pruning 기반 방식이 merging 기반 방식보다 성능 보존에 더 효과적임을 실험적으로 입증하였다.
-      </p>
-
-      <a class="open-link" href="papers/docpruner-a-storage-efficient-framework/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/efficient-constant-space-multi-vector-retrieval/">
-            Efficient Constant-Space Multi-Vector Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Sean MacAvaney (University of Glasgow, UK), Antonio Mallia (Pinecone, US), Nicola Tonellotto (University of Pisa, Italy)</p>
-      <p class="metadata">2025 · arXiv preprint (arXiv:2504.01818v1, cs.IR)</p>
-
-      <p class="summary">
-        이 논문은 ColBERT로 대표되는 multi-vector retrieval의 핵심 약점인 저장 공간(storage) 비용 문제를 해결하는 ConstBERT를 제안한다. 기존 ColBERT는 문서의 모든 토큰마다 벡터를 하나씩 저장하기 때문에 문서 길이에 비례해 인덱스가 커지는데, ConstBERT는 학습된 선형 투영 계층(projection layer) W를 도입하여 M개의 토큰 임베딩을 문서 길이와 무관한 고정된 C개(C&lt;M)의 문서 수준 임베딩 δ1,...,δC로 pooling한다. 이렇게 하면 late interaction 점수 계산 방식은 그대로 유지하면서도 문서당 저장 임베딩 수가 M/C 배만큼 줄어들어, 인덱스 크기와 질의 처리 시간이 함께 감소한다. 또한 문서당 벡터 수가 항상 일정하므로 디스크 상에서 고정 크기 표현이 되어 OS 페이징(paging) 정렬과 reranking 통합이 쉬워진다. MSMARCO 및 13개 BEIR 데이터셋 실험에서, 저자들은 원래 효과성의 대부분을 유지하면서도 동등한 효과성 기준에서 ColBERT 대비 인덱스 크기를 50% 이상 줄일 수 있음을 보였다. 특히 제안 설정인 ConstBERT32는 인덱스 크기를 22GB에서 11GB로 절반으로 줄이면서 MRR@10과 NDCG@10에서 ColBERT와 근접한 성능을 유지한다.
-      </p>
-
-      <a class="open-link" href="papers/efficient-constant-space-multi-vector-retrieval/">
+      <a class="open-link" href="papers/nemotron-colembed-v2-top-performing-late-interaction/">
         보고서 열기 →
       </a>
     </article>
@@ -1553,8 +1644,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/hierarchical-vision-language-reasoning-for-multimodal/">
-            Hierarchical Vision-Language Reasoning for Multimodal Multiple-Choice Question Answering
+          <a href="papers/docpruner-a-storage-efficient-framework/">
+            DocPruner: A Storage-Efficient Framework for Multi-Vector Visual Document Retrieval via Adaptive Patch-Level Embedding Pruning
           </a>
         </h2>
 
@@ -1563,14 +1654,14 @@
         </span>
       </div>
 
-      <p class="authors">Ao Zhou, Zebo Gu, Tenghao Sun, Jiawen Chen, Mingsheng Tu, Zifeng Cheng, Yafeng Yin, Zhiwei Jiang, Qing Gu</p>
-      <p class="metadata">2025 · Proceedings of the 33rd ACM International Conference on Multimedia (MM &#x27;25), Dublin, Ireland</p>
+      <p class="authors">Yibo Yan, Guangwei Xu, Xin Zou, Shuliang Liu, James Kwok, Xuming Hu</p>
+      <p class="metadata">2025 · arXiv preprint (arXiv:2509.23883v1, cs.CL). &#x27;Preprint&#x27; 헤더로 표기되어 있으며 정식 학회/저널 게재 정보는 확인되지 않음</p>
 
       <p class="summary">
-        이 논문은 복잡한 레이아웃과 방대한 분량을 가진 일본어 PDF 문서에서, 10개의 선택지 중 정답을 고르는 ten-choice 질의응답(multiple-choice QA) 과제를 푸는 프레임워크를 제안한다. 핵심 아이디어는 (1) ColQwen2(ColPali 계열)를 이용한 vision-language 검색으로 전체 PDF에서 질의와 가장 관련 있는 상위 3개 페이지 이미지를 찾고 QwenVL2.5로 재필터링한 뒤, (2) 대규모 언어모델과 정교한 프롬프트로 원 질문을 여러 sub-question으로 분해(sub-question decomposition)하고 그 답을 검증하는 계층적(hierarchical) 추론을 수행하며, (3) bounding box 기반 crop 모듈로 검색 결과를 보정하는 것이다. 프롬프트는 언어 편향을 줄이기 위해 1단계는 영어·일본어 이중언어로, 2단계는 일본어 전용으로 설계되고, think/answer 필드를 가진 구조화된 JSON으로 추론 과정을 함께 출력한다. 저자들은 task-specific fine-tuning 없이 여러 최신 MLLM을 zero-shot으로 Public Score 지표에서 비교하였고, Qwen2.5-VL-72B·Kimi-VL-A3B-Thinking·GLM-4.1-9B-Thinking을 결합한 fusion이 0.59로 최고 성능을 기록했다. 실패 사례 분석에서는 retrieval precision이 주요 병목임을 확인하였다.
+        DocPruner는 다중 벡터(multi-vector) 기반 시각 문서 검색(Visual Document Retrieval, VDR)에서 발생하는 막대한 저장(storage) 오버헤드를 완화하기 위해 제안된 경량 plug-and-play 프레임워크이다. ColBERT 스타일 late interaction을 사용하는 patch-level 검색기(ColPali, ColQwen, ColNomic, Jina Embeddings v4 등)는 문서 페이지마다 수백~수천 개의 patch embedding을 저장해야 하므로 대규모 배포가 비용이 많이 들고 비현실적이라는 병목이 있다.\nDocPruner의 핵심 아이디어는 오프라인 색인(offline indexing) 단계에서, 질의(query) 없이도 VLM이 global token([EOS])을 통해 각 patch에 부여하는 attention 가중치를 patch importance score로 사용하고, 문서별 importance score의 평균 μd와 표준편차 σd로부터 만든 통계적 임계값 τd = μd + k·σd를 적용해 중요도가 낮은 patch embedding을 동적으로 제거하는 것이다. 이 방식은 query-agnostic(질의 무관)하고 document-adaptive(문서별 적응적)하며, 모델 재학습이 필요 없다.\n저자들은 ViDoRe-V2와 JinaVDR-Bench(다국어 포함)에서 세 개의 선도적 base 모델과 결합해 평균 50-60%의 patch를 pruning하면서도 near-lossless한 nDCG@5 성능을 유지함을 보였고, pruning 기반 방식이 merging 기반 방식보다 성능 보존에 더 효과적임을 실험적으로 입증하였다.
       </p>
 
-      <a class="open-link" href="papers/hierarchical-vision-language-reasoning-for-multimodal/">
+      <a class="open-link" href="papers/docpruner-a-storage-efficient-framework/">
         보고서 열기 →
       </a>
     </article>
@@ -1579,34 +1670,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/in-storage-acceleration-of-retrieval-augmented-generation-as-a-service/">
-            In-Storage Acceleration of Retrieval Augmented Generation as a Service
-          </a>
-        </h2>
-
-        <span class="status-badge status-failed">
-          검증 실패
-        </span>
-      </div>
-
-      <p class="authors">Rohan Mahapatra, Harsha Santhanam, Christopher Priebe, Hanyang Xu, Hadi Esmaeilzadeh</p>
-      <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), Tokyo, Japan (ACM)</p>
-
-      <p class="summary">
-        이 논문은 RAG(Retrieval-Augmented Generation) 서비스가 계속 커지는 지식 베이스를 감당하기 위해 임베딩(embedding)과 posting list 같은 표현(representation)을 DRAM이 아닌 영속적 저장장치(persistent storage, NVMe SSD)에 두는 방향으로 전환되면서, end-to-end 지연시간의 병목이 LLM 추론이 아니라 Search &amp; Retrieval 단계로 이동한다는 관찰에서 출발한다. 저자들은 AWS 상에서 DGX A100 GPU와 PubMed 5백만 문서를 사용해 end-to-end RAG를 특성화하여, 로컬 NVMe 구성에서 Search &amp; Retrieval이 전체 지연시간의 평균 61%, 네트워크 EBS 구성에서는 88%를 차지함을 실측으로 보였다(p.2, p.5). 이 병목은 (1) 소형 언어모델을 통한 질의 임베딩 생성, (2) HNSW 그래프나 inverted index 등 서로 다른 자료구조에 대한 유사도/키워드 relevance 계산, (3) 이 계산과 상호 의존적으로 반복되는 긴 지연시간의 저장장치 접근이라는 세 가지(triad) 성격을 동시에 갖는다. 이를 해결하기 위해 논문은 RAGX를 제안한다. RAGX는 SSD 내부에 프로그래머블한 shape-shifting metamorphic accelerator와 Metadata Navigation Unit(MNU)을 통합한 in-storage 가속기로, systolic mode에서는 질의 임베딩 언어모델의 GeMM을, vector mode에서는 cosine similarity·ℓ2-norm·TF-IDF·BM25 같은 비-GeMM 스코어링을 수행하며(p.7-8), MNU는 질의에 따라 크기·위치가 동적으로 결정되는 HNSW 그래프 또는 inverted index 메타데이터를 해석해 NAND 배열에서 필요한 표현을 호스트 PCIe 경로를 우회해 가속기 온칩 메모리로 직접 적재한다(p.8-9). 여기에 확장된 NVMe 커맨드셋, 펌웨어 드라이버, peer2peer PCIe 기반 디바이스 간 통신, 멀티 디바이스 데이터 배치 전략을 더한 시스템 프리미티브를 갖춘다(p.6-7). 최종 Referenced Generation(LLAMA2)은 여전히 DGX A100 GPU에서 수행된다. 5종의 end-to-end RAG 배포(BM25, SPLADEv2, Doc2Vec, ColBERT, GTR)와 최대 5억 passage 규모의 PubMed/BioASQ로 평가한 결과(500M 설정은 PubMed 50M passages를 randomly generated embeddings로 증강해 구성한 것으로, 실제 코퍼스 전체가 5억 passage 규모로 존재하는 것은 아니다), 저자들은 CPU-NVMe 대비 최대 4.3배(50M 기준; 이 500M 증강 설정에서는 5.7배), A100 GPU-DRAM 대비 최대 1.5배의 종단간 처리량 향상을 15 W 저장장치 전력 예산(추정 TDP 13 W) 안에서 보고한다(p.1-2, p.11-12).
-      </p>
-
-      <a class="open-link" href="papers/in-storage-acceleration-of-retrieval-augmented-generation-as-a-service/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/mordenbert/">
-            ModernVBERT: Towards Smaller Visual Document Retrievers
+          <a href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
+            ColPali: Efficient Document Retrieval with Vision Language Models
           </a>
         </h2>
 
@@ -1615,144 +1680,14 @@
         </span>
       </div>
 
-      <p class="authors">Paul Teiletche, Quentin Macé, Max Conti, Antonio Loison, Gautier Viaud, Pierre Colombo, Manuel Faysse</p>
-      <p class="metadata">2025 · arXiv preprint (arXiv:2510.01149v3, cs.IR) — 정식 학회/저널 게재 명시 없음</p>
+      <p class="authors">Manuel Faysse, Hugues Sibille, Tony Wu, Bilel Omrani, Gautier Viaud, Céline Hudelot, Pierre Colombo</p>
+      <p class="metadata">2025 · ICLR 2025 (arXiv:2407.01449)</p>
 
       <p class="summary">
-        이 논문은 시각 문서 검색(Visual Document Retrieval, VDR) 모델을 대형 생성형 vision-language decoder를 재활용(repurposing)해 만드는 관행이 검색 성능과 효율을 병목시킨다는 점을 지적하고, 언어모델 modality alignment 단계부터 대조학습까지 전체 학습 파이프라인을 통제된 실험(controlled ablation)으로 재검토한다. 핵심 결론은 (1) causal attention은 문서 검색에 최적이 아니며 bidirectional masking이 multi-vector late interaction 세팅에서 큰 이득(+10.6 nDCG@5)을 주고, (2) token 수준 언어모델 목표가 단순히 강한 이미지 임베딩이 아니라 image-text token alignment를 강화해 검색을 돕고, (3) 이미지 해상도와 데이터 mix가 성능에 중요하다는 것이다. 이 통찰을 바탕으로 저자들은 사전학습된 텍스트 bidirectional encoder를 MLM(Masked Language Modeling)으로 vision encoder와 정렬한 250M 규모 소형 multimodal encoder ModernVBERT와 late-interaction 검색 모델 ColModernVBERT를 공개한다. ColModernVBERT는 10배 이상 큰 ColPali(2.92B)와 ViDoRe 평균 nDCG@5에서 0.6점 차이(68.6 vs 69.2)에 불과하면서 CPU 쿼리 인코딩 지연을 20ms로 7배 이상 단축한다.
+        이 논문은 문서(document)를 텍스트로 추출·색인하는 기존 파이프라인 대신, 문서 페이지 이미지를 Vision Language Model(VLM)로 직접 임베딩하여 검색하는 새로운 개념 &#x27;Retrieval in Vision Space&#x27;를 제안한다. 저자들은 먼저 시각적으로 풍부한 문서 검색을 평가하기 위한 벤치마크 ViDoRe(다양한 도메인·언어·모달리티의 페이지 단위 검색 태스크)를 공개한다. 그리고 PaliGemma-3B를 확장하여 텍스트·이미지 토큰 모두에 대해 ColBERT 스타일의 multi-vector 임베딩(차원 D=128)을 생성하는 ColPali 모델을 제안하고, 여기에 late interaction 매칭(각 쿼리 벡터가 문서 벡터들과의 최대 내적을 취해 합산하는 MaxSim)을 결합한다. 이 방식은 OCR·레이아웃 분석·청킹·captioning 등 복잡한 전처리를 제거하여 색인이 훨씬 단순·빠르면서도, ViDoRe에서 nDCG@5 평균 81.3으로 최고 baseline(Unstructured+Captioning BGE-M3 67.0)을 크게 능가한다. 또한 end-to-end로 학습 가능하고, 온라인 쿼리 지연은 낮게 유지되며, late interaction 히트맵으로 해석 가능성(interpretability)도 제공한다.
       </p>
 
-      <a class="open-link" href="papers/mordenbert/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
-            NVM Express® Computational Programs Command Set Specification, Revision 1.2
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">NVM Express, Inc. (NVM Express Workgroup)</p>
-      <p class="metadata">2025 · Technical specification (industry standard, ratified)</p>
-
-      <p class="summary">
-        본 문서는 연구 논문이 아니라 NVM Express가 2025년 7월 30일자로 발행한 산업 표준 규격서(Revision 1.2, ratified)이며, host에서 NVM subsystem으로 프로그램 실행을 오프로드(offload)하기 위한 Computational Programs Command Set을 정의한다(pp.9-10). 핵심 모델은 host-driven 방식이다. 즉 프로그램(program)은 device-defined이거나 host가 download한 것일 수 있고, 프로그램은 하나 이상의 memory namespace, 즉 Subsystem Local Memory(SLM) 내 데이터에 대해서만 동작하며, 프로그램의 입력 및 출력 데이터는 host가 발행하는 NVMe 커맨드를 통해 memory namespace로 staging된다(pp.9-10). 규격은 이를 위해 (1) 프로그램을 실행하는 주체인 compute namespace, (2) 데이터를 담는 memory namespace/SLM, (3) 프로그램이 접근 가능한 SLM 영역을 (NSID, offset, length) range들의 집합으로 한정하는 Memory Range Set, (4) compute namespace가 어떤 memory namespace에 도달 가능한지를 규정하는 reachability라는 네 가지 개념을 축으로 구조를 정의한다(pp.9-13). 커맨드 수준에서는 I/O 커맨드인 Execute Program(opcode 01h)과 Admin 커맨드인 Load Program, Program Activation Management, Memory Range Set Management가 정의되며, 프로그램은 PUID(64비트 Program Unique Identifier)로 기능이 식별되고 compute namespace 내에서는 PIND(Program Index)로 참조된다(pp.13-16, 25-27, 34-39). 동작 흐름은 capability 탐색 → 프로그램 load → activation → Memory Range Set 생성 → 입력 데이터 staging 후 Execute Program 발행 → completion queue entry에서 상태와 64비트 return value(RVAL) 확인 → 결과 데이터 회수의 순서로 진행된다(pp.17-22). 규격 문서의 특성상 정량적 실험 평가나 baseline 비교는 포함되어 있지 않다.
-      </p>
-
-      <a class="open-link" href="papers/nvm-express-computational-programs-command-set-specification-revision-1-2-2025-08-01-ratified/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
-            NVM Express® Subsystem Local Memory Command Set Specification, Revision 1.2
-          </a>
-        </h2>
-
-        <span class="status-badge status-failed">
-          검증 실패
-        </span>
-      </div>
-
-      <p class="authors"></p>
-      <p class="metadata">2025</p>
-
-      <p class="summary">
-        본 문서는 학술 논문이 아니라 NVM Express, Inc.가 발행한 산업 표준 명세서(specification)이다. NVM Express Base Specification은 호스트가 memory-based transport 및 message-based transport를 통해 NVM subsystem과 통신하기 위한 인터페이스를 정의하는데, 본 명세는 이를 확장하는 특정 NVMe I/O Command Set인 Subsystem Local Memory(SLM) Command Set을 정의한다(p.6). SLM은 NVM subsystem 내부에 존재하는 volatile byte addressable memory이며, 호스트는 CSI(Command Set Identifier) 값 03h를 갖는 이 command set을 통해 memory namespace에 dword aligned/dword granular 방식으로 접근한다(p.8). 제공되는 I/O 커맨드는 Memory Read, Memory Write(mandatory)와 Memory Fill, Memory Copy(optional)의 4가지이며, 이를 통해 Host↔SLM, SLM↔NVM, SLM↔SLM 간 데이터 전송과 SLM의 fill 동작을 수행한다(p.8, p.10, p.20, p.21). SLM은 Controller Memory Buffer(CMB)나 Persistent Memory Region(PMR)과 달리 PCIe BAR에 매핑되지 않으며, memory namespace의 데이터는 SLM Command Set 명령뿐 아니라 Computational Programs Command Set의 compute namespace 접근, 그리고 Copy command를 포함하는 적격 LBA 기반 I/O Command Set(예: NVM Command Set, Zoned Namespace Command Set)을 통해서도 접근될 수 있다(p.8). 이 memory는 Computational Programs Command Set이 사용하는 데이터의 이동을 포함한 다양한 용도로 활용될 수 있으며, compute namespace의 compute resource는 memory namespace 데이터에 대해 byte-addressable, byte-granular한 read/write를 수행할 수 있다(p.8, p.9). 명세는 커맨드 정의 외에도 Copy Descriptor Format(2h/3h/4h), I/O Command Set specific Identify Namespace 데이터 구조(CNS 05h, CSI 03h)와 Controller 데이터 구조(CNS 06h, CSI 03h), 그리고 커맨드 특정 상태 값들을 규정한다(p.14~p.16, p.19, p.23~p.25). 실증적 실험이나 정량적 성능 평가는 원문에 존재하지 않는다.
-      </p>
-
-      <a class="open-link" href="papers/nvm-express-subsystem-local-memory-command-set-specification-revision-1-2-2025-08-01-ratified/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/reis/">
-            REIS: A High-Performance and Energy-Efficient Retrieval System with In-Storage Processing
-          </a>
-        </h2>
-
-        <span class="status-badge status-failed">
-          검증 실패
-        </span>
-      </div>
-
-      <p class="authors">Kangqi Chen, Rakesh Nadig, Manos Frouzakis, Nika Mansouri Ghiasi, Yu Liang, Haiyu Mao, Jisung Park, Mohammad Sadrosadati, Onur Mutlu</p>
-      <p class="metadata">2025 · Proceedings of the 52nd Annual International Symposium on Computer Architecture (ISCA &#x27;25), June 21-25, 2025, Tokyo, Japan</p>
-
-      <p class="summary">
-        REIS는 RAG(Retrieval-Augmented Generation) 파이프라인의 retrieval 단계를 SSD 내부에서 처리하는 최초의 RAG 특화 ISP(In-Storage Processing) 시스템이다. 저자들은 자체 측정을 통해 4,150만 개 항목 규모의 wiki_en 데이터셋에서 storage로부터의 I/O 트래픽이 전체 RAG 파이프라인 지연시간의 84%를 차지함을 확인했고(Sec 3.1, Figure 2), 기존 ISP 기반 ANNS 가속기들이 (i) 그래프 기반 알고리즘의 불규칙(irregular) 접근 패턴 때문에 SSD 내부 대역폭을 살리지 못하고, (ii) ANNS만 가속할 뿐 document retrieval은 가속하지 않으며, (iii) 상당한 저장 공간·하드웨어 오버헤드를 유발한다는 점을 문제로 지목한다. REIS는 이에 대응해 세 가지 메커니즘을 제안한다. 첫째, NAND flash의 OOB(Out-Of-Band) 영역 일부(16KB page당 16바이트, OOB의 0.7%)를 재사용해 임베딩과 대응 document chunk 주소(DADR)를 직접 연결하는 embedding-document linkage와, 임베딩을 모든 plane에 고르게 분산시키는 Parallelism-First Page Allocation 기반 database layout을 도입한다. 둘째, ISP에 적합한 순차적(streaming) 접근 패턴을 갖는 IVF(Inverted File) 알고리즘을 채택하고 이에 맞춘 R-IVF 레지스트리와 데이터 배치를 설계하며, 이 과정에서 INT8 재채점 주소(RADR)와 cluster tag가 OOB 영역에 추가로 저장되도록 linkage를 확장한다(이 확장분의 저장 비용은 0.7% 수치와 별개이며 본문에서 정량화되지 않는다). 셋째, Binary Quantization(BQ)을 기반으로 MAC 유닛 같은 추가 연산 하드웨어 없이 기존 SSD 구성요소(Cache/Sensing/Data Latch, fail-bit counter, pass/fail checker, 임베디드 코어)만으로 거리 계산과 top-k 선택을 수행하는 in-storage ANNS 엔진을 구성하며, Enhanced SLC-mode Programming(ESP)으로 ECC 없이 오류 없는 plane 내부 연산을 가능하게 한다. 저자들이 보고한 평가 결과에 따르면 REIS는 고성능 CPU 서버(CPU-Real; 논문은 Introduction에서 256-core라고 서술하지만 Methodology의 Table 3 스펙은 AMD EPYC 9554 2소켓 128코어로 제시되어 있어 두 서술이 서로 다르다) 대비 평균 13배(최대 112배) 성능과 평균 55배(최대 157배) 에너지 효율을 제공하고, 최신 ISP 기반 ANNS 가속기인 ICE 대비로는 서술 위치(Abstract/Introduction vs. 본문 Section 6.4)에 따라 제시된 배수 값이 다르므로 단일 수치로 단정하기보다 SSD 구성과 목표 Recall@10에 따라 수 배에서 최대 20배 이상의 폭으로 RAG retrieval을 가속한다고 이해하는 것이 안전하다(세부 수치는 unresolved 참조). 또한 Dataset Loading과 Search가 차지하던 지연시간 비중을 20.3%-69.3%에서 0.02%-0.15%로 낮추어, RAG 파이프라인의 병목이 LLM generation 단계(전체의 92%)로 옮겨감을 보인다.
-      </p>
-
-      <a class="open-link" href="papers/reis/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/espnlive/">
-            Storage access optimization for efficient GPU-centric information retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-failed">
-          검증 실패
-        </span>
-      </div>
-
-      <p class="authors">Susav Shrestha, Aayush Gautam, Narasimha Reddy</p>
-      <p class="metadata">2025 · The Journal of Supercomputing</p>
-
-      <p class="summary">
-        이 논문은 GPU 중심(GPU-centric) 이종 시스템에서 저장장치 접근 경로를 재설계하여 대규모 신경망 정보 검색(neural Information Retrieval)의 메모리 비용과 지연시간을 동시에 낮추는 방법을 제안한다. 문제의 출발점은 멀티벡터 검색 모델(ColBERT 계열)이 문서 토큰마다 임베딩을 저장하기 때문에 재랭킹(re-ranking) 인덱스가 BM25 대비 최대 210.9배까지 커지고(Table 3), 이를 전부 시스템 메모리에 올리는 기존 방식이 대규모 환경에서 비용상 실현 불가능하다는 점이다. 저자들은 GPUDirect Storage(GDS)를 이용해 SSD에서 GPU 메모리로 임베딩을 직접 전송하는 ESPN(Embedding from Storage Pipelined Network)을 제안한다. ESPN의 핵심은 세 가지다. 첫째, candidate generation용 ANN 인덱스는 CPU 메모리에 캐시하고 대용량 재랭킹 임베딩 테이블은 SSD로 오프로드한다. 둘째, IVF 기반 ANN 검색이 전체 nprobe의 일부(δ, PrefetchStep)만 탐색한 시점에 software prefetcher가 예상 top-K 문서 임베딩을 GDS로 미리 가져와 남은 ANN 탐색과 저장장치 지연을 중첩시킨다. 셋째, 도착한 임베딩에 대해 MaxSim 연산자가 즉시 early re-ranking을 수행한다. 여기에 상위 64-128개 후보만 재랭킹하는 대역폭 절감 기법 ESPN-Lite와, 저장된 임베딩을 조회하는 대신 사전 토큰화된 문서를 GPU에서 즉석 인코딩해 임베딩을 실시간 합성하는 ESPN-LIVE를 확장으로 제시한다. MS-MARCO v1/v2 실험에서 저자들은 ESPN이 mmap 대비 종단간 지연시간을 3.1-3.9배 줄이고, 완전 캐시 방식 대비 인덱스의 6-19%만 메모리에 두면서 메모리 사용량을 5-16배 절감하며, 완전 캐시 대비 1.02배 수준의 지연시간을 유지한다고 보고한다. ESPN-Lite와 ESPN-LIVE는 MRR@10 기준 0.5%의 미미한 품질 저하만 발생시킨다고 저자들은 밝힌다.
-      </p>
-
-      <a class="open-link" href="papers/espnlive/">
-        보고서 열기 →
-      </a>
-    </article>
-    
-
-    <article class="library-card paper-card">
-      <div class="card-header">
-        <h2>
-          <a href="papers/warp/">
-            WARP: An Efficient Engine for Multi-Vector Retrieval
-          </a>
-        </h2>
-
-        <span class="status-badge status-passed">
-          검증 완료
-        </span>
-      </div>
-
-      <p class="authors">Jan Luca Scheerer, Matei Zaharia, Christopher Potts, Gustavo Alonso, Omar Khattab</p>
-      <p class="metadata">2025 · SIGIR &#x27;25 (Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval), Padua, Italy</p>
-
-      <p class="summary">
-        WARP는 XTR(ConteXtualized Token Retriever) objective로 학습된 multi-vector retrieval 모델을 위한 고성능 검색 엔진(retrieval engine)이다. ColBERTv2/PLAID의 residual 압축·pruning 기법과 XTR 아키텍처에 맞춘 세 가지 혁신, 즉 (1) 누적 cluster size 기반으로 missing similarity를 동적으로 채우는 WARPSELECT, (2) retrieval 중 벡터를 명시적으로 복원하지 않는 implicit decompression, (3) 명시적 score matrix 없이 점수를 합치는 two-stage reduction을 결합한다. 여기에 고도로 최적화된 C++ kernel과 전용 inference runtime을 더해, LoTTE Pooled 기준 XTR 참조 구현 대비 end-to-end latency를 약 41배 줄이고(6초 이상에서 171ms로, 단일 스레드), ColBERTv2/PLAID 대비 약 3배 빠르면서도 retrieval quality를 유지한다. 또한 XTR(ScaNN) 대비 index size를 2~4배 줄여 메모리 제약 환경에서의 배포를 가능하게 한다.
-      </p>
-
-      <a class="open-link" href="papers/warp/">
+      <a class="open-link" href="papers/colpali-efficient-document-retrieval-with-vision-language-models/">
         보고서 열기 →
       </a>
     </article>
@@ -1787,8 +1722,8 @@
     <article class="library-card paper-card">
       <div class="card-header">
         <h2>
-          <a href="papers/espn-memory-efficient-multi-vector-information-retrieval/">
-            ESPN: Memory-Efficient Multi-Vector Information Retrieval
+          <a href="papers/efficient-constant-space-multi-vector-retrieval/">
+            Efficient Constant-Space Multi-Vector Retrieval
           </a>
         </h2>
 
@@ -1797,14 +1732,118 @@
         </span>
       </div>
 
-      <p class="authors">Susav Shrestha, Narasimha Reddy, Zongwang Li</p>
-      <p class="metadata">2023 · Under review (arXiv:2312.05417v1)</p>
+      <p class="authors">Sean MacAvaney (University of Glasgow, UK), Antonio Mallia (Pinecone, US), Nicola Tonellotto (University of Pisa, Italy)</p>
+      <p class="metadata">2025 · arXiv preprint (arXiv:2504.01818v1, cs.IR)</p>
 
       <p class="summary">
-        ColBERT류의 멀티벡터(late interaction) 검색 모델은 문서를 토큰 단위 멀티벡터로 인코딩하고 MaxSim 연산으로 유사도를 계산해 단일 벡터·lexical 모델보다 검색 품질(MRR@10)을 크게 높이지만, 재랭킹용 임베딩 인덱스 크기가 BM25 대비 한 자릿수 이상(예: ColBERTv1은 210배, ColBERTv2·ColBERTer도 26-34배) 커지면서 대규모 데이터셋에서 메모리 확장성이 심각한 병목이 된다.\n이 논문은 ESPN(Embedding from Storage Pipelined Network)을 제안한다. 핵심은 방대한 bag-of-word(BOW) 재랭킹 임베딩 테이블 전체를 SSD로 오프로드하되, Nvidia GPUDirect Storage(GDS)로 SSD에서 GPU 메모리로 직접(peer-to-peer) 데이터를 전송하고, ANN(근사 최근접 이웃) 탐색의 특성을 이용한 소프트웨어 프리페처(prefetcher)로 스토리지 지연을 ANN 연산과 오버랩시키는 것이다. 프리페처는 90%를 넘는 히트율을 달성하고, 조기 재랭킹(early re-ranking)과 부분 재랭킹(partial re-ranking)을 결합해 대역폭 요구량을 줄인다.\n결과적으로 ESPN은 전체 리트리벌 인덱스의 6-19%만 메모리에 유지하면서도 완전 메모리 기반 솔루션 대비 1.02배 수준의 end-to-end 지연시간을 유지하고, 메모리 요구량을 quantization factor에 따라 5-16배 줄이며, 메모리 용량 근처에서 mmap 대비 3.1-3.9배 빠른 지연을 달성한다.
+        이 논문은 ColBERT로 대표되는 multi-vector retrieval의 핵심 약점인 저장 공간(storage) 비용 문제를 해결하는 ConstBERT를 제안한다. 기존 ColBERT는 문서의 모든 토큰마다 벡터를 하나씩 저장하기 때문에 문서 길이에 비례해 인덱스가 커지는데, ConstBERT는 학습된 선형 투영 계층(projection layer) W를 도입하여 M개의 토큰 임베딩을 문서 길이와 무관한 고정된 C개(C&lt;M)의 문서 수준 임베딩 δ1,...,δC로 pooling한다. 이렇게 하면 late interaction 점수 계산 방식은 그대로 유지하면서도 문서당 저장 임베딩 수가 M/C 배만큼 줄어들어, 인덱스 크기와 질의 처리 시간이 함께 감소한다. 또한 문서당 벡터 수가 항상 일정하므로 디스크 상에서 고정 크기 표현이 되어 OS 페이징(paging) 정렬과 reranking 통합이 쉬워진다. MSMARCO 및 13개 BEIR 데이터셋 실험에서, 저자들은 원래 효과성의 대부분을 유지하면서도 동등한 효과성 기준에서 ColBERT 대비 인덱스 크기를 50% 이상 줄일 수 있음을 보였다. 특히 제안 설정인 ConstBERT32는 인덱스 크기를 22GB에서 11GB로 절반으로 줄이면서 MRR@10과 NDCG@10에서 ColBERT와 근접한 성능을 유지한다.
       </p>
 
-      <a class="open-link" href="papers/espn-memory-efficient-multi-vector-information-retrieval/">
+      <a class="open-link" href="papers/efficient-constant-space-multi-vector-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
+            FLASH-MaxSim: IO-Aware Fused Kernels for Late-Interaction Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Roi Pony, Daniel Ezer, Adi Raz Goldfarb, Idan Friedman, Oshri Naparstek, Udi Barzelay</p>
+      <p class="metadata">2026</p>
+
+      <p class="summary">
+        이 논문은 ColBERT/ColPali로 대표되는 late-interaction retrieval의 핵심 연산인 MaxSim(쿼리 토큰마다 문서 토큰에 대해 max를 취하고, 다시 쿼리 토큰에 대해 sum하는 연산)을 GPU에서 효율적으로 계산하는 IO-aware fused 커널 FLASH-MaxSim(FM)을 제안한다. 표준 PyTorch 구현은 [Nq, B, Lq, Ld] 크기의 query×document 유사도 텐서 S를 HBM에 전부 만든 뒤 max·sum으로 줄이고 버리는데, 이 텐서는 오직 reduce되기 위해서만 존재하면서 추론 시 후보 집합 크기와 대조학습(contrastive training) 시 배치 크기를 제한하는 메모리 병목이 된다(예: ColPali 10K 문서에서 FP16 기준 21GB). 저자들은 FlashAttention의 IO-aware tiling 원리를 MaxSim이라는 hard-selection reduction(한 축에 max/min/arg, 다른 축에 sum)에 적용하여, forward에서는 유사도 텐서를 전혀 만들지 않고 SRAM 안에서 tile 단위 running max로 점수만 계산하고, backward에서는 forward가 저장한 argmax를 sparse bipartite routing graph로 취급하는 inverse-grid CSR 구조로 gradient 텐서 없이 정확한 gradient를 복원한다. 그 결과 추론 peak memory를 최대 9× 낮추고 학습 peak memory를 두 자릿수 배(orders of magnitude) 줄이면서, 모든 shape에서 naive PyTorch보다 빠르고(최대 A100 3.8×/H100 4.7×) FP32 정밀도 프로토콜 하에서 순위(ranking)를 BEIR·REAL-MM-RAG에서 nDCG@10 소수점 4자리까지 보존한다. 여기에 저장공간을 절반으로 줄이는 approximate INT8 경로와 d&gt;512에서의 SRAM-spill을 없애는 split-d forward가 서빙 지향 확장으로 추가된다.
+      </p>
+
+      <a class="open-link" href="papers/flash-maxsim-io-aware-fused-kernels-for-late-interaction-retrieval/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
+            ColBERT-serve: Efficient Multi-Stage Memory-Mapped Scoring
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Kaili Huang, Thejas Venkatesh, Uma Dingankar, Antonio Mallia, Daniel Campos, Jian Jiao, Christopher Potts, Matei Zaharia, Kwabena Boahen, Omar Khattab, Saarthak Sarup, Keshav Santhanam</p>
+      <p class="metadata">2025 · ECIR 2025 (Advances in Information Retrieval, Lecture Notes in Computer Science, vol 15575)</p>
+
+      <p class="summary">
+        ColBERT과 같은 multi-vector late-interaction retriever는 높은 검색 품질을 보이지만, PLAID로 인코딩된 ColBERTv2 인덱스를 완전히 메모리에 올리려면 Wikipedia 규모(2000만 passage)에서 거의 100GB의 RAM이 필요해, 저사양·저비용 서버에서 다수의 동시 사용자를 서빙하기 어렵다는 문제가 있다. 이 논문은 ColBERT-serve라는 서빙 시스템을 제안하는데, (1) 압축된 ColBERTv2 임베딩 텐서에 memory-mapping을 적용해 인덱스 대부분을 디스크에 두고 필요한 페이지만 OS가 온디맨드로 메모리에 올리도록 하며, (2) SPLADEv2를 1단계 검색기로 사용하는 multi-stage retrieval로 memory-mapped 인덱스에 대한 접근(페이지 미스)을 최소화하고, (3) SPLADEv2와 ColBERTv2 점수를 z-norm 정규화 후 선형 보간(hybrid scoring)하여 재랭킹만 사용할 때보다도 품질을 개선하며, (4) Python GIL 해제와 서버-클라이언트 구조로 동시 요청을 병렬 처리한다. 그 결과, MS MARCO와 Wikipedia에서 모델 로딩에 필요한 RAM을 각각 90%, 92% 절감하고 머신 비용을 78%, 68% 절감하면서도, MS MARCO Dev/Test와 LoTTE Lifestyle에서는 완전 인메모리 ColBERTv2보다 오히려 높은 품질을 달성했고, 초당 최대 4~5개의 쿼리를 낮은 지연시간으로 서빙할 수 있음을 실증했다.
+      </p>
+
+      <a class="open-link" href="papers/colbert-serve-efficient-multi-stage-memory-mapped-scoring/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/warp/">
+            WARP: An Efficient Engine for Multi-Vector Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Jan Luca Scheerer, Matei Zaharia, Christopher Potts, Gustavo Alonso, Omar Khattab</p>
+      <p class="metadata">2025 · SIGIR &#x27;25 (Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval), Padua, Italy</p>
+
+      <p class="summary">
+        WARP는 XTR(ConteXtualized Token Retriever) objective로 학습된 multi-vector retrieval 모델을 위한 고성능 검색 엔진(retrieval engine)이다. ColBERTv2/PLAID의 residual 압축·pruning 기법과 XTR 아키텍처에 맞춘 세 가지 혁신, 즉 (1) 누적 cluster size 기반으로 missing similarity를 동적으로 채우는 WARPSELECT, (2) retrieval 중 벡터를 명시적으로 복원하지 않는 implicit decompression, (3) 명시적 score matrix 없이 점수를 합치는 two-stage reduction을 결합한다. 여기에 고도로 최적화된 C++ kernel과 전용 inference runtime을 더해, LoTTE Pooled 기준 XTR 참조 구현 대비 end-to-end latency를 약 41배 줄이고(6초 이상에서 171ms로, 단일 스레드), ColBERTv2/PLAID 대비 약 3배 빠르면서도 retrieval quality를 유지한다. 또한 XTR(ScaNN) 대비 index size를 2~4배 줄여 메모리 제약 환경에서의 배포를 가능하게 한다.
+      </p>
+
+      <a class="open-link" href="papers/warp/">
+        보고서 열기 →
+      </a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="papers/colbertsar/">
+            ColBERTSaR: Sparsified ColBERT Index via Product Quantization
+          </a>
+        </h2>
+
+        <span class="status-badge status-passed">
+          검증 완료
+        </span>
+      </div>
+
+      <p class="authors">Eugene Yang, Andrew Yates, Dawn Lawrie, James Mayfield, Saron Samuel, Rohan Jha</p>
+      <p class="metadata">2026 · SIGIR &#x27;26 (49th International ACM SIGIR Conference), Melbourne, VIC, Australia; arXiv:2606.05568v1 [cs.IR]</p>
+
+      <p class="summary">
+        ColBERTSaR는 ColBERT 계열 multi-vector dense retrieval의 핵심 확장성(scalability) 문제인 거대한 index 크기를, PLAID가 저장하던 residual 벡터를 완전히 제거하는 residual-free product quantization으로 해결한다. 저자들은 MaxSim 점수를 anchor(centroid)와 query token의 내적만으로 근사하는 Score_S(Equation 3)를 유도하고, 이 식이 anchor를 sparse vocabulary로 보는 dynamic TF-IDF 형태임을 보여 embedding quantization을 적용한 ColBERT가 scoring mechanism을 제외하면 learned sparse retrieval(LSR)과 이론적으로 동등함을 확립한다. 구현은 retrieval 모델을 재학습하지 않는 PLAID의 drop-in replacement로서, K-means로 학습한 anchor에 각 문서 토큰을 할당해 inverted index와 forward index를 만들고 nprobe 기반 2단계 검색을 수행한다. proof-of-concept 실험에서 ColBERTSaR index는 1-bit PLAID 대비 50~70% 작으면서 monolingual(BEIR), CLIR·MLIR(NeuCLIRBench, NeuCLIRTech)에서 경쟁적인 retrieval 효과성을 유지한다.
+      </p>
+
+      <a class="open-link" href="papers/colbertsar/">
         보고서 열기 →
       </a>
     </article>
