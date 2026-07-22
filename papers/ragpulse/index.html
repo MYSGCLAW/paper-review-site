@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RAGPulse: An Open-Source RAG Workload Trace to Optimize RAG Serving Systems</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>RAGPulse: An Open-Source RAG Workload Trace to Optimize RAG Serving Systems</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Zhengchao Wang, Yitao Hu, Jianing Ye, Zhuxuan Chang, Jiazheng Yu, Youpeng Deng, Keqiu Li</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2511.12979v1 [cs.LG])</span>
+        <span><strong>연도</strong> · 2025</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조와 주요 구성요소</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 메커니즘과 데이터 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 후속 방향</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>RAGPulse는 실제 운영 중인 대학 전체(university-wide) 정책 Q&amp;A RAG 시스템 &#x27;Twen&#x27;에서 수집한 오픈소스 RAG 워크로드 트레이스(workload trace) 데이터셋이다. 저자들은 기존의 범용 LLM 추론 트레이스(generic LLM inference trace)가 RAG 고유의 다단계 파이프라인(multi-stage pipeline: retrieve, augment, generate)과 지식 의존성(knowledge dependency)을 포착하지 못해 학계 연구와 실제 배포 사이에 성능 격차(performance gap)가 생긴다고 주장한다. 이를 메우기 위해 2024년 4월부터 40,000명 이상의 학생·교직원에게 서비스해 온 Twen 시스템에서 1주일간 샘플링한 7,106건의 요청 레코드를 공개하며, 원본 텍스트를 모두 제거하고 remapped hash_ids로 대체하는 프라이버시 보호 해시 기반 포맷(privacy-preserving hash-based format)을 사용해 구조적·시간적 특성만 보존한다. 트레이스 분석 결과 (1) 주기적 부하 변동(periodic load fluctuation), (2) 입력 길이에 따라 변하는 동적 입력 구성(dynamic input composition), (3) 소수의 hot document에 접근이 집중되는 long-tail 문서 사용 빈도, (4) 요청 간 문서 중복(inter-request document overlap)에 따른 강한 시간적 지역성(temporal locality)이라는 네 가지 특성이 드러났고, 이는 retrieval caching과 content-aware batching이 유망한 최적화 방향임을 실증적으로 뒷받침한다. 또한 데이터셋의 실효성을 검증하기 위해 vLLM 기반 프로토타입 RAG 서비스와 클라이언트-서버 구조의 워크로드 리플레이(workload replay) 벤치마킹 플랫폼(TTFT/TPOT 측정)을 함께 구축·공개하였다. 다만 본문에는 벤치마킹 플랫폼의 실측 TTFT/TPOT 결과가 보고되지 않으며, 이 논문은 시스템 최적화 기법 제안이 아니라 데이터셋·인프라 제공(artifact) 논문에 해당한다.</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 6</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>RAGPulse는 최적화 기법 제안 논문이 아니라, 실제 운영 중인 대학 전체 정책 Q&amp;A RAG 시스템에서 수집한 실세계 워크로드 트레이스와 재생 인프라를 공개하는 artifact 논문이다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>공개 데이터는 1주일 운영 기간에서 샘플링한 7,106건의 요청 레코드이며, 원본 텍스트를 전부 제거하고 remapped hash_ids로 대체해 구조적·시간적 특성만 보존한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>입력 토큰 길이는 약 3500 토큰, 출력 토큰 길이는 약 500 토큰 부근에 집중되어, prefill 비용이 지배적인 긴 입력 워크로드임을 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>입력 구성은 정적이지 않다. 2000 토큰 미만 요청에서는 system prompt가 70% 이상을 차지하지만, 3000 토큰을 넘으면 retrieved passages와 history의 합산 비중이 약 40%에 근접한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>소수의 hot document에 검색이 집중되는 long-tail 분포와 요청 간 문서 중복(시간적 지역성)이 관찰되며, 이는 retrieval caching과 content-aware batching의 직접적 근거가 된다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>텍스트가 해시로 대체되어 있으므로 KV cache 평가를 위해서는 &#x27;동일 hash ID → 동일 길이·동일 placeholder&#x27; 규칙을 지키는 텍스트 재구성 전략이 반드시 필요하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>논문은 TTFT/TPOT 측정 방법론과 리플레이 플랫폼을 제시하지만 실측 성능 수치를 보고하지 않으므로, 데이터셋의 유용성 주장은 통계 분석에 근거하며 종단 간 성능 개선으로 입증된 것은 아니다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>LLM의 근본적 한계와 RAG의 부상</h3>
+      <p>LLM은 학습 시점 이후 정보를 알지 못하는 knowledge cutoff와, 사실이 아닌 내용을 확신 있게 생성하는 hallucination이라는 두 가지 내재적 한계를 가진다. RAG(Retrieval-Augmented Generation)는 LLM의 추론·생성 능력과 외부 지식베이스의 실시간 사실성을 결합해 이를 해결하는 방식으로, 지식 저장을 모델의 추론 능력으로부터 분리(decoupling)함으로써 LLM 애플리케이션의 신뢰성(reliability), 시의성(timeliness), 추적 가능성(traceability)을 크게 높인다. 논문은 RAG가 엔터프라이즈급 Q&amp;A 시스템, 지능형 문서 분석 도구, 신뢰 가능한 AI 어시스턴트 구축의 표준(standard)이 되었다고 서술한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAG 서빙의 병목은 복합적(composite)이다</h3>
+      <p>순수 LLM 추론과 달리 RAG 서빙 시스템의 성능 병목은 복합적이다. 성능은 생성 단계(예: KV cache 효율)만이 아니라 검색 단계(예: vector database latency), 그리고 두 단계 사이의 복잡한 상호작용(예: adaptive batching)에 의해서도 크게 좌우된다. 따라서 생성 단계만 기술하는 트레이스로는 시스템 최적화 연구를 제대로 수행할 수 없다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>핵심 문제: RAG-specific 실세계 트레이스의 부재</h3>
+      <p>논문이 정의하는 핵심 문제는 &#x27;기존 범용 LLM 추론 트레이스가 RAG 고유의 워크로드 동역학을 포착하지 못한다&#x27;는 것이다. 실세계 RAG 워크로드는 매우 편향된(highly skewed) 지식 청크 접근 빈도와 유의미한 요청 간 시간적 지역성(hot document 현상)을 보이는데, 이러한 특성은 retrieval caching과 content-aware batching 설계에 결정적임에도 범용 트레이스에는 전혀 존재하지 않는다. 이 격차(gap)는 연구 도구와 실제 배포 사이의 성능 괴리를 낳으며, 학계와 산업계 모두 실세계 RAG 워크로드 특성을 정확히 반영하는 공개 벤치마크 데이터셋을 시급히 필요로 한다는 것이 이 논문의 출발점이다.</p>
+      <span class="source-ref">PDF p. 1, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>다단계 파이프라인 복잡성 미반영</h3>
+      <p>RAG 요청은 retrieval, re-ranking, generation 등 서로 구분되는 단계를 순차적으로 통과한다. 이 구조 때문에 시스템 지연시간, 자원 소비, 캐싱 동작이 복잡한 단계 간 상호작용(inter-stage interaction)에 의해 결정된다. 그러나 기존 범용 LLM 트레이스는 일반적으로 generation 단계에만 초점을 맞추므로 이러한 복합 효과(composite effect)를 특성화하지 못한다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>지식베이스·쿼리 패턴 의존성과 요청 간 상관관계 누락</h3>
+      <p>RAG 성능은 지식베이스와 쿼리 패턴에 강하게 의존한다. query similarity, embedding cache hit rate, retrieval latency 같은 워크로드 동역학은 실제 사용자 행동에 따라 크게 변동하며, 실무 환경에서 연속된 쿼리들은 유의미한 요청 간 문맥 의존성(inter-request contextual dependency)을 보인다. 이러한 동역학과 요청 간 상관관계를 포착하는 것은 KV cache 재사용, batching, scheduling 전략 최적화에 필수적이지만 범용 트레이스에는 담겨 있지 않다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>검색-생성 co-optimization의 차단</h3>
+      <p>검색과 생성을 독립적인 블랙박스로 취급하는 전통적 접근은 시스템 설계의 잠재력을 제한한다. RAG 트레이스 데이터가 있어야 dynamic retrieval caching이나 query-adaptive batching 같은 두 컴포넌트의 협력 최적화(co-optimization)를 설계·평가할 수 있다는 것이 저자들의 주장이다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>합성(synthetic)·일반 채팅 기반 트레이스의 비대표성</h3>
+      <p>기존의 RAG 트레이스 데이터는 흔히 synthetic하거나 일반적인 채팅 워크로드에서 파생된다. 비대표적(non-representative) 트레이스로 최적화 전략을 평가하면 연구 결과와 실제 시스템 성능이 단절되며, 이는 RAG 서빙 시스템의 효율성·안정성·신뢰성에 심각한 문제를 야기한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1) 실세계 RAG 워크로드 트레이스 공개</h3>
+      <p>2024년 4월부터 40,000명 이상의 학생·교직원에게 서비스해 온 대학 전체 정책 Q&amp;A RAG 시스템에서 수집한 오픈소스 실세계 RAG 워크로드 트레이스 RAGPulse를 소개하고 공개한다(코드: https://github.com/flashserve/RAGPulse). 현재 공개분은 1주일 운영 기간에서 샘플링한 7,106건의 요청 레코드다.</p>
+      <span class="source-ref">PDF p. 1, 2, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2) 데이터 소스 아키텍처와 프라이버시 보호 포맷 상세화</h3>
+      <p>트레이스가 생성된 Twen 시스템의 아키텍처(오프라인 지식베이스 구축 + 온라인 Agent LLM 처리)를 상세히 기술하고, 원본 텍스트를 모두 제거해 remapped hash_ids로 대체하는 프라이버시 보호 해시 기반 데이터 포맷을 정의한다.</p>
+      <span class="source-ref">PDF p. 1, 3, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3) 네 가지 워크로드 특성의 통계 분석</h3>
+      <p>트레이스에 대한 심층 통계 분석을 통해 (a) 주기적 부하 변동, (b) 동적 입력 구성, (c) 텍스트(문서 청크) 사용 빈도의 long-tail한 hot document 접근 패턴, (d) 요청 간 문서 중복으로 나타나는 강한 시간적 지역성이라는 네 가지 핵심 특성을 규명한다.</p>
+      <span class="source-ref">PDF p. 3, 4, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4) 벤치마킹 플랫폼 구축</h3>
+      <p>데이터셋의 실효성을 검증하기 위해 vLLM 기반 프로토타입 RAG 서비스와, 클라이언트-서버 구조의 워크로드 리플레이 벤치마킹 플랫폼(TTFT/TPOT 측정 포함)을 구축한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5) 최적화 연구 방향 제시</h3>
+      <p>분석 결과가 content-aware batching과 retrieval caching 같은 RAG 시스템 최적화 연구에 실증적 근거(empirical support)와 연구 방향을 제공한다고 제시한다.</p>
+      <span class="source-ref">PDF p. 1, 6</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조와 주요 구성요소</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 구조 개요</h3>
+      <p>RAGPulse는 알고리즘이 아니라 &#x27;데이터셋 + 이를 재생할 수 있는 벤치마크 인프라&#x27;라는 형태의 산출물이다. 구조는 크게 세 층으로 나뉜다. (1) 데이터 생산 층: 실제 운영 시스템 Twen이 오프라인 단계에서 벡터 지식베이스를 구축하고, 온라인 단계에서 사용자 요청을 처리하며 Langfuse를 통해 트레이스를 기록한다. (2) 데이터 층: 기록된 레코드가 해시 기반으로 익명화되어 RAGPulse 트레이스 파일이 된다. (3) 데이터 소비 층: 연구자가 클라이언트-서버 리플레이 메커니즘으로 트레이스를 재생하여 vLLM 기반 서버의 TTFT/TPOT를 측정한다.</p>
+      <span class="source-ref">PDF p. 1, 2, 3, 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAGPulse 트레이스 레코드 포맷</h3>
+      <p>각 레코드는 하나의 RAG 요청에 대한 시스템 레벨 런타임 정보를 담는다. 필드는 timestamp(트레이스 시작 시각 12:00:00 기준 초 단위 제출 시각), input_length(system prompt·검색 문서·대화 이력 등 모든 구성요소 토큰 길이의 합), output_length(모델 생성 출력 토큰 길이), hash_ids(sys_prompt, passages_ids, history, web_search, user_input 각각에 대한 해시 식별자 집합), session_id(요청이 속한 대화 식별자)로 구성된다. 즉 입력이 &#x27;무엇으로 이루어져 있는지&#x27;를 컴포넌트 단위로 분해해 기록하는 점이 범용 트레이스와의 핵심 차이다.</p>
+      <span class="source-ref">PDF p. 2, 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Twen 시스템 아키텍처 (데이터 소스)</h3>
+      <p>Twen의 핵심 설계 철학은 검색과 생성의 분리(separation of retrieval and generation)이며, 이를 위해 Python 기반 마이크로서비스 아키텍처(FastAPI, Docker)를 채택해 CPU 집약적 검색 작업과 GPU 집약적 생성 작업을 분리한다. 구성요소는 Generator Model(Qwen3-235B-A22B-Instruct-2507), Embedding Model(로컬 배포된 infgrad/stella-large-zh-v3-1792d), Orchestration(LangChain), Vector Database(Qdrant, 태그 기반 구조로 global/tagged/user-personal 데이터베이스로 조직화), Document Maintenance(Python 프로그램과 LLM을 이용한 내용 추출·형식 표준화·자동 분할)이다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Offline Stage: 벡터 지식베이스 구축</h3>
+      <p>오프라인 단계의 핵심 과제는 고품질 벡터 지식베이스 구축이다. 대학 정책·정보 코퍼스를 (1) 교수·부서장의 수동 제출, (2) 인가된 관리자를 위한 업로드 시스템, (3) 공개 부서 웹사이트를 주기적으로 수집하는 대상 웹 크롤러의 세 채널로 확보한 뒤, 저장 형식에 따라 Python 추출 경로와 LLM 기반 OCR 추출 경로로 나누어 처리하고, 전용 정규화 에이전트와 전용 LLM 청킹을 거쳐 벡터 임베딩을 생성한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Online Stage / Agent LLM</h3>
+      <p>온라인 단계에서는 중앙 LLM(Agent LLM, Qwen3-235B)이 자율적 컨트롤러(autonomous controller)로 동작한다. 요청이 도착하면 사용자 정보와 프롬프트를 바탕으로 최적 처리 전략을 스스로 계획하고, 멀티모달(이미지·오디오·텍스트) 관점에서 질의를 해석하며, 웹 검색·RAG·사전 정의된 외부 도구(API 호출, 프로그래밍 등)를 동적으로 오케스트레이션한다. 또한 능동적 self-reflection을 지원해, 자신의 응답이 불충분하다고 판단하면 multi-hop 방식으로 도구를 반복 사용한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>프라이버시 보호 해시 기반 포맷</h3>
+      <p>사용자 프라이버시를 엄격히 보호하기 위해 원본 텍스트 콘텐츠 전부를 제거하고 remapped hash_ids로 대체한다. 이로써 완전한 익명화를 보장하면서도 연구에 필요한 구조적·시간적 특성은 모두 보존되며, 시스템 성능 및 스케줄링 정책 분석에 적합한 형태가 된다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>벤치마킹 플랫폼과 텍스트 재구성(Decryption) 전략</h3>
+      <p>프로토타입 온라인 RAG 서비스는 vLLM을 코어로 하며, Generator로 Qwen2.5-14B를 단일 NVIDIA A800(80GB VRAM) 서버에 배포해 요청 수신·텍스트 처리·결과 생성의 종단 간 파이프라인을 구성한다. 텍스트가 해시로 대체되어 있으므로 KV cache처럼 구체적 텍스트에 의존하는 컴포넌트를 평가하려면 텍스트 재구성 전략이 필요하다. 그 원칙은 고유한 hash ID마다 원본과 토큰 길이가 엄밀히 동일한 고유·랜덤 콘텐츠 placeholder 텍스트를 생성하고, 동일 hash ID는 모든 요청에서 항상 동일한 placeholder로 매핑되도록 하여 시뮬레이션의 일관성과 타당성을 보장하는 것이다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>클라이언트-서버 리플레이 메커니즘</h3>
+      <p>서버 측은 vLLM 기반으로 핵심 추론을 담당하며, OpenAI 호환 API로 요청을 받고 streaming/non-streaming 생성 모드를 모두 지원한다(TTFT·TPOT 측정에 필수). 고부하에서도 안정성과 처리량을 유지하기 위해 비동기·동시성 설계를 채택한다. 클라이언트 측은 부하 생성기로서 Data Preprocessing → Request Scheduling(time-scaling factor로 재생 속도 조절 가능) → Metric Collection의 3단계 워크플로를 수행한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 — 문서 수집 (오프라인)</h3>
+      <p>대학 정책 문서를 수동 제출, 인가 관리자용 업로드 시스템, 대상 웹 크롤러의 세 가지 경로로 수집한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 — 텍스트 추출과 정규화</h3>
+      <p>수집된 문서를 저장 형식별로 구분한다. TXT류는 Python 프로그램으로 직접 내용을 추출하고, JPG/PDF처럼 내용이 명시적으로 저장되지 않은 파일은 LLM 기반 OCR로 추출한다. 추출된 원본 콘텐츠는 포맷이 지저분한 경우가 많으므로, 전용 정규화(normalization) 에이전트가 이를 표준화한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 — 청킹과 벡터화</h3>
+      <p>정규화된 텍스트를 또 다른 전용 LLM으로 의미적 무결성(semantic integrity)을 보장하도록 지능적으로 분할(chunking)한다. 비용 효율을 위해 하위 작업별로 7B~70B 범위의 다양한 LLM을 사용한다. 생성된 고품질 청크를 임베딩해 Qdrant 벡터 데이터베이스(global/tagged/user-personal)에 저장한다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 — 요청 수신과 전략 수립 (온라인)</h3>
+      <p>사용자 요청이 Web Service(Nginx, Python APIs)를 통해 도착하면 Agent LLM(Qwen3-235B)이 사용자 정보와 프롬프트를 근거로 최적 처리 전략을 자율적으로 계획하고, 멀티모달 입력(이미지/오디오/텍스트)을 해석한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 — 도구 오케스트레이션과 multi-hop self-reflection</h3>
+      <p>Agent LLM이 웹 검색, RAG 검색, 사전 정의된 외부 도구(API 호출, 코드 실행 등)를 동적으로 오케스트레이션한다. 이어서 자신의 응답을 스스로 평가해 현재 답변이 불충분하다고 판단되면 multi-hop 방식으로 여러 도구를 반복 사용하여 최종 응답에 도달한다. 이 과정에서 최종 프롬프트(Final Prompt)가 구성된다.</p>
+      <span class="source-ref">PDF p. 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 — 트레이스 레코드 생성</h3>
+      <p>LangChain의 AsyncIteratorCallbackHandler로 Qwen3-235B를 비동기 스트리밍 호출하며, 이때 Langfuse CallbackHandler가 활성화되어 지연시간·토큰 길이·user_id·session_id·검색된 hash_ids를 포함한 전체 호출 메타데이터를 캡처한다. 캡처된 데이터는 Langfuse 데이터베이스로 전송되어 RAGPulse 트레이스 데이터셋을 형성하며, 원본 텍스트는 해시 ID로 익명화된다.</p>
+      <span class="source-ref">PDF p. 3, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>7단계 — 리플레이를 위한 텍스트 재구성 (데이터셋 사용)</h3>
+      <p>벤치마크 클라이언트가 트레이스 파일을 읽고, 각 hash ID의 원본 토큰 길이와 엄밀히 일치하는 랜덤 토큰 시퀀스를 생성해 텍스트 입력을 재구성한다(Data Preprocessing).</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>8단계 — 요청 재생과 지표 수집</h3>
+      <p>Request Scheduling 모듈이 트레이스 파일의 원본 타임스탬프를 엄격히 따르며(필요 시 time-scaling factor로 가속·감속) vLLM 기반 서버로 요청을 디스패치하고, Metric Collection 모듈이 요청별 TTFT/TPOT 성능 데이터를 기록해 이후 분석을 위해 영구 저장한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 메커니즘과 데이터 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>해시 기반 익명화가 만드는 &#x27;구조 보존 트레이스&#x27;</h3>
+      <p>이 논문에는 전통적 의미의 알고리즘이나 새로운 인덱스 구조가 없다. 대신 핵심 기술 장치는 hash_ids 기반의 레코드 표현이다. 요청의 각 입력 구성요소(system prompt, 검색된 문서들, 대화 이력, 웹 검색 결과, 사용자 질문)를 서로 다른 해시 ID 집합으로 표현함으로써, 텍스트 내용은 전혀 노출하지 않으면서도 &#x27;어떤 청크가 언제 어떤 요청에서 재사용되었는가&#x27;라는 관계 정보를 완전히 보존한다. hot document 분석과 요청 간 문서 중복 분석은 모두 이 hash_ids 필드의 재사용 패턴을 집계하여 도출된다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>길이 보존 placeholder 매핑 (텍스트 복원 규칙)</h3>
+      <p>KV cache처럼 구체적 텍스트에 의존하는 컴포넌트를 평가하려면 텍스트가 필요하므로, 논문은 두 가지 불변조건(invariant)을 갖는 복원 규칙을 제시한다. (1) 각 고유 hash ID에 대해 원본과 토큰 길이가 엄밀히 동일한 랜덤 콘텐츠 placeholder를 생성한다. (2) 동일한 hash ID는 모든 요청에서 반드시 같은 placeholder 텍스트로 매핑되어야 한다. 두 번째 조건이 있어야 서로 다른 요청이 같은 청크를 참조할 때 prefix/청크 단위 캐시 재사용이 실제와 동일하게 재현되어 시뮬레이션의 일관성과 타당성이 보장된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>임의 스케일 재생 (Scaling RAGPulse to Any Scale)</h3>
+      <p>트레이스가 상당한 시간적 범위(temporal span)를 갖는다는 성질을 이용해, 연구자는 실험 목표에 따라 트레이스를 잘라내거나 스케일링할 수 있다. 예컨대 고트래픽 구간(1시간 등)만 분리해 피크 동시 처리 능력을 벤치마킹하거나, 전체 장기 트레이스로 KV cache 관리 같은 캐싱 정책의 장기 효과를 평가할 수 있다. 여기에 재생 시 time-scaling factor를 적용해 부하 강도를 조절한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>분석 대상 워크로드</h3>
+      <p>분석 대상은 RAGPulse 트레이스 자체다. Twen 대학 전체 정책 Q&amp;A RAG 시스템(2024년 4월부터 40,000명 이상 사용자에게 서비스)의 1주일 운영 기간에서 샘플링한 7,106건의 요청 레코드로 구성된다. 논문에는 비교 대상 baseline 시스템이나 baseline 트레이스와의 정량 비교 실험이 제시되지 않는다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>벤치마킹 하드웨어·소프트웨어 구성</h3>
+      <p>모든 실험은 단일 NVIDIA A800 GPU(80GB VRAM)를 갖춘 서버에서 수행되었다. 추론 프레임워크는 vLLM이며, RAG 파이프라인의 Generator로 Qwen2.5-14B를 배포했다. 이는 트레이스를 생성한 실제 운영 시스템 Twen의 Generator(Qwen3-235B-A22B-Instruct-2507)와는 다른 모델임에 유의해야 한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>측정 지표</h3>
+      <p>서빙 성능 지표로는 LLM 서빙 분야에서 널리 인정되는 두 가지를 채택한다. TTFT(Time To First Token)는 요청 수신부터 첫 출력 토큰 반환까지의 총 경과 시간으로 시스템 응답성과 사용자 체감 지연의 핵심 벤치마크이고, TPOT(Time Per Output Token)는 첫 토큰 이후 각 토큰 생성에 걸리는 평균 시간으로 생성 단계의 처리량과 처리 효율을 반영한다. 데이터셋 특성 분석에는 입력/출력 토큰 길이 CDF, QPS 및 초당 생성 토큰 수(Tokens/s) 기반 처리량 시계열, 입력 길이 구간별 평균 입력 컴포넌트 비율, Passage 접근 빈도 CDF, 요청 간 문서 중복률(Document Overlap Ratio)이 사용된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>주의: 실측 성능 결과의 부재</h3>
+      <p>본문 §4.4~4.5는 TTFT/TPOT의 정의와 측정 방법론(클라이언트-서버 리플레이)을 제시하지만, 실제로 측정된 TTFT/TPOT 수치는 논문에 보고되지 않는다. 따라서 이 논문의 &#x27;실험&#x27; 부분은 시스템 성능 평가라기보다 데이터셋 특성 분석과 재생 인프라의 기능 설명에 해당한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>결과 1 — 입력/출력 토큰 길이의 집중 (Figure 2)</h3>
+      <p>입력 및 출력 토큰 길이는 뚜렷한 집중(concentration) 경향을 보인다. 입력 토큰 길이는 주로 약 3500 토큰 부근에 몰려 있고, 출력 토큰 길이는 약 500 토큰 부근에 집중된다. 의미: RAG 워크로드는 일반 채팅 워크로드와 달리 검색 문맥이 붙기 때문에 입력이 길고 예측 가능한 범위에 분포하며, 이는 prefill 비용이 지배적인 워크로드임을 시사한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>결과 2 — 주기적 부하 변동 (Figure 3)</h3>
+      <p>각 요청의 도착 시각을 기록한 결과 워크로드는 명확한 주기성을 보인다. 요청량은 주간(근무 시간)에 정점을 찍고 야간에 크게 감소하며, 이는 실세계 서빙 시스템의 사용자 행동과 매우 일치한다. 다만 QPS와 Tokens/s의 구체적 피크 수치는 본문에 명시되지 않았다. 의미: 자원 프로비저닝과 오토스케일링 정책 평가에 활용 가능한 현실적 부하 패턴을 제공한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>결과 3 — 동적 입력 구성 (Figure 4)</h3>
+      <p>입력 토큰의 구성 비율은 고정적이지 않고 총 입력 길이에 따라 동적으로 변한다. 총 입력 길이 2000 토큰 미만의 짧은 요청에서는 system_prompt가 지배적 구성요소로 전체 토큰의 70% 이상을 차지하며 검색된 passage와 history의 기여는 미미하다. 반면 총 입력 길이가 3000 토큰을 넘어서면 구성이 크게 바뀌어 retrieved passages와 history(대화 이력)의 토큰 기여가 크게 늘어 합산 비중이 전체의 약 40%에 근접한다. 의미: 시스템의 처리 오버헤드(문맥 처리를 위한 메모리·연산)가 균일하지 않고 요청의 길이·유형에 따라 고도로 이질적(heterogeneous)이라는 점이 최적화의 핵심 통찰이다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>결과 4 — 텍스트 사용 빈도의 long-tail (Figure 5(a))</h3>
+      <p>hash_ids 필드 사용을 분석한 결과, 벡터 데이터베이스에서 검색된 문서에 대응하는 hash_ids의 재사용률이 다른 구성요소보다 훨씬 높았다. 소수의 핵심 지식 청크(&#x27;hot&#x27; documents)가 다수의 서로 다른 사용자 요청에 의해 빈번히 검색·참조되는 반면 대다수 청크는 훨씬 드물게 접근되는, 전형적인 long-tail 효과를 보이는 고도로 편향된 사용 분포가 나타난다. 구체적 정량 수치는 본문에 명시되지 않았다. 의미: 검색된 콘텐츠 청크를 대상으로 하는 Retrieval Caching이 매우 가치 있는 최적화 방향임을 뒷받침하는 강력한 증거다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>결과 5 — 요청 간 문서 중복과 시간적 지역성 (Figure 5(b))</h3>
+      <p>요청 시계열을 추가 분석한 결과 유의미한 시간적 지역성이 확인된다. 임의의 시간 윈도우 안에서 동시에 도착하는 요청 중 상당 비율이 동일하거나 매우 유사한 지식 청크 hash_ids에 접근한다. 구체적 수치는 본문에 명시되지 않았다. 의미: 실세계 RAG 워크로드에 강한 요청 간 문맥 의존성이 존재한다는 가설을 확증하며, (1) 동일 문서에 접근하는 요청들의 content-aware batching과 (2) 이들 hot document에 대응하는 KV Cache의 매우 높은 재사용 잠재력이라는 두 전략이 큰 이득을 줄 수 있음을 시사한다.</p>
+      <span class="source-ref">PDF p. 3, 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 후속 방향</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>RAG는 신뢰할 수 있고 고성능인 LLM 애플리케이션 구축의 표준 패러다임이 되었지만, 검색·재순위·생성으로 이루어진 복합 아키텍처는 시스템 최적화에 전례 없는 도전을 제기한다. 이 논문의 중심 테제는 기존 범용 LLM 트레이스가 RAG 고유의 워크로드 동역학을 포착하지 못해 학계 연구와 실제 배포 사이에 심각한 성능 격차를 만든다는 것이다. 저자들은 이 격차를 메우기 위해 RAGPulse를 설계·공개하고, 심층 분석을 통해 고도로 편향된 hot document 접근 패턴과 유의미한 요청 간 시간적 지역성이라는 실세계 RAG 워크로드의 결정적 특성을 정량화했으며, 이것이 content-aware batching과 retrieval caching 같은 최적화에 명확한 실증적 근거와 연구 방향을 제공한다고 결론짓는다.</p>
+      <span class="source-ref">PDF p. 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>저자들이 밝힌 확장 계획</h3>
+      <p>현재는 1주일 분량 데이터를 공개하고 있으며 향후 더 긴 기간의 데이터를 공개할 계획이라고 밝혔다. 또한 서비스가 진화함에 따라 데이터셋을 지속적으로 갱신하고, 변화하는 워크로드 패턴을 반영하는 추가 RAG 트레이스와 향후 Agent 트레이스를 공개할 것을 약속하고 있다.</p>
+      <span class="source-ref">PDF p. 2, 4</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>전체 동작 흐름: 트레이스 생성부터 벤치마크 재생까지</h3>
+                <span class="source-ref">PDF p. 3, 4, 5</span>
+              </div>
+              <p>Twen의 오프라인 지식베이스 구축과 온라인 Agent LLM 처리로 트레이스가 생성되고, 해시 익명화를 거쳐 RAGPulse 데이터셋이 되며, 연구자가 클라이언트-서버 리플레이로 이를 재생해 TTFT/TPOT를 측정하는 전체 경로를 나타낸다.</p>
+              <div class="mermaid">
+flowchart TB
+  subgraph OFF[&quot;Offline Stage (Twen)&quot;]
+    A1[&quot;문서 수집: 수동 제출 / 관리자 업로드 / 웹 크롤러&quot;] --&gt; A2[&quot;추출: Python (TXT) / LLM OCR (PDF, JPG)&quot;]
+    A2 --&gt; A3[&quot;정규화 에이전트&quot;]
+    A3 --&gt; A4[&quot;LLM 기반 의미 청킹&quot;]
+    A4 --&gt; A5[&quot;벡터 임베딩 (stella-large-zh)&quot;]
+    A5 --&gt; A6[&quot;Qdrant 벡터 DB (global / tagged / user-personal)&quot;]
+  end
+  subgraph ON[&quot;Online Stage (Twen)&quot;]
+    B1[&quot;사용자 요청 (Nginx, Python APIs)&quot;] --&gt; B2[&quot;Agent LLM: 전략 계획 및 멀티모달 해석&quot;]
+    B2 --&gt; B3[&quot;도구 오케스트레이션: RAG / 웹 검색 / 외부 도구&quot;]
+    B3 --&gt; B4{&quot;응답 충분한가?&quot;}
+    B4 -- &quot;아니오&quot; --&gt; B3
+    B4 -- &quot;예&quot; --&gt; B5[&quot;Final Prompt 및 스트리밍 생성 (Qwen3-235B)&quot;]
+  end
+  A6 --&gt; B3
+  B5 --&gt; C1[&quot;Langfuse CallbackHandler: 지연시간, 토큰 길이, hash_ids 캡처&quot;]
+  C1 --&gt; C2[&quot;해시 익명화: 원본 텍스트 제거, remapped hash_ids&quot;]
+  C2 --&gt; C3[&quot;RAGPulse 트레이스 (7,106건, 1주일)&quot;]
+  subgraph REPLAY[&quot;Benchmark Replay&quot;]
+    C3 --&gt; D1[&quot;Data Preprocessing: 길이 일치 placeholder 텍스트 생성&quot;]
+    D1 --&gt; D2[&quot;Request Scheduling: 원본 timestamp + time-scaling factor&quot;]
+    D2 --&gt; D3[&quot;vLLM 서버 (Qwen2.5-14B, A800 80GB)&quot;]
+    D3 --&gt; D4[&quot;Metric Collection: TTFT / TPOT 기록&quot;]
+  end
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 범용 LLM 트레이스와 RAGPulse의 차이</h3>
+                <span class="source-ref">PDF p. 2, 3, 4</span>
+              </div>
+              <p>범용 LLM 트레이스는 generation 단계의 입출력 길이만 기록해 요청 간 관계를 알 수 없는 반면, RAGPulse는 입력을 컴포넌트별 hash_ids로 분해해 기록하므로 hot document와 요청 간 중복을 분석할 수 있고 그로부터 retrieval caching, content-aware batching 연구가 가능해진다.</p>
+              <div class="mermaid">
+flowchart LR
+  subgraph GEN[&quot;기존 범용 LLM 트레이스&quot;]
+    G1[&quot;요청 = (timestamp, input_len, output_len)&quot;] --&gt; G2[&quot;generation 단계만 기술&quot;]
+    G2 --&gt; G3[&quot;입력 내부 구성 불명&quot;]
+    G2 --&gt; G4[&quot;요청 간 지식 의존성 소실&quot;]
+    G3 --&gt; G5[&quot;retrieval caching 평가 불가&quot;]
+    G4 --&gt; G5
+  end
+  subgraph RP[&quot;RAGPulse 트레이스&quot;]
+    R1[&quot;요청 = timestamp, 길이, session_id, hash_ids&quot;] --&gt; R2[&quot;입력을 컴포넌트로 분해: sys_prompt / passages / history / web_search / user_input&quot;]
+    R2 --&gt; R3[&quot;동적 입력 구성 분석&quot;]
+    R2 --&gt; R4[&quot;hot document long-tail 분석&quot;]
+    R2 --&gt; R5[&quot;요청 간 문서 중복 및 시간적 지역성 분석&quot;]
+    R4 --&gt; R6[&quot;retrieval caching&quot;]
+    R5 --&gt; R7[&quot;content-aware batching 및 KV cache 재사용&quot;]
+  end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>RAGPulse 워크로드의 입력/출력 토큰 길이 집중 지점</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 2 · Figure 2 · 전체 7,106건 요청의 input/output token length CDF에서 본문이 명시한 집중(clustering) 지점. 분포의 평균이나 중앙값이 아니라 본문 서술상의 집중 값이다.
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>입력 길이에 따른 입력 구성 비율 변화</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 3 · Figure 4 · 입력 길이 구간별 평균 입력 컴포넌트 비율. 두 막대는 서로 다른 요청 구간과 서로 다른 구성요소를 나타내므로 직접 비교 대상이 아니며, 본문이 명시한 임계값(각각 &#x27;70% 이상&#x27;, &#x27;약 40%에 근접&#x27;)이다.
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>합성 데이터가 아니라 2024년 4월부터 40,000명 이상에게 실제로 서비스 중인 운영 시스템에서 수집된 트레이스라는 점에서 생태 타당성(ecological validity)이 높다.</span>
+              </div>
+              <span class="source-ref">PDF p. 1, 2, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>입력을 sys_prompt / passages_ids / history / web_search / user_input으로 분해해 기록하는 스키마 설계가 이 논문의 실질적 핵심이다. 총 입력 길이만 기록하는 범용 트레이스로는 불가능한 &#x27;동적 입력 구성&#x27; 분석과 캐시 재사용 잠재력 추정이 이 분해 덕분에 가능해진다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>프라이버시 보호와 연구 유용성 사이의 상충을 해시 익명화 + 길이 보존 placeholder 매핑 규칙으로 실용적으로 절충했다. 특히 &#x27;동일 hash ID는 항상 동일 placeholder&#x27;라는 불변조건은 prefix/청크 캐시 재사용 실험의 재현성을 보장하는 핵심 장치다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>데이터셋만 던지지 않고 vLLM 기반 서버와 클라이언트 리플레이 도구, time-scaling factor, TTFT/TPOT 수집기를 함께 공개해 후속 연구자의 진입 비용을 낮췄다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>분석에서 도출한 각 특성이 곧바로 특정 시스템 최적화 기법(long-tail → retrieval caching, 요청 간 중복 → content-aware batching 및 KV cache 재사용)으로 연결되어, 관찰과 설계 함의 사이의 논리가 명확하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>현재 공개된 RAGPulse는 Twen 운영 1주일 분량(7,106건 요청)만 포함하며, 저자들은 각주에서 향후 더 긴 기간(longer-period)의 데이터를 공개할 계획이라고 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>현재는 RAG 트레이스만 공개되며, 서비스 진화에 따라 추가 RAG 트레이스와 (아직 미공개인) Agent 트레이스를 향후 공개할 계획이라고 밝힌다. 즉 Agent LLM의 multi-hop 도구 사용 과정 자체는 현재 데이터셋으로 분석할 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>프라이버시 보호를 위해 원본 텍스트 콘텐츠 전체를 제거했기 때문에, KV cache처럼 구체적 텍스트 내용에 의존하는 컴포넌트를 평가하려면 연구자가 직접 텍스트 재구성(랜덤 placeholder 생성) 전략을 적용해야 한다고 저자들이 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>논문에 별도의 &#x27;Limitations&#x27; 절이 없어, 한계 관련 서술이 각주와 여러 절에 산재해 있다. 따라서 저자가 인지한 한계의 전체 목록은 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상 예상되는 한계 — 단일 도메인·단일 기관 편향: 트레이스가 하나의 대학 정책 Q&amp;A 서비스(주 사용 언어가 중국어인 것으로 보이는 stella-large-zh 임베딩 사용)에서만 수집되었으므로, 관찰된 hot document 편향과 주기성이 전자상거래, 코드 어시스턴트, 다국어 서비스 등 다른 도메인 RAG 워크로드로 일반화되는지는 논문에서 검증되지 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상 예상되는 한계 — 데이터셋 유용성이 정량적으로 입증되지 않음: 논문은 TTFT/TPOT 지표 정의와 리플레이 방법론을 제시하지만 실제 측정된 성능 수치를 보고하지 않는다. 따라서 &#x27;이 트레이스로 평가하면 범용 트레이스와 다른 결론이 나온다&#x27;는 핵심 주장이 실험으로 직접 증명되지는 않았다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상 예상되는 한계 — 검색 단계 지연 정보의 부재: 논문은 RAG 병목이 검색 단계와 단계 간 상호작용을 포함해 복합적이라고 문제를 제기했으나, 공개 레코드 필드(timestamp, input_length, output_length, hash_ids, session_id)에는 retrieval latency나 re-ranking 지연 같은 단계별 시간 분해 정보가 포함되어 있지 않다. 저자들이 §2.2에서 기대 효과로 제시한 &#x27;단계별 지연 기여도의 정밀 분해&#x27;는 현재 공개 필드만으로는 수행하기 어려워 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상 예상되는 한계 — 트레이스 생성 시스템과 벤치마크 시스템의 불일치: 트레이스는 Qwen3-235B-A22B 기반 Twen에서 생성되었지만 벤치마크 리플레이는 단일 A800에서 Qwen2.5-14B로 수행된다. 모델 규모와 토크나이저가 다르면 output_length 및 생성 속도 특성이 원 시스템과 달라질 수 있으나, 이 불일치의 영향은 논문에서 다루어지지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>구조상 예상되는 한계 — 샘플링 대표성 미기술: 7,106건이 &#x27;샘플링되었다&#x27;고만 서술될 뿐 샘플링 방법과 전체 요청 모집단 대비 비율이 제시되지 않아, 부하 주기성이나 중복률 통계가 편향 없이 모집단을 반영하는지 확인되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>RAGPulse로 평가했을 때와 기존 범용 LLM 트레이스(예: BurstGPT, ShareGPT)로 평가했을 때 동일한 스케줄링·캐싱 정책의 성능 순위가 실제로 뒤바뀌는가?</h3>
+              </div>
+              <p>논문의 핵심 주장은 범용 트레이스가 RAG 워크로드를 대표하지 못한다는 것이지만, 두 트레이스를 같은 시스템에서 재생해 결론이 달라짐을 보이는 대조 실험은 제시되지 않았다.</p>
+              <span class="source-ref">PDF p. 2, 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>관찰된 hot document long-tail 분포와 요청 간 중복률을 고려할 때, 검색 결과 청크 단위 KV cache(chunk-level prefix cache)의 이론적 상한 히트율은 얼마이며 실제 시스템에서 어느 정도 달성 가능한가?</h3>
+              </div>
+              <p>Figure 5(a), 5(b)가 정성적으로 편향과 지역성을 보여주지만 구체적 재사용률 수치나 캐시 히트율 시뮬레이션 결과는 본문에 없다.</p>
+              <span class="source-ref">PDF p. 3, 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>입력 길이에 따라 구성 비율이 달라진다는 사실을 스케줄러가 활용할 수 있는가? 예컨대 입력 길이만으로 &#x27;캐시 가능한 passage 비중&#x27;을 예측해 배치 구성을 결정하는 정책이 유효한가?</h3>
+              </div>
+              <p>Figure 4는 길이 구간별 구성 비율 변화를 보여주지만, 이를 온라인 스케줄링 신호로 사용하는 방안은 논문에서 제안만 되고 평가되지 않았다.</p>
+              <span class="source-ref">PDF p. 3</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>동일 hash ID를 랜덤 placeholder로 치환하는 재구성 전략은 토큰 길이는 보존하지만 어휘 분포와 semantic 구조는 보존하지 않는다. 이 차이가 attention 패턴이나 출력 길이 예측 기반 스케줄러의 평가 결과를 왜곡하지 않는가?</h3>
+              </div>
+              <p>§4.3은 길이 일치와 매핑 일관성만을 불변조건으로 요구하며, 내용 차이가 시스템 지표에 미치는 영향은 논의되지 않는다.</p>
+              <span class="source-ref">PDF p. 4</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>단일 대학 정책 Q&amp;A 도메인에서 관찰된 특성(주기성, hot document 편향)이 다른 도메인·다른 언어의 RAG 서비스에서도 재현되는가?</h3>
+              </div>
+              <p>트레이스가 단일 기관·단일 도메인 시스템에서만 수집되었고, 교차 도메인 비교는 수행되지 않았다.</p>
+              <span class="source-ref">PDF p. 2, 5</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>Agent LLM의 multi-hop self-reflection 루프가 요청당 지연시간과 토큰 소비에 기여하는 비중은 얼마인가?</h3>
+              </div>
+              <p>§5.3에서 multi-hop 반복 도구 사용이 기술되지만 현재 공개 레코드에는 hop 수나 단계별 지연 정보가 없으며, Agent 트레이스는 향후 공개 예정으로 남아 있다.</p>
+              <span class="source-ref">PDF p. 2, 5</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>RAG (Retrieval-Augmented Generation)</dt>
+              <dd>
+                LLM의 추론·생성 능력과 외부 지식베이스의 실시간 사실성을 결합하는 패러다임. Retrieve(임베딩 모델이 질의를 벡터화해 벡터 DB에서 가장 의미적으로 관련된 지식 청크 검색), Augment(검색된 청크를 원 질의·시스템 프롬프트와 context로 결합), Generate(증강 프롬프트를 LLM에 제출해 사실에 근거한 출력 생성)의 다단계 파이프라인으로 동작한다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Workload Trace</dt>
+              <dd>
+                실제 서비스에서 발생한 요청들의 도착 시각과 특성을 기록한 데이터. 시스템 연구자가 실제 부하를 재현(replay)해 스케줄링·캐싱 정책을 평가하는 데 사용된다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>hash_ids</dt>
+              <dd>
+                RAGPulse 레코드에서 요청 입력의 각 구성요소(system prompt, 검색된 문서들, 대화 이력, 웹 검색 결과, 사용자 질문)를 나타내는 해시 식별자 집합. 원본 텍스트를 제거하고 이 ID로 대체함으로써 익명화하면서도 청크 재사용 관계를 보존한다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Hot Document / Long-tail Effect</dt>
+              <dd>
+                소수의 핵심 지식 청크가 다수의 서로 다른 요청에 의해 빈번히 검색되는 반면 대다수 청크는 훨씬 드물게 접근되는 고도로 편향된 사용 분포. Retrieval Caching의 유효성을 뒷받침하는 근거다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Temporal Locality / Document Overlap</dt>
+              <dd>
+                임의의 시간 윈도우 내에서 동시에 도착하는 요청 다수가 동일하거나 매우 유사한 지식 청크에 접근하는 성질. 요청 간 문맥 의존성을 의미하며 content-aware batching과 KV cache 재사용의 근거가 된다.
+                <span class="source-ref">PDF p. 3, 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>TTFT (Time To First Token)</dt>
+              <dd>
+                시스템이 요청을 수신한 순간부터 첫 출력 토큰이 생성·반환될 때까지의 총 경과 시간. 시스템 응답성과 사용자 체감 지연의 핵심 벤치마크다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>TPOT (Time Per Output Token)</dt>
+              <dd>
+                첫 토큰이 생성된 이후 후속 토큰 각각을 생성하는 데 걸리는 평균 시간. 생성 단계의 처리량과 처리 효율을 주로 반영한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Content-aware Batching</dt>
+              <dd>
+                동일한 문서(지식 청크)에 접근하는 요청들을 함께 배치(batch)로 묶어 처리하는 최적화 전략. 요청 간 문서 중복이 높을 때 이득이 크다.
+                <span class="source-ref">PDF p. 4, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Retrieval Caching</dt>
+              <dd>
+                벡터 데이터베이스에서 검색되는 콘텐츠 청크를 캐싱하는 최적화 방향. hot document의 long-tail 접근 분포가 그 가치를 뒷받침한다.
+                <span class="source-ref">PDF p. 4, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Time-scaling Factor</dt>
+              <dd>
+                벤치마크 클라이언트가 트레이스의 원본 타임스탬프를 따라 요청을 재생할 때 재생 속도를 가속·감속하도록 도입한 계수. 부하 강도를 조절해 유연한 실험을 가능하게 한다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Text Decryption (텍스트 재구성)</dt>
+              <dd>
+                해시로 대체된 입력을 시뮬레이션에 쓰기 위해 각 고유 hash ID마다 원본과 토큰 길이가 엄밀히 동일한 랜덤 placeholder 텍스트를 생성하고, 동일 ID는 항상 동일 텍스트로 매핑하도록 하는 전략.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Agent LLM</dt>
+              <dd>
+                Twen 온라인 단계의 중앙 LLM(Qwen3-235B)으로, 자율적 컨트롤러로서 처리 전략을 계획하고 멀티모달 질의를 해석하며 웹 검색·RAG·외부 도구를 동적으로 오케스트레이션하고, 응답이 불충분하면 multi-hop self-reflection을 수행한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>vLLM</dt>
+              <dd>
+                PagedAttention 기반의 널리 채택된 오픈소스 LLM 추론 프레임워크. RAGPulse 벤치마킹 플랫폼의 서버 측 코어로 사용된다.
+                <span class="source-ref">PDF p. 4</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Langfuse</dt>
+              <dd>
+                LLM 호출 메타데이터(지연시간, 토큰 길이, user_id, session_id, hash_ids 등)를 캡처하는 관측(observability) 도구. Twen 온라인 호출 중 CallbackHandler로 활성화되어 RAGPulse 트레이스를 형성한다.
+                <span class="source-ref">PDF p. 5</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문이 정식 게재되었거나 게재 예정인 학회 또는 저널명 (본문에서는 arXiv preprint 정보만 확인됨)</li><li>Figure 3에 나타난 QPS 및 Tokens/s의 구체적 피크 수치 (본문 서술에는 정성적 주기성 설명만 있고 정확한 수치는 명시되지 않음)</li><li>Figure 5(a) CDF of Passage Frequency 및 Figure 5(b) Document Overlap Ratio의 구체적 정량 수치 (본문에 수치가 명시되지 않음)</li><li>벤치마킹 플랫폼(§4.4~4.5)에서 실제로 측정된 TTFT/TPOT 실측 결과값 (본문에는 지표 정의와 측정 방법론만 제시되고 실측 결과 수치는 보고되지 않음)</li><li>Twen 시스템 전체 요청량(모집단) 대비 공개된 7,106건 샘플이 차지하는 비율 및 샘플링 방법</li><li>논문에 별도의 &#x27;Limitations&#x27;라는 제목의 절이 존재하지 않아, 한계점 관련 서술이 본문 각주 및 여러 절에 산재되어 있음</li><li>트레이스에 포함된 요청의 언어 구성 및 세션당 평균 요청 수 등 세션 수준 통계 (본문에 제시되지 않음)</li><li>Figure 2, 4, 5의 분포에 대한 평균·중앙값·백분위수 등 요약 통계량 (본문에는 집중 지점과 임계 비율만 서술됨)</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "RAGPulse 워크로드의 입력/출력 토큰 길이 집중 지점", "labels": ["입력 토큰 길이 (집중 구간)", "출력 토큰 길이 (집중 구간)"], "values": [3500, 500], "unit": "tokens", "xLabel": "토큰 종류", "yLabel": "집중되는 토큰 길이"}, {"canvasId": "chart-1", "type": "bar", "title": "입력 길이에 따른 입력 구성 비율 변화", "labels": ["입력 2000 토큰 미만: system prompt 비중 (70% 이상)", "입력 3000 토큰 초과: passages + history 합산 비중 (약 40%)"], "values": [70, 40], "unit": "%", "xLabel": "요청 구간 및 구성요소", "yLabel": "전체 입력 토큰 대비 비율"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
