@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RAGCache: Efficient Knowledge Caching for Retrieval-Augmented Generation</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #192231;
+      --border: #2a3546;
+      --text: #eef3fa;
+      --muted: #9eacbf;
+      --accent: #76a9fa;
+      --paper: #9ec5fe;
+      --author-limit: #f6c177;
+      --inference: #c4a7e7;
+      --question: #9ccfd8;
+      --danger: #ff8f8f;
+      --max-width: 1100px;
+      --content-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter, Pretendard, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .page-shell {
+      width: min(calc(100% - 32px), var(--content-width));
+      margin: 0 auto;
+    }
+
+    .article-width {
+      max-width: var(--max-width);
+    }
+
+    .hero {
+      padding: 18px 0 42px;
+      border-bottom: 1px solid var(--border);
+      background: #0d1117;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .paper-meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(19, 26, 38, 0.82);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 38px 0 80px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .doc-index {
+      position: sticky;
+      top: 18px;
+      max-height: calc(100vh - 36px);
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(19, 26, 38, 0.82);
+      overflow: hidden;
+    }
+
+    .doc-index p {
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .doc-index nav {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    .doc-index a {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .doc-index a:hover {
+      color: var(--accent);
+    }
+
+    .summary-card {
+      margin-bottom: 28px;
+      padding: 28px;
+      border: 1px solid #31517d;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(40, 71, 112, 0.32), rgba(19, 26, 38, 0.9));
+    }
+
+    .summary-card h2 {
+      margin-bottom: 14px;
+    }
+
+    .report-section {
+      margin: 22px 0;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .section-heading,
+    .visual-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .content-item {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .content-item:first-of-type {
+      border-top: 0;
+    }
+
+    .claim-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .claim-paper_claim {
+      background: rgba(158, 197, 254, 0.15);
+      color: var(--paper);
+    }
+
+    .claim-author_limit {
+      background: rgba(246, 193, 119, 0.15);
+      color: var(--author-limit);
+    }
+
+    .claim-analyst_inference {
+      background: rgba(196, 167, 231, 0.15);
+      color: var(--inference);
+    }
+
+    .claim-open_question {
+      background: rgba(156, 207, 216, 0.15);
+      color: var(--question);
+    }
+
+    .source-ref {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .highlight-section {
+      border-color: #31517d;
+    }
+
+    .structured-list {
+      display: grid;
+      gap: 14px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .structured-list li {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+    }
+
+    .list-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .visual-card {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-frame {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .diagram-frame .mermaid {
+      margin-top: 0;
+    }
+
+    .diagram-zoom-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      padding: 5px 9px;
+      border: 1px solid rgba(15, 23, 42, 0.22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .diagram-zoom-button:hover {
+      background: #fff;
+      border-color: rgba(37, 99, 235, 0.46);
+      color: #1d4ed8;
+    }
+
+    .diagram-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      padding: 22px;
+      background: rgba(3, 7, 18, 0.86);
+    }
+
+    .diagram-modal.is-open {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .diagram-modal-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .diagram-modal-toolbar button {
+      min-width: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(238, 243, 250, 0.22);
+      border-radius: 6px;
+      background: #131a26;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    .diagram-modal-toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .diagram-modal-body {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid rgba(238, 243, 250, 0.18);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .diagram-modal-stage {
+      width: max-content;
+      min-width: 100%;
+      padding: 26px;
+      zoom: var(--diagram-zoom, 1);
+    }
+
+    .diagram-modal-stage svg {
+      max-width: none;
+      height: auto;
+    }
+
+    body.diagram-modal-open {
+      overflow: hidden;
+    }
+
+    .chart-container {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .chart-source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .question-card {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 4px solid var(--question);
+      border-radius: 10px;
+      background: var(--surface-2);
+    }
+
+    .question-card h3 {
+      margin-top: 10px;
+    }
+
+    .glossary {
+      margin: 18px 0 0;
+    }
+
+    .glossary-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.3fr) 1fr;
+      gap: 20px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .glossary-row dt {
+      font-weight: 700;
+    }
+
+    .glossary-row dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .warning-section {
+      border-color: #704646;
+    }
+
+    footer {
+      padding: 28px 0 48px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+
+    .index-toggle {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+    .index-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    body.index-hidden .doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body.index-hidden .doc-index {
+      display: none;
+    }
+    body.index-hidden .article-width {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .top-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .doc-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-index {
+        position: static;
+      }
+
+      .report-section,
+      .summary-card {
+        padding: 20px;
+      }
+
+      .section-heading,
+      .visual-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .glossary-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body class="auth-locked index-hidden">
+<!-- verification-status:start -->
+<style>
+.verification-status {
+    max-width: 1100px;
+    margin: 18px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.verification-status strong {
+    display: inline-block;
+    margin-right: 8px;
+}
+.verification-status.pending {
+    background: #fff8e1;
+    border-color: #e6b800;
+    color: #6d5200;
+}
+.verification-status.verified {
+    background: #e8f5e9;
+    border-color: #2e7d32;
+    color: #1b5e20;
+}
+.verification-status.failed {
+    background: #ffebee;
+    border-color: #c62828;
+    color: #8e0000;
+}
+</style>
+<div class="verification-status pending">
+    <strong>미검증</strong>
+    <span>이 보고서는 AI가 생성했으며 아직 독립 검증되지 않았습니다.</span>
+</div>
+<!-- verification-status:end -->
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header class="hero">
+    <div class="page-shell">
+      <div class="top-row">
+        <a class="back-link" href="../../">← 목록</a>
+        <button class="index-toggle" type="button" aria-controls="doc-index"></button>
+        <span class="status-badge">Claude 분석 완료</span>
+      </div>
+
+      <p class="eyebrow">Research Paper Report</p>
+
+      <h1>RAGCache: Efficient Knowledge Caching for Retrieval-Augmented Generation</h1>
+
+      <div class="paper-meta">
+        <span><strong>저자</strong> · Chao Jin, Zili Zhang, Xuanlin Jiang, Fangyue Liu, Xin Liu, Xuanzhe Liu, Xin Jin</span>
+        <span><strong>출처</strong> · arXiv preprint (arXiv:2404.12457v2 [cs.DC], 2024-04-25). 정식 학회/저널 게재 정보는 본문에서 확인되지 않음</span>
+        <span><strong>연도</strong> · 2024</span>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-shell doc-layout">
+    
+    <aside class="doc-index" id="doc-index" aria-label="문서 목차">
+      <p>Index</p>
+      <nav>
+        <a href="#summary">핵심 요약</a>
+<a href="#takeaways">핵심 요점</a>
+<a href="#problem">해결하려는 문제</a>
+<a href="#prior-work-limitations">기존 방식의 한계</a>
+<a href="#contributions">핵심 contribution</a>
+<a href="#architecture">제안 방식의 전체 구조</a>
+<a href="#workflow">단계별 동작 과정</a>
+<a href="#algorithms">핵심 알고리즘 및 인덱스 구조</a>
+<a href="#evaluation">실험 구성</a>
+<a href="#results">주요 결과와 의미</a>
+<a href="#conclusion">결론과 시사점</a>
+<a href="#diagrams">구조 및 동작 도식</a>
+<a href="#charts">정량 결과</a>
+<a href="#strengths">논문의 강점</a>
+<a href="#limitations">한계</a>
+<a href="#questions">후속 연구 질문</a>
+<a href="#glossary">핵심 용어</a>
+<a href="#unresolved">확인이 필요한 내용</a>
+      </nav>
+    </aside>
+    
+
+    <div class="article-width">
+      <section id="summary" class="summary-card">
+        <h2>핵심 요약</h2>
+        <p>RAGCache는 Retrieval-Augmented Generation(RAG) 서빙을 위한 multilevel dynamic caching system이다. RAG는 검색된 문서를 요청에 주입(knowledge injection)하기 때문에 입력 시퀀스가 매우 길어지고, 그 결과 prefill 단계의 계산·메모리 비용이 급격히 커진다. 논문에 따르면 원 요청이 100 토큰이고 검색된 문서가 1000 토큰이면 augmented request의 비용은 원 요청 대비 10배 이상(&gt;10×)이 될 수 있다. 저자들은 시스템 특성 분석(system characterization)을 통해 두 가지 관찰을 제시한다. 첫째, prefill이 지배적 병목이며 시퀀스 길이가 4000 토큰을 넘으면 추론 시간이 약 1초에 달한다(LLaMA2-7B, A10G GPU). 둘째, 실제 QA 워크로드의 문서 검색 패턴은 소수 문서에 심하게 편중(skewed)되어 있어 MMLU에서는 상위 3% 문서가 전체 요청의 60%를 차지한다. 이 두 관찰로부터 &#x27;자주 재사용되는 문서의 key-value(KV) tensor를 캐싱하면 중복 prefill 연산을 제거할 수 있다&#x27;는 설계 동기가 도출된다. RAGCache는 문서 ID 기반 prefix tree인 knowledge tree로 KV tensor를 조직하고, GPU 메모리와 host 메모리의 2계층에 걸쳐 배치한다. 핵심 기법은 (1) 노드의 frequency, size, prefix-aware recomputation cost, recency를 종합한 priority(=Clock + Frequency×Cost/Size)로 축출을 결정하는 prefix-aware GDSF(PGDSF) replacement policy, (2) 캐시된 길이 비율을 기준으로 대기 요청 순서를 바꾸는 cache-aware reordering, (3) CPU의 vector retrieval과 GPU의 generation을 오버랩하는 dynamic speculative pipelining이다. 평가에서 RAGCache는 Faiss와 결합된 vLLM 대비 TTFT를 최대 4배 낮추고 throughput을 최대 2.1배 높였으며, 최신 caching 시스템인 SGLang 대비로도 TTFT 최대 3.5배, throughput 최대 1.8배의 개선을 보였다.</p>
+        <span class="source-ref">PDF p. 1, 2, 3, 4, 5, 10</span>
+      </section>
+
+      
+    <section id="takeaways" class="report-section highlight-section">
+      <h2>핵심 요점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>RAG의 성능 병목은 검색된 문서로 인해 길어진 입력의 prefill 단계이며, 문서 길이 평균(3717.52 토큰)이 요청 길이 평균(348.04 토큰)을 크게 상회한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>실제 QA 워크로드의 문서 접근은 강하게 편중되어 있어(MMLU 기준 상위 3% 문서가 요청의 60% 차지) 캐싱의 이득이 크다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Knowledge tree는 문서 ID 기반 prefix tree로, KV tensor의 순서 민감성을 정확히 표현하면서 O(h) 조회를 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>PGDSF는 priority = Clock + Frequency × Cost / Size 로 GPU/host 배치를 결정하며, LRU·LFU·GDSF 대비 일관되게 높은 cache hit rate를 보인다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>Dynamic speculative pipelining은 항상 speculation 하지 않고 대기 prefill 요청 수를 기준으로 조건부 실행하며, 낮은 부하(0.1 req/s) 조건에서 효과가 검증되었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>RAGCache는 vLLM 대비 TTFT 최대 4×·throughput 최대 2.1×, SGLang 대비 TTFT 최대 3.5×·throughput 최대 1.8× 개선을 달성한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 2, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>세 가지 최적화가 서로 다른 부하 구간(재정렬은 고부하, 파이프라이닝은 저부하)에서 효과를 내도록 설계되어 있어, 전체 request rate 구간을 함께 커버하는 구성으로 볼 수 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 7, 8, 11, 12</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="problem" class="report-section">
+      <div class="section-heading">
+        <h2>해결하려는 문제</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Knowledge injection이 만드는 long sequence 비용</h3>
+      <p>RAG 시스템은 사용자 질의에 대해 외부 지식 데이터베이스에서 관련 문서를 검색한 뒤, 이를 프롬프트에 덧붙여 LLM에 입력한다. 이 knowledge injection 과정에서 입력 시퀀스가 크게 길어지며 계산 및 메모리 비용이 함께 증가한다. 논문은 원 요청이 100 토큰이고 검색된 문서가 총 1000 토큰인 경우, augmented request의 추가 계산/메모리 비용이 원 요청 대비 10배 이상(&gt;10×)이 될 수 있다고 명시한다.</p>
+      <span class="source-ref">PDF p. 1</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>동일 문서에 대한 반복적 재계산</h3>
+      <p>여러 요청이 동일한 문서를 반복적으로 검색하더라도, 기존 RAG 시스템은 매 요청마다 해당 문서의 key-value(KV) tensor를 처음부터 다시 계산한다. 즉 문서 부분의 prefill 연산이 요청 간에 중복 수행된다. 논문이 다루는 문제는 이 검색된 지식의 중간 상태(intermediate states, 곧 KV tensor)를 GPU 메모리와 host 메모리 계층에 걸쳐 효율적으로 캐싱하고 여러 쿼리에 공유하는 것이다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>관찰 1: prefill이 지배적 병목</h3>
+      <p>저자들의 시스템 특성 분석에 따르면 LLM 추론은 prefill 단계와 decoding 단계로 나뉘며, RAG처럼 입력이 긴 워크로드에서는 prefill이 지배적 병목이 된다. LLaMA2-7B와 A10G GPU 환경에서 시퀀스 길이가 4000 토큰을 넘으면 추론 시간이 약 1초에 도달한다(Figure 2). 또한 Wikipedia 기반 문서 집합(약 0.3 million documents)에서 문서 길이의 평균은 3717.52 토큰으로, MMLU 요청 길이 평균 348.04 토큰보다 훨씬 길다(Figure 3). 즉 전체 입력 길이의 대부분을 검색된 문서가 차지한다.</p>
+      <span class="source-ref">PDF p. 3</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>관찰 2: 편중된(skewed) 문서 접근 패턴</h3>
+      <p>저자들은 MMLU, Google Natural Questions, HotpotQA, TriviaQA 네 개의 QA 데이터셋에 대해 문서 검색 패턴(retrieval pattern)을 분석하였고, 접근이 소수 문서에 강하게 편중되어 있음을 확인했다. MMLU의 경우 상위 3% 문서가 전체 요청의 60%를 차지하며, 이는 균등분포 대비 20배 낮은 수치이다(Figure 5(a)). 이 편중성은 캐싱이 높은 hit rate를 낼 수 있음을 시사하며 RAGCache 설계의 직접적 동기가 된다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="prior-work-limitations" class="report-section">
+      <div class="section-heading">
+        <h2>기존 방식의 한계</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>RAG 특성을 고려하지 않는 GPU-only 캐싱</h3>
+      <p>vLLM, SGLang 등 기존 LLM 추론 최적화 시스템은 intermediate state를 요청 간에 공유하여 재계산 비용을 줄인다. 그러나 이들은 RAG의 특성을 고려하지 않고 intermediate state를 GPU 메모리에만 캐싱한다. Augmented request의 시퀀스가 매우 길다는 점을 감안하면 GPU 메모리 용량이 제한적이어서 캐시 가능한 문서 수가 적고, 결과적으로 최적화되지 못한 성능(suboptimal performance)에 그친다.</p>
+      <span class="source-ref">PDF p. 1, 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Retrieval과 inference의 순차 실행</h3>
+      <p>기존 RAG 시스템에서는 CPU에서 수행되는 vector retrieval과 GPU에서 수행되는 LLM inference가 서로 독립적인 두 단계로 순차 실행된다. 그 결과 retrieval이 진행되는 동안 GPU 자원이 유휴(idle) 상태로 남고, end-to-end latency가 불필요하게 길어진다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>단순 replacement policy</h3>
+      <p>비교 대상인 SGLang은 GPU 메모리 내에서 요청 간 KV cache 재사용을 지원하지만 replacement policy로 LRU를 사용한다. LRU는 문서 prefix마다 다른 크기(size), 접근 빈도(frequency), 재계산 비용(recomputation cost)을 반영하지 못한다는 점이 RAGCache가 PGDSF를 제안하는 배경이 된다.</p>
+      <span class="source-ref">PDF p. 5, 11</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="contributions" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 contribution</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>RAG에 대한 상세한 system characterization</h3>
+      <p>RAG 시스템에 대한 상세한 특성 분석을 수행하여 성능 병목(performance bottleneck)과 최적화 기회(optimization opportunities)를 규명한다. prefill 지배성, 문서 길이 분포, 편중된 검색 패턴, prefix caching의 효과가 여기에 해당한다.</p>
+      <span class="source-ref">PDF p. 2, 3, 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>최초의 지식 캐싱 RAG 시스템</h3>
+      <p>저자들이 아는 한, 외부 지식(external knowledge)의 intermediate states를 캐싱하여 여러 쿼리에 걸쳐 공유함으로써 중복 연산을 줄이는 최초의 RAG 시스템인 RAGCache를 제안한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PGDSF와 dynamic speculative pipelining</h3>
+      <p>RAG의 특성을 활용하여 cache miss rate를 최소화하는 prefix-aware Greedy-Dual-Size-Frequency(PGDSF) replacement policy를 설계하고, end-to-end latency를 최소화하기 위해 retrieval과 generation을 오버랩하는 dynamic speculative pipelining 기법을 설계한다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>프로토타입 구현과 실증</h3>
+      <p>RAGCache 프로토타입을 구현하고 평가하였다. Faiss와 결합된 vLLM 대비 TTFT를 최대 4배 낮추고 throughput을 최대 2.1배 향상시켰으며, LLM 애플리케이션용 최신 caching 시스템인 SGLang 대비 TTFT를 최대 3.5배 낮추고 throughput을 최대 1.8배 높였다.</p>
+      <span class="source-ref">PDF p. 2</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="architecture" class="report-section">
+      <div class="section-heading">
+        <h2>제안 방식의 전체 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>전체 개요</h3>
+      <p>RAGCache는 RAG에 특화된 multilevel dynamic caching system이다. 검색된 문서의 KV tensor를 문서 ID 기반 prefix tree인 knowledge tree(Figure 8)로 구조화하고, GPU 메모리(빠르지만 작음)와 host 메모리(느리지만 큼)의 두 계층에 걸쳐 배치하여 여러 요청 간에 공유한다. 시스템은 기존의 CPU 기반 external knowledge database(Faiss 기반 벡터 검색)와 GPU 기반 LLM 추론 엔진(vLLM 기반)을 통합 대상으로 삼고, 그 위에 캐싱 계층과 스케줄링 계층을 추가하는 형태이다(Figure 7).</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>RAG Controller</h3>
+      <p>RAG controller는 외부 지식 데이터베이스와 LLM 추론 엔진 간의 상호작용을 조정(orchestrate)하는 중심 구성요소이다. PGDSF replacement policy, cache-aware reordering, dynamic speculative pipelining을 통합 관리한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Knowledge Tree와 Cache Retriever</h3>
+      <p>LLM 추론에서 KV tensor는 앞선 토큰들에 의존하므로, 동일한 문서라도 앞에 어떤 문서가 놓였는지(문서 순서)에 따라 KV 값이 달라진다. Knowledge tree는 이 순서 민감성을 문서 ID 기반 prefix tree로 표현하여, 서로 다른 요청이 동일한 prefix를 공유하는 경우를 트리 경로의 중첩으로 자연스럽게 나타낸다. Cache retriever는 prefix matching을 통해 트리 높이 h에 대해 O(h) 시간복잡도로 재사용 가능한 KV tensor를 조회한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PGDSF Replacement Policy</h3>
+      <p>각 노드에 대해 접근 빈도(frequency), 크기(size), prefix를 고려한 재계산 비용(prefix-aware recomputation cost), 최근성(clock)을 종합한 priority를 Formula 1(priority = Clock + Frequency × Cost / Size)로 계산한다. GPU 메모리가 가득 차면 leaf 노드 중 priority가 가장 낮은 노드를 host memory로 swap-out한다(Algorithm 1). 이때 데이터 복사는 최초 1회만 수행되고 이후 축출 시에는 GPU에서 바로 free 한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Cache-aware Reordering</h3>
+      <p>OrderPriority = Cached Length / Computation Length 기준의 priority queue를 사용해 대기 중인 요청의 처리 순서를 재배열한다. 캐시된 비율이 높은 요청을 먼저 처리하여 cache hit rate를 높이고 cache thrashing을 방지하며, 재배열 window 크기를 제한하여 request starvation을 막는다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Dynamic Speculative Pipelining</h3>
+      <p>벡터 검색이 진행되는 도중 산출되는 중간 top-k 후보 문서를 이용해 LLM이 조기에 speculative generation을 시작하게 함으로써 retrieval 단계와 generation 단계를 오버랩한다. 무조건 speculation 하는 것이 아니라 대기 중인 prefill 요청 수(max_prefill_bs)를 기준으로 speculation 시작 여부를 동적으로 결정한다(Algorithm 2, Theorem 5.1).</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="workflow" class="report-section">
+      <div class="section-heading">
+        <h2>단계별 동작 과정</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>1단계 — 문서 검색</h3>
+      <p>요청이 도착하면 RAG controller가 external knowledge database에 질의하여 관련 문서를 검색한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>2단계 — 캐시 조회</h3>
+      <p>검색된 문서 목록이 cache retriever로 전달되고, cache retriever는 knowledge tree에서 prefix matching으로 일치하는 KV tensor를 탐색한다.</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>3단계 — Cache miss 경로</h3>
+      <p>해당 문서 시퀀스의 KV tensor가 캐시에 없으면 LLM 추론 엔진에 전체 prefill 계산을 지시하여 토큰을 생성한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>4단계 — Cache hit 경로</h3>
+      <p>KV tensor가 캐시에 있으면 해당 tensor와 함께 요청이 LLM 추론 엔진으로 전달되고, prefix caching kernel을 이용해 캐시되지 않은 나머지 부분만 계산하여 토큰을 생성한다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>5단계 — 캐시 갱신과 축출</h3>
+      <p>첫 토큰 생성 후 KV tensor가 RAG controller로 반환된다. Controller는 접근된 문서의 tensor를 캐시에 저장하고 PGDSF policy(Formula 1, Algorithm 1)에 따라 priority와 clock 등 캐시 상태를 갱신한다. GPU 메모리가 가득 찬 경우 priority가 가장 낮은 leaf 노드를 host memory로 swap-out하며, 데이터 복사는 최초 1회만 발생하고 이후 축출 시에는 GPU 메모리에서 곧바로 해제한다.</p>
+      <span class="source-ref">PDF p. 4, 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>6단계 — 요청 재정렬</h3>
+      <p>요청 큐가 포화 상태일 때 cache-aware reordering이 OrderPriority(=Cached Length / Computation Length) 기준으로 요청 순서를 재배열하여 cache hit rate를 높인다. 윈도우 크기를 제한하여 starvation을 방지한다.</p>
+      <span class="source-ref">PDF p. 7</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>7단계 — Speculative pipelining</h3>
+      <p>retrieval 지연이 큰 경우 dynamic speculative pipelining이 vector search의 중간 top-k 후보를 단계적으로 LLM에 전달하여 speculative generation을 조기 시작한다. 후보 목록이 갱신되면 이전 생성을 종료하고 재시작하며, 최종 검색 결과가 speculation에 사용한 후보와 일치하면 생성 결과를 그대로 반환하고 다르면 재생성한다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>8단계 — 응답 반환</h3>
+      <p>생성된 답변이 최종 응답으로 사용자에게 전달된다.</p>
+      <span class="source-ref">PDF p. 4</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="algorithms" class="report-section">
+      <div class="section-heading">
+        <h2>핵심 알고리즘 및 인덱스 구조</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>Knowledge tree (인덱스 구조)</h3>
+      <p>Knowledge tree는 문서 ID를 키로 하는 prefix tree이다. 루트에서 특정 노드까지의 경로는 하나의 문서 시퀀스를 의미하며, 그 노드는 해당 시퀀스에 대응하는 KV tensor를 보관한다. LLM의 attention이 prefix에 의존하므로 [D1, D2]와 [D2, D1]의 KV tensor는 서로 다르며, 트리 구조는 이 순서 민감성을 정확히 표현한다. 조회는 prefix matching으로 이루어지며 트리 높이 h에 대해 O(h)이다(Figure 8).</p>
+      <span class="source-ref">PDF p. 4, 5</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>PGDSF priority 계산 (Formula 1, Algorithm 1)</h3>
+      <p>각 노드의 priority는 priority = Clock + Frequency × Cost / Size 로 정의된다. Clock은 최근성(recency)을 반영하는 논리 시계 값이고, Frequency는 접근 빈도, Cost는 해당 prefix를 재계산하는 데 드는 비용, Size는 KV tensor가 차지하는 메모리 크기이다. 즉 자주 접근되고 재계산 비용이 크며 크기가 작은 노드일수록 높은 priority를 갖는다. GPU 메모리가 부족하면 leaf 노드 중 priority 최솟값을 가진 노드를 host memory로 swap-out 한다. leaf만 축출 대상으로 삼는 이유는 부모 노드가 자식 노드의 prefix이므로 부모를 먼저 제거하면 자식이 무효화되기 때문이다(분석자 해석). 데이터 복사는 최초 축출 시 1회만 수행되며, 이미 host에 사본이 있으면 GPU 메모리를 바로 해제한다.</p>
+      <span class="source-ref">PDF p. 5, 6</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Cache-aware reordering 기준</h3>
+      <p>OrderPriority = Cached Length / Computation Length. 이미 캐시된 토큰 길이의 비율이 높은 요청일수록 우선 처리된다. 이 기준은 실제로 계산해야 할 토큰이 적은 요청을 먼저 내보내 GPU 시간을 절약하고, 동시에 서로 다른 prefix를 오가며 캐시를 밀어내는 cache thrashing을 억제한다. 무한정 밀리는 요청을 막기 위해 재배열 대상 window 크기를 제한한다(평가에서는 window=32 사용).</p>
+      <span class="source-ref">PDF p. 7, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Dynamic speculative pipelining (Algorithm 2, Theorem 5.1)</h3>
+      <p>Speculation은 잘못된 후보에 대해 GPU 연산을 낭비할 위험이 있으므로 항상 유리하지는 않다. 저자들은 Theorem 5.1을 통해 대기 중인 prefill 요청 수(max_prefill_bs)를 기준으로 speculation 시작 여부를 결정하는 것이 최적임을 보인다. 즉 GPU가 상대적으로 한가할 때에만 speculative generation을 시작하고, 처리할 요청이 충분히 쌓여 있으면 speculation을 하지 않는다. Theorem 5.1의 분석은 vector search와 LLM이 각각 한 번에 하나의 요청만 처리한다는 G/G/1 queue 기반의 단순화된 가정 위에 서 있다.</p>
+      <span class="source-ref">PDF p. 7, 8</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="evaluation" class="report-section">
+      <div class="section-heading">
+        <h2>실험 구성</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>워크로드와 지식 베이스</h3>
+      <p>워크로드로 MMLU(Measuring Massive Multitask Language Understanding, 모델이 A/B/C/D 중 한 토큰을 출력하는 multi-choice QA)와 Google Natural Questions(검색 기반 질의응답)를 사용한다. 지식 베이스는 Wikipedia corpus 기반의 약 0.3 million documents이며, text-embedding-3-small로 벡터화되었다.</p>
+      <span class="source-ref">PDF p. 3, 9, 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>비교 대상(baseline)</h3>
+      <p>vLLM(iteration-level scheduling과 PagedAttention을 사용하는 최신 LLM serving 시스템, Faiss와 결합)과 SGLang(GPU 메모리 내에서 요청 간 KV cache 재사용을 지원하며 replacement policy로 LRU를 사용하는 고성능 LLM serving 시스템)을 사용한다. Ablation에서는 replacement policy 비교군으로 GDSF, LRU, LFU를, pipelining 비교군으로 No DSP(vector search 완료를 기다린 후 생성 시작)를 사용한다.</p>
+      <span class="source-ref">PDF p. 10, 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>모델과 하드웨어</h3>
+      <p>소형 모델 실험에는 Mistral-7B와 LLaMA2-7B를 AWS g5.16xlarge(A10G GPU)에서 max batch size=4로 사용한다. 대형 모델 실험에는 Mixtral-8×7B와 LLaMA2-70B를 NVLink로 연결된 2×NVIDIA H800 80GB GPU에서 각각 max batch size=8, 4로 사용한다.</p>
+      <span class="source-ref">PDF p. 9, 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>평가 지표</h3>
+      <p>주 지표는 평균 Time To First Token(TTFT)과 throughput이다. 여기서 throughput은 TTFT가 특정 임계값(최저 request rate에서 측정된 TTFT의 5배) 미만으로 유지되는 최대 request rate로 정의된다. 추가로 ablation에서는 cache hit rate와 RAGCache의 scheduling time(knowledge tree 조회·갱신, 요청 재정렬, speculative pipelining 결정에 소요되는 시간)을 측정한다. Cache hit rate는 검색된 문서 수 대비 hit한 문서 수의 비율로 정의된다(예: 저장된 시퀀스가 [D1, D2]이고 요청이 [D1, D3]이면 hit rate 50%).</p>
+      <span class="source-ref">PDF p. 10, 11, 12</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="results" class="report-section">
+      <div class="section-heading">
+        <h2>주요 결과와 의미</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>End-to-end TTFT 및 throughput</h3>
+      <p>동일한 request rate 조건에서 RAGCache는 vLLM 대비 평균 TTFT를 1.2–4× 낮추고 SGLang 대비 1.1–3.5× 낮춘다. Throughput 측면에서는 vLLM 대비 1.3–2.1×, SGLang 대비 1.2–1.8× 높다(MMLU/Natural Questions, Mistral-7B/LLaMA2-7B, max batch size=4, Figure 13·14). SGLang 대비 이득이 존재한다는 점은 GPU-only 캐싱을 host memory까지 확장한 것과 replacement policy 개선의 효과가 실제로 유효함을 시사한다(분석자 해석).</p>
+      <span class="source-ref">PDF p. 10</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>top-k 민감도</h3>
+      <p>top-k를 1, 3, 5로 바꾼 실험에서 RAGCache는 평균 TTFT 기준 vLLM 대비 1.7–3.1×, SGLang 대비 1.2–2.5× 우수하다(MMLU, Mistral-7B, max batch size=4). 다만 top-5 설정에서는 GPU 용량 제한으로 문서를 truncate 하였다(Figure 15).</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>대형 모델에서의 결과</h3>
+      <p>Mixtral-8×7B와 LLaMA2-70B에서 낮은 request rate 조건일 때 RAGCache는 vLLM 대비 평균 TTFT를 1.4–2.1× 감소시킨다. 특히 vLLM은 Mixtral-8×7B에서 2 req/s, LLaMA2-70B에서 1.5 req/s를 넘으면 TTFT SLO(최저 request rate TTFT의 5배)를 만족하지 못하는 반면, RAGCache는 모든 request rate에서 TTFT를 1.4초 이하로 유지한다. SGLang 대비로는 1.2–2.6× 우수한 평균 TTFT를 보인다(2×H800, Figure 16).</p>
+      <span class="source-ref">PDF p. 10, 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation — PGDSF replacement policy</h3>
+      <p>host memory 8–128 GiB 구간에서 PGDSF는 GDSF 대비 1.02–1.32×, LRU 대비 1.06–1.62×, LFU 대비 1.06–1.75× 높은 cache hit rate를 달성한다(top-2 retrieval, request rate=0.8 req/s, Figure 17). 이 hit rate 향상은 평균 TTFT 1.05–1.29× 감소로 이어지며, host memory 8 GiB·MMLU 조건에서 평균 TTFT는 PGDSF 1.38초, GDSF 1.68초, LRU 1.78초, LFU 1.81초이다(Table 2). 저자들은 PGDSF가 문서 prefix별로 다른 크기, 접근 패턴, 재계산 비용을 함께 포착하기 때문이라고 설명한다.</p>
+      <span class="source-ref">PDF p. 11</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation — cache-aware reordering</h3>
+      <p>cache-aware reordering을 적용하면 RAGCache는 평균 TTFT를 1.2–2.1× 감소시킨다(MMLU request rate=2.5 req/s, Natural Questions request rate=1.4 req/s, reordering window=32, host memory 16–128 GiB, Figure 18). 실험 조건이 상대적으로 높은 request rate라는 점은 이 기법이 큐가 포화된 상황을 겨냥한 최적화임을 보여준다(분석자 해석).</p>
+      <span class="source-ref">PDF p. 11, 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Ablation — dynamic speculative pipelining</h3>
+      <p>dynamic speculative pipelining은 최대 1.6× TTFT 감소를 달성하며(request rate=0.1 req/s, vector search ratio 12.5%–100%, Figure 19), non-overlapping vector search time을 1.5–4.3× 줄인다. vector search ratio 100% 조건에서 non-overlapping vector search time은 MMLU에서 RAGCache 97.4ms 대 No DSP 422.3ms, Natural Questions에서 RAGCache 145.0ms 대 No DSP 446.1ms이다(Table 3). request rate 0.1 req/s라는 낮은 부하 조건은 Theorem 5.1이 예측하는 &#x27;GPU가 한가할 때 speculation이 유리하다&#x27;는 결론과 일관된다(분석자 해석).</p>
+      <span class="source-ref">PDF p. 12</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>Overhead</h3>
+      <p>RAGCache의 scheduling time(knowledge tree 조회·갱신, 요청 재정렬, speculative pipelining 결정 포함)은 request rate 0.5–2 req/s 전 구간에서 1밀리초 미만이다(0.5 req/s: 0.880ms, 1.0 req/s: 0.872ms, 1.5 req/s: 0.902ms, 2.0 req/s: 0.906ms). 저자들은 이것이 초 단위 TTFT에 비해 무시할 만한 수준이라고 주장한다(Table 4).</p>
+      <span class="source-ref">PDF p. 12, 13</span>
+    </article>
+    
+    </section>
+    
+
+    <section id="conclusion" class="report-section">
+      <div class="section-heading">
+        <h2>결론과 시사점</h2>
+        <span class="claim-badge claim-paper_claim">논문 주장</span>
+      </div>
+      
+    <article class="content-item">
+      <h3>논문의 결론</h3>
+      <p>RAGCache는 RAG 시스템의 지배적 병목이 검색된 문서로 인한 긴 prefill이라는 점과 실제 문서 접근이 심하게 편중되어 있다는 점을 결합하여, 문서 KV tensor를 knowledge tree로 조직하고 GPU–host 두 계층에 캐싱하는 접근을 제시한다. PGDSF, cache-aware reordering, dynamic speculative pipelining 세 기법이 결합되어 vLLM 대비 TTFT 최대 4×, throughput 최대 2.1×, SGLang 대비 TTFT 최대 3.5×, throughput 최대 1.8×의 개선을 달성한다.</p>
+      <span class="source-ref">PDF p. 2, 10, 13</span>
+    </article>
+    
+
+    <article class="content-item">
+      <h3>시스템 설계 관점의 시사점 (분석자 해석)</h3>
+      <p>이 논문의 핵심 통찰은 RAG 워크로드의 입력이 &#x27;임의의 긴 텍스트&#x27;가 아니라 &#x27;재사용 가능한 문서들의 순열&#x27;이라는 구조를 가진다는 점이다. 이 구조 덕분에 일반적인 토큰 단위 prefix caching 대신 문서 ID 단위의 트리 인덱스를 쓸 수 있고, 결과적으로 조회 비용이 O(h)로 낮아지며 replacement policy도 문서 단위 통계(빈도, 크기, 재계산 비용)를 활용할 수 있다. 또한 캐시 계층 확장(GPU→host)과 스케줄링(재정렬, 파이프라이닝)을 함께 다루었다는 점에서, 캐시 정책만 개선하는 접근보다 넓은 설계 공간을 다루고 있다. 다만 이 구조적 이점은 문서 순열의 재사용 가능성에 의존하므로 top-k가 커질수록 약화된다.</p>
+      <span class="source-ref">PDF p. 4, 5, 12</span>
+    </article>
+    
+    </section>
+    
+
+      
+    <section id="diagrams" class="report-section">
+      <h2>구조 및 동작 도식</h2>
+      
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>RAGCache 전체 동작 흐름</h3>
+                <span class="source-ref">PDF p. 4, 5, 6, 7, 8</span>
+              </div>
+              <p>요청 도착부터 응답 반환까지의 처리 경로. 검색 결과를 knowledge tree에서 prefix matching으로 조회하여 cache hit/miss 경로가 갈리며, 생성 후 PGDSF에 따라 캐시가 갱신되고 필요 시 host memory로 swap-out 된다. Figure 6·7의 시스템 구조와 4–8페이지의 서술을 근거로 작성하였다.</p>
+              <div class="mermaid">
+flowchart TD
+    A[요청 도착] --&gt; B[RAG Controller]
+    B --&gt; C[Vector Retrieval&lt;br/&gt;External Knowledge DB / CPU]
+    C -.중간 top-k 후보.-&gt; P[Dynamic Speculative Pipelining&lt;br/&gt;조건: 대기 prefill 요청 수]
+    C --&gt; D[Cache Retriever&lt;br/&gt;Knowledge Tree prefix matching]
+    D --&gt; E{Cache Hit?}
+    E --&gt;|Miss| F[전체 Prefill 계산]
+    E --&gt;|Hit| G[캐시된 KV tensor 재사용&lt;br/&gt;나머지만 계산]
+    P -.조기 생성 시작.-&gt; H
+    F --&gt; H[LLM Inference Engine&lt;br/&gt;GPU]
+    G --&gt; H
+    R[Cache-aware Reordering&lt;br/&gt;Cached Len / Compute Len] --&gt; H
+    B --&gt; R
+    H --&gt; I[첫 토큰 생성]
+    I --&gt; J[KV tensor 반환 및 캐시 갱신&lt;br/&gt;PGDSF priority / clock 업데이트]
+    J --&gt; K{GPU 메모리 부족?}
+    K --&gt;|Yes| L[최저 priority leaf 노드&lt;br/&gt;Host Memory로 swap-out]
+    K --&gt;|No| M[응답 반환]
+    L --&gt; M
+              </div>
+            </article>
+            
+            <article class="visual-card">
+              <div class="visual-heading">
+                <h3>기존 방식과 RAGCache의 차이</h3>
+                <span class="source-ref">PDF p. 1, 2, 4, 5, 7, 8</span>
+              </div>
+              <p>기존 RAG 시스템은 retrieval과 inference를 순차 실행하고 intermediate state를 GPU 메모리에만 캐싱하는 반면, RAGCache는 GPU–host 2계층 캐싱과 retrieval–generation 오버랩을 도입한다. 1–2페이지의 prior work 한계 서술과 4–8페이지의 설계 서술을 근거로 한다.</p>
+              <div class="mermaid">
+flowchart LR
+    subgraph BASE[기존 방식: vLLM / SGLang + Faiss]
+        B1[Retrieval&lt;br/&gt;CPU] --&gt; B2[대기: GPU idle]
+        B2 --&gt; B3[Prefill 계산]
+        B3 --&gt; B4[GPU 메모리 전용 KV 캐시&lt;br/&gt;LRU 등 단순 정책]
+    end
+    subgraph RC[RAGCache]
+        R1[Retrieval&lt;br/&gt;CPU] -.중간 후보로 오버랩.-&gt; R2[Speculative Prefill]
+        R1 --&gt; R3[Knowledge Tree 조회]
+        R3 --&gt; R4[GPU 메모리 캐시&lt;br/&gt;hot 노드]
+        R4 &lt;--&gt; R5[Host 메모리 캐시&lt;br/&gt;cold 노드]
+        R4 --&gt; R6[PGDSF 축출 + 요청 재정렬]
+    end
+              </div>
+            </article>
+            
+    </section>
+    
+
+      
+        <section id="charts" class="report-section">
+          <h2>정량 결과</h2>
+          
+            <article class="visual-card">
+              <h3>Replacement policy별 평균 TTFT (host memory 8 GiB)</h3>
+              <div class="chart-container">
+                <canvas id="chart-0"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 11 · Table 2 · MMLU workload, host memory = 8 GiB, top-2 retrieval, request rate = 0.8 req/s
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Dynamic speculative pipelining 유무에 따른 non-overlapping vector search time (vector search ratio 100%)</h3>
+              <div class="chart-container">
+                <canvas id="chart-1"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12 · Table 3 · vector search ratio = 100%, request rate = 0.1 req/s
+              </p>
+            </article>
+            
+            <article class="visual-card">
+              <h3>Request rate별 RAGCache scheduling time</h3>
+              <div class="chart-container">
+                <canvas id="chart-2"></canvas>
+              </div>
+              <p class="chart-source">
+                PDF p. 12, 13 · Table 4 · MMLU workload, Mistral-7B, knowledge tree 조회·갱신 + 요청 재정렬 + speculative pipelining 결정 포함
+              </p>
+            </article>
+            
+        </section>
+        
+
+      
+    <section id="strengths" class="report-section">
+      <h2>논문의 강점</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>설계 결정이 측정 기반 관찰에서 도출된다. prefill 지배성(Figure 2), 문서 길이 분포(Figure 3), 편중된 접근 패턴(Figure 5)을 먼저 제시하고 그로부터 캐싱 설계를 유도하는 구성이어서 각 구성요소의 필요성이 명확하다.</span>
+              </div>
+              <span class="source-ref">PDF p. 3, 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>문서 ID 기반 prefix tree라는 인덱스 선택이 RAG 워크로드의 구조(문서 순열의 재사용)와 정확히 맞물린다. KV tensor의 순서 민감성을 왜곡 없이 표현하면서도 O(h) 조회를 제공한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>캐시 정책만이 아니라 메모리 계층 확장(GPU→host), 요청 스케줄링(reordering), 단계 오버랩(pipelining)까지 함께 다루어 최적화 범위가 넓다. 세 기법이 각각 독립적으로 ablation 되어 기여도가 분리 측정되었다.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 7, 8, 11, 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-paper_claim">논문 주장</span>
+                <span>KV cache 양자화·압축 계열 기법과 달리 문서의 정확한(exact) KV cache를 보존하므로 생성 품질에 영향을 주지 않는다는 점을 논문이 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>스케줄링 오버헤드를 별도로 측정하여 1ms 미만임을 보였고(Table 4), 이는 초 단위 TTFT 대비 무시 가능한 수준이므로 개선 수치가 오버헤드에 의해 상쇄되지 않음을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>vLLM뿐 아니라 이미 KV cache 재사용을 지원하는 SGLang과도 비교하여, 개선분이 단순히 &#x27;캐싱 유무&#x27;가 아니라 RAG 특화 설계에서 온다는 점을 뒷받침한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="limitations" class="report-section">
+      <h2>한계</h2>
+      <ul class="structured-list">
+        
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Dynamic speculative pipelining의 최적 전략(Theorem 5.1)은 vector search와 LLM이 각각 한 번에 하나의 요청만 처리한다고 가정하는 단순화된 G/G/1 queue 분석에 근거한다. 실제 RAG 시스템은 더 큰 LLM batch size와 병렬 vector search로 인해 더 복잡하며, 요청이 다른 요청들과 배치로 묶인 경우 잘못된 speculative generation을 즉시 종료할 수 없다.</span>
+              </div>
+              <span class="source-ref">PDF p. 8</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>Knowledge tree는 LLM 추론의 prefix 민감성 때문에 GPU 장애 발생 시 하위 노드들이 무효화되어 트리 전체가 영향을 받을 수 있다. 저자들은 가장 자주 접근되는 상위 레벨 노드 일부(예: system prompt)만 host memory에 복제하고 timeout 기반 재시도 메커니즘을 사용하며, 전체 노드를 완전히 복제하지는 않는다고 명시한다.</span>
+              </div>
+              <span class="source-ref">PDF p. 9</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>top-k 값이 커질수록 문서 순열(permutation) 조합이 factorial로 증가하여 문서 시퀀스의 재사용 가능성이 낮아진다. RAGCache는 실제 top-k보다 낮은 k로 문서를 캐싱하는 방식(예: top-5 요청에 대해 top-3 문서만 캐싱)으로 hit rate와 cache efficiency의 균형을 맞출 뿐, 문제를 근본적으로 해결하지는 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-author_limit">저자 명시 한계</span>
+                <span>RAGCache는 주로 TTFT(prefill 단계 지연) 감소에 초점을 맞춘다. TPOT(time per output token, decoding 단계)에 대해서는 prefill iteration 가속의 부수적 효과로 낮아질 수 있다고만 언급되며 별도의 직접적 최적화 기법은 제시되지 않는다.</span>
+              </div>
+              <span class="source-ref">PDF p. 12</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>평가 워크로드가 MMLU와 Natural Questions 두 QA 데이터셋에 한정되어 있다. 동기 분석(3장)에서는 HotpotQA와 TriviaQA의 검색 패턴도 함께 분석했으나 end-to-end 성능 평가에는 사용되지 않았으므로, 접근 편중성이 약한 워크로드에서의 성능은 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5, 10</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>지식 베이스가 정적(static)인 상황을 전제로 한 것으로 보인다. 문서가 갱신·삭제되는 경우 해당 문서를 prefix로 포함하는 knowledge tree 하위 노드들의 무효화 처리 비용이 문제가 될 수 있으나, 이에 대한 메커니즘이나 측정은 본문에서 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 4, 5</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>top-5 실험에서 GPU 용량 제한으로 문서를 truncate 하였다고 명시되어 있어, 해당 조건의 결과는 다른 top-k 설정과 완전히 동일한 기준에서 비교되지 않을 가능성이 있다.</span>
+              </div>
+              <span class="source-ref">PDF p. 10, 11</span>
+            </li>
+            
+            <li>
+              <div class="list-main">
+                <span class="claim-badge claim-analyst_inference">분석자 해석</span>
+                <span>PGDSF의 priority 계산에는 Cost(재계산 비용) 추정이 필요하다. 이 비용을 어떻게 추정하며 추정 오차가 hit rate에 어떤 영향을 주는지에 대한 민감도 분석은 확인되지 않음.</span>
+              </div>
+              <span class="source-ref">PDF p. 5, 6</span>
+            </li>
+            
+      </ul>
+    </section>
+    
+
+      
+    <section id="questions" class="report-section">
+      <h2>후속 연구 질문</h2>
+      
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>LLM batch size가 크고 vector search가 병렬로 수행되는 현실적 조건에서 dynamic speculative pipelining의 최적 정책은 어떻게 달라지는가?</h3>
+              </div>
+              <p>저자들이 Theorem 5.1의 분석이 단일 요청 처리(G/G/1) 가정에 근거하며 실제 시스템은 더 복잡하다고 직접 명시하였다.</p>
+              <span class="source-ref">PDF p. 8</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>top-k가 커져 문서 순열 공간이 factorial로 확대될 때, 순서에 덜 민감한 KV 재사용 표현(예: 순서 독립적 근사나 부분 재계산)이 hit rate와 생성 품질 사이에서 더 나은 절충을 제공할 수 있는가?</h3>
+              </div>
+              <p>저자들이 permutation 폭증 문제를 한계로 명시하고 낮은 k로 캐싱하는 완화책만 제시하였다. RAGCache는 exact KV cache 보존을 강점으로 내세우므로 근사 도입 시 품질 영향 평가가 필요하다.</p>
+              <span class="source-ref">PDF p. 12, 13</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>지식 베이스가 동적으로 갱신되는 환경에서 knowledge tree의 무효화(invalidation) 비용은 얼마이며, 이를 낮추는 인덱스 설계가 가능한가?</h3>
+              </div>
+              <p>본문은 정적 Wikipedia corpus(~0.3 million documents)를 대상으로 평가하였고 문서 갱신 시나리오는 다루지 않았다.</p>
+              <span class="source-ref">PDF p. 4, 5, 9</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>접근 편중성(skewness)이 약한 워크로드에서 RAGCache의 이득은 어느 정도로 감소하는가? hit rate가 이득으로 전환되는 임계 skewness가 존재하는가?</h3>
+              </div>
+              <p>성능 개선의 근거가 되는 핵심 관찰이 편중된 검색 패턴이지만, end-to-end 평가는 MMLU와 Natural Questions 두 워크로드에 한정된다.</p>
+              <span class="source-ref">PDF p. 4, 5, 10</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>GPU–host 2계층을 넘어 SSD 등 더 느린 계층까지 확장할 경우, swap-in 대역폭 대비 재계산 비용의 손익 분기점은 어디인가?</h3>
+              </div>
+              <p>PGDSF의 priority가 재계산 비용(Cost)을 명시적으로 포함하므로 계층 확장 시 동일한 비용 모델을 확장 적용할 수 있으나, 본문은 host memory까지만 평가한다.</p>
+              <span class="source-ref">PDF p. 5, 6, 11</span>
+            </article>
+            
+            <article class="question-card">
+              <div>
+                <span class="claim-badge claim-open_question">후속 질문</span>
+                <h3>TPOT(decoding 단계 지연)에 대한 직접적 최적화를 결합하면 end-to-end 사용자 체감 지연은 얼마나 더 개선되는가?</h3>
+              </div>
+              <p>저자들이 RAGCache의 초점이 TTFT이며 TPOT은 부수적 효과로만 다루어진다고 명시하였다.</p>
+              <span class="source-ref">PDF p. 12</span>
+            </article>
+            
+    </section>
+    
+
+      
+    <section id="glossary" class="report-section">
+      <h2>핵심 용어</h2>
+      <dl class="glossary">
+        
+            <div class="glossary-row">
+              <dt>RAG (Retrieval-Augmented Generation)</dt>
+              <dd>
+                사용자 질의에 대해 외부 지식 데이터베이스에서 관련 문서를 검색한 뒤 이를 프롬프트에 주입하여 LLM이 답변을 생성하도록 하는 방식. 생성 품질은 높아지지만 입력 시퀀스가 길어져 계산·메모리 비용이 증가한다.
+                <span class="source-ref">PDF p. 1, 2</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Knowledge injection</dt>
+              <dd>
+                검색된 문서를 원 요청에 덧붙여 augmented request를 만드는 과정. 논문 예시에서 100 토큰 요청에 1000 토큰 문서가 주입되면 비용이 10배 이상 증가할 수 있다.
+                <span class="source-ref">PDF p. 1</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>KV tensor / KV cache</dt>
+              <dd>
+                Transformer의 attention 계산에 쓰이는 key-value 텐서. 한 번 계산해 두면 이후 토큰 생성에서 재사용할 수 있으며, RAGCache가 캐싱 대상으로 삼는 intermediate state가 바로 이것이다.
+                <span class="source-ref">PDF p. 1, 2, 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Prefill / Decoding</dt>
+              <dd>
+                LLM 추론의 두 단계. prefill은 입력 프롬프트 전체의 KV tensor를 한 번에 계산하는 단계이고, decoding은 토큰을 하나씩 생성하는 단계이다. RAG처럼 입력이 긴 워크로드에서는 prefill이 지배적 병목이 된다.
+                <span class="source-ref">PDF p. 3</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>TTFT (Time To First Token)</dt>
+              <dd>
+                요청 도착부터 첫 출력 토큰이 생성될 때까지의 시간. prefill 단계 지연을 주로 반영하며 RAGCache의 주 최적화 지표이다.
+                <span class="source-ref">PDF p. 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>TPOT (Time Per Output Token)</dt>
+              <dd>
+                출력 토큰 하나당 소요 시간으로 decoding 단계 성능을 반영한다. RAGCache는 이를 직접 최적화하지 않는다.
+                <span class="source-ref">PDF p. 12</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Knowledge tree</dt>
+              <dd>
+                문서 ID를 키로 하는 prefix tree. 루트에서 노드까지의 경로가 하나의 문서 시퀀스를 나타내며 해당 노드가 그 시퀀스의 KV tensor를 보관한다. prefix matching으로 O(h)(h=트리 높이) 조회가 가능하다.
+                <span class="source-ref">PDF p. 4, 5</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>PGDSF (Prefix-aware Greedy-Dual-Size-Frequency)</dt>
+              <dd>
+                RAGCache의 cache replacement policy. priority = Clock + Frequency × Cost / Size(Formula 1)로 각 노드 우선순위를 계산하고, GPU 메모리가 가득 차면 priority가 가장 낮은 leaf 노드를 host memory로 swap-out 한다(Algorithm 1).
+                <span class="source-ref">PDF p. 5, 6</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cache-aware reordering</dt>
+              <dd>
+                OrderPriority = Cached Length / Computation Length 기준의 priority queue로 대기 요청 순서를 재배열하여 cache hit rate를 높이고 cache thrashing을 방지하는 스케줄링 기법. window 크기 제한으로 starvation을 방지한다.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Dynamic speculative pipelining</dt>
+              <dd>
+                vector search의 중간 top-k 후보를 이용해 LLM 생성을 조기 시작하여 retrieval과 generation을 오버랩하는 기법. 대기 중인 prefill 요청 수(max_prefill_bs)에 따라 speculation 수행 여부를 동적으로 결정한다(Algorithm 2, Theorem 5.1).
+                <span class="source-ref">PDF p. 7, 8</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cache hit rate (본 논문 정의)</dt>
+              <dd>
+                검색된 문서 수 대비 hit한 문서 수의 비율. 예를 들어 저장된 문서 시퀀스가 [D1, D2]이고 요청이 [D1, D3]이면 hit rate는 50%이다.
+                <span class="source-ref">PDF p. 11</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Throughput (본 논문 정의)</dt>
+              <dd>
+                TTFT가 특정 임계값(최저 request rate에서 측정된 TTFT의 5배) 미만으로 유지되는 최대 request rate.
+                <span class="source-ref">PDF p. 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>vLLM</dt>
+              <dd>
+                iteration-level scheduling과 PagedAttention을 사용하는 최신 LLM serving 시스템. 본 논문에서는 Faiss와 결합하여 주 baseline으로 사용된다.
+                <span class="source-ref">PDF p. 10, 13</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>SGLang</dt>
+              <dd>
+                GPU 메모리 내에서 요청 간 KV cache 재사용을 지원하며 replacement policy로 LRU를 사용하는 고성능 LLM serving 시스템. RAGCache의 caching baseline이다.
+                <span class="source-ref">PDF p. 10</span>
+              </dd>
+            </div>
+            
+            <div class="glossary-row">
+              <dt>Cache thrashing</dt>
+              <dd>
+                서로 다른 prefix를 요구하는 요청들이 번갈아 처리되면서 캐시 내용이 반복적으로 축출·재적재되어 hit rate가 떨어지는 현상. cache-aware reordering이 이를 완화한다.
+                <span class="source-ref">PDF p. 7</span>
+              </dd>
+            </div>
+            
+      </dl>
+    </section>
+    
+
+      
+        <section id="unresolved" class="report-section warning-section">
+          <h2>확인이 필요한 내용</h2>
+          <ul><li>논문이 정식으로 게재된 학회/저널 명칭은 본문에서 확인되지 않음(확인된 것은 arXiv:2404.12457v2 [cs.DC], 2024-04-25 preprint 정보뿐임).</li><li>3–4페이지의 문장 &#x27;The full prefill latency is up to 11.5× lower than that in the cached prefix scenario&#x27;는 caching이 latency를 줄인다는 문맥 및 뒤따르는 유사 문장(&#x27;cache hit latency ... up to 3.9× lower ... than the full prefill latency&#x27;)과 비교하면 비교 방향이 반대로 표현된 것으로 보이나, 원문을 그대로 인용하였으며 정확한 의도는 본문만으로 확정할 수 없음. 이 때문에 해당 11.5× 수치는 charts에 포함하지 않았음.</li><li>RAGCache 구현체의 오픈소스 코드 공개 여부(저장소 링크 등)는 본문에서 언급되지 않음.</li><li>Figure 13–19의 개별 데이터 포인트(request rate별 TTFT 곡선 등)는 본문에 수치 표로 제시되지 않아 charts로 재현하지 않았음. 정확한 수치가 표로 제공된 Table 2·3·4만 charts에 반영하였음.</li><li>PGDSF Formula 1의 Cost(재계산 비용) 항을 실제로 어떻게 추정·측정하는지에 대한 구체적 절차는 추출된 근거만으로는 확인되지 않음.</li><li>Ablation 실험(Figure 17, Table 2)의 host memory 8–128 GiB 구간에 대응하는 GPU 메모리 크기 설정은 추출된 근거에서 명시적으로 확인되지 않음.</li></ul>
+        </section>
+        
+    </div>
+  </main>
+
+  <footer>
+    <div class="page-shell">
+      이 문서는 AI 기반 논문 분석 파이프라인으로 생성되었습니다.
+      원문과 독립 검증 결과를 기준으로 최종 내용을 판단해야 합니다.
+    </div>
+  </footer>
+
+  <script>
+
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+
+
+    (() => {
+      const button = document.querySelector(".index-toggle");
+      if (!button) {
+        return;
+      }
+      const sync = () => {
+        const hidden = document.body.classList.contains("index-hidden");
+        button.textContent = hidden ? "인덱스 열기" : "인덱스 닫기";
+        button.setAttribute("aria-expanded", String(!hidden));
+      };
+      button.addEventListener("click", () => {
+        document.body.classList.toggle("index-hidden");
+        sync();
+      });
+      sync();
+    })();
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "neutral",
+      securityLevel: "strict"
+    });
+
+    (() => {
+      const diagrams = Array.from(document.querySelectorAll(".mermaid"));
+      if (!diagrams.length) {
+        return;
+      }
+
+      const modal = document.createElement("div");
+      modal.className = "diagram-modal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-label", "다이어그램 확대 보기");
+      modal.innerHTML = `
+        <div class="diagram-modal-toolbar">
+          <button type="button" data-action="out" aria-label="축소">-</button>
+          <button type="button" data-action="reset">100%</button>
+          <button type="button" data-action="in" aria-label="확대">+</button>
+          <button type="button" data-action="close">닫기</button>
+        </div>
+        <div class="diagram-modal-body" tabindex="0">
+          <div class="diagram-modal-stage"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const stage = modal.querySelector(".diagram-modal-stage");
+      const resetButton = modal.querySelector('[data-action="reset"]');
+      let zoom = 1;
+
+      const setZoom = (nextZoom) => {
+        zoom = Math.min(3, Math.max(0.75, nextZoom));
+        stage.style.setProperty("--diagram-zoom", String(zoom));
+        resetButton.textContent = `${Math.round(zoom * 100)}%`;
+      };
+
+      const closeModal = () => {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("diagram-modal-open");
+        stage.replaceChildren();
+      };
+
+      const openModal = (diagram) => {
+        stage.replaceChildren(diagram.cloneNode(true));
+        setZoom(1.5);
+        modal.classList.add("is-open");
+        document.body.classList.add("diagram-modal-open");
+        modal.querySelector(".diagram-modal-body").focus();
+      };
+
+      const enhanceDiagrams = () => {
+        diagrams.forEach((diagram) => {
+          if (diagram.dataset.zoomReady === "true") {
+            return;
+          }
+          diagram.dataset.zoomReady = "true";
+          const frame = document.createElement("div");
+          frame.className = "diagram-frame";
+          diagram.parentNode.insertBefore(frame, diagram);
+          frame.appendChild(diagram);
+
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "diagram-zoom-button";
+          button.textContent = "확대";
+          button.setAttribute("aria-label", "다이어그램 확대");
+          button.addEventListener("click", () => openModal(diagram));
+          frame.appendChild(button);
+        });
+      };
+
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          closeModal();
+          return;
+        }
+
+        const action = event.target.dataset && event.target.dataset.action;
+        if (action === "close") closeModal();
+        if (action === "in") setZoom(zoom + 0.25);
+        if (action === "out") setZoom(zoom - 0.25);
+        if (action === "reset") setZoom(1);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && modal.classList.contains("is-open")) {
+          closeModal();
+        }
+      });
+
+      mermaid.run({ nodes: diagrams }).then(enhanceDiagrams).catch(() => {
+        enhanceDiagrams();
+      });
+    })();
+
+    const chartSpecs = [{"canvasId": "chart-0", "type": "bar", "title": "Replacement policy별 평균 TTFT (host memory 8 GiB)", "labels": ["PGDSF", "GDSF", "LRU", "LFU"], "values": [1.38, 1.68, 1.78, 1.81], "unit": "seconds", "xLabel": "Replacement Policy", "yLabel": "평균 TTFT"}, {"canvasId": "chart-1", "type": "bar", "title": "Dynamic speculative pipelining 유무에 따른 non-overlapping vector search time (vector search ratio 100%)", "labels": ["MMLU / RAGCache", "MMLU / No DSP", "Natural Questions / RAGCache", "Natural Questions / No DSP"], "values": [97.4, 422.3, 145.0, 446.1], "unit": "ms", "xLabel": "워크로드 / 설정", "yLabel": "Non-overlapping vector search time"}, {"canvasId": "chart-2", "type": "bar", "title": "Request rate별 RAGCache scheduling time", "labels": ["0.5 req/s", "1.0 req/s", "1.5 req/s", "2.0 req/s"], "values": [0.88, 0.872, 0.902, 0.906], "unit": "ms", "xLabel": "Request Rate (req/s)", "yLabel": "Scheduling Time"}];
+
+    for (const spec of chartSpecs) {
+      const canvas = document.getElementById(spec.canvasId);
+
+      if (!canvas) {
+        continue;
+      }
+
+      new Chart(canvas, {
+        type: spec.type,
+        data: {
+          labels: spec.labels,
+          datasets: [
+            {
+              label: spec.title,
+              data: spec.values,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: spec.type === "pie"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y ?? context.parsed;
+                  return `${context.dataset.label}: ${value} ${spec.unit || ""}`;
+                }
+              }
+            }
+          },
+          scales: spec.type === "pie" ? {} : {
+            x: {
+              title: {
+                display: Boolean(spec.xLabel),
+                text: spec.xLabel
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: Boolean(spec.yLabel),
+                text: spec.yLabel
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
