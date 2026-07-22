@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Paper Discovery - 2026-07-22</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-hover: #252b3d;
+      --border: #2d3548;
+      --text: #e1e4eb;
+      --muted: #8892a4;
+      --accent: #58a6ff;
+      --max-width: 1100px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+    .page-shell { width: min(calc(100% - 32px), var(--max-width)); margin: 0 auto; }
+    header { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .back-link { color: var(--accent); font-weight: 700; }
+    .eyebrow {
+      margin: 28px 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.2; }
+    .summary { max-width: 760px; color: var(--muted); }
+    main { padding: 32px 0 80px; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .library-card {
+      display: flex;
+      min-height: 320px;
+      flex-direction: column;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .library-card:hover { background: var(--surface-hover); }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+    h2 a:hover, .open-link { color: var(--accent); }
+    .status-badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(174, 184, 198, 0.13);
+      color: #aeb8c6;
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .authors { margin: 14px 0 0; font-size: 0.92rem; }
+    .metadata { margin: 4px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .card-summary { margin: 22px 0; color: var(--muted); font-size: 0.94rem; }
+    .open-link { margin-top: auto; font-weight: 700; font-size: 0.9rem; }
+    @media (max-width: 640px) {
+      .library-grid { grid-template-columns: 1fr; }
+      .library-card { min-height: auto; }
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+  </style>
+</head>
+<body class="auth-locked">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header>
+    <div class="page-shell">
+      <a class="back-link" href="../../">← 홈페이지</a>
+      <p class="eyebrow">Paper Discovery</p>
+      <h1>Daily Paper Discovery - 2026-07-22</h1>
+      <p class="summary">오늘 추천 후보 14개: D-NOVA: In-Storage Retrieval Accelerator via Dual-Bound 3D NAND-Optimized Similarity Search with Vector Adaptation, Hybrid-Vector Retrieval for Visually Rich Documents: Combining Single-Vector Efficiency and Multi-Vector Accuracy (HEAVEN), DistVS: Large-scale Vector Search with Compute-Memory Disaggregation</p>
+    </div>
+  </header>
+  <main class="page-shell">
+    <div class="library-grid">
+      
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/html/2607.17538">
+            D-NOVA: In-Storage Retrieval Accelerator via Dual-Bound 3D NAND-Optimized Similarity Search with Vector Adaptation
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Chang Eun Song, Sumukh Pinge, Tianqi Zhang, Sung Eun Kim, Tajana S. Rosing, Mingu Kang</p>
+      <p class="metadata">2026-07-22 · 2026 · MICRO 2026 (59th IEEE/ACM International Symposium on Microarchitecture) · top-tier · arXiv preprint (accepted at MICRO 2026) · Score 91</p>
+      <p class="metadata">인용 근거: MICRO 2026 (59th IEEE/ACM Intl. Symp. on Microarchitecture), Athens, Greece; arXiv:2607.17538</p>
+      <div class="tag-row"><span class="tag">near-data/placement</span><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">MICRO 2026 top-tier architecture venue 공식 확인</span><span class="tag">in-storage MaxSim/유사도 scoring이라는 연구 핵심 질문과 직접 연결</span></div>
+
+      <p class="summary">
+        D-NOVA는 RAG를 위한 IVF 기반 계층적 검색 파이프라인을 3D NAND 메모리 배열 내부에 직접 구현한 in-storage 가속기다. NAND string 검색에 최적화된 Dual-Bound Tight Similarity Sensing 거리 척도와 경량 contrastive adapter를 도입해 CPU 대비 최대 41.7배 속도, 71배 에너지 효율을 달성했으며 기존 in-storage RAG 가속기보다 처리량이 높다. MICRO 2026 발표 논문이다.
+      </p>
+      <p class="summary">
+        storage-side similarity scoring과 candidate ID pushdown이라는 연구의 핵심 질문(23, 24, 27)을 정확히 다루는 하드웨어-소프트웨어 co-design 사례로, CSD/near-data scoring의 최신 상한선을 보여준다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/html/2607.17538">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2607.17538">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://github.com/juyeonnn/HEAVEN">
+            Hybrid-Vector Retrieval for Visually Rich Documents: Combining Single-Vector Efficiency and Multi-Vector Accuracy (HEAVEN)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Juyeon Kim, Geon Lee, Dongwon Choi, Taeuk Kim, Kijung Shin</p>
+      <p class="metadata">2026-07-22 · 2026 · ACL 2026 Findings · top-tier · arXiv preprint (accepted at ACL 2026 Findings) · Score 90</p>
+      <p class="metadata">인용 근거: ACL 2026 Findings; arXiv:2510.22215</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">ACL 2026 Findings 공식 accept 확인 (GitHub 레포에 명시)</span><span class="tag">single-vector candidate generation과 multi-vector exact scoring을 결합하는 연구 핵심 주제와 정확히 부합</span></div>
+
+      <p class="summary">
+        HEAVEN은 visual document retrieval을 위한 2단계 hybrid-vector 프레임워크로, 1단계에서 Visually-Summarized Page에 대한 single-vector 검색으로 candidate를 좁히고, 2단계에서 언어적 중요도로 query token을 필터링한 multi-vector reranking을 수행해 중복 계산을 줄인다. multi-vector 대비 Recall@1의 99.87%를 유지하면서 query당 연산량을 99.82% 절감했으며, 시각 문서 multi-document/long-document 검색 벤치마크 ViMDoc을 함께 제안한다. ACL 2026 Findings 논문이다.
+      </p>
+      <p class="summary">
+        candidate generation과 exact late-interaction scoring 사이의 gap을 줄이는 연구 질문(7, 8번)과 정확히 일치하며, patch/token pruning을 통해 storage·scoring 비용을 실제로 얼마나 줄일 수 있는지 정량적 근거를 제공한다.
+      </p>
+
+      <a class="open-link" href="https://github.com/juyeonnn/HEAVEN">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2510.22215">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://www.usenix.org/conference/nsdi26/presentation/yin">
+            DistVS: Large-scale Vector Search with Compute-Memory Disaggregation
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Peiqi Yin, Xiao Yan, Shiyuan Deng, Hui Li, Yifan Zhu, Xiangyu Zhi, Jingqi Mao, Ran Xu, et al.</p>
+      <p class="metadata">2026-07-22 · 2026 · NSDI 2026 (23rd USENIX Symposium on Networked Systems Design and Implementation) · top-tier · official proceedings · Score 87</p>
+      <p class="metadata">인용 근거: NSDI 2026 proceedings, pp. 449–467</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">compute-memory-storage 3계층 disaggregation이 multi-vector embedding storage tiering 질문에 직접 전이 가능</span><span class="tag">NSDI 2026 공식 발표 확인</span></div>
+
+      <p class="summary">
+        DistVS는 벡터 검색(ANNS)의 저장 공간과 세밀한 vector/index I/O 비용 문제를 compute-memory disaggregation 구조로 해결한다. compute 서버는 저정밀 압축 벡터, memory 서버는 고정밀 압축 벡터와 인덱스, SSD는 full-precision 벡터를 보관하는 3단계 저장 계층을 통해 정밀도를 점진적으로 pruning하며 접근한다. NSDI 2026에 게재된 시스템 논문이다.
+      </p>
+      <p class="summary">
+        candidate embedding을 DRAM/네트워크/SSD 계층 중 어디에 저장하고 어떤 정밀도로 읽어야 하는가라는 연구 질문(11, 30번)과 직접 맞닿아 있으며, multi-vector retrieval의 storage tiering 설계에 참고할 아키텍처 패턴을 제공한다.
+      </p>
+
+      <a class="open-link" href="https://www.usenix.org/conference/nsdi26/presentation/yin">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://www.iscaconf.org/isca2024/program/">
+            NDSEARCH: Accelerating Graph-Traversal-Based Approximate Nearest Neighbor Search through Near Data Processing
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yitu Wang, Shiyu Li, Qilin Zheng, Linghao Song, Zongwang Li, Andrew Chang, Hai Li, Yiran Chen</p>
+      <p class="metadata">2026-07-22 · 2024 · ISCA 2024 (ACM/IEEE International Symposium on Computer Architecture) · top-tier · official proceedings · Score 80</p>
+      <p class="metadata">인용 근거: ISCA 2024 proceedings, pp. 368–381; arXiv:2312.03141</p>
+      <div class="tag-row"><span class="tag">near-data/placement</span><span class="tag">storage/data movement</span><span class="tag">ISCA는 컴퓨터 아키텍처 최상위 학회(MICRO/HPCA와 동급)</span><span class="tag">in-storage ANNS 가속이라는 연구의 near-data scoring 주제와 직접 부합</span></div>
+
+      <p class="summary">
+        NDSEARCH는 graph-traversal 기반 ANNS를 위한 in-storage computing 아키텍처 SEARSSD를 제안하며, NAND flash 칩 내부의 LUN 단위 병렬성을 활용해 대규모 그래프에서의 메모리 용량 및 SSD I/O bandwidth 병목을 해결한다. CPU/GPU/SmartSSD-only/DeepStore 대비 각각 최대 31.7배, 14.6배, 7.4배, 2.9배 처리량 향상과 CPU/GPU 대비 두 자릿수 배 에너지 효율을 보인다. ISCA 2024 논문이다.
+      </p>
+      <p class="summary">
+        SSD 내부에서 graph traversal과 유사도 계산을 함께 수행하는 near-data processing 설계는 candidate generation과 exact scoring을 storage 근처에서 결합하는 연구 목표(near-data 섹션)와 정확히 대응된다.
+      </p>
+
+      <a class="open-link" href="https://www.iscaconf.org/isca2024/program/">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2312.03141">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3731569.3764857">
+            Managing Scalable Direct Storage Accesses for GPUs with GoFS
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Shaobo Li, Yirui Eric Zhou, Yuqi Xue, Yuan Xu, Jian Huang</p>
+      <p class="metadata">2026-07-22 · 2025 · SOSP 2025 (ACM SIGOPS 31st Symposium on Operating Systems Principles) · top-tier · official proceedings/DOI · Score 79</p>
+      <p class="metadata">인용 근거: SOSP 2025 proceedings; DOI: 10.1145/3731569.3764857</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">SOSP는 시스템 분야 최상위 venue</span><span class="tag">GPUDirect Storage 기반 embedding gather 설계와 직접 연관</span></div>
+
+      <p class="summary">
+        GoFS는 storage 관리를 GPU로 완전히 offload하는 최초의 GPU-orchestrated 파일시스템으로, 파일시스템 구조를 GPU 메모리에 두어 control path와 data path를 모두 host CPU 개입 없이 처리한다. scalable indexing, SM 단위 block 관리, zero-copy I/O를 통해 기존 GPU storage access 방식 대비 평균 1.61배 성능을 내며 crash consistency와 F2FS 호환성을 유지한다. SOSP 2025 논문이다.
+      </p>
+      <p class="summary">
+        SSD-to-GPU 데이터 이동과 host 개입 최소화라는 연구 질문(GPUDirect Storage 항목)에 직결되는 시스템으로, candidate embedding gather를 host bottleneck 없이 GPU가 직접 주도하는 아키텍처 설계에 참고할 수 있다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3731569.3764857">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://link.springer.com/article/10.1007/s00778-026-00974-8">
+            Efficient Graph Embedding at Scale: Optimizing CPU-GPU-SSD Integration (Legend)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Zhonggen Li, Xiangyu Ke, Yifan Zhu, Yunjun Gao, Feifei Li</p>
+      <p class="metadata">2026-07-22 · 2026 · The VLDB Journal · top-tier · official journal (VLDB Journal, Springer) · Score 78</p>
+      <p class="metadata">인용 근거: The VLDB Journal 2026; DOI: 10.1007/s00778-026-00974-8; arXiv:2505.09258</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">VLDB Journal은 데이터베이스 분야 최상위 venue</span><span class="tag">GPU memory 초과 환경에서의 embedding prefetch·SSD 직접 접근 설계가 연구 핵심 질문과 구조적으로 동일</span></div>
+
+      <p class="summary">
+        Legend는 billion-scale graph embedding을 위한 CPU-GPU-SSD 이기종 시스템으로, embedding과 optimizer state는 NVMe SSD에, 그래프 데이터는 RAM에 두고 prefetch-friendly loading 순서와 전용 GPU-SSD direct-access driver로 I/O 증폭을 줄인다. 기존 시스템 대비 최대 4.8배 속도 향상을 GPU 1/4 수준의 자원으로 달성했다. VLDB Journal 2026 게재 논문이다.
+      </p>
+      <p class="summary">
+        embedding 전체가 GPU memory에 들어가지 않는 환경에서 SSD-GPU 직접 접근과 prefetch 순서를 설계하는 문제(질문 11, 15, 30)는 multi-vector document embedding gather 문제와 구조적으로 동일하다.
+      </p>
+
+      <a class="open-link" href="https://link.springer.com/article/10.1007/s00778-026-00974-8">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2505.09258">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2602.21514">
+            I/O Optimizations for Graph-Based Disk-Resident Approximate Nearest Neighbor Search: A Design Space Exploration (OctopusANN)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Liang Li, Shufeng Gong, Yanan Yang, Yiduo Wang, Jie Wu</p>
+      <p class="metadata">2026-07-22 · 2026 · PVLDB Vol. 19, No. 7 · top-tier · official proceedings (PVLDB) · Score 78</p>
+      <p class="metadata">인용 근거: PVLDB 19(7): 1484-1498, 2026; arXiv:2602.21514</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">PVLDB는 데이터베이스 최상위 venue</span><span class="tag">disk I/O가 query latency를 지배한다는 정량적 분석이 연구의 핵심 병목 진단 질문과 직접 연결</span></div>
+
+      <p class="summary">
+        이 논문은 SSD 기반 disk-resident ANNS에서 I/O가 query latency의 70~90%를 차지함을 보이고, memory layout·disk layout·search algorithm을 아우르는 설계 공간 탐색과 page locality-traversal length 관계를 정량화하는 복잡도 모델을 제시한다. 제안 시스템 OctopusANN은 memory-resident navigation, adaptive width, page shuffle, page search를 결합해 Starling 대비 4.1~37.9% 높은 처리량을 달성하고 동일 recall에서 DiskANN을 능가한다. PVLDB 2026 논문이다.
+      </p>
+      <p class="summary">
+        candidate embedding fetch가 sequential인지 random gather인지(질문 12)와 I/O 병목의 정량적 분해는 multi-vector retrieval에서 embedding gather 비용을 진단하는 방법론으로 그대로 전이 가능하다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2602.21514">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3769780">
+            DiskJoin: Large-scale Vector Similarity Join with SSD
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yanqi Chen, Xiao Yan, Alexandra Meliou, Eric Lo</p>
+      <p class="metadata">2026-07-22 · 2026 · SIGMOD 2026 (Proceedings of the ACM on Management of Data, PACMMOD) · top-tier · official proceedings/DOI · Score 76</p>
+      <p class="metadata">인용 근거: SIGMOD 2026 / PACMMOD Vol.3 Iss.6; DOI: 10.1145/3769780; arXiv:2508.18494</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">SIGMOD는 데이터베이스 최상위 학회</span><span class="tag">SSD 기반 대규모 벡터 access pattern·read amplification 최적화가 candidate gather 문제와 직접 연결</span></div>
+
+      <p class="summary">
+        DiskJoin은 단일 머신에서 billion-scale 벡터 데이터셋을 처리하는 최초의 disk 기반 similarity join 알고리즘으로, 반복 접근과 read amplification을 피하는 access pattern 설계, 동적 캐시 eviction, probabilistic pruning을 결합한다. 메모리가 데이터셋의 약 10%로 제한된 환경에서도 disk 기반 벡터 인덱스 검색 대비 2~3자릿수 배 빠른 성능을 보인다. SIGMOD 2026 논문이다.
+      </p>
+      <p class="summary">
+        read amplification을 줄이는 disk access pattern 설계와 memory cache eviction 정책은 candidate embedding gather의 random access 병목(질문 12, 16)에 직접 적용 가능한 storage-centric 기법이다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3769780">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2508.18494">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://2026.sigmod.org/sigmod_papers.shtml">
+            GPS (Gorgeous): Revisiting the Data Layout for Disk-Resident High-Dimensional Vector Search
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Peiqi Yin, Xiao Yan, Qihui Zhou, Hui Li, Xiaolu Li, Meiling Wang, Lin Zhang, Xin Yao, et al.</p>
+      <p class="metadata">2026-07-22 · 2026 · SIGMOD 2026 · top-tier · conference program (arXiv preprint under name &#x27;Gorgeous&#x27;) · Score 75</p>
+      <p class="metadata">인용 근거: SIGMOD 2026 accepted papers list; arXiv:2508.15290 (as &#x27;Gorgeous&#x27;)</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">SIGMOD 2026 accept 확인</span><span class="tag">disk-resident vector index의 data layout 재설계가 연구의 storage layout 질문과 직접 연결</span></div>
+
+      <p class="summary">
+        이 논문은 disk 기반 proximity graph 벡터 검색에서 벡터 자체보다 그래프 구조(adjacency list)가 훨씬 자주 접근된다는 점을 발견하고, 기존 시스템의 disk layout이 이를 제대로 활용하지 못함을 지적한다. adjacency list를 메모리에 캐싱하고 이웃의 adjacency list와 벡터를 disk에서 co-locate하는 새로운 layout을 제안해 기존 최신 시스템 대비 처리량 60% 이상, 지연시간 35% 이상 개선했다. SIGMOD 2026에 accept되었다.
+      </p>
+      <p class="summary">
+        variable-length embedding을 fixed-size storage block에 어떻게 배치할지(질문 4)와 candidate ID를 storage locality 기준으로 재배열하는 문제(질문 13)에 직접적인 disk layout 설계 통찰을 제공한다.
+      </p>
+
+      <a class="open-link" href="https://2026.sigmod.org/sigmod_papers.shtml">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2508.15290">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2601.03229">
+            SpANNS: Optimizing Approximate Nearest Neighbor Search for Sparse Vectors Using Near Memory Processing
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Tianqi Zhang, Flavio Ponzina, Tajana Rosing</p>
+      <p class="metadata">2026-07-22 · 2026 · ASP-DAC 2026 (31st Asia and South Pacific Design Automation Conference) · strong · conference proceedings (confirmed via search) · Score 68</p>
+      <p class="metadata">인용 근거: ASP-DAC 2026 (31st Asia and South Pacific Design Automation Conference); arXiv:2601.03229</p>
+      <div class="tag-row"><span class="tag">near-data/placement</span><span class="tag">ASP-DAC은 EDA/시스템 설계 분야 주요 학회로 strong tier</span><span class="tag">near-memory index traversal + distance computation 결합이 near-data scoring 연구 질문과 연결</span></div>
+
+      <p class="summary">
+        SpANNS는 CXL Type-2 near-memory 플랫폼 기반의 sparse ANNS 아키텍처로, hybrid inverted index와 query parsing/cluster filtering을 담당하는 전용 controller, 그리고 index traversal과 거리 계산을 데이터 근처에서 수행하는 compute-enabled DIMM을 결합한다. CPU 대비 15.2~21.6배 속도 향상을 보이며 sparse-dense hybrid retrieval 파이프라인에서 sparse ANNS의 CPU 병목을 해결한다. ASP-DAC 2026 논문이다.
+      </p>
+      <p class="summary">
+        near-memory에서 index traversal과 scoring을 결합하는 설계는 CSD/host 사이의 balanced execution 질문(26번)에 참고할 수 있는 하드웨어 co-design 사례다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2601.03229">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2511.21121">
+            Beyond Patch Aggregation: 3-Pass Pyramid Indexing for Vision-Enhanced Document Retrieval (VisionRAG)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">author information not fully verified</p>
+      <p class="metadata">2026-07-22 · 2025 · arXiv preprint · preprint · arXiv · Score 58</p>
+      <p class="metadata">인용 근거: arXiv:2511.21121</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">ColPali/ColQwen류의 수백 개 patch embedding 문제를 정면으로 겨냥한 대안 아키텍처</span><span class="tag">storage footprint를 페이지당 vector 수 단위로 정량화</span></div>
+
+      <p class="summary">
+        VisionRAG는 OCR 없이 문서를 이미지로 직접 인덱싱하는 모델 비종속 멀티모달 검색 시스템으로, 페이지 요약·섹션 헤더·시각적 hotspot·fact-level 단서로 구성된 3-pass pyramid 인덱스를 사용해 페이지당 수백 개의 patch embedding 대신 17~27개의 vector만 유지한다. FinanceBench에서 accuracy@10 0.8051, TAT-DQA에서 Recall@100 0.9629를 보고한다. 아직 학회 게재는 확인되지 않은 arXiv preprint다.
+      </p>
+      <p class="summary">
+        문서당 vector 수를 극단적으로 줄이는 대안적 representation은 patch-level embedding storage footprint 문제(질문 3, 4)에 대한 비교 baseline으로 유용하다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2511.21121">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2605.25522">
+            Co-Designing Graph-based Approximate Nearest Neighbor Search at Billion Scale for Processing-in-Memory
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Sitian Chen, Yusen Li, Yao Chen, Minwen Deng, Jintao Meng, Amelie Chi Zhou</p>
+      <p class="metadata">2026-07-22 · 2026 · arXiv preprint · preprint · arXiv · Score 56</p>
+      <p class="metadata">인용 근거: arXiv:2605.25522</p>
+      <div class="tag-row"><span class="tag">near-data/placement</span><span class="tag">PIM 상에서 인덱스 압축 배치와 비동기 scheduling을 결합한 co-design이 near-data execution placement 질문과 연결</span><span class="tag">정량적 성능·recall 트레이드오프 명시</span></div>
+
+      <p class="summary">
+        이 논문은 graph 기반 ANNS를 Processing-in-Memory(PIM)에 co-design하여, PIM의 제한된 메모리 용량과 interconnect 제약을 compacted index layout(PIM 상주 footprint 14.5배 축소), 비동기 pipelined scheduler, 곱셈 없는 distance kernel(recall 손실 0.08% 미만)로 해결한다. CPU/GPU 대비 각각 최대 20배/17.1배, 기존 PIM 가속기 대비 high-recall 영역에서 129배 높은 처리량을 보고한다. 아직 학회 게재는 미확인된 arXiv preprint다.
+      </p>
+      <p class="summary">
+        PIM 환경에서 그래프 인덱스를 압축 배치하는 layout 설계는 variable-length multi-vector index를 제한된 near-memory 자원에 배치하는 문제(질문 4, 25)와 구조적으로 유사하다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2605.25522">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2512.02660">
+            Spatially-Grounded Document Retrieval via Patch-to-Region Relevance Propagation (Snappy)
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Athos Georgiou</p>
+      <p class="metadata">2026-07-22 · 2025 · arXiv preprint · preprint · arXiv · Score 55</p>
+      <p class="metadata">인용 근거: arXiv:2512.02660</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">patch embedding을 region 단위로 집계해 전송량을 줄이는 아이디어가 데이터 이동량 최소화 목표와 부합</span><span class="tag">정량적 hit rate·token 절감 수치 확인</span></div>
+
+      <p class="summary">
+        이 논문은 ColPali/ColQwen류의 patch-level 시각 유사도와 OCR 기반 bounding box 영역을 결합해, 추가 학습 없이 추론 시점에 페이지 내 정밀 위치 파악을 가능하게 한다. ColQwen3-4B는 IoU@0.5 기준 within-page localization에서 59.7% hit rate를 달성했고, 전체 OCR 영역을 반환하는 방식 대비 RAG context token을 28.8% 절감한다. 오픈소스 구현 이름은 Snappy이며 학회 게재는 미확인 arXiv preprint다.
+      </p>
+      <p class="summary">
+        patch 단위 scoring을 OCR region 단위로 그룹핑해 반환 데이터량을 줄이는 접근은 patch-group-level scoring 질문(22번) 및 read amplification 감소 아이디어와 연결된다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2512.02660">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2607.04415">
+            GORIO: GPU-Centered Remote I/O for Graph ANNS over NVMe-oF
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Gen Zhang, Wenhao Gu, Shan Huang, Xinhai Chen</p>
+      <p class="metadata">2026-07-22 · 2026 · arXiv preprint (technical report) · preprint · arXiv · Score 54</p>
+      <p class="metadata">인용 근거: arXiv:2607.04415</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">runtime/kernel/serving</span><span class="tag">GPU-주도 원격 I/O 설계가 host-GPU-storage 데이터 이동 최소화 목표와 직접 연결</span><span class="tag">정량적 속도 향상 수치 제시</span></div>
+
+      <p class="summary">
+        GORIO는 graph ANNS를 위한 GPU 중심 로컬 I/O를 NVMe-oF 기반 원격 스토리지로 확장한 시스템으로, query 진행·page-miss 감지·pending query 상태·resume 결정을 모두 GPU에서 처리하고 CPU는 NVMe-oF transport/completion proxy 역할만 수행한다. SIFT1M DiskANN 스타일 워크로드에서 기존 최신 remote-I/O 경로 대비 1.31배, 직접 remote page-cache 경로 대비 4.89배 빠르다. 학회 게재 여부는 미확인된 기술 보고서 수준의 arXiv preprint다.
+      </p>
+      <p class="summary">
+        GPU가 storage I/O 제어를 직접 주도해 host bottleneck을 없애는 설계는 candidate embedding을 원격/분리된 storage에서 GPU로 직접 가져오는 문제(질문 11, 27)에 적용 가능한 아이디어다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2607.04415">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+    </div>
+  </main>
+  
+  <script>
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+  </script>
+
+</body>
+</html>
