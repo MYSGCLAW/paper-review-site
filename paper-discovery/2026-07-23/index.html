@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Paper Discovery - 2026-07-23</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a1f2e;
+      --surface-hover: #252b3d;
+      --border: #2d3548;
+      --text: #e1e4eb;
+      --muted: #8892a4;
+      --accent: #58a6ff;
+      --max-width: 1100px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: inherit; text-decoration: none; }
+    .page-shell { width: min(calc(100% - 32px), var(--max-width)); margin: 0 auto; }
+    header { padding: 28px 0; border-bottom: 1px solid var(--border); }
+    .back-link { color: var(--accent); font-weight: 700; }
+    .eyebrow {
+      margin: 28px 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: 2rem; line-height: 1.2; }
+    .summary { max-width: 760px; color: var(--muted); }
+    main { padding: 32px 0 80px; }
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .library-card {
+      display: flex;
+      min-height: 320px;
+      flex-direction: column;
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .library-card:hover { background: var(--surface-hover); }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+    h2 a:hover, .open-link { color: var(--accent); }
+    .status-badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(174, 184, 198, 0.13);
+      color: #aeb8c6;
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .authors { margin: 14px 0 0; font-size: 0.92rem; }
+    .metadata { margin: 4px 0 0; color: var(--muted); font-size: 0.82rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .card-summary { margin: 22px 0; color: var(--muted); font-size: 0.94rem; }
+    .open-link { margin-top: auto; font-weight: 700; font-size: 0.9rem; }
+    @media (max-width: 640px) {
+      .library-grid { grid-template-columns: 1fr; }
+      .library-card { min-height: auto; }
+    }
+
+    body.auth-locked > :not(.login-gate) {
+      display: none !important;
+    }
+    .login-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .login-gate[hidden] {
+      display: none;
+    }
+    .login-panel {
+      width: min(100%, 360px);
+      padding: 26px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    }
+    .login-panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+    .login-panel p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .login-panel label {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+    .login-panel input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #080b11;
+      color: var(--text);
+      font: inherit;
+    }
+    .login-panel button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 10px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      background: var(--accent);
+      color: #07111f;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .login-error {
+      min-height: 1.2em;
+      margin: 10px 0 0;
+      color: #ff8f8f;
+      font-size: 0.84rem;
+    }
+
+  </style>
+</head>
+<body class="auth-locked">
+  
+  <section class="login-gate" aria-label="로그인">
+    <form class="login-panel" id="login-form">
+      <h2>로그인</h2>
+      <p>문서를 보려면 아이디와 비밀번호를 입력하세요.</p>
+      <label>
+        아이디
+        <input id="login-id" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        비밀번호
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit">들어가기</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+
+  <header>
+    <div class="page-shell">
+      <a class="back-link" href="../../">← 홈페이지</a>
+      <p class="eyebrow">Paper Discovery</p>
+      <h1>Daily Paper Discovery - 2026-07-23</h1>
+      <p class="summary">오늘 추천 후보 10개: IGP: Efficient Multi-Vector Retrieval via Proximity Graph Index, Reproducibility, Replicability, and Insights into Visual Document Retrieval with Late Interaction, Vector Search for the Future: From Memory-Resident, Static Heterogeneous Storage, to Cloud-Native Architectures</p>
+    </div>
+  </header>
+  <main class="page-shell">
+    <div class="library-grid">
+      
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3726302.3730004">
+            IGP: Efficient Multi-Vector Retrieval via Proximity Graph Index
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Zheng Bian, Man Lung Yiu, Bo Tang</p>
+      <p class="metadata">2026-07-23 · 2025 · SIGIR 2025 · top-tier · official proceedings · Score 92</p>
+      <p class="metadata">인용 근거: SIGIR 2025 proceedings, pp. 2524-2533; DOI: 10.1145/3726302.3730004</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">SIGIR 2025 공식 프로시딩 확인</span><span class="tag">multi-vector candidate generation 인덱스 구조에 대한 직접적 기여</span></div>
+
+      <p class="summary">
+        IGP는 단일 벡터 검색에서 최고 성능을 보이는 proximity graph 인덱스를 multi-vector retrieval의 candidate generation 단계에 적용한 SIGIR 2025 논문이다. incremental next-similar retrieval 기법으로 고품질 candidate set을 효율적으로 생성하며, 기존 방법 대비 동일 정확도에서 2~3배 높은 query throughput을 달성했다.
+      </p>
+      <p class="summary">
+        candidate generation 단계에서 필요한 K와 candidate 품질이 storage traffic 및 scoring 비용에 직접 영향을 준다는 현재 연구의 핵심 질문(Q6~Q10)과 정확히 맞닿아 있으며, GEM·LEMUR 등 기존 graph 기반 MVR 인덱스와 비교 대상이 될 수 있다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3726302.3730004">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://www4.comp.polyu.edu.hk/~csmlyiu/conf/SIGIR25_IGP.pdf">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3726302.3730285">
+            Reproducibility, Replicability, and Insights into Visual Document Retrieval with Late Interaction
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Jingfen Qiao, Jia-Huei Ju, Xinyu Ma, Evangelos Kanoulas, Andrew Yates</p>
+      <p class="metadata">2026-07-23 · 2025 · SIGIR 2025 · top-tier · official proceedings · Score 88</p>
+      <p class="metadata">인용 근거: SIGIR 2025 proceedings; DOI: 10.1145/3726302.3730285; arXiv: 2505.07730</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">visual document</span><span class="tag">SIGIR 2025 공식 DOI 확인</span><span class="tag">visual document retrieval의 late-interaction 비효율을 실증적으로 규명</span></div>
+
+      <p class="summary">
+        SIGIR 2025 재현성 트랙 논문으로, ColPali류의 late-interaction visual document retrieval을 여러 VLM 백본에서 체계적으로 재검증했다. late interaction이 검색 정확도를 크게 높이지만 추론 시 상당한 계산 비효율을 유발한다는 점을 확인했고, query token이 실제 patch와 어떻게 매칭되는지 분석했다.
+      </p>
+      <p class="summary">
+        visual document retrieval에서 late-interaction의 계산/저장 비효율을 정량적으로 밝힌 실증 연구로, patch-level embedding footprint와 scoring 비용 문제(연구 질문 3, 17, 18)에 직접적인 근거 자료를 제공한다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3726302.3730285">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2505.07730">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://dl.acm.org/doi/10.1145/3788853.3801879">
+            Vector Search for the Future: From Memory-Resident, Static Heterogeneous Storage, to Cloud-Native Architectures
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yitong Song, Xuanhe Zhou, Christian S. Jensen, Jianliang Xu</p>
+      <p class="metadata">2026-07-23 · 2026 · SIGMOD 2026 (Companion/Tutorial) · top-tier · official proceedings · Score 75</p>
+      <p class="metadata">인용 근거: SIGMOD 2026 Companion proceedings; DOI: 10.1145/3788853.3801879; arXiv: 2601.01937</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">SIGMOD 2026 공식 프로시딩</span><span class="tag">storage architecture 관점의 vector search 발전사와 열린 문제를 정리한 최신 서베이</span></div>
+
+      <p class="summary">
+        SIGMOD 2026 튜토리얼로, vector search를 storage architecture 관점에서 조망한다. in-memory 방식에서 billion-scale heterogeneous memory-SSD 아키텍처, 나아가 memory-SSD-object storage를 결합한 cloud-native trillion-scale 아키텍처로의 진화를 정리하고 향후 연구 방향을 제시한다.
+      </p>
+      <p class="summary">
+        text/visual multi-vector retrieval에 국한되지는 않지만, embedding을 어디에 저장하고 이동시켜야 하는가라는 현재 연구의 핵심 질문 전체에 대한 최신 지형도와 참고 문헌을 제공하는 조사 자료로서 가치가 있다.
+      </p>
+
+      <a class="open-link" href="https://dl.acm.org/doi/10.1145/3788853.3801879">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2601.01937">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2607.04605">
+            Do All Visual Tokens Matter Equally? Object-Evidence Preserving Token Merging for Vision-Language Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Suhyeong Park, Junha Jung, Jungwoo Park, Jaewoo Kang</p>
+      <p class="metadata">2026-07-23 · 2026 · arXiv preprint · preprint · arXiv · Score 87</p>
+      <p class="metadata">인용 근거: arXiv: 2607.04605</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">compression/pruning</span><span class="tag">ColPali storage 16배 감소를 보고한 최신 patch compression 연구</span><span class="tag">MaxSim 인터페이스를 유지하는 설계로 시스템 통합성 높음</span></div>
+
+      <p class="summary">
+        SaMer는 ColPali류 visual retrieval에서 dense한 patch token들을 late-interaction(MaxSim) 인터페이스를 유지한 채 K개의 대표 centroid로 병합하는 프레임워크다. 단순 token 수 축소가 아니라 향후 query token이 필요로 하는 evidence를 보존하는 방향으로 병합해, ColPali storage를 16.09배 줄이고 K=64에서 image token의 93% 이상을 제거하면서도 검색 성능을 향상시켰다.
+      </p>
+      <p class="summary">
+        visual document의 patch 수 증가로 인한 storage·scoring 비용을 token merging/pruning으로 직접 줄이는 접근으로, patch-level compression과 late-interaction scoring 비용 절감(연구 질문 5, 20)에 밀접하게 연결된다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2607.04605">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://link.springer.com/chapter/10.1007/978-3-032-21324-2_4">
+            Multivector Reranking in the Era of Strong First-Stage Retrievers
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Silvio Martinico, Franco Maria Nardini, Cosimo Rulli, Rossano Venturini</p>
+      <p class="metadata">2026-07-23 · 2026 · ECIR 2026 · strong · official proceedings (Springer) · Score 85</p>
+      <p class="metadata">인용 근거: ECIR 2026, Springer LNCS 978-3-032-21324-2; DOI: 10.1007/978-3-032-21324-2_4; arXiv: 2601.05200</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">ECIR 2026 공식 프로시딩(Springer)</span><span class="tag">candidate generation과 exact scoring 사이 gap을 정량적으로 재현·분석</span></div>
+
+      <p class="summary">
+        기존 multi-vector retrieval의 token-level gather-and-refine candidate generation이 비효율적이고 top 후보를 놓치는 경우가 많음을 재현 실험으로 보였다. 이를 learned sparse retriever 기반 single-vector candidate generation으로 대체해 두 단계 검색 구조로 재구성했고, inference-free LSR을 결합해 query encoding 병목까지 줄여 최대 24배의 속도 향상을 달성했다.
+      </p>
+      <p class="summary">
+        candidate generation 방식이 필요한 K와 exact scoring 비용에 미치는 영향(연구 질문 6~8)을 정면으로 다루며, token-level index 대신 경량 candidate generation을 쓰는 접근은 storage traffic 감소 전략과 직접 연결된다.
+      </p>
+
+      <a class="open-link" href="https://link.springer.com/chapter/10.1007/978-3-032-21324-2_4">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/abs/2601.05200">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2604.02815">
+            Unified and Efficient Approach for Multi-Vector Similarity Search
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">미확인 (arXiv 저자 정보 확인 필요)</p>
+      <p class="metadata">2026-07-23 · 2026 · arXiv preprint · preprint · arXiv · Score 82</p>
+      <p class="metadata">인용 근거: arXiv: 2604.02815</p>
+      <div class="tag-row"><span class="tag">multi-vector/late interaction</span><span class="tag">multi-vector 전용 그래프 인덱스라는 명확한 시스템 기여</span><span class="tag">IGP·GEM과 비교 가능한 candidate generation 접근</span></div>
+
+      <p class="summary">
+        이 논문은 기존 filter-and-refine 방식이 multi-vector 데이터의 풍부한 정보를 필터링 단계에서 무시해 부정확하거나 비효율적이라는 문제를 formalize하고, 대칭성·cardinality robustness·query consistency를 만족하는 새로운 edge-weight 함수 기반의 계층적 그래프 인덱스 MV-HNSW를 제안한다.
+      </p>
+      <p class="summary">
+        multi-vector 데이터 전용 candidate generation 인덱스 설계로, IGP와 마찬가지로 candidate generation과 필요한 K, 후속 exact scoring 비용 사이의 관계(연구 질문 6~10)에 직접 기여하는 후보다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2604.02815">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/html/2604.02815">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2312.04257">
+            Proxima: Near-storage Acceleration for Graph-based Approximate Nearest Neighbor Search in 3D NAND
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Weihong Xu, Junwei Chen, Po-Kai Hsu, Jaeyoung Kang, Minxuan Zhou, Sumukh Pinge, Shimeng Yu, Tajana Rosing</p>
+      <p class="metadata">2026-07-23 · 2026 · IEEE Transactions on Computers · strong · author page / arXiv (journal acceptance reported) · Score 79</p>
+      <p class="metadata">인용 근거: IEEE Transactions on Computers, 2026 (accepted); arXiv: 2312.04257</p>
+      <div class="tag-row"><span class="tag">near-data/placement</span><span class="tag">storage/data movement</span><span class="tag">IEEE Transactions on Computers 게재로 확인된 저명 학술지 논문</span><span class="tag">3D NAND 내 근접 그래프 ANN 가속이라는 근접-데이터 처리 사례</span></div>
+
+      <p class="summary">
+        Proxima는 3D NAND flash 내부에 알고리즘-하드웨어 co-design을 구현한 near-storage processing 기반 ANN 가속기다. distance approximation과 early termination으로 그래프 탐색 복잡도를 줄이고, flash bandwidth를 최대한 활용하는 dataflow를 설계해 기존 near-storage ASIC 대비 7~13배의 속도 향상을 달성했다.
+      </p>
+      <p class="summary">
+        candidate scoring을 storage 장치 자체에서 수행하는 near-data processing 사례로, CSD/near-data scoring 및 storage-side top-k 아이디어(연구 질문 23~28)에 대한 하드웨어 수준의 참고 사례가 된다. multi-vector 특화는 아니지만 near-data ANN 가속 설계 원칙이 전이 가능하다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2312.04257">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2604.09173">
+            COMPASS: Decoupling Vector Data and Index Storage for Space Efficiency
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Yuanming Ren, Juncheng Zhang, Yanjing Ren, Rui Yang, Di Wu, Patrick P. C. Lee</p>
+      <p class="metadata">2026-07-23 · 2026 · arXiv preprint (cs.DB) · preprint · arXiv · Score 78</p>
+      <p class="metadata">인용 근거: arXiv: 2604.09173</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">compression/pruning</span><span class="tag">billion-scale 검증을 거친 storage layout 재설계</span><span class="tag">vector data와 index metadata 분리 압축이라는 명확한 시스템 기여</span></div>
+
+      <p class="summary">
+        COMPASS는 disk-resident graph 기반 ANN 시스템에서 원본 벡터 데이터와 인덱스 메타데이터를 분리해 각각의 압축 특성에 맞게 손실 없이 압축하는 스토리지 프레임워크다. billion-scale 데이터셋에서 최대 58.7%의 저장 공간 절감을 달성하면서도 검색·업데이트 성능을 유지한다.
+      </p>
+      <p class="summary">
+        variable-length embedding을 fixed storage block에 배치하는 방식과 vector/index 데이터의 분리 압축 전략은 현재 연구의 storage layout 질문(연구 질문 4)과 직접적으로 관련된다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2604.09173">
+        공식/논문 링크 열기 →
+      </a>
+      
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2603.21466">
+            GateANN: I/O-Efficient Filtered Vector Search on SSDs
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">Nakyung Lee, Soobin Cho, Jiwoong Park, Gyuyeong Kim</p>
+      <p class="metadata">2026-07-23 · 2026 · arXiv preprint (cs.OS/cs.DB) · preprint · arXiv · Score 74</p>
+      <p class="metadata">인용 근거: arXiv: 2603.21466</p>
+      <div class="tag-row"><span class="tag">storage/data movement</span><span class="tag">SSD I/O에서 selective fetch를 통한 read amplification 감소라는 명확한 문제의식</span><span class="tag">candidate ID 기반 selective embedding fetch와 직접 유사</span></div>
+
+      <p class="summary">
+        GateANN은 SSD 상주 그래프 인덱스에서 filtered vector search의 I/O 효율을 다룬다. 핵심 설계는 그래프 탐색과 벡터 fetch를 분리해, 탐색 경로에 있다는 이유만으로 SSD에서 벡터를 읽지 않고 실제 query 결과에 기여할 수 있는 노드만 선택적으로 fetch하도록 하며, 메모리 상주 filter store로 O(1) predicate 평가를 지원한다.
+      </p>
+      <p class="summary">
+        candidate 수에 비례한 불필요한 SSD read를 줄이는 selective fetch 전략은 multi-vector retrieval의 candidate embedding gather 문제(연구 질문 11~16)에 바로 전이 가능한 아이디어다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2603.21466">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/pdf/2603.21466">Preprint 열기 →</a>
+    </article>
+    
+
+    <article class="library-card paper-card">
+      <div class="card-header">
+        <h2>
+          <a href="https://arxiv.org/abs/2603.12824">
+            NanoVDR: Distilling a 2B Vision-Language Retriever into a 70M Text-Only Encoder for Visual Document Retrieval
+          </a>
+        </h2>
+
+        <span class="status-badge status-unverified">
+          추천 후보
+        </span>
+      </div>
+
+      <p class="authors">미확인 (arXiv 저자 정보 확인 필요)</p>
+      <p class="metadata">2026-07-23 · 2026 · arXiv preprint · preprint · arXiv · Score 68</p>
+      <p class="metadata">인용 근거: arXiv: 2603.12824</p>
+      <div class="tag-row"><span class="tag">visual document</span><span class="tag">runtime/kernel/serving</span><span class="tag">visual document retrieval serving에서 query-side 비용을 크게 낮추는 실용적 접근</span><span class="tag">concurrent serving 환경에서 query encoding 병목 완화에 기여</span></div>
+
+      <p class="summary">
+        NanoVDR는 visual document retrieval에서 문서는 복잡한 시각 이해가 필요하지만 query는 짧은 텍스트라는 비대칭성을 활용한다. 2B 크기의 VLM teacher를 오프라인 문서 인덱싱에만 쓰고, query 인코더는 69M 파라미터의 text-only 모델로 비대칭 cross-modal distillation을 수행해 teacher 성능의 95.1%를 유지하면서 CPU query latency를 50~143배 낮췄다.
+      </p>
+      <p class="summary">
+        query encoding 단계의 latency와 자원 비용을 줄이는 접근으로, end-to-end pipeline의 첫 단계(query encoding)와 concurrent serving에서의 CPU/자원 절감(연구 질문 29)에 참고할 수 있으나 storage/scoring 시스템 자체보다는 모델 경량화에 가깝다.
+      </p>
+
+      <a class="open-link" href="https://arxiv.org/abs/2603.12824">
+        공식/논문 링크 열기 →
+      </a>
+      <a class="open-link" href="https://arxiv.org/pdf/2603.12824">Preprint 열기 →</a>
+    </article>
+    
+    </div>
+  </main>
+  
+  <script>
+    (() => {
+      const gate = document.querySelector(".login-gate");
+      const form = document.querySelector("#login-form");
+      const error = document.querySelector("#login-error");
+      const unlock = () => {
+        document.body.classList.remove("auth-locked");
+        gate.hidden = true;
+      };
+
+      if (sessionStorage.getItem("paperReviewAuthed") === "true") {
+        unlock();
+        return;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const username = document.querySelector("#login-id").value.trim();
+        const password = document.querySelector("#login-password").value;
+        if (username === "sam" && password === "sam") {
+          sessionStorage.setItem("paperReviewAuthed", "true");
+          unlock();
+          return;
+        }
+        error.textContent = "아이디 또는 비밀번호가 맞지 않습니다.";
+      });
+    })();
+  </script>
+
+</body>
+</html>
